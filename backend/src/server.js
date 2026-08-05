@@ -11,6 +11,13 @@ const { securityMiddleware } = require('./middleware/security');
 const { errorHandler } = require('./middleware/errorHandler');
 const { setupSwagger } = require('./config/swagger');
 const logger = require('./config/logger');
+const fs = require('fs');
+const path = require('path');
+
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -78,6 +85,7 @@ app.use('/api/ratings', require('./routes/ratings'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/sos', require('./routes/sos'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/uploads', express.static(uploadsDir));
 
 setupSwagger(app);
 

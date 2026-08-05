@@ -50,7 +50,19 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
   updateLocation: (coordinates) => api.put('/auth/location', { coordinates }),
-  updateDriverStatus: (isOnline, coordinates) => api.put('/auth/driver/status', { isOnline, coordinates })
+  updateDriverStatus: (isOnline, coordinates) => api.put('/auth/driver/status', { isOnline, coordinates }),
+  sendEmailOTP: (email) => api.post('/auth/send-email-otp', { email }),
+  verifyEmailOTP: (email, otp) => api.post('/auth/verify-email-otp', { email, otp }),
+  uploadProfilePhoto: (formData) => api.post('/auth/profile-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getDocuments: () => api.get('/auth/documents'),
+  uploadDocuments: (formData) => api.post('/auth/documents', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  uploadVehicleDocuments: (formData) => api.post('/auth/vehicle-documents', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
 };
 
 export const driverAPI = {

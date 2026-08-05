@@ -8,7 +8,12 @@
     "save": "Save",
     "back": "Back",
     "next": "Next",
-    "submit": "Submit"
+    "submit": "Submit",
+    "home": "Home",
+    "trips": "Trips",
+    "vehicle": "Vehicle",
+    "profile": "Profile",
+    "skip": "Skip for now"
   },
   "auth": {
     "login": "Sign In",
@@ -17,13 +22,21 @@
     "phoneNumber": "Phone Number",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "email": "Email",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "registerAsDriver": "Register as Driver",
     "signingIn": "Signing in...",
     "creatingAccount": "Creating Account...",
     "loginFailed": "Login failed",
-    "registerFailed": "Registration failed"
+    "registerFailed": "Registration failed",
+    "verifyEmail": "Verify Email",
+    "enterEmailOTP": "Enter the 6-digit code sent to {{email}}",
+    "sendOTP": "Send OTP",
+    "verify": "Verify",
+    "resendIn": "Resend in {{countdown}}s",
+    "resend": "Resend OTP",
+    "emailVerified": "Email verified successfully"
   },
   "driver": {
     "online": "Online",
@@ -77,5 +90,26 @@
     "notifications": "Notifications",
     "markAllRead": "Mark all as read",
     "noNotifications": "No notifications"
+  },
+  "documents": {
+    "title": "Documents",
+    "driverDocuments": "Driver Documents",
+    "vehicleDocuments": "Vehicle Documents",
+    "licenseNumber": "License Number",
+    "licenseExpiry": "License Expiry",
+    "licensePhoto": "License Photo",
+    "nationalId": "National ID",
+    "nationalIdPhoto": "National ID Photo",
+    "insuranceExpiry": "Insurance Expiry",
+    "vehiclePhoto": "Vehicle Photo",
+    "registrationPhoto": "Registration Photo",
+    "insurancePhoto": "Insurance Photo",
+    "uploadPhoto": "Tap to upload",
+    "saveDriverDocs": "Save Driver Documents",
+    "saveVehicleDocs": "Save Vehicle Documents",
+    "pendingVerification": "Pending Verification",
+    "verified": "Verified",
+    "rejected": "Rejected",
+    "underReview": "Under Review"
   }
 }

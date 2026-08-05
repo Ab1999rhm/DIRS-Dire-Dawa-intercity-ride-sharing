@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../../controllers/auth/authController');
+const documentController = require('../../controllers/auth/documentController');
 const { protect } = require('../../middleware/auth');
+const upload = require('../../middleware/upload');
 const {
   validateRegistration,
   validateLogin,
@@ -316,5 +318,20 @@ router.put('/profile', protect, validateUpdateProfile, authController.updateProf
 router.put('/location', protect, validateUpdateLocation, authController.updateLocation);
 
 router.put('/driver/status', protect, authController.updateDriverStatus);
+
+router.get('/documents', protect, documentController.getDocuments);
+
+router.post('/profile-photo', protect, upload.single('photo'), documentController.uploadProfilePhoto);
+
+router.post('/documents', protect, upload.fields([
+  { name: 'licensePhoto', maxCount: 1 },
+  { name: 'nationalIdPhoto', maxCount: 1 }
+]), documentController.uploadDocuments);
+
+router.post('/vehicle-documents', protect, upload.fields([
+  { name: 'vehiclePhoto', maxCount: 1 },
+  { name: 'registrationPhoto', maxCount: 1 },
+  { name: 'insurancePhoto', maxCount: 1 }
+]), documentController.uploadVehicleDocuments);
 
 module.exports = router;

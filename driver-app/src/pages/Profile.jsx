@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
-import { DriverAvatarIcon } from '../components/VehicleIcons';
-import { FaPhone, FaEnvelope, FaEdit, FaCheck, FaTimes, FaSignOutAlt, FaStar, FaHome, FaListUl, FaWallet, FaUser } from 'react-icons/fa';
+import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
+import { FaPhone, FaEnvelope, FaEdit, FaCheck, FaTimes, FaSignOutAlt, FaStar, FaHome, FaListUl, FaWallet, FaUser, FaIdCard } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './Pages.css';
 
@@ -41,6 +41,10 @@ const ProfilePage = () => {
     }
   };
 
+  const handlePhotoUpdate = (photoUrl) => {
+    updateDriverProfile({ profilePhoto: photoUrl });
+  };
+
   const handleLogout = () => {
     logout();
     window.location.href = '/login';
@@ -58,9 +62,10 @@ const ProfilePage = () => {
       </header>
 
       <div className="profile-avatar-section">
-        <div className="profile-avatar">
-          <DriverAvatarIcon size={96} />
-        </div>
+        <ProfilePhotoUpload
+          currentPhoto={user?.profilePhoto}
+          onPhotoUpdate={handlePhotoUpdate}
+        />
         <h3>{user?.firstName} {user?.lastName}</h3>
         <div className="profile-rating">
           <FaStar className="star-icon" />
@@ -96,29 +101,35 @@ const ProfilePage = () => {
           </div>
         </div>
       ) : (
-        <div className="profile-details">
-          <div className="detail-row">
-            <FaPhone className="detail-icon" />
-            <div>
-              <span className="detail-label">Phone Number</span>
-              <span className="detail-value">{user?.phoneNumber}</span>
+        <>
+          <div className="profile-details">
+            <div className="detail-row">
+              <FaPhone className="detail-icon" />
+              <div>
+                <span className="detail-label">Phone Number</span>
+                <span className="detail-value">{user?.phoneNumber}</span>
+              </div>
+            </div>
+            <div className="detail-row">
+              <FaEnvelope className="detail-icon" />
+              <div>
+                <span className="detail-label">Email</span>
+                <span className="detail-value">{user?.email || 'Not set'}</span>
+              </div>
+            </div>
+            <div className="detail-row">
+              <FaStar className="detail-icon" />
+              <div>
+                <span className="detail-label">Rating</span>
+                <span className="detail-value">{driverProfile?.averageRating?.toFixed(1) || 'N/A'}</span>
+              </div>
             </div>
           </div>
-          <div className="detail-row">
-            <FaEnvelope className="detail-icon" />
-            <div>
-              <span className="detail-label">Email</span>
-              <span className="detail-value">{user?.email || 'Not set'}</span>
-            </div>
-          </div>
-          <div className="detail-row">
-            <FaStar className="detail-icon" />
-            <div>
-              <span className="detail-label">Rating</span>
-              <span className="detail-value">{driverProfile?.averageRating?.toFixed(1) || 'N/A'}</span>
-            </div>
-          </div>
-        </div>
+
+          <button className="btn-documents" onClick={() => navigate('/documents')}>
+            <FaIdCard /> Manage Documents
+          </button>
+        </>
       )}
 
       <button className="btn-logout" onClick={handleLogout}>

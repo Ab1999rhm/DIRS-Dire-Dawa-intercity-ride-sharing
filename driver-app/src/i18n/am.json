@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "ዲআርኤስ ንርስ",
+    "appName": "ዲआርኤስ ንርስ",
     "loading": "በመጫን ላይ...",
     "error": "ስህተት",
     "success": "ስኬት",
@@ -8,7 +8,12 @@
     "save": "አስቀምጥ",
     "back": "ተመለስ",
     "next": "ቀጥል",
-    "submit": "ያስገባ"
+    "submit": "ያስገባ",
+    "home": "መነሻ",
+    "trips": "ጉዞዎች",
+    "vehicle": "ተሽከርካሪ",
+    "profile": "መለያ",
+    "skip": "አሁን ደልድል"
   },
   "auth": {
     "login": "ግባ",
@@ -17,13 +22,21 @@
     "phoneNumber": "ስልክ ቁጥር",
     "password": "የይለፍ ቃል",
     "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+    "email": "ኢሜይል",
     "noAccount": "መለያ የለህም?",
     "hasAccount": "መለያ አለህ?",
     "registerAsDriver": "ንርስ እንድትሆን ተመዝገብ",
     "signingIn": "በመግባት ላይ...",
     "creatingAccount": "መለያ በመፍጠር ላይ...",
     "loginFailed": "መግባት አልተሳካም",
-    "registerFailed": "መዝገቡ አልተሳካም"
+    "registerFailed": "መዝገቡ አልተሳካም",
+    "verifyEmail": "ኢሜይል ያረጋግጡ",
+    "enterEmailOTP": "ወደ {{email}} የተላከውን 6-ቁጥር ኮድ ያስገቡ",
+    "sendOTP": "ኮድ ላክ",
+    "verify": "ያረጋግጡ",
+    "resendIn": "በ {{countdown}} ሰкон እንደገና ይላኩ",
+    "resend": "ኮድ እንደገና ላክ",
+    "emailVerified": "ኢሜይል በተሳካ ሁኔታ ተረጋግጧል"
   },
   "driver": {
     "online": "መስመር ላይ",
@@ -36,7 +49,7 @@
     "currentTrip": "የአሁኑ ጉዞ",
     "totalTrips": "ጠቅላላ ጉዞዎች",
     "balance": "ቀሪ ቀንዘብ (ብር)",
-    "earnings": "যাবতীয় ገንዘብ",
+    "earnings": "የያበতን ገንዘብ",
     "todayEarnings": "የዛሬ ገንዘብ",
     "weekEarnings": "የሳምንት ገንዘብ",
     "monthEarnings": "የወር ገንዘብ",
@@ -77,5 +90,26 @@
     "notifications": "ማንቂያዎች",
     "markAllRead": "ሁሉንም እንድንነበብ",
     "noNotifications": "ማንቂያዎች የሉም"
+  },
+  "documents": {
+    "title": "ቁራጮች",
+    "driverDocuments": "የንርስ ቁራጮች",
+    "vehicleDocuments": "የተሽከርካሪ ቁራጮች",
+    "licenseNumber": "የ尥ኔስ ቁጥር",
+    "licenseExpiry": "የ尥ኔስ ማብቂያ",
+    "licensePhoto": "የ尥ኔስ ፎቶ",
+    "nationalId": "የሀገር መታወቂያ",
+    "nationalIdPhoto": "የሀገር መታወቂያ ፎቶ",
+    "insuranceExpiry": "የኢንሱረንስ ማብቂያ",
+    "vehiclePhoto": "የተሽከርካሪ ፎቶ",
+    "registrationPhoto": "የ註冊 ፎቶ",
+    "insurancePhoto": "የኢንሱረንስ ፎቶ",
+    "uploadPhoto": "ለመጫን ይནኩ",
+    "saveDriverDocs": "የንርስ ቁራጮች አስቀምጥ",
+    "saveVehicleDocs": "የተሽከርካሪ ቁራጮች አስቀምጥ",
+    "pendingVerification": "ማረጋገጫ በመጠበቅ ላይ",
+    "verified": "የተረጋግጧል",
+    "rejected": "ተቋቋሟል",
+    "underReview": "በ_firestore ላይ"
   }
 }

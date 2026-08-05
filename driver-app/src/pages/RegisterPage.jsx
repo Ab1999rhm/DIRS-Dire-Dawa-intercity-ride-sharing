@@ -58,8 +58,13 @@ const RegisterPage = () => {
 
     try {
       const { confirmPassword, ...submitData } = formData;
-      await register(submitData);
-      navigate('/');
+      const response = await register(submitData);
+      navigate('/verify-email', {
+        state: {
+          email: formData.email,
+          registrationData: { phoneNumber: formData.phoneNumber, password: formData.password }
+        }
+      });
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally {

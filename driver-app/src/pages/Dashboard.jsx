@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { driverAPI, authAPI, notificationsAPI, sosAPI, ratingsAPI } from '../services/api';
 import { getVehicleIcon } from '../components/VehicleIcons';
+import DashboardMap from '../components/DashboardMap';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { requestPushPermission, registerForPush } from '../services/pushService';
+import { useLanguage } from '../context/LanguageContext';
 import {
   FaMapMarkerAlt, FaPhone, FaCheck, FaTimes, FaPowerOff, FaHome, FaListUl,
   FaWallet, FaUser, FaBell, FaExclamationTriangle, FaDirections, FaStar,
@@ -16,6 +20,7 @@ const GPS_INTERVAL = 10000;
 
 const DriverDashboard = () => {
   const { user, driverProfile, socket, updateDriverProfile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [isOnline, setIsOnline] = useState(false);
@@ -34,6 +39,7 @@ const DriverDashboard = () => {
   const [ratingScore, setRatingScore] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
+  const [driverLocation, setDriverLocation] = useState(null);
 
   const gpsRef = useRef(null);
   const onlineTimerRef = useRef(null);
@@ -43,6 +49,11 @@ const DriverDashboard = () => {
   useEffect(() => {
     loadStats();
     loadNotifications();
+    requestPushPermission().then((granted) => {
+      if (granted && user?._id) {
+        registerForPush(user._id);
+      }
+    });
   }, []);
 
   // Sync online status with backend on mount
@@ -71,23 +82,30 @@ const DriverDashboard = () => {
   // Continuous GPS tracking when online
   useEffect(() => {
     if (isOnline && navigator.geolocation) {
-      const sendLocation = () => {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            try {
-              await authAPI.updateLocation([longitude, latitude]);
-            } catch (e) { /* silent */ }
-          },
-          () => { /* silent */ }
-        );
+      const sendLocation = (position) => {
+        const { latitude, longitude } = position.coords;
+        setDriverLocation({ lat: latitude, lng: longitude });
+        try {
+          authAPI.updateLocation([longitude, latitude]);
+        } catch (e) { /* silent */ }
       };
-      sendLocation();
-      gpsRef.current = setInterval(sendLocation, GPS_INTERVAL);
+
+      const options = {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 15000
+      };
+
+      const watchId = navigator.geolocation.watchPosition(sendLocation, () => {}, options);
+      gpsRef.current = watchId;
+
+      return () => navigator.geolocation.clearWatch(watchId);
     } else {
-      clearInterval(gpsRef.current);
+      if (gpsRef.current && typeof gpsRef.current === 'number') {
+        navigator.geolocation.clearWatch(gpsRef.current);
+      }
+      gpsRef.current = null;
     }
-    return () => clearInterval(gpsRef.current);
   }, [isOnline]);
 
   // Socket listeners
@@ -389,6 +407,7 @@ const DriverDashboard = () => {
           )}
         </div>
         <div className="header-actions">
+          <LanguageSwitcher />
           <button className="notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
             <FaBell />
             {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
@@ -436,6 +455,15 @@ const DriverDashboard = () => {
         </div>
       )}
 
+      {/* Map */}
+      <div className="dashboard-map-section">
+        <DashboardMap
+          driverLocation={driverLocation}
+          currentTrip={currentTrip}
+          rideRequests={rideRequests}
+        />
+      </div>
+
       {/* Pull to Refresh */}
       <button className={`refresh-btn ${refreshing ? 'spinning' : ''}`} onClick={handleRefresh}>
         <FaSync /> Refresh
@@ -447,15 +475,15 @@ const DriverDashboard = () => {
           <div className="pulse-animation">
             <VehicleIcon size={72} color={isOnline ? '#1a73e8' : '#94a3b8'} className="car-icon" />
           </div>
-          <h3>{isOnline ? 'Waiting for ride requests...' : 'Go online to receive requests'}</h3>
-          <p>{isOnline ? 'Stay in a good network area' : 'Toggle the online button to start'}</p>
+          <h3>{isOnline ? t('driver.waitingForRequests') : t('driver.goOnline')}</h3>
+          <p>{isOnline ? t('driver.stayInGoodArea') : t('driver.toggleOnline')}</p>
         </div>
       )}
 
       {/* Ride Requests */}
       {rideRequests.length > 0 && !currentTrip && (
         <div className="ride-requests-section">
-          <h3>New Ride Requests ({rideRequests.length})</h3>
+          <h3>{t('driver.newRideRequests')} ({rideRequests.length})</h3>
           {rideRequests.map((request) => (
             <div key={request._id} className="ride-request-card">
               <div className="request-timer-bar">
@@ -715,19 +743,19 @@ const DriverDashboard = () => {
       {/* Bottom Nav */}
       <nav className="bottom-nav">
         <button className="nav-btn active" onClick={() => navigate('/')}>
-          <FaHome /> <span>Home</span>
+          <FaHome /> <span>{t('common.home') || 'Home'}</span>
         </button>
         <button className="nav-btn" onClick={() => navigate('/trips')}>
-          <FaListUl /> <span>Trips</span>
+          <FaListUl /> <span>{t('common.trips') || 'Trips'}</span>
         </button>
         <button className="nav-btn" onClick={() => navigate('/earnings')}>
-          <FaWallet /> <span>Earnings</span>
+          <FaWallet /> <span>{t('driver.earnings')}</span>
         </button>
         <button className="nav-btn" onClick={() => navigate('/vehicle')}>
-          <FaCar /> <span>Vehicle</span>
+          <FaCar /> <span>{t('common.vehicle') || 'Vehicle'}</span>
         </button>
         <button className="nav-btn" onClick={() => navigate('/profile')}>
-          <FaUser /> <span>Profile</span>
+          <FaUser /> <span>{t('common.profile') || 'Profile'}</span>
         </button>
       </nav>
     </div>

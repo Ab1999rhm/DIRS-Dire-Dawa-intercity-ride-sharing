@@ -4,11 +4,13 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import DriverDashboard from './pages/Dashboard';
 import TripsPage from './pages/Trips';
 import EarningsPage from './pages/Earnings';
 import VehiclePage from './pages/Vehicle';
 import ProfilePage from './pages/Profile';
+import DocumentsPage from './pages/Documents';
 import TripDetailPage from './pages/TripDetail';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -31,8 +33,14 @@ function App() {
           <div className="App">
             <ToastContainer position="top-right" autoClose={3000} />
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/documents" element={
+              <PrivateRoute>
+                <DocumentsPage />
+              </PrivateRoute>
+            } />
               <Route path="/" element={
                 <PrivateRoute>
                   <DriverDashboard />
