@@ -44,17 +44,20 @@ exports.processPayment = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Trip already paid' });
   }
 
-  const serverFare = calculateTotalFare(trip.route.distance, trip.route.duration, trip.rideType);
-  const fareDifference = Math.abs(serverFare.totalFare - trip.fare.totalFare);
-  if (fareDifference > serverFare.totalFare * 0.1) {
-    logger.warn('Fare mismatch detected', {
-      tripId,
-      clientFare: trip.fare.totalFare,
-      serverFare: serverFare.totalFare,
-      userId: req.user._id
-    });
-    trip.fare = serverFare;
-    await trip.save();
+  if (trip.route && trip.route.distance && trip.route.duration) {
+    const rideType = trip.rideType || 'intra_city';
+    const serverFare = calculateTotalFare(trip.route.distance, trip.route.duration, rideType);
+    const fareDifference = Math.abs(serverFare.totalFare - trip.fare.totalFare);
+    if (fareDifference > serverFare.totalFare * 0.1) {
+      logger.warn('Fare mismatch detected', {
+        tripId,
+        clientFare: trip.fare.totalFare,
+        serverFare: serverFare.totalFare,
+        userId: req.user._id
+      });
+      trip.fare = serverFare;
+      await trip.save();
+    }
   }
 
   const { platformCommission, driverEarnings } = calculateCommission(trip.fare.totalFare);

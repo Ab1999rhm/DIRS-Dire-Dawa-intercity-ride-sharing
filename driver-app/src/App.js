@@ -4,6 +4,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DriverDashboard from './pages/Dashboard';
+import TripsPage from './pages/Trips';
+import EarningsPage from './pages/Earnings';
+import VehiclePage from './pages/Vehicle';
+import ProfilePage from './pages/Profile';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -33,17 +37,22 @@ function App() {
             } />
             <Route path="/trips" element={
               <PrivateRoute>
-                <div>Trip History</div>
+                <TripsPage />
               </PrivateRoute>
             } />
             <Route path="/earnings" element={
               <PrivateRoute>
-                <div>Earnings</div>
+                <EarningsPage />
+              </PrivateRoute>
+            } />
+            <Route path="/vehicle" element={
+              <PrivateRoute>
+                <VehiclePage />
               </PrivateRoute>
             } />
             <Route path="/profile" element={
               <PrivateRoute>
-                <div>Profile</div>
+                <ProfilePage />
               </PrivateRoute>
             } />
           </Routes>

@@ -49,7 +49,8 @@ export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
-  updateLocation: (coordinates) => api.put('/auth/location', { coordinates })
+  updateLocation: (coordinates) => api.put('/auth/location', { coordinates }),
+  updateDriverStatus: (isOnline, coordinates) => api.put('/auth/driver/status', { isOnline, coordinates })
 };
 
 export const driverAPI = {
@@ -62,8 +63,10 @@ export const driverAPI = {
   startTrip: (tripId) => api.post(`/rides/trip/${tripId}/start`),
   completeTrip: (tripId) => api.post(`/rides/trip/${tripId}/complete`),
   confirmArrival: (tripId) => api.post(`/rides/trip/${tripId}/arrival`),
+  cancelTrip: (tripId, reason) => api.post(`/rides/trip/${tripId}/cancel`, { reason }),
   getDriverTrips: (params) => api.get('/rides/driver/trips', { params }),
-  getTripDetails: (id) => api.get(`/rides/trip/${id}`)
+  getTripDetails: (id) => api.get(`/rides/trip/${id}`),
+  getDriverStats: () => api.get('/rides/driver/stats')
 };
 
 export const paymentsAPI = {
@@ -76,6 +79,12 @@ export const notificationsAPI = {
   getNotifications: (params) => api.get('/notifications', { params }),
   markRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
   markAllRead: () => api.put('/notifications/read-all')
+};
+
+export const sosAPI = {
+  trigger: (data) => api.post('/sos/trigger', data),
+  history: (params) => api.get('/sos/history', { params }),
+  active: () => api.get('/sos/active')
 };
 
 export default api;

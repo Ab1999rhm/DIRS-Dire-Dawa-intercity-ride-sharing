@@ -38,7 +38,14 @@ exports.register = asyncHandler(async (req, res) => {
   });
 
   if (role === 'driver') {
-    await Driver.create({ user: user._id });
+    await Driver.create({
+      user: user._id,
+      licenseNumber: 'PENDING',
+      licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      licensePhoto: 'pending',
+      nationalId: 'PENDING',
+      nationalIdPhoto: 'pending'
+    });
   }
 
   logger.info('User registered (pending email verification)', { userId: user._id, role: user.role });
@@ -332,4 +339,36 @@ exports.updateLocation = asyncHandler(async (req, res) => {
   });
 
   res.json({ message: 'Location updated' });
+});
+
+exports.updateDriverStatus = asyncHandler(async (req, res) => {
+  const { isOnline } = req.body;
+
+  if (typeof isOnline !== 'boolean') {
+    return res.status(400).json({ error: 'isOnline must be a boolean' });
+  }
+
+  const driver = await Driver.findOne({ user: req.user._id });
+  if (!driver) {
+    return res.status(404).json({ error: 'Driver profile not found' });
+  }
+
+  driver.isAvailable = isOnline;
+  if (!isOnline) {
+    driver.currentTrip = null;
+  }
+  await driver.save();
+
+  await User.findByIdAndUpdate(req.user._id, {
+    isOnline,
+    currentLocation: {
+      type: 'Point',
+      coordinates: req.body.coordinates || [0, 0],
+      updatedAt: new Date()
+    }
+  });
+
+  logger.info('Driver status updated', { driverId: driver._id, isOnline });
+
+  res.json({ message: 'Status updated', isOnline, isAvailable: driver.isAvailable });
 });

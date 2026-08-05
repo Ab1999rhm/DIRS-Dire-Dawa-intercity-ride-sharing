@@ -67,13 +67,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     const response = await authAPI.register(data);
-    const { user, driverProfile, accessToken, refreshToken } = response.data;
-    localStorage.setItem('driverAccessToken', accessToken);
-    localStorage.setItem('driverRefreshToken', refreshToken);
-    setUser(user);
-    setDriverProfile(driverProfile);
-    connectSocket(accessToken);
-    return user;
+    return response.data;
   };
 
   const logout = () => {

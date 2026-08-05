@@ -315,4 +315,6 @@ router.put('/profile', protect, validateUpdateProfile, authController.updateProf
  */
 router.put('/location', protect, validateUpdateLocation, authController.updateLocation);
 
+router.put('/driver/status', protect, authController.updateDriverStatus);
+
 module.exports = router;

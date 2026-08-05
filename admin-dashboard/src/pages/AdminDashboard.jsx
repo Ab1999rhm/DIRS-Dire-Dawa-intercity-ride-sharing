@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
+import api from '../services/api';
 import { FaUsers, FaCar, FaMoneyBill, FaTripadvisor, FaExclamationTriangle, FaCheck, FaTimes } from 'react-icons/fa';
 import './AdminDashboard.css';
 
@@ -222,6 +223,7 @@ const DriverVerificationSection = () => {
 const UserManagementSection = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadUsers();
@@ -229,7 +231,7 @@ const UserManagementSection = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await adminAPI.getAllUsers();
+      const response = await adminAPI.getAllUsers({ search });
       setUsers(response.data.users);
     } catch (error) {
       console.error('Load users error:', error);
@@ -238,17 +240,46 @@ const UserManagementSection = () => {
     }
   };
 
+  const handleSuspend = async (userId) => {
+    try {
+      await adminAPI.suspendUser(userId, 'Suspended by admin');
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: false } : u));
+    } catch (error) {
+      console.error('Suspend error:', error);
+    }
+  };
+
+  const handleReactivate = async (userId) => {
+    try {
+      await adminAPI.reactivateUser(userId);
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: true } : u));
+    } catch (error) {
+      console.error('Reactivate error:', error);
+    }
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
 
   return (
     <div className="section-content">
       <h2>User Management</h2>
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && loadUsers()}
+        />
+        <button onClick={loadUsers}>Search</button>
+      </div>
       <div className="user-table">
         <table>
           <thead>
             <tr>
               <th>Name</th>
               <th>Phone</th>
+              <th>Email</th>
               <th>Role</th>
               <th>Status</th>
               <th>Actions</th>
@@ -259,17 +290,19 @@ const UserManagementSection = () => {
               <tr key={user._id}>
                 <td>{user.firstName} {user.lastName}</td>
                 <td>{user.phoneNumber}</td>
+                <td>{user.email || '-'}</td>
                 <td>{user.role}</td>
-                <td>{user.isActive ? 'Active' : 'Suspended'}</td>
+                <td><span className={`status ${user.isActive ? 'completed' : 'cancelled'}`}>{user.isActive ? 'Active' : 'Suspended'}</span></td>
                 <td>
                   {user.isActive ? (
-                    <button className="btn-suspend">Suspend</button>
+                    <button className="btn-suspend" onClick={() => handleSuspend(user._id)}>Suspend</button>
                   ) : (
-                    <button className="btn-reactivate">Reactivate</button>
+                    <button className="btn-reactivate" onClick={() => handleReactivate(user._id)}>Reactivate</button>
                   )}
                 </td>
               </tr>
             ))}
+            {users.length === 0 && <tr><td colSpan="6">No users found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -280,14 +313,18 @@ const UserManagementSection = () => {
 const TripsSection = () => {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     loadTrips();
-  }, []);
+  }, [statusFilter]);
 
   const loadTrips = async () => {
+    setLoading(true);
     try {
-      const response = await adminAPI.getAllTrips();
+      const params = {};
+      if (statusFilter) params.status = statusFilter;
+      const response = await adminAPI.getAllTrips(params);
       setTrips(response.data.trips);
     } catch (error) {
       console.error('Load trips error:', error);
@@ -301,6 +338,15 @@ const TripsSection = () => {
   return (
     <div className="section-content">
       <h2>All Trips</h2>
+      <div className="filter-bar">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">All Statuses</option>
+          <option value="driver_arriving">Driver Arriving</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
       <div className="trips-table">
         <table>
           <thead>
@@ -319,11 +365,12 @@ const TripsSection = () => {
                 <td>{trip.passenger?.firstName} {trip.passenger?.lastName}</td>
                 <td>{trip.driver?.user?.firstName} {trip.driver?.user?.lastName}</td>
                 <td>{trip.pickupLocation?.address} → {trip.dropoffLocation?.address}</td>
-                <td>{trip.fare?.totalFare} ETB</td>
-                <td><span className={`status ${trip.status}`}>{trip.status}</span></td>
+                <td>{trip.fare?.totalFare || 0} ETB</td>
+                <td><span className={`status ${trip.status}`}>{trip.status?.replace('_', ' ')}</span></td>
                 <td>{new Date(trip.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}
+            {trips.length === 0 && <tr><td colSpan="6">No trips found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -333,6 +380,7 @@ const TripsSection = () => {
 
 const PaymentsSection = () => {
   const [payments, setPayments] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -343,6 +391,7 @@ const PaymentsSection = () => {
     try {
       const response = await adminAPI.getPayments();
       setPayments(response.data.payments);
+      setSummary(response.data.summary);
     } catch (error) {
       console.error('Load payments error:', error);
     } finally {
@@ -355,11 +404,33 @@ const PaymentsSection = () => {
   return (
     <div className="section-content">
       <h2>Payment Overview</h2>
+      {summary && (
+        <div className="stats-grid" style={{ marginBottom: 20 }}>
+          <div className="stat-card">
+            <div className="stat-info">
+              <span className="stat-value">{summary.totalAmount?.toLocaleString() || 0} ETB</span>
+              <span className="stat-label">Total Revenue</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-info">
+              <span className="stat-value">{summary.totalCommission?.toLocaleString() || 0} ETB</span>
+              <span className="stat-label">Platform Commission</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-info">
+              <span className="stat-value">{summary.totalDriverEarnings?.toLocaleString() || 0} ETB</span>
+              <span className="stat-label">Driver Earnings</span>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="payments-table">
         <table>
           <thead>
             <tr>
-              <th>Receipt</th>
+              <th>Transaction ID</th>
               <th>Passenger</th>
               <th>Driver</th>
               <th>Amount</th>
@@ -371,7 +442,7 @@ const PaymentsSection = () => {
           <tbody>
             {payments.map((payment) => (
               <tr key={payment._id}>
-                <td>{payment.receiptNumber}</td>
+                <td>{payment.transactionId || payment._id}</td>
                 <td>{payment.passenger?.firstName} {payment.passenger?.lastName}</td>
                 <td>{payment.driver?.user?.firstName} {payment.driver?.user?.lastName}</td>
                 <td>{payment.amount} ETB</td>
@@ -380,6 +451,7 @@ const PaymentsSection = () => {
                 <td><span className={`status ${payment.status}`}>{payment.status}</span></td>
               </tr>
             ))}
+            {payments.length === 0 && <tr><td colSpan="7">No payments found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -406,6 +478,15 @@ const SOSAlertsSection = () => {
     }
   };
 
+  const handleResolve = async (alertId) => {
+    try {
+      await api.put(`/sos/${alertId}/resolve`);
+      setAlerts(prev => prev.map(a => a._id === alertId ? { ...a, status: 'resolved' } : a));
+    } catch (error) {
+      console.error('Resolve error:', error);
+    }
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
 
   return (
@@ -417,12 +498,21 @@ const SOSAlertsSection = () => {
             <div className="alert-info">
               <h4>{alert.user?.firstName} {alert.user?.lastName}</h4>
               <p>Phone: {alert.user?.phoneNumber}</p>
-              <p>Message: {alert.message}</p>
+              <p>Message: {alert.message || 'Emergency SOS triggered'}</p>
+              <p>Trip: {alert.trip?._id || 'N/A'}</p>
               <p>Time: {new Date(alert.createdAt).toLocaleString()}</p>
             </div>
-            <span className={`status-badge ${alert.status}`}>{alert.status}</span>
+            <div className="alert-actions">
+              <span className={`status-badge ${alert.status}`}>{alert.status}</span>
+              {alert.status === 'active' && (
+                <button className="btn-approve" onClick={() => handleResolve(alert._id)}>
+                  Resolve
+                </button>
+              )}
+            </div>
           </div>
         ))}
+        {alerts.length === 0 && <p>No SOS alerts found</p>}
       </div>
     </div>
   );

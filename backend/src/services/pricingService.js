@@ -1,4 +1,12 @@
 const PricingConfig = {
+  intra_city: {
+    baseFare: parseFloat(process.env.BASE_FARE_INTRA_CITY) || 50,
+    perKmRate: parseFloat(process.env.PER_KM_RATE_INTRA_CITY) || 15,
+    perMinuteRate: 2,
+    minimumFare: 30,
+    surgeThreshold: 0.8,
+    surgeMultiplier: parseFloat(process.env.SURGE_MULTIPLIER) || 1.5
+  },
   intraCity: {
     baseFare: parseFloat(process.env.BASE_FARE_INTRA_CITY) || 50,
     perKmRate: parseFloat(process.env.PER_KM_RATE_INTRA_CITY) || 15,

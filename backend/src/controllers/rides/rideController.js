@@ -2,6 +2,7 @@ const RideRequest = require('../../models/RideRequest');
 const Trip = require('../../models/Trip');
 const Driver = require('../../models/Driver');
 const Vehicle = require('../../models/Vehicle');
+const Payment = require('../../models/Payment');
 const User = require('../../models/User');
 const { findNearbyDrivers } = require('../../services/rideMatchingService');
 const { calculateFare } = require('../../services/pricingService');
@@ -405,4 +406,150 @@ exports.confirmArrival = asyncHandler(async (req, res) => {
   });
 
   res.json({ message: 'Arrival confirmed' });
+});
+
+exports.cancelTrip = asyncHandler(async (req, res) => {
+  const { tripId } = req.params;
+  const { reason } = req.body;
+
+  const trip = await Trip.findById(tripId);
+  if (!trip) {
+    return res.status(404).json({ error: 'Trip not found' });
+  }
+
+  if (trip.status === 'completed' || trip.status === 'cancelled') {
+    return res.status(400).json({ error: 'Cannot cancel this trip' });
+  }
+
+  trip.status = 'cancelled';
+  await trip.save();
+
+  const driver = await Driver.findById(trip.driver);
+  if (driver) {
+    driver.isAvailable = true;
+    driver.currentTrip = null;
+    await driver.save();
+  }
+
+  const rideRequest = await RideRequest.findById(trip.rideRequest);
+  if (rideRequest) {
+    rideRequest.status = 'cancelled';
+    rideRequest.cancelledBy = 'driver';
+    rideRequest.cancellationReason = reason;
+    await rideRequest.save();
+  }
+
+  await notifyRideUpdate(trip.passenger, 'ride_cancelled', {
+    tripId: trip._id,
+    reason: reason || 'Driver cancelled'
+  });
+
+  const io = getIO();
+  io.to(`trip_${tripId}`).emit('trip_status', {
+    tripId: trip._id,
+    status: 'cancelled'
+  });
+
+  logger.info('Trip cancelled by driver', { tripId, reason });
+
+  res.json({ message: 'Trip cancelled' });
+});
+
+exports.getDriverStats = asyncHandler(async (req, res) => {
+  const driver = await Driver.findOne({ user: req.user._id });
+  if (!driver) {
+    return res.status(404).json({ error: 'Driver not found' });
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todayTrips = await Trip.countDocuments({
+    driver: driver._id,
+    status: 'completed',
+    createdAt: { $gte: today }
+  });
+
+  const allTimeTrips = await Trip.countDocuments({
+    driver: driver._id,
+    status: 'completed'
+  });
+
+  const todayPayments = await Payment.aggregate([
+    {
+      $match: {
+        driver: driver._id,
+        status: 'completed',
+        paidAt: { $gte: today }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        todayEarnings: { $sum: '$driverEarnings' }
+      }
+    }
+  ]);
+
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  const weekPayments = await Payment.aggregate([
+    {
+      $match: {
+        driver: driver._id,
+        status: 'completed',
+        paidAt: { $gte: weekStart }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        weekEarnings: { $sum: '$driverEarnings' }
+      }
+    }
+  ]);
+
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthPayments = await Payment.aggregate([
+    {
+      $match: {
+        driver: driver._id,
+        status: 'completed',
+        paidAt: { $gte: monthStart }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        monthEarnings: { $sum: '$driverEarnings' }
+      }
+    }
+  ]);
+
+  const recentTrips = await Trip.find({ driver: driver._id })
+    .populate('passenger', 'firstName lastName averageRating phoneNumber')
+    .sort({ createdAt: -1 })
+    .limit(5);
+
+  const vehicle = await Vehicle.findOne({ driver: driver._id, isActive: true });
+
+  res.json({
+    todayTrips,
+    allTimeTrips,
+    todayEarnings: todayPayments[0]?.todayEarnings || 0,
+    weekEarnings: weekPayments[0]?.weekEarnings || 0,
+    monthEarnings: monthPayments[0]?.monthEarnings || 0,
+    totalEarnings: driver.totalEarnings,
+    availableBalance: driver.availableBalance,
+    averageRating: driver.user?.averageRating || 0,
+    totalTrips: driver.totalTrips,
+    vehicle: vehicle ? {
+      type: vehicle.vehicleType,
+      make: vehicle.make,
+      model: vehicle.model,
+      color: vehicle.color,
+      plateNumber: vehicle.plateNumber
+    } : null,
+    recentTrips
+  });
 });
