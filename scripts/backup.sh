@@ -1,8 +1,15 @@
 #!/bin/bash
 # DIRS Database Backup Script
 # Run daily via cron: 0 2 * * * /path/to/backup.sh
+# Requires MONGODB_URI environment variable
 
 set -e
+
+if [ -z "$MONGODB_URI" ]; then
+  echo "Error: MONGODB_URI environment variable is not set."
+  echo "Usage: MONGODB_URI='mongodb://...' ./backup.sh"
+  exit 1
+fi
 
 BACKUP_DIR="./backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -13,7 +20,7 @@ mkdir -p "$BACKUP_DIR"
 echo "[$(date)] Starting DIRS database backup..."
 
 mongodump \
-  --uri="mongodb://fikaduabraham093_db_user:fqPONaDBsb2kXCIF@ac-y8f2kev-shard-00-00.q3rw6ml.mongodb.net:27017/dirs_diredawa?authSource=admin&tls=true&tlsAllowInvalidCertificates=true" \
+  --uri="$MONGODB_URI" \
   --archive="$BACKUP_FILE" \
   --gzip
 

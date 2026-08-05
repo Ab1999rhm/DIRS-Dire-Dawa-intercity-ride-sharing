@@ -1,12 +1,19 @@
 #!/bin/bash
 # DIRS Database Restore Script
-# Usage: ./restore.sh ./backups/dirs_backup_20260805_020000.gz
+# Usage: MONGODB_URI='mongodb://...' ./restore.sh ./backups/dirs_backup_20260805_020000.gz
+# Requires MONGODB_URI environment variable
 
 set -e
 
+if [ -z "$MONGODB_URI" ]; then
+  echo "Error: MONGODB_URI environment variable is not set."
+  echo "Usage: MONGODB_URI='mongodb://...' $0 <backup_file.gz>"
+  exit 1
+fi
+
 if [ -z "$1" ]; then
   echo "Usage: $0 <backup_file.gz>"
-  echo "Example: $0 ./backups/dirs_backup_20260805_020000.gz"
+  echo "Example: MONGODB_URI='mongodb://...' $0 ./backups/dirs_backup_20260805_020000.gz"
   exit 1
 fi
 
@@ -26,7 +33,7 @@ fi
 echo "[$(date)] Starting database restore from $BACKUP_FILE..."
 
 mongorestore \
-  --uri="mongodb://fikaduabraham093_db_user:fqPONaDBsb2kXCIF@ac-y8f2kev-shard-00-00.q3rw6ml.mongodb.net:27017/dirs_diredawa?authSource=admin&tls=true&tlsAllowInvalidCertificates=true" \
+  --uri="$MONGODB_URI" \
   --archive="$BACKUP_FILE" \
   --gzip \
   --drop
