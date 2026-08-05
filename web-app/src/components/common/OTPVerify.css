@@ -1,0 +1,45 @@
+.otp-verify {
+  max-width: 400px; margin: 0 auto; padding: 32px 24px;
+  background: var(--card); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg); text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+.otp-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; color: var(--text-secondary); font-size: 14px;
+  font-weight: 500; margin-bottom: 24px; cursor: pointer;
+}
+.otp-back:hover { color: var(--primary); }
+.otp-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--primary-100); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin: 0 auto 20px;
+}
+.otp-verify h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.otp-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 28px; }
+
+.otp-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 28px; }
+.otp-input {
+  width: 52px; height: 56px; text-align: center;
+  border: 2px solid var(--border); border-radius: var(--radius-md);
+  font-size: 24px; font-weight: 700; color: var(--text);
+  background: var(--bg); transition: var(--transition);
+}
+.otp-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-100); }
+
+.otp-verify-btn {
+  width: 100%; padding: 14px; background: var(--primary); color: white;
+  border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: var(--transition);
+}
+.otp-verify-btn:hover { background: var(--primary-dark); }
+.otp-verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.otp-resend { margin-top: 20px; font-size: 14px; color: var(--text-muted); }
+.otp-resend-btn {
+  background: none; border: none; color: var(--primary); font-weight: 600;
+  cursor: pointer; font-size: 14px;
+}
+.otp-resend-btn:hover { text-decoration: underline; }

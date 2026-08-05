@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2563eb" />
+  <title>DIRS - Offline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .offline-card {
+      max-width: 400px;
+      text-align: center;
+      padding: 48px 32px;
+      background: #1e293b;
+      border-radius: 24px;
+      border: 1px solid #334155;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .offline-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 36px;
+    }
+    .offline-icon svg {
+      width: 40px;
+      height: 40px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #94a3b8;
+      font-size: 15px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    .offline-features {
+      text-align: left;
+      margin-bottom: 32px;
+    }
+    .offline-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #334155;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .offline-feature:last-child { border-bottom: none; }
+    .offline-feature-icon {
+      width: 32px;
+      height: 32px;
+      background: #0f172a;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .offline-feature-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: #2563eb;
+      fill: none;
+      stroke-width: 2;
+    }
+    .retry-btn {
+      width: 100%;
+      padding: 14px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .retry-btn:hover { background: #1d4ed8; }
+    .retry-btn:active { transform: scale(0.98); }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .queued-info {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #0f172a;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div class="offline-icon">
+      <svg viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    <h1><span class="status-dot"></span>You're Offline</h1>
+    <p class="subtitle">No internet connection detected. Some features are limited, but your queued actions will sync automatically.</p>
+
+    <div class="offline-features">
+      <div class="offline-feature">
+        <div class="offline-feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <span>View cached trips and history</span>
+      </div>
+      <div class="offline-feature">
+        <div class="offline-feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span>Queue ride requests for later</span>
+      </div>
+      <div class="offline-feature">
+        <div class="offline-feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <span>Auto-sync when back online</span>
+      </div>
+    </div>
+
+    <button class="retry-btn" onclick="window.location.reload()">Try Again</button>
+
+    <div class="queued-info" id="queuedInfo" style="display: none;">
+      <span id="queuedCount">0</span> actions queued for sync
+    </div>
+  </div>
+
+  <script>
+    // Check for queued items
+    const request = indexedDB.open('dirs-offline', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      let total = 0;
+
+      ['pendingRides', 'pendingLocations', 'pendingRatings'].forEach(storeName => {
+        if (db.objectStoreNames.contains(storeName)) {
+          const tx = db.transaction(storeName, 'readonly');
+          const store = tx.objectStore(storeName);
+          const countReq = store.count();
+          countReq.onsuccess = function() {
+            total += countReq.result;
+            if (total > 0) {
+              document.getElementById('queuedInfo').style.display = 'block';
+              document.getElementById('queuedCount').textContent = total;
+            }
+          };
+        }
+      });
+    };
+
+    // Auto-retry when online
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

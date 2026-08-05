@@ -1,0 +1,18 @@
+{
+  "name": "dirs-diredawa",
+  "version": "1.0.0",
+  "description": "Digital Intercity and Ride Sharing System for Dire Dawa City",
+  "private": true,
+  "workspaces": [],
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:passenger": "cd passenger-app && npm start",
+    "dev:driver": "cd driver-app && npm start",
+    "dev:admin": "cd admin-dashboard && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../passenger-app && npm install && cd ../driver-app && npm install && cd ../admin-dashboard && npm install",
+    "test": "cd backend && npm test"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

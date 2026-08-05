@@ -1,0 +1,81 @@
+{
+  "common": {
+    "appName": "ዲআርኤስ ንርስ",
+    "loading": "በመጫን ላይ...",
+    "error": "ስህተት",
+    "success": "ስኬት",
+    "cancel": "ሰርዝ",
+    "save": "አስቀምጥ",
+    "back": "ተመለስ",
+    "next": "ቀጥል",
+    "submit": "ያስገባ"
+  },
+  "auth": {
+    "login": "ግባ",
+    "register": "ተመዝገብ",
+    "logout": "ውጣ",
+    "phoneNumber": "ስልክ ቁጥር",
+    "password": "የይለፍ ቃል",
+    "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+    "noAccount": "መለያ የለህም?",
+    "hasAccount": "መለያ አለህ?",
+    "registerAsDriver": "ንርስ እንድትሆን ተመዝገብ",
+    "signingIn": "በመግባት ላይ...",
+    "creatingAccount": "መለያ በመፍጠር ላይ...",
+    "loginFailed": "መግባት አልተሳካም",
+    "registerFailed": "መዝገቡ አልተሳካም"
+  },
+  "driver": {
+    "online": "መስመር ላይ",
+    "offline": "ከመስመር ውጪ",
+    "goOnline": "ጥያቄዎችን ለመቀበል መስመር ላይ ይሂዱ",
+    "waitingForRequests": "የመጓጓዣ ጥያቄዎችን በመጠበቅ ላይ...",
+    "stayInGoodArea": "በጥሩ የአውታር ቦታ ይቀመጡ",
+    "toggleOnline": "መስመር ላይ ለመሆን ቁልፍ ይጫኑ",
+    "newRideRequests": "አዲሶች የመጓጓዣ ጥያቄዎች",
+    "currentTrip": "የአሁኑ ጉዞ",
+    "totalTrips": "ጠቅላላ ጉዞዎች",
+    "balance": "ቀሪ ቀንዘብ (ብር)",
+    "earnings": "যাবতীয় ገንዘብ",
+    "todayEarnings": "የዛሬ ገንዘብ",
+    "weekEarnings": "የሳምንት ገንዘብ",
+    "monthEarnings": "የወር ገንዘብ",
+    "withdraw": "አውጣ",
+    "minWithdrawal": "አነስተኛ ማውጣት 100 ብር ነው",
+    "withdrawRequest": "ማውጣት ጥያቄ ተሰጥቷል",
+    "insufficientBalance": "በቂ ቀሪ ገንዘብ የለም"
+  },
+  "ride": {
+    "pickup": "መነሻ",
+    "dropoff": "መድረሻ",
+    "fare": "ክፍያ",
+    "distance": "ርቀት",
+    "accept": "ተቀበል",
+    "decline": "አይቀበል",
+    "startTrip": "ጉዞ ጀምር",
+    "completeTrip": "ጉዞ ጨረስ",
+    "confirmArrival": "መድረስ ማረጋገጫ",
+    "cancel": "ሰርዝ",
+    "driverArriving": "ንርስ በመመጡ ላይ ነው",
+    "inProgress": "በሂደት ላይ",
+    "completed": "ተጠናቅቋል"
+  },
+  "vehicle": {
+    "vehicleType": "የተሽከርካሪ ዓይነት",
+    "make": "ምርƙ",
+    "model": "ሞዴል",
+    "year": "ዓመት",
+    "color": "ቀለም",
+    "plateNumber": "የተሽከርካሪ ቁጥር",
+    "capacity": "የመሳብ ችሎታ",
+    "serviceType": "የአገልግሎት ዓይነት",
+    "intraCity": "ከከተማ ውስጥ ብቻ",
+    "intercity": "ከከተማ ወደ ከተማ ብቻ",
+    "both": "ሁለቱም"
+  },
+  "notifications": {
+    "notifications": "ማንቂያዎች",
+    "markAllRead": "ሁሉንም እንድንነበብ",
+    "noNotifications": "ማንቂያዎች የሉም"
+  }
+}

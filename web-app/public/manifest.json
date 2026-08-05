@@ -1,0 +1,31 @@
+{
+  "short_name": "DIRS",
+  "name": "DIRS - Dire Dawa Ride Sharing",
+  "description": "Dire Dawa's Intercity and Ride Sharing System. Book rides, track drivers, and travel safely.",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "categories": ["transportation", "travel"],
+  "lang": "en",
+  "scope": "/"
+}
