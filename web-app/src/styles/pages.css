@@ -1,8 +1,8 @@
 /* Shared Page Styles */
 .gradient-text { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.app-layout { min-height: 100vh; background: var(--bg); }
-.app-body { display: flex; padding-top: 64px; }
-.app-main { flex: 1; margin-left: 260px; min-height: calc(100vh - 64px); }
+.app-layout { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
+.app-body { display: flex; padding-top: 64px; overflow-x: hidden; }
+.app-main { flex: 1; margin-left: 260px; min-height: calc(100vh - 64px); min-width: 0; overflow-x: hidden; }
 .page-container { max-width: 1000px; margin: 0 auto; padding: 24px 20px; }
 
 .page-header {

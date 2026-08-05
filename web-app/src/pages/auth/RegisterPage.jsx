@@ -10,7 +10,7 @@ import './Auth.css';
 
 const RegisterPage = () => {
   const { t } = useLanguage();
-  const { register } = useAuth();
+  const { register, completeRegistration } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -32,6 +32,7 @@ const RegisterPage = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [resendTimer, setResendTimer] = useState(60);
 
   const handleChange = (e) => {
@@ -63,7 +64,7 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await register({
+      const result = await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         phoneNumber: formData.phoneNumber,
@@ -86,6 +87,7 @@ const RegisterPage = () => {
     try {
       const res = await authAPI.sendEmailOTP(formData.email);
       setPreviewUrl(res.data.previewUrl || '');
+      setOtpCode(res.data.otpCode || '');
       toast.success('OTP sent to your email!');
       setResendTimer(60);
       const interval = setInterval(() => {
@@ -126,7 +128,9 @@ const RegisterPage = () => {
 
     setOtpLoading(true);
     try {
-      await authAPI.verifyEmailOTP(formData.email, code);
+      const res = await authAPI.verifyEmailOTP(formData.email, code);
+      const { accessToken, refreshToken, user: verifiedUser, driverProfile } = res.data;
+      completeRegistration(accessToken, refreshToken, verifiedUser, driverProfile);
       toast.success('Email verified!');
       const userRole = formData.role;
       if (userRole === 'driver') navigate('/driver');
@@ -295,12 +299,23 @@ const RegisterPage = () => {
             </form>
           ) : (
             <div className="auth-form">
+              {otpCode && (
+                <div
+                  style={{
+                    padding: '12px 16px', background: '#fef3c7', borderRadius: 8,
+                    color: '#92400e', fontWeight: 700, fontSize: 20,
+                    marginBottom: 16, border: '1px solid #fbbf24',
+                    textAlign: 'center', letterSpacing: 6
+                  }}
+                >
+                  Your OTP: {otpCode}
+                </div>
+              )}
               {previewUrl && (
                 <a
                   href={previewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="otp-email-link"
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '12px 16px', background: '#eff6ff', borderRadius: 8,

@@ -52,7 +52,7 @@ const sendEmailOTP = async (email, otp) => {
     const previewUrl = nodemailer.getTestMessageUrl(info);
     logger.info(`Email OTP sent`, { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp, previewUrl });
 
-    return { success: true, previewUrl };
+    return { success: true, previewUrl, otpCode: otp };
   } catch (error) {
     logger.error('Email sending failed', { error: error.message });
     return { success: false, error: error.message };

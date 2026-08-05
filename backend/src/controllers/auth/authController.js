@@ -41,18 +41,12 @@ exports.register = asyncHandler(async (req, res) => {
     await Driver.create({ user: user._id });
   }
 
-  const { accessToken, refreshToken } = generateTokens(user._id);
-
-  user.refreshToken = refreshToken;
-  await user.save();
-
-  logger.info('User registered', { userId: user._id, role: user.role });
+  logger.info('User registered (pending email verification)', { userId: user._id, role: user.role });
 
   res.status(201).json({
-    message: 'Registration successful',
-    user,
-    accessToken,
-    refreshToken
+    message: 'Registration successful. Please verify your email.',
+    userId: user._id,
+    email: user.email
   });
 });
 
@@ -152,7 +146,8 @@ exports.sendEmailOTP = asyncHandler(async (req, res) => {
   if (result.success) {
     res.json({
       message: 'OTP sent to your email',
-      previewUrl: result.previewUrl || null
+      previewUrl: result.previewUrl || null,
+      otpCode: result.otpCode || null
     });
   } else {
     res.status(500).json({ error: 'Failed to send OTP email' });
@@ -211,8 +206,38 @@ exports.verifyEmailOTP = asyncHandler(async (req, res) => {
   }
 
   otpStore.delete(email);
-  logger.info('Email verified', { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3') });
-  res.json({ message: 'Email verified successfully' });
+
+  const user = await User.findOneAndUpdate(
+    { email },
+    { isVerified: true },
+    { new: true }
+  );
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const { accessToken, refreshToken } = generateTokens(user._id);
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  let driverProfile = null;
+  if (user.role === 'driver') {
+    driverProfile = await Driver.findOne({ user: user._id });
+  }
+
+  logger.info('Email verified and logged in', { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3') });
+  res.json({
+    message: 'Email verified successfully',
+    accessToken,
+    refreshToken,
+    user: {
+      _id: user._id,
+      email: user.email,
+      role: user.role,
+    },
+    driverProfile,
+  });
 });
 
 exports.forgotPassword = asyncHandler(async (req, res) => {

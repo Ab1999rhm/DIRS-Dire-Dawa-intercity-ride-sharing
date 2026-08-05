@@ -259,15 +259,9 @@ const PassengerHome = () => {
       </div>
 
       <div className="quick-stats">
-        <Card className="stat-card" hover>
           <StatCard icon={<FaRoute />} iconColor="primary" value={stats.totalTrips} label={t('passenger.totalTrips') || 'Total Trips'} />
-        </Card>
-        <Card className="stat-card" hover>
           <StatCard icon={<FaWallet />} iconColor="success" value={`ETB ${stats.totalSpent.toLocaleString()}`} label={t('passenger.totalSpent') || 'Total Spent'} />
-        </Card>
-        <Card className="stat-card" hover>
           <StatCard icon={<FaStar />} iconColor="warning" value={stats.favoriteRoutes} label={t('passenger.favoriteRoutes') || 'Favorite Routes'} />
-        </Card>
       </div>
 
       <div className="map-section">

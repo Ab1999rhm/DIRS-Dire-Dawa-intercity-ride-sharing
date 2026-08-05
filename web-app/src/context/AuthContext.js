@@ -91,11 +91,15 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     const res = await authAPI.register(data);
-    localStorage.setItem('accessToken', res.data.accessToken);
-    localStorage.setItem('refreshToken', res.data.refreshToken);
-    setUser(res.data.user);
-    connectSocket(res.data.accessToken);
-    return res.data.user;
+    return res.data;
+  };
+
+  const completeRegistration = (accessToken, refreshToken, userData, driverProfileData) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    setUser(userData);
+    if (driverProfileData) setDriverProfile(driverProfileData);
+    connectSocket(accessToken);
   };
 
   const logout = () => {
@@ -121,7 +125,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, driverProfile, loading, socket,
-      login, register, logout, setUser, setDriverProfile,
+      login, register, completeRegistration, logout, setUser, setDriverProfile,
       notifications, unreadCount, setNotifications, setUnreadCount,
       newRideRequest, clearNewRideRequest,
       rideAccepted, clearRideAccepted,

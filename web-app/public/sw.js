@@ -134,12 +134,17 @@ async function networkFirstWithOffline(request) {
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
-    if (cached) return cached;
+    // Only show offline page if browser is actually offline
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const cached = await caches.match(request);
+      if (cached) return cached;
 
-    // Show offline page
-    const offlinePage = await caches.match('/offline.html');
-    return offlinePage || new Response('Offline', { status: 503 });
+      const offlinePage = await caches.match('/offline.html');
+      return offlinePage || new Response('Offline', { status: 503 });
+    }
+    // If online but fetch failed (e.g. CORS), try cache then throw
+    const cached = await caches.match(request);
+    return cached || new Response('Service Unavailable', { status: 503 });
   }
 }
 
