@@ -12,6 +12,11 @@ import VehiclePage from './pages/Vehicle';
 import ProfilePage from './pages/Profile';
 import DocumentsPage from './pages/Documents';
 import TripDetailPage from './pages/TripDetail';
+import ChatPage from './pages/ChatPage';
+import SettingsPage from './pages/SettingsPage';
+import HelpCenterPage from './pages/HelpCenterPage';
+import SupportChatPage from './pages/SupportChatPage';
+import OnboardingPage from './pages/OnboardingPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -64,6 +69,31 @@ function App() {
               <Route path="/trip/:tripId" element={
               <PrivateRoute>
                 <TripDetailPage />
+              </PrivateRoute>
+            } />
+            <Route path="/chat" element={
+              <PrivateRoute>
+                <ChatPage />
+              </PrivateRoute>
+            } />
+            <Route path="/settings" element={
+              <PrivateRoute>
+                <SettingsPage />
+              </PrivateRoute>
+            } />
+            <Route path="/help" element={
+              <PrivateRoute>
+                <HelpCenterPage />
+              </PrivateRoute>
+            } />
+            <Route path="/support" element={
+              <PrivateRoute>
+                <SupportChatPage />
+              </PrivateRoute>
+            } />
+            <Route path="/onboarding" element={
+              <PrivateRoute>
+                <OnboardingPage />
               </PrivateRoute>
             } />
             <Route path="/profile" element={

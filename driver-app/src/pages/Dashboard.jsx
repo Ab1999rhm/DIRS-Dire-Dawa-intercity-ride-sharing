@@ -5,12 +5,14 @@ import { driverAPI, authAPI, notificationsAPI, sosAPI, ratingsAPI } from '../ser
 import { getVehicleIcon } from '../components/VehicleIcons';
 import DashboardMap from '../components/DashboardMap';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import DocumentStatusDashboard from '../components/DocumentStatusDashboard';
 import { requestPushPermission, registerForPush } from '../services/pushService';
 import { useLanguage } from '../context/LanguageContext';
 import {
   FaMapMarkerAlt, FaPhone, FaCheck, FaTimes, FaPowerOff, FaHome, FaListUl,
   FaWallet, FaUser, FaBell, FaExclamationTriangle, FaDirections, FaStar,
-  FaClock, FaRoute, FaSync, FaCar, FaMoneyBillWave, FaCalendarDay
+  FaClock, FaRoute, FaSync, FaCar, FaMoneyBillWave, FaCalendarDay,
+  FaShareAlt, FaComment, FaShieldAlt, FaPassport
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './Dashboard.css';
@@ -40,6 +42,14 @@ const DriverDashboard = () => {
   const [ratingComment, setRatingComment] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
   const [driverLocation, setDriverLocation] = useState(null);
+  const [destinationMode, setDestinationMode] = useState(false);
+  const [destination, setDestination] = useState('');
+  const [documents, setDocuments] = useState(null);
+  const [rideRequestSound] = useState(() => {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczIjmWyt25f0MlZ5rP3rqDQyVnms/euoNDJWeaz966g0MlZ5rP3rqDQyVnms/euoNDJWeaz94=');
+    audio.volume = 0.7;
+    return audio;
+  });
 
   const gpsRef = useRef(null);
   const onlineTimerRef = useRef(null);
@@ -49,6 +59,7 @@ const DriverDashboard = () => {
   useEffect(() => {
     loadStats();
     loadNotifications();
+    loadDocuments();
     requestPushPermission().then((granted) => {
       if (granted && user?._id) {
         registerForPush(user._id);
@@ -119,6 +130,15 @@ const DriverDashboard = () => {
         });
         startRequestTimer(request._id);
         toast.info('New ride request!');
+        try {
+          const soundEnabled = localStorage.getItem('driverSoundEnabled') !== 'false';
+          if (soundEnabled) {
+            rideRequestSound.play().catch(() => {});
+          }
+          if ('vibrate' in navigator) {
+            navigator.vibrate([200, 100, 200]);
+          }
+        } catch (e) { /* silent */ }
       });
 
       socket.on('trip_status', (data) => {
@@ -188,6 +208,15 @@ const DriverDashboard = () => {
       setUnreadCount(response.data.unreadCount || 0);
     } catch (error) {
       console.error('Load notifications error:', error);
+    }
+  };
+
+  const loadDocuments = async () => {
+    try {
+      const response = await authAPI.getDocuments();
+      setDocuments(response.data);
+    } catch (error) {
+      console.error('Load documents error:', error);
     }
   };
 
@@ -366,6 +395,21 @@ const DriverDashboard = () => {
     if (phone) window.open(`tel:${phone}`, '_self');
   };
 
+  const handleShareTrip = () => {
+    if (currentTrip && navigator.share) {
+      navigator.share({
+        title: 'DIRS Trip',
+        text: `Trip from ${currentTrip.pickupLocation?.address || 'Pickup'} to ${currentTrip.dropoffLocation?.address || 'Dropoff'}. Fare: ${currentTrip.fare?.totalFare || 'N/A'} ETB`,
+        url: window.location.href
+      }).catch(() => {});
+    } else {
+      toast.info('Trip details copied to clipboard');
+      navigator.clipboard?.writeText(
+        `DIRS Trip: ${currentTrip?.pickupLocation?.address} → ${currentTrip?.dropoffLocation?.address}`
+      );
+    }
+  };
+
   const handleMarkAllRead = async () => {
     try {
       await notificationsAPI.markAllRead();
@@ -446,6 +490,27 @@ const DriverDashboard = () => {
         </div>
       )}
 
+      {/* Background Check Status */}
+      {driverProfile?.verificationStatus && driverProfile.verificationStatus !== 'approved' && (
+        <div className={`verification-alert ${driverProfile.verificationStatus}`}>
+          <FaShieldAlt className="alert-icon" />
+          <div className="alert-content">
+            <span className="alert-title">
+              {driverProfile.verificationStatus === 'pending' ? 'Verification Pending' :
+               driverProfile.verificationStatus === 'under_review' ? 'Under Review' : 'Verification Rejected'}
+            </span>
+            <span className="alert-detail">
+              {driverProfile.verificationStatus === 'rejected'
+                ? driverProfile.rejectionReason || 'Please re-upload your documents'
+                : 'Upload documents to get verified faster'}
+            </span>
+          </div>
+          <button className="alert-action" onClick={() => navigate('/documents')}>
+            <FaPassport /> Docs
+          </button>
+        </div>
+      )}
+
       {/* Vehicle Info Bar */}
       {stats?.vehicle && (
         <div className="vehicle-info-bar">
@@ -454,6 +519,32 @@ const DriverDashboard = () => {
           <span className="plate-number">{stats.vehicle.plateNumber}</span>
         </div>
       )}
+
+      {/* Destination Mode */}
+      <div className="destination-mode-section">
+        <button
+          className={`destination-toggle ${destinationMode ? 'active' : ''}`}
+          onClick={() => setDestinationMode(!destinationMode)}
+        >
+          <FaRoute /> {destinationMode ? 'Destination Mode ON' : 'Set Destination'}
+        </button>
+        {destinationMode && (
+          <div className="destination-input-row">
+            <input
+              type="text"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder="Where are you going?"
+              className="destination-input"
+            />
+            <button className="btn-destination-go" onClick={() => {
+              if (destination) {
+                toast.success('Destination set. You\'ll go offline after arriving.');
+              }
+            }}>Go</button>
+          </div>
+        )}
+      </div>
 
       {/* Map */}
       <div className="dashboard-map-section">
@@ -596,9 +687,21 @@ const DriverDashboard = () => {
                     </span>
                   )}
                 </div>
-                <button className="btn-call" onClick={() => handleCallPassenger(currentTrip.passenger.phoneNumber)}>
-                  <FaPhone /> Call
-                </button>
+                <div className="passenger-actions">
+                  <button className="btn-call" onClick={() => handleCallPassenger(currentTrip.passenger.phoneNumber)}>
+                    <FaPhone /> Call
+                  </button>
+                  <button className="btn-chat" onClick={() => {
+                    sessionStorage.setItem('activeTripId', currentTrip._id);
+                    sessionStorage.setItem('chatPassengerName', `${currentTrip.passenger.firstName}`);
+                    navigate('/chat');
+                  }}>
+                    <FaComment /> Chat
+                  </button>
+                  <button className="btn-share" onClick={() => handleShareTrip()}>
+                    <FaShareAlt /> Share
+                  </button>
+                </div>
               </div>
             )}
 
@@ -716,6 +819,11 @@ const DriverDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Document Status */}
+      {!currentTrip && rideRequests.length === 0 && documents && (
+        <DocumentStatusDashboard documents={documents} />
+      )}
 
       {/* Recent Trips */}
       {stats?.recentTrips?.length > 0 && !currentTrip && (

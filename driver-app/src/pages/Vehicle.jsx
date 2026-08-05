@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { driverAPI } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { driverAPI, authAPI } from '../services/api';
 import { getVehicleIcon } from '../components/VehicleIcons';
-import { FaEdit, FaCheck, FaTimes, FaCar, FaHome, FaListUl, FaWallet, FaUser } from 'react-icons/fa';
+import { FaEdit, FaCheck, FaTimes, FaCar, FaHome, FaListUl, FaWallet, FaUser, FaCamera } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './Pages.css';
@@ -35,6 +35,9 @@ const VehiclePage = () => {
     capacity: 4,
     serviceType: 'both',
   });
+  const [vehiclePhotoFile, setVehiclePhotoFile] = useState(null);
+  const [vehiclePhotoPreview, setVehiclePhotoPreview] = useState(null);
+  const vehiclePhotoRef = useRef(null);
 
   useEffect(() => {
     loadVehicle();
@@ -86,10 +89,27 @@ const VehiclePage = () => {
         await driverAPI.registerVehicle(form);
         toast.success('Vehicle registered successfully');
       }
+
+      if (vehiclePhotoFile) {
+        const formData = new FormData();
+        formData.append('vehiclePhoto', vehiclePhotoFile);
+        await authAPI.uploadVehicleDocuments(formData);
+      }
+
       setEditing(false);
       loadVehicle();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to save vehicle');
+    }
+  };
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setVehiclePhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setVehiclePhotoPreview(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -176,6 +196,31 @@ const VehiclePage = () => {
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>Vehicle Photo</label>
+            <div className="upload-area">
+              {(vehiclePhotoPreview || (vehicle?.vehiclePhoto && vehicle.vehiclePhoto !== 'pending')) ? (
+                <img
+                  src={vehiclePhotoPreview || `http://localhost:5000${vehicle.vehiclePhoto}`}
+                  alt="Vehicle"
+                  className="upload-preview"
+                />
+              ) : (
+                <label className="upload-placeholder">
+                  <FaCamera size={24} />
+                  <span>Tap to upload vehicle photo</span>
+                  <input
+                    ref={vehiclePhotoRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoSelect}
+                    hidden
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           <div className="form-actions">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { paymentsAPI } from '../services/api';
-import { FaWallet, FaArrowUp, FaCalendarDay, FaCalendarWeek, FaMoneyBillWave, FaHome, FaListUl, FaUser, FaCar } from 'react-icons/fa';
+import EarningsChart from '../components/EarningsChart';
+import { FaWallet, FaArrowUp, FaCalendarDay, FaCalendarWeek, FaMoneyBillWave, FaHome, FaListUl, FaUser, FaCar, FaBolt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './Pages.css';
@@ -14,6 +15,7 @@ const EarningsPage = () => {
   const [withdrawing, setWithdrawing] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [instantCashouting, setInstantCashouting] = useState(false);
 
   useEffect(() => {
     loadEarnings();
@@ -67,6 +69,37 @@ const EarningsPage = () => {
     }
   };
 
+  const handleInstantCashout = async () => {
+    const balance = earnings?.availableBalance || 0;
+    if (balance < 100) {
+      toast.warning('Minimum instant cashout is 100 ETB');
+      return;
+    }
+    setInstantCashouting(true);
+    try {
+      await paymentsAPI.requestWithdrawal({ amount: balance, method: withdrawMethod, instant: true });
+      toast.success('Instant cashout initiated!');
+      loadEarnings();
+      loadPaymentHistory();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Cashout failed');
+    } finally {
+      setInstantCashouting(false);
+    }
+  };
+
+  const getChartData = () => {
+    if (!paymentHistory || paymentHistory.length === 0) return [];
+    const last7 = paymentHistory
+      .filter(p => p.type === 'ride_payment')
+      .slice(0, 7)
+      .reverse();
+    return last7.map((p, i) => ({
+      label: new Date(p.createdAt).toLocaleDateString('en-US', { weekday: 'short' }),
+      amount: p.amount || p.driverEarnings || 0
+    }));
+  };
+
   if (loading) return <div className="page-loading">Loading earnings...</div>;
 
   return (
@@ -117,6 +150,11 @@ const EarningsPage = () => {
         </div>
       </div>
 
+      {/* Earnings Chart */}
+      <div style={{ padding: '0 16px' }}>
+        <EarningsChart data={getChartData()} />
+      </div>
+
       <div className="withdraw-section">
         <h3>Withdraw Funds</h3>
         <div className="withdraw-form">
@@ -140,6 +178,13 @@ const EarningsPage = () => {
             disabled={withdrawing || !withdrawAmount}
           >
             {withdrawing ? 'Processing...' : 'Request Withdrawal'}
+          </button>
+          <button
+            className="btn-instant-cashout"
+            onClick={handleInstantCashout}
+            disabled={instantCashouting || (earnings?.availableBalance || 0) < 100}
+          >
+            <FaBolt /> {instantCashouting ? 'Processing...' : `Instant Cashout (${earnings?.availableBalance || 0} ETB)`}
           </button>
         </div>
       </div>

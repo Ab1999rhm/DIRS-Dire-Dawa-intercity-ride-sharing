@@ -98,6 +98,19 @@ export const ratingsAPI = {
   getUserRatings: (userId, params) => api.get(`/ratings/user/${userId}`, { params })
 };
 
+export const chatAPI = {
+  sendMessage: (tripId, data) => api.post(`/rides/trip/${tripId}/message`, data),
+  getMessages: (tripId, params) => api.get(`/rides/trip/${tripId}/messages`, { params })
+};
+
+export const tippingAPI = {
+  addTip: (tripId, data) => api.post(`/payments/trip/${tripId}/tip`, data)
+};
+
+export const supportAPI = {
+  sendMessage: (data) => api.post('/notifications', { ...data, type: 'support_message', channel: 'in_app' })
+};
+
 export const sosAPI = {
   trigger: (data) => api.post('/sos/trigger', data),
   history: (params) => api.get('/sos/history', { params }),
