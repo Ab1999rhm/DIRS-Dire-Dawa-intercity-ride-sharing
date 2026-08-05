@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { driverAPI, authAPI, notificationsAPI, sosAPI } from '../services/api';
+import { driverAPI, authAPI, notificationsAPI, sosAPI, ratingsAPI } from '../services/api';
 import { getVehicleIcon } from '../components/VehicleIcons';
 import {
   FaMapMarkerAlt, FaPhone, FaCheck, FaTimes, FaPowerOff, FaHome, FaListUl,
@@ -29,6 +29,11 @@ const DriverDashboard = () => {
   const [onlineDuration, setOnlineDuration] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [tripLoading, setTripLoading] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [completedTrip, setCompletedTrip] = useState(null);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   const gpsRef = useRef(null);
   const onlineTimerRef = useRef(null);
@@ -263,13 +268,34 @@ const DriverDashboard = () => {
     setTripLoading(true);
     try {
       await driverAPI.completeTrip(currentTrip._id);
+      setCompletedTrip(currentTrip);
+      setShowRatingModal(true);
+      setRatingScore(5);
+      setRatingComment('');
       setCurrentTrip(null);
-      toast.success('Trip completed!');
       loadStats();
     } catch (error) {
       toast.error('Failed to complete trip');
     } finally {
       setTripLoading(false);
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (!completedTrip) return;
+    setSubmittingRating(true);
+    try {
+      await ratingsAPI.createRating(completedTrip._id, {
+        score: ratingScore,
+        comment: ratingComment
+      });
+      toast.success('Rating submitted!');
+      setShowRatingModal(false);
+      setCompletedTrip(null);
+    } catch (error) {
+      toast.error('Failed to submit rating');
+    } finally {
+      setSubmittingRating(false);
     }
   };
 
@@ -581,6 +607,52 @@ const DriverDashboard = () => {
             <button className="btn-sos" onClick={handleSOS}>
               <FaExclamationTriangle /> SOS Emergency
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && completedTrip && (
+        <div className="rating-modal-overlay">
+          <div className="rating-modal">
+            <h3>Rate Passenger</h3>
+            <p className="rating-passenger-name">
+              {completedTrip.passenger?.firstName} {completedTrip.passenger?.lastName}
+            </p>
+            <div className="rating-stars">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  className={`star-btn ${star <= ratingScore ? 'active' : ''}`}
+                  onClick={() => setRatingScore(star)}
+                >
+                  <FaStar />
+                </button>
+              ))}
+            </div>
+            <textarea
+              className="rating-comment"
+              placeholder="Leave a comment (optional)"
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              rows={3}
+            />
+            <div className="rating-actions">
+              <button
+                className="btn-skip-rating"
+                onClick={() => { setShowRatingModal(false); setCompletedTrip(null); }}
+                disabled={submittingRating}
+              >
+                Skip
+              </button>
+              <button
+                className="btn-submit-rating"
+                onClick={handleSubmitRating}
+                disabled={submittingRating}
+              >
+                {submittingRating ? 'Submitting...' : 'Submit Rating'}
+              </button>
+            </div>
           </div>
         </div>
       )}

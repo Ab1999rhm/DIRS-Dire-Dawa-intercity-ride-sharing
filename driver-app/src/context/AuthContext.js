@@ -12,11 +12,39 @@ export const AuthProvider = ({ children }) => {
 
   const connectSocket = useCallback((token) => {
     const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
-      auth: { token }
+      auth: { token },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000
     });
 
     newSocket.on('connect', () => {
       console.log('Driver socket connected');
+    });
+
+    newSocket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err.message);
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.warn('Socket disconnected:', reason);
+    });
+
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log('Socket reconnected after', attemptNumber, 'attempts');
+    });
+
+    newSocket.on('reconnect_attempt', (attemptNumber) => {
+      console.log('Socket reconnect attempt:', attemptNumber);
+    });
+
+    newSocket.on('reconnect_error', (err) => {
+      console.error('Socket reconnect error:', err.message);
+    });
+
+    newSocket.on('reconnect_failed', () => {
+      console.error('Socket reconnection failed after all attempts');
     });
 
     newSocket.on('notification', (data) => {

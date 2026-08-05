@@ -90,7 +90,7 @@ const TripsPage = () => {
           trips.map((trip) => {
             const statusStyle = getStatusColor(trip.status);
             return (
-              <div key={trip._id} className="trip-item">
+              <div key={trip._id} className="trip-item" onClick={() => navigate(`/trip/${trip._id}`)} style={{ cursor: 'pointer' }}>
                 <div className="trip-item-header">
                   <span className="trip-date">{formatDate(trip.createdAt)}</span>
                   <span

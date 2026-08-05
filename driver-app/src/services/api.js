@@ -81,6 +81,11 @@ export const notificationsAPI = {
   markAllRead: () => api.put('/notifications/read-all')
 };
 
+export const ratingsAPI = {
+  createRating: (tripId, data) => api.post(`/ratings/trip/${tripId}`, data),
+  getUserRatings: (userId, params) => api.get(`/ratings/user/${userId}`, { params })
+};
+
 export const sosAPI = {
   trigger: (data) => api.post('/sos/trigger', data),
   history: (params) => api.get('/sos/history', { params }),

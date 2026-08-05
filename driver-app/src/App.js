@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DriverDashboard from './pages/Dashboard';
@@ -8,6 +9,7 @@ import TripsPage from './pages/Trips';
 import EarningsPage from './pages/Earnings';
 import VehiclePage from './pages/Vehicle';
 import ProfilePage from './pages/Profile';
+import TripDetailPage from './pages/TripDetail';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -24,40 +26,47 @@ const PrivateRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <ToastContainer position="top-right" autoClose={3000} />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/" element={
+      <LanguageProvider>
+        <Router>
+          <div className="App">
+            <ToastContainer position="top-right" autoClose={3000} />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/" element={
+                <PrivateRoute>
+                  <DriverDashboard />
+                </PrivateRoute>
+              } />
+              <Route path="/trips" element={
+                <PrivateRoute>
+                  <TripsPage />
+                </PrivateRoute>
+              } />
+              <Route path="/earnings" element={
+                <PrivateRoute>
+                  <EarningsPage />
+                </PrivateRoute>
+              } />
+              <Route path="/vehicle" element={
+                <PrivateRoute>
+                  <VehiclePage />
+                </PrivateRoute>
+              } />
+              <Route path="/trip/:tripId" element={
               <PrivateRoute>
-                <DriverDashboard />
-              </PrivateRoute>
-            } />
-            <Route path="/trips" element={
-              <PrivateRoute>
-                <TripsPage />
-              </PrivateRoute>
-            } />
-            <Route path="/earnings" element={
-              <PrivateRoute>
-                <EarningsPage />
-              </PrivateRoute>
-            } />
-            <Route path="/vehicle" element={
-              <PrivateRoute>
-                <VehiclePage />
+                <TripDetailPage />
               </PrivateRoute>
             } />
             <Route path="/profile" element={
-              <PrivateRoute>
-                <ProfilePage />
-              </PrivateRoute>
-            } />
-          </Routes>
-        </div>
-      </Router>
+                <PrivateRoute>
+                  <ProfilePage />
+                </PrivateRoute>
+              } />
+            </Routes>
+          </div>
+        </Router>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

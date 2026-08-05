@@ -34,7 +34,15 @@ const RegisterPage = () => {
   };
 
   const handleVehicleChange = (e) => {
-    setVehicleData({ ...vehicleData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setVehicleData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'vehicleType') {
+        const capacityMap = { car: 4, minivan: 7, minibus: 12, bajaj: 3, bus: 16 };
+        updated.capacity = capacityMap[value] || 4;
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -155,6 +163,8 @@ const RegisterPage = () => {
                 <option value="car">Car</option>
                 <option value="minivan">Minivan</option>
                 <option value="minibus">Minibus</option>
+                <option value="bajaj">Bajaj</option>
+                <option value="bus">Bus</option>
               </select>
             </div>
 

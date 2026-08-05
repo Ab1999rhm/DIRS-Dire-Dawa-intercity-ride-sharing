@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { paymentsAPI } from '../services/api';
-import { FaWallet, FaArrowUp, FaCalendarDay, FaCalendarWeek, FaMoneyBillWave, FaHome, FaListUl, FaUser } from 'react-icons/fa';
+import { FaWallet, FaArrowUp, FaCalendarDay, FaCalendarWeek, FaMoneyBillWave, FaHome, FaListUl, FaUser, FaCar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './Pages.css';
@@ -12,9 +12,12 @@ const EarningsPage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
   const [withdrawing, setWithdrawing] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => {
     loadEarnings();
+    loadPaymentHistory();
   }, []);
 
   const loadEarnings = async () => {
@@ -25,6 +28,17 @@ const EarningsPage = () => {
       console.error('Load earnings error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPaymentHistory = async () => {
+    try {
+      const response = await paymentsAPI.getPaymentHistory({ limit: 20 });
+      setPaymentHistory(response.data.payments || []);
+    } catch (error) {
+      console.error('Load payment history error:', error);
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -45,6 +59,7 @@ const EarningsPage = () => {
       toast.success('Withdrawal request submitted successfully');
       setWithdrawAmount('');
       loadEarnings();
+      loadPaymentHistory();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Withdrawal failed');
     } finally {
@@ -127,6 +142,45 @@ const EarningsPage = () => {
             {withdrawing ? 'Processing...' : 'Request Withdrawal'}
           </button>
         </div>
+      </div>
+
+      {/* Payment History */}
+      <div className="payment-history-section">
+        <h3>Transaction History</h3>
+        {historyLoading ? (
+          <p className="empty-history">Loading...</p>
+        ) : paymentHistory.length === 0 ? (
+          <p className="empty-history">No transactions yet</p>
+        ) : (
+          <div className="payment-list">
+            {paymentHistory.map((payment) => (
+              <div key={payment._id} className="payment-item">
+                <div className="payment-info">
+                  <span className="payment-type">
+                    {payment.type === 'ride_payment' ? 'Trip Payment' :
+                     payment.type === 'withdrawal' ? 'Withdrawal' :
+                     payment.type === 'bonus' ? 'Bonus' : payment.type}
+                  </span>
+                  <span className="payment-date">
+                    {new Date(payment.createdAt).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span className={`payment-amount ${payment.type === 'withdrawal' ? 'debit' : 'credit'}`}>
+                    {payment.type === 'withdrawal' ? '-' : '+'}{payment.amount} ETB
+                  </span>
+                  {payment.status && (
+                    <span className={`payment-status-badge ${payment.status}`}>
+                      {payment.status}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <nav className="bottom-nav">
