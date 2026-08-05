@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Circle } from '@react-google-maps/api';
 
 const mapContainerStyle = {
   width: '100%',
@@ -15,7 +15,17 @@ const defaultCenter = {
 
 const libraries = ['places'];
 
-const DashboardMap = ({ driverLocation, currentTrip, rideRequests }) => {
+const demandZones = [
+  { id: 'market', name: 'Dire Dawa Market', lat: 9.5985, lng: 41.8520, intensity: 0.9, color: '#ef4444' },
+  { id: 'bus_station', name: 'Bus Station', lat: 9.6055, lng: 41.8490, intensity: 0.85, color: '#f97316' },
+  { id: 'airport', name: 'Dire Dawa Airport', lat: 9.6275, lng: 41.8530, intensity: 0.6, color: '#eab308' },
+  { id: 'university', name: 'Dire Dawa University', lat: 9.6080, lng: 41.8610, intensity: 0.7, color: '#f97316' },
+  { id: 'kezira', name: 'Kezira Area', lat: 9.5940, lng: 41.8450, intensity: 0.75, color: '#f97316' },
+  { id: 'sefer', name: 'Sefer Area', lat: 9.5910, lng: 41.8560, intensity: 0.5, color: '#eab308' },
+  { id: 'sabian', name: 'Sabian Area', lat: 9.6120, lng: 41.8380, intensity: 0.4, color: '#22c55e' },
+];
+
+const DashboardMap = ({ driverLocation, currentTrip, rideRequests, showDemandZones = false }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [map, setMap] = useState(null);
 
@@ -77,6 +87,13 @@ const DashboardMap = ({ driverLocation, currentTrip, rideRequests }) => {
               </span>
             </div>
           )}
+          {showDemandZones && (
+            <div className="map-demand-legend">
+              <span className="legend-item"><span className="legend-dot" style={{ background: '#ef4444' }}></span> High demand</span>
+              <span className="legend-item"><span className="legend-dot" style={{ background: '#f97316' }}></span> Medium</span>
+              <span className="legend-item"><span className="legend-dot" style={{ background: '#22c55e' }}></span> Low</span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -103,6 +120,23 @@ const DashboardMap = ({ driverLocation, currentTrip, rideRequests }) => {
           ]
         }}
       >
+        {/* Demand zones */}
+        {showDemandZones && demandZones.map((zone) => (
+          <Circle
+            key={zone.id}
+            center={{ lat: zone.lat, lng: zone.lng }}
+            radius={400 + zone.intensity * 200}
+            options={{
+              fillColor: zone.color,
+              fillOpacity: 0.12 + zone.intensity * 0.13,
+              strokeColor: zone.color,
+              strokeOpacity: 0.3,
+              strokeWeight: 1,
+              clickable: false
+            }}
+          />
+        ))}
+
         {driverLocation && (
           <Marker
             position={driverLocation}
@@ -199,6 +233,15 @@ const DashboardMap = ({ driverLocation, currentTrip, rideRequests }) => {
           </InfoWindow>
         )}
       </GoogleMap>
+
+      {/* Demand zone legend */}
+      {showDemandZones && (
+        <div className="map-legend-overlay">
+          <span className="legend-item"><span className="legend-dot" style={{ background: '#ef4444' }}></span> High</span>
+          <span className="legend-item"><span className="legend-dot" style={{ background: '#f97316' }}></span> Medium</span>
+          <span className="legend-item"><span className="legend-dot" style={{ background: '#22c55e' }}></span> Low</span>
+        </div>
+      )}
     </div>
   );
 };

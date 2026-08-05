@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { driverAPI, authAPI, notificationsAPI, sosAPI, ratingsAPI } from '../services/api';
 import { getVehicleIcon } from '../components/VehicleIcons';
 import DashboardMap from '../components/DashboardMap';
+import MiniMap from '../components/MiniMap';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import DocumentStatusDashboard from '../components/DocumentStatusDashboard';
 import { requestPushPermission, registerForPush } from '../services/pushService';
@@ -46,9 +47,28 @@ const DriverDashboard = () => {
   const [destination, setDestination] = useState('');
   const [documents, setDocuments] = useState(null);
   const [rideRequestSound] = useState(() => {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczIjmWyt25f0MlZ5rP3rqDQyVnms/euoNDJWeaz966g0MlZ5rP3rqDQyVnms/euoNDJWeaz94=');
-    audio.volume = 0.7;
-    return audio;
+    const audioCtx = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
+    const createTone = () => {
+      if (!audioCtx) return null;
+      const ctx = new audioCtx();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.value = 880;
+      osc2.type = 'sine';
+      osc2.frequency.value = 1100;
+      gain.gain.value = 0.3;
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + 0.15);
+      osc2.stop(ctx.currentTime + 0.15);
+      setTimeout(() => ctx.close(), 500);
+    };
+    return { play: createTone };
   });
 
   const gpsRef = useRef(null);
@@ -136,7 +156,7 @@ const DriverDashboard = () => {
             rideRequestSound.play().catch(() => {});
           }
           if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200]);
+            navigator.vibrate([300, 80, 300, 80, 500]);
           }
         } catch (e) { /* silent */ }
       });
@@ -321,6 +341,13 @@ const DriverDashboard = () => {
       setRatingComment('');
       setCurrentTrip(null);
       loadStats();
+      if (destinationMode) {
+        setDestinationMode(false);
+        setDestination('');
+        setIsOnline(false);
+        toast.info('Destination mode ended. You are now offline.');
+        try { await driverAPI.updateOnlineStatus(false); } catch {}
+      }
     } catch (error) {
       toast.error('Failed to complete trip');
     } finally {
@@ -393,6 +420,12 @@ const DriverDashboard = () => {
 
   const handleCallPassenger = (phone) => {
     if (phone) window.open(`tel:${phone}`, '_self');
+  };
+
+  const maskPhone = (phone) => {
+    if (!phone) return '***';
+    if (phone.length <= 6) return phone;
+    return phone.substring(0, 4) + '****' + phone.substring(phone.length - 3);
   };
 
   const handleShareTrip = () => {
@@ -539,7 +572,7 @@ const DriverDashboard = () => {
             />
             <button className="btn-destination-go" onClick={() => {
               if (destination) {
-                toast.success('Destination set. You\'ll go offline after arriving.');
+                toast.success('Destination set. You\'ll go offline after your next trip.');
               }
             }}>Go</button>
           </div>
@@ -552,6 +585,7 @@ const DriverDashboard = () => {
           driverLocation={driverLocation}
           currentTrip={currentTrip}
           rideRequests={rideRequests}
+          showDemandZones={!currentTrip && rideRequests.length === 0}
         />
       </div>
 
@@ -581,6 +615,9 @@ const DriverDashboard = () => {
                 <div className="timer-fill" style={{ animationDuration: `${REQUEST_TIMEOUT}s` }} />
               </div>
               <div className="request-header">
+                <MiniMap pickup={request.pickupLocation} dropoff={request.dropoffLocation} />
+              </div>
+              <div className="request-header" style={{ marginTop: 0 }}>
                 <FaMapMarkerAlt className="pickup-icon" />
                 <div className="request-info">
                   <p className="pickup">{request.pickupLocation?.address || 'Pickup Location'}</p>
@@ -686,6 +723,7 @@ const DriverDashboard = () => {
                       <FaStar /> {currentTrip.passenger.averageRating.toFixed(1)}
                     </span>
                   )}
+                  <span className="passenger-phone-masked">{maskPhone(currentTrip.passenger.phoneNumber)}</span>
                 </div>
                 <div className="passenger-actions">
                   <button className="btn-call" onClick={() => handleCallPassenger(currentTrip.passenger.phoneNumber)}>
