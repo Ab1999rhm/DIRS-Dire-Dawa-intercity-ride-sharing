@@ -1403,3 +1403,35 @@
   font-family: monospace;
   letter-spacing: 0.5px;
 }
+
+/* ==========================================
+   LEAFLET MAP FIXES
+   ========================================== */
+.map-container {
+  position: relative;
+}
+
+.map-container .leaflet-container {
+  border-radius: 16px;
+  z-index: 1;
+}
+
+.mini-map-preview .leaflet-container {
+  border-radius: 10px;
+}
+
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Fix Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 10px !important;
+  font-size: 13px !important;
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px !important;
+  line-height: 1.4 !important;
+}
