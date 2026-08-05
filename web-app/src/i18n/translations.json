@@ -23,8 +23,7 @@
       "stepAccount": "Account", "stepOtp": "Verify",
       "phoneRequired": "Phone number is required", "passwordRequired": "Password is required",
       "passwordMismatch": "Passwords do not match", "logout": "Logout",
-      "logoutConfirm": "Confirm Logout", "logoutMessage": "Are you sure you want to logout?",
-      "registerSubtitle": "Create your DIRS account to get started"
+      "logoutConfirm": "Confirm Logout", "logoutMessage": "Are you sure you want to logout?"
     },
     "passenger": {
       "welcome": "Welcome, {{name}}", "whereTo": "Where to?", "pickup": "Pickup location",
@@ -116,8 +115,7 @@
       "stepAccount": "መለያ", "stepOtp": "ማረጋገጫ",
       "phoneRequired": "ስልክ ቁጥር ያስፈልጋል", "passwordRequired": "የይለፍ ቃል ያስፈልጋል",
       "passwordMismatch": "የይለፍ ቃሎች አይመሳሰሉም", "logout": "ውጣ",
-      "logoutConfirm": "ውጣ ማረጋገጫ", "logoutMessage": "መለያዎን መውጣት መፈልጎ ነው?",
-      "registerSubtitle": "ለመነሳት መለያዎን ይፍጠሩ"
+      "logoutConfirm": "ውጣ ማረጋገጫ", "logoutMessage": "መለያዎን መውጣት መፈልጎ ነው?"
     },
     "passenger": {
       "welcome": "እንኳን በደህና መጡ, {{name}}", "whereTo": "ወዴት መሄድ ነው?",
@@ -141,11 +139,11 @@
       "historyLabel": "የጉዞ ታሪክዎ", "searchTrips": "ጉዞዎች ፈልግ...",
       "allDates": "ሁሉም ቀኖች", "avgRating": "መካከለኛ ደረጃ",
       "favorites": "ተወዳጆች", "favoritesTitle": "የተወደዱ ቦታዎች",
-      "noFavorites": "ተወዳጆች የለም", "noFavoritesDesc": "ለፈጣን ቀይጠል የሚ經常 ቦታዎችን ያስቀምጡ",
+      "noFavorites": "ተወዳጆች የለም", "noFavoritesDesc": "ለፈጣን ቀይጠል የሚጠቅም ቦታዎችን ያስቀምጡ",
       "addFavorite": "ተወዳጅ ጨምር", "locationName": "የቦታ ስም",
       "address": "አድራሻ", "noTrips": "ጉዞዎች የለም", "noTripsDesc": "የመጀመሪያ ጉዞዎን ይቀይጡ",
       "noHistory": "ታሪክ የለም", "noHistoryDesc": "የተፈጸሙ ጉዞዎች እዚህ ይታያሉ",
-      "personalInfo": "የግል መረጃ", "emergencyContacts": "የአደጋ ጊዜ ማ聯絡",
+      "personalInfo": "የግል መረጃ", "emergencyContacts": "የአደጋ ጊዜ ማገናኛ",
       "settings": "ማስተካከያ", "firstName": "የመጀመሪያ ስም", "lastName": "የአባቶ ስም",
       "phone": "ስልክ", "email": "ኢሜይል", "addContact": "ማ联络 ጨምር",
       "contactName": "የማ联络 ስም", "contactPhone": "የማ联络 ስልክ",
@@ -178,9 +176,9 @@
     "profile": {
       "title": "መለያ", "personalInfo": "የግል መረጃ", "documents": "ሰነዶች",
       "settings": "ማስተካከያ", "availability": "ተገኝነት",
-      "drivingLicense": "የመንductive ፈቃድ", "insurance": "ኢንሹራንስ",
+      "drivingLicense": "የመንገድ ፈቃድ", "insurance": "ኢንሹራንስ",
       "vehicleRegistration": "የሰው ሰራሽ መሳሪያ ምዝገባ",
-      "uploaded": "ተጭኗል", "notUploaded": "አልተጭነም", "upload": "τετρ", "view": "ተመልከት",
+      "uploaded": "ተጭኗል", "notUploaded": "አልተጭነም", "upload": "አስቀምጥ", "view": "ተመልከት",
       "language": "ቋንቋ", "notifications": "ማሳወቂያዎች", "pushNotifications": "ፉሽ ማሳወቂያ",
       "startTime": "የመጀመሪያ ጊዜ", "endTime": "የመጨረሻ ጊዜ",
       "updateSuccess": "መለያ ተስተካክልዋል", "settingsUpdated": "ማስተካከያ ተስተካክልዋል"

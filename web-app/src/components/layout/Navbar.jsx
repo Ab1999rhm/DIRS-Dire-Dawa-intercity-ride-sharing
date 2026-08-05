@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,6 +13,16 @@ const Navbar = ({ onMenuToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
@@ -89,10 +99,22 @@ const Navbar = ({ onMenuToggle }) => {
           <button className="nav-icon-btn" onClick={toggleTheme} title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}>
             {theme === 'light' ? <FaMoon /> : <FaSun />}
           </button>
-          <button className="nav-icon-btn">
-            <FaBell />
-            {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-          </button>
+          <div className="notif-wrapper" ref={notifRef}>
+            <button className="nav-icon-btn" onClick={() => setShowNotifications(!showNotifications)}>
+              <FaBell />
+              {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
+            </button>
+            {showNotifications && (
+              <div className="notif-dropdown">
+                <div className="notif-header">Notifications</div>
+                {unreadCount > 0 ? (
+                  <div className="notif-item">You have {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</div>
+                ) : (
+                  <div className="notif-item empty">No new notifications</div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="nav-user" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
             <div className="nav-avatar">
               {user?.firstName?.[0]}{user?.lastName?.[0]}

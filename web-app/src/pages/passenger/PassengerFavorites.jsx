@@ -53,6 +53,7 @@ const PassengerFavorites = () => {
     try {
       const updated = [...favorites, { name: newName, address: newAddress, iconType: newIcon, _id: Date.now().toString() }];
       setFavorites(updated);
+      await authAPI.updateProfile({ favorites: updated });
       setNewName('');
       setNewAddress('');
       setNewIcon('other');
@@ -69,6 +70,7 @@ const PassengerFavorites = () => {
     try {
       const updated = favorites.filter(f => f._id !== id);
       setFavorites(updated);
+      await authAPI.updateProfile({ favorites: updated });
       toast.success('Favorite removed');
     } catch (err) {
       toast.error('Failed to remove favorite');

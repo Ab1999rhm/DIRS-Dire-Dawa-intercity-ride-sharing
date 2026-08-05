@@ -22,7 +22,7 @@ const ProfilePhotoUpload = ({ currentPhoto, onPhotoUpdate }) => {
     }
   };
 
-  const photoUrl = currentPhoto ? `http://localhost:5000${currentPhoto}` : null;
+  const photoUrl = currentPhoto ? `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${currentPhoto}` : null;
 
   return (
     <div className="profile-photo-upload" onClick={() => fileInputRef.current?.click()}>

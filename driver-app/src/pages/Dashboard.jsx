@@ -118,7 +118,9 @@ const DriverDashboard = () => {
         setDriverLocation({ lat: latitude, lng: longitude });
         try {
           authAPI.updateLocation([longitude, latitude]);
-        } catch (e) { /* silent */ }
+        } catch (e) {
+          console.error('GPS update error:', e);
+        }
       };
 
       const options = {
@@ -218,6 +220,7 @@ const DriverDashboard = () => {
       setStats(response.data);
     } catch (error) {
       console.error('Load stats error:', error);
+      toast.error('Failed to load stats');
     }
   };
 
@@ -228,6 +231,7 @@ const DriverDashboard = () => {
       setUnreadCount(response.data.unreadCount || 0);
     } catch (error) {
       console.error('Load notifications error:', error);
+      toast.error('Failed to load notifications');
     }
   };
 
@@ -237,6 +241,7 @@ const DriverDashboard = () => {
       setDocuments(response.data);
     } catch (error) {
       console.error('Load documents error:', error);
+      toast.error('Failed to load documents');
     }
   };
 
@@ -249,6 +254,7 @@ const DriverDashboard = () => {
       }
     } catch (error) {
       console.error('Load trip error:', error);
+      toast.error('Failed to load trip details');
     }
   };
 
@@ -313,8 +319,10 @@ const DriverDashboard = () => {
       setRideRequests(prev => prev.filter(r => r._id !== rideRequestId));
       clearInterval(requestTimersRef.current[rideRequestId]);
       delete requestTimersRef.current[rideRequestId];
+      toast.info('Ride declined');
     } catch (error) {
       console.error('Decline ride error:', error);
+      toast.error('Failed to decline ride');
     }
   };
 
@@ -386,7 +394,7 @@ const DriverDashboard = () => {
   };
 
   const handleCancelTrip = async () => {
-    if (!window.confirm('Are you sure you want to cancel this trip?')) return;
+    toast.info('Cancelling trip...');
     setTripLoading(true);
     try {
       await driverAPI.cancelTrip(currentTrip._id, 'Driver cancelled');
@@ -401,7 +409,7 @@ const DriverDashboard = () => {
   };
 
   const handleSOS = async () => {
-    if (!window.confirm('Send emergency SOS alert?')) return;
+    toast.info('Sending SOS alert...');
     try {
       await sosAPI.trigger({
         tripId: currentTrip?._id,
@@ -674,7 +682,7 @@ const DriverDashboard = () => {
           <div className="trip-header-row">
             <h3>Current Trip</h3>
             <span className={`status-badge ${currentTrip.status}`}>
-              {currentTrip.status.replace('_', ' ')}
+              {(currentTrip.status || '').replace('_', ' ')}
             </span>
           </div>
           <div className="trip-card">

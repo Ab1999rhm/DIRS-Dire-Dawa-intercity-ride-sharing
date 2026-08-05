@@ -334,4 +334,6 @@ router.post('/vehicle-documents', protect, upload.fields([
   { name: 'insurancePhoto', maxCount: 1 }
 ]), documentController.uploadVehicleDocuments);
 
+router.post('/logout', protect, authController.logout);
+
 module.exports = router;

@@ -176,7 +176,11 @@ const DriverDashboard = () => {
 
       <div className="driver-search-bar">
         <FaSearch className="search-icon" />
-        <span className="search-placeholder">{t('passenger.whereTo') || 'Where are you going?'}</span>
+        <input
+          className="search-input"
+          type="text"
+          placeholder={t('passenger.whereTo') || 'Where are you going?'}
+        />
       </div>
 
       <div className="driver-online-row">

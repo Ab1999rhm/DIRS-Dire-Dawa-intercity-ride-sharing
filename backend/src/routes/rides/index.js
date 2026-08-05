@@ -10,6 +10,7 @@ router.post('/:rideRequestId/decline', protect, authorize('driver'), rideControl
 router.post('/:rideRequestId/cancel', protect, authorize('passenger'), rideController.cancelRideRequest);
 
 router.get('/available', protect, authorize('driver'), rideController.getAvailableRides);
+router.get('/driver/stats', protect, authorize('driver'), rideController.getDriverStats);
 router.get('/passenger/trips', protect, authorize('passenger'), rideController.getPassengerTrips);
 router.get('/driver/trips', protect, authorize('driver'), rideController.getDriverTrips);
 router.get('/trip/:id', protect, rideController.getTripDetails);
@@ -19,6 +20,5 @@ router.post('/trip/:tripId/start', protect, authorize('driver'), rideController.
 router.post('/trip/:tripId/complete', protect, authorize('driver'), rideController.completeTrip);
 router.post('/trip/:tripId/arrival', protect, authorize('driver'), rideController.confirmArrival);
 router.post('/trip/:tripId/cancel', protect, authorize('driver'), rideController.cancelTrip);
-router.get('/driver/stats', protect, authorize('driver'), rideController.getDriverStats);
 
 module.exports = router;

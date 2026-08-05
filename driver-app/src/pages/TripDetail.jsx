@@ -47,6 +47,12 @@ const TripDetailPage = () => {
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const maskPhone = (phone) => {
+    if (!phone) return '***';
+    if (phone.length <= 6) return phone;
+    return phone.substring(0, 4) + '****' + phone.substring(phone.length - 3);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return { bg: '#e8f5e9', color: '#00c853' };
@@ -127,7 +133,7 @@ const TripDetailPage = () => {
               </div>
               <div className="passenger-info-sm">
                 <span className="passenger-name-sm">{trip.passenger.firstName} {trip.passenger.lastName}</span>
-                <span className="passenger-phone-sm">{trip.passenger.phoneNumber}</span>
+                <span className="passenger-phone-sm">{maskPhone(trip.passenger.phoneNumber)}</span>
                 {trip.passenger.averageRating && (
                   <span className="passenger-rating-sm">
                     <FaStar /> {trip.passenger.averageRating.toFixed(1)}

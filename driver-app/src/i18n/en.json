@@ -8,12 +8,15 @@
     "save": "Save",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "submit": "Submit",
     "home": "Home",
     "trips": "Trips",
     "vehicle": "Vehicle",
     "profile": "Profile",
-    "skip": "Skip for now"
+    "skip": "Skip for now",
+    "search": "Search",
+    "filter": "Filter"
   },
   "auth": {
     "login": "Sign In",
@@ -69,9 +72,19 @@
     "completeTrip": "Complete Trip",
     "confirmArrival": "Confirm Arrival",
     "cancel": "Cancel",
+    "cancelTrip": "Cancel Trip",
+    "sos": "SOS Emergency",
+    "navigate": "Navigate",
+    "shareTrip": "Share Trip",
+    "callPassenger": "Call Passenger",
+    "chatPassenger": "Chat with Passenger",
     "driverArriving": "Driver Arriving",
     "inProgress": "In Progress",
-    "completed": "Completed"
+    "completed": "Completed",
+    "rating": "Rating",
+    "ratePassenger": "Rate Passenger",
+    "skipRating": "Skip Rating",
+    "submitRating": "Submit Rating"
   },
   "vehicle": {
     "vehicleType": "Vehicle Type",
@@ -84,7 +97,10 @@
     "serviceType": "Service Type",
     "intraCity": "Intra-City Only",
     "intercity": "Intercity Only",
-    "both": "Both"
+    "both": "Both",
+    "register": "Register Vehicle",
+    "update": "Update Vehicle",
+    "noVehicle": "No vehicle registered"
   },
   "notifications": {
     "notifications": "Notifications",
@@ -110,6 +126,18 @@
     "pendingVerification": "Pending Verification",
     "verified": "Verified",
     "rejected": "Rejected",
-    "underReview": "Under Review"
-  }
+    "underReview": "Under Review",
+    "status": "Document Status"
+  },
+  "earnings": {
+    "withdraw": "Withdraw",
+    "instantCashout": "Instant Cashout",
+    "paymentHistory": "Payment History",
+    "balance": "Balance"
+  },
+  "chat": "Chat",
+  "settings": "Settings",
+  "help": "Help",
+  "support": "Support",
+  "onboarding": "Onboarding"
 }

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api';
 import { Card, Button, Input, Modal } from '../../components/common';
 import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt } from 'react-icons/fa';
+import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
 const DriverProfile = () => {
@@ -36,6 +37,8 @@ const DriverProfile = () => {
     availabilityStart: driverProfile?.settings?.availabilityStart || '08:00',
     availabilityEnd: driverProfile?.settings?.availabilityEnd || '18:00'
   });
+
+  const toast = useToast();
 
   const tabs = [
     { id: 'info', label: t('profile.personalInfo'), icon: <FaUser /> },
@@ -167,7 +170,7 @@ const DriverProfile = () => {
                 <h4>{t('profile.drivingLicense')}</h4>
                 <p>{documents.license ? t('profile.uploaded') : t('profile.notUploaded')}</p>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => toast.info('Document upload coming soon')}>
                 {documents.license ? t('profile.view') : t('profile.upload')}
               </Button>
             </div>
@@ -177,7 +180,7 @@ const DriverProfile = () => {
                 <h4>{t('profile.insurance')}</h4>
                 <p>{documents.insurance ? t('profile.uploaded') : t('profile.notUploaded')}</p>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => toast.info('Document upload coming soon')}>
                 {documents.insurance ? t('profile.view') : t('profile.upload')}
               </Button>
             </div>
@@ -187,7 +190,7 @@ const DriverProfile = () => {
                 <h4>{t('profile.vehicleRegistration')}</h4>
                 <p>{documents.registration ? t('profile.uploaded') : t('profile.notUploaded')}</p>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => toast.info('Document upload coming soon')}>
                 {documents.registration ? t('profile.view') : t('profile.upload')}
               </Button>
             </div>

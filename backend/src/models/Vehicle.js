@@ -60,6 +60,9 @@ const vehicleSchema = new mongoose.Schema({
   insuranceExpiry: {
     type: Date
   },
+  insurancePhoto: {
+    type: String
+  },
   isActive: {
     type: Boolean,
     default: true

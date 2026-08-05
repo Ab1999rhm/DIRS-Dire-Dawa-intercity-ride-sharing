@@ -6,11 +6,13 @@ import { adminAPI } from '../../services/api';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import Modal from '../../components/common/Modal';
 import Badge, { StatusBadge } from '../../components/common/Badge';
+import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
 const AdminUsers = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,7 +51,7 @@ const AdminUsers = () => {
       await adminAPI.suspendUser(userId, 'Suspended by admin');
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, status: 'suspended' } : u));
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to suspend user');
+      toast.error(err.response?.data?.message || 'Failed to suspend user');
     }
   };
 
@@ -58,7 +60,7 @@ const AdminUsers = () => {
       await adminAPI.reactivateUser(userId);
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, status: 'active' } : u));
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reactivate user');
+      toast.error(err.response?.data?.message || 'Failed to reactivate user');
     }
   };
 

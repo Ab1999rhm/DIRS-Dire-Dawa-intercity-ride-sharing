@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -34,6 +35,7 @@ api.interceptors.response.use(
           error.config.headers.Authorization = `Bearer ${accessToken}`;
           return api(error.config);
         } catch (refreshError) {
+          toast.error('Session expired. Please login again.');
           localStorage.removeItem('driverAccessToken');
           localStorage.removeItem('driverRefreshToken');
           window.location.href = '/login';
@@ -78,7 +80,8 @@ export const driverAPI = {
   cancelTrip: (tripId, reason) => api.post(`/rides/trip/${tripId}/cancel`, { reason }),
   getDriverTrips: (params) => api.get('/rides/driver/trips', { params }),
   getTripDetails: (id) => api.get(`/rides/trip/${id}`),
-  getDriverStats: () => api.get('/rides/driver/stats')
+  getDriverStats: () => api.get('/rides/driver/stats'),
+  updateOnlineStatus: (isAvailable) => api.put('/auth/driver/status', { isAvailable })
 };
 
 export const paymentsAPI = {

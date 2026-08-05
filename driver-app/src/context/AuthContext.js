@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { authAPI } from '../services/api';
+import { unregisterPush } from '../services/pushService';
 import { io } from 'socket.io-client';
 
 const AuthContext = createContext(null);
@@ -98,7 +99,8 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await unregisterPush();
     localStorage.removeItem('driverAccessToken');
     localStorage.removeItem('driverRefreshToken');
     setUser(null);

@@ -45,17 +45,17 @@ const DocumentsPage = () => {
         setLicenseExpiry(data.driver.licenseExpiry ? new Date(data.driver.licenseExpiry).toISOString().split('T')[0] : '');
         setNationalId(data.driver.nationalId || '');
         if (data.driver.licensePhoto && data.driver.licensePhoto !== 'pending') {
-          setLicensePhotoPreview(`http://localhost:5000${data.driver.licensePhoto}`);
+          setLicensePhotoPreview(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${data.driver.licensePhoto}`);
         }
         if (data.driver.nationalIdPhoto && data.driver.nationalIdPhoto !== 'pending') {
-          setNationalIdPhotoPreview(`http://localhost:5000${data.driver.nationalIdPhoto}`);
+          setNationalIdPhotoPreview(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${data.driver.nationalIdPhoto}`);
         }
       }
       if (data.vehicle) {
         setInsuranceExpiry(data.vehicle.insuranceExpiry ? new Date(data.vehicle.insuranceExpiry).toISOString().split('T')[0] : '');
-        if (data.vehicle.vehiclePhoto) setVehiclePhotoPreview(`http://localhost:5000${data.vehicle.vehiclePhoto}`);
-        if (data.vehicle.registrationPhoto) setRegistrationPhotoPreview(`http://localhost:5000${data.vehicle.registrationPhoto}`);
-        if (data.vehicle.insurancePhoto) setInsurancePhotoPreview(`http://localhost:5000${data.vehicle.insurancePhoto}`);
+        if (data.vehicle.vehiclePhoto) setVehiclePhotoPreview(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${data.vehicle.vehiclePhoto}`);
+        if (data.vehicle.registrationPhoto) setRegistrationPhotoPreview(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${data.vehicle.registrationPhoto}`);
+        if (data.vehicle.insurancePhoto) setInsurancePhotoPreview(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${data.vehicle.insurancePhoto}`);
       }
     } catch (error) {
       console.error('Load documents error:', error);

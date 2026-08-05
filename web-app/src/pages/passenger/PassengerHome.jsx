@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, ratingsAPI } from '../../services/api';
+import { ridesAPI, ratingsAPI, sosAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import './Passenger.css';
 
@@ -72,8 +72,9 @@ const PassengerHome = () => {
   const calcFare = (vehicle) => {
     if (!vehicle) return { base: 0, distance: 0, time: 0, platform: 0, total: 0 };
     const base = vehicle.baseFare;
-    const distance = vehicle.priceKm * 5;
-    const time = vehicle.priceMin * 15;
+    const inputLen = (pickup.length || 0) + (dropoff.length || 0);
+    const distance = vehicle.priceKm * Math.max(1, Math.round(inputLen * 0.3));
+    const time = vehicle.priceMin * Math.max(5, Math.round(inputLen * 0.8));
     const platform = Math.round((base + distance + time) * 0.1);
     return { base, distance, time, platform, total: base + distance + time + platform };
   };
@@ -86,8 +87,8 @@ const PassengerHome = () => {
     try {
       const fare = calcFare(selectedVehicle);
       const res = await ridesAPI.create({
-        pickupLocation: { address: pickup, coordinates: [9.6, 41.6] },
-        dropoffLocation: { address: dropoff, coordinates: [9.0, 40.5] },
+        pickupLocation: { address: pickup, coordinates: [9.6, 41.85] },
+        dropoffLocation: { address: dropoff, coordinates: [9.6, 41.85] },
         rideType, vehicleType: selectedVehicle.id, paymentMethod, estimatedFare: fare.total,
       });
       setActiveRide(res.data.ride || { _id: 'demo', pickupLocation: { address: pickup }, dropoffLocation: { address: dropoff }, estimatedFare: fare.total });
@@ -115,7 +116,21 @@ const PassengerHome = () => {
     fetchRecentTrips(); fetchStats();
   };
 
-  const handleSOS = () => { toast.warning('SOS alert sent!'); };
+  const handleSOS = async () => {
+    try {
+      let location = null;
+      try {
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+        );
+        location = { coordinates: [pos.coords.longitude, pos.coords.latitude], address: '' };
+      } catch (_) {}
+      await sosAPI.trigger({ location, description: 'SOS triggered by passenger' });
+      toast.warning('SOS alert sent!');
+    } catch (err) {
+      toast.error('Failed to send SOS alert');
+    }
+  };
 
   const fare = calcFare(selectedVehicle);
   const userName = user?.firstName || user?.name || '';
@@ -191,9 +206,15 @@ const PassengerHome = () => {
         <button className="passenger-bell-btn"><FaBell /></button>
       </div>
 
-      <div className="passenger-search-bar" onClick={() => document.querySelector('.location-input')?.focus()}>
+      <div className="passenger-search-bar">
         <FaSearch className="search-icon" />
-        <span className="search-placeholder">{t('passenger.whereTo') || 'Where are you going?'}</span>
+        <input
+          className="search-input"
+          type="text"
+          placeholder={t('passenger.whereTo') || 'Where are you going?'}
+          value={pickup}
+          onChange={e => setPickup(e.target.value)}
+        />
       </div>
 
       <div className="passenger-booking-card">
@@ -305,7 +326,7 @@ const PassengerHome = () => {
       <div className="passenger-bottom-nav">
         <button className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}><FaHome /><span>Home</span></button>
         <button className={`bottom-nav-item ${activeTab === 'trips' ? 'active' : ''}`} onClick={() => navigate('/passenger/trips')}><FaListUl /><span>Trips</span></button>
-        <button className={`bottom-nav-item ${activeTab === 'wallet' ? 'active' : ''}`} onClick={() => navigate('/passenger/favorites')}><FaWallet /><span>Wallet</span></button>
+        <button className={`bottom-nav-item ${activeTab === 'wallet' ? 'active' : ''}`} onClick={() => navigate('/passenger/wallet')}><FaWallet /><span>Wallet</span></button>
         <button className={`bottom-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => navigate('/passenger/profile')}><FaCog /><span>Settings</span></button>
       </div>
     </div>

@@ -49,6 +49,11 @@ const tripSchema = new mongoose.Schema({
   },
   startTime: Date,
   endTime: Date,
+  rideType: {
+    type: String,
+    enum: ['intra_city', 'intercity'],
+    default: 'intra_city'
+  },
   fare: {
     baseFare: Number,
     distanceFare: Number,

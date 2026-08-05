@@ -32,13 +32,11 @@ const SupportChatPage = () => {
         channel: 'in_app'
       });
 
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          sender: 'support',
-          text: 'Thank you for your message. Our support team will respond shortly. You can also reach us at support@dirs.et',
-          timestamp: new Date().toISOString()
-        }]);
-      }, 1500);
+      setMessages(prev => [...prev, {
+        sender: 'support',
+        text: 'Your message has been sent to our support team. We\'ll respond within 24 hours.',
+        timestamp: new Date().toISOString()
+      }]);
     } catch (error) {
       console.error('Support message error:', error);
     }

@@ -56,14 +56,17 @@ const PassengerProfile = () => {
     const newContact = { name: contactName, phone: contactPhone, _id: Date.now().toString() };
     const updated = [...emergencyContacts, newContact];
     setEmergencyContacts(updated);
+    await authAPI.updateProfile({ emergencyContacts: updated });
     setContactName('');
     setContactPhone('');
     setShowContactForm(false);
     toast.success('Contact added');
   };
 
-  const handleDeleteContact = (id) => {
-    setEmergencyContacts(emergencyContacts.filter(c => c._id !== id));
+  const handleDeleteContact = async (id) => {
+    const updated = emergencyContacts.filter(c => c._id !== id);
+    setEmergencyContacts(updated);
+    await authAPI.updateProfile({ emergencyContacts: updated });
     toast.success('Contact removed');
   };
 
@@ -229,7 +232,15 @@ const PassengerProfile = () => {
                 <span style={{ fontSize: 14 }}>{t('passenger.notifications')}</span>
                 <ToggleButton
                   active={notifications}
-                  onToggle={() => setNotifications(!notifications)}
+                  onToggle={async () => {
+                    const newValue = !notifications;
+                    setNotifications(newValue);
+                    try {
+                      await authAPI.updateProfile({ notifications: newValue });
+                    } catch (err) {
+                      toast.error('Failed to update notification setting');
+                    }
+                  }}
                   label={notifications ? 'On' : 'Off'}
                 />
               </div>

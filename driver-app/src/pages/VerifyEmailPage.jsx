@@ -38,9 +38,6 @@ const VerifyEmailPage = () => {
       setStep('verify');
       setCountdown(60);
       toast.success('OTP sent to your email');
-      if (response.data.otpCode) {
-        toast.info(`Dev OTP: ${response.data.otpCode}`);
-      }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send OTP');
     } finally {

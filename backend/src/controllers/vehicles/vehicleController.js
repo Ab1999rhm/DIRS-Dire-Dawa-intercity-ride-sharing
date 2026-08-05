@@ -55,9 +55,11 @@ exports.updateVehicle = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Driver profile not found' });
   }
 
+  const { vehicleType, make, model, year, color, plateNumber, capacity, serviceType } = req.body;
+
   const vehicle = await Vehicle.findOneAndUpdate(
     { driver: driver._id, isActive: true },
-    req.body,
+    { vehicleType, make, model, year, color, plateNumber, capacity, serviceType },
     { new: true, runValidators: true }
   );
 

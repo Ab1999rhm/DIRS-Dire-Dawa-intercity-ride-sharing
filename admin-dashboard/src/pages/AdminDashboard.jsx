@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import api from '../services/api';
-import { FaUsers, FaCar, FaMoneyBill, FaTripadvisor, FaExclamationTriangle, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUsers, FaCar, FaMoneyBill, FaTripadvisor, FaExclamationTriangle, FaCheck, FaTimes, FaSignOutAlt } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminAccessToken');
+    localStorage.removeItem('adminRefreshToken');
+    navigate('/login');
+  };
 
   useEffect(() => {
     loadDashboardStats();
@@ -19,6 +28,7 @@ const AdminDashboard = () => {
       setStats(response.data);
     } catch (error) {
       console.error('Load stats error:', error);
+      toast.error('Failed to load dashboard stats');
     } finally {
       setLoading(false);
     }
@@ -78,6 +88,9 @@ const AdminDashboard = () => {
             Reports
           </button>
         </nav>
+        <button className="nav-item logout-btn" onClick={handleLogout}>
+          <FaSignOutAlt /> Logout
+        </button>
       </aside>
 
       <main className="admin-main">
@@ -167,6 +180,7 @@ const DriverVerificationSection = () => {
       setDrivers(response.data.drivers);
     } catch (error) {
       console.error('Load drivers error:', error);
+      toast.error('Failed to load pending drivers');
     } finally {
       setLoading(false);
     }
@@ -176,8 +190,10 @@ const DriverVerificationSection = () => {
     try {
       await adminAPI.verifyDriver(driverId, action, reason);
       setDrivers(prev => prev.filter(d => d._id !== driverId));
+      toast.success(`Driver ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
       console.error('Verify driver error:', error);
+      toast.error('Failed to verify driver');
     }
   };
 
@@ -235,6 +251,7 @@ const UserManagementSection = () => {
       setUsers(response.data.users);
     } catch (error) {
       console.error('Load users error:', error);
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -244,8 +261,10 @@ const UserManagementSection = () => {
     try {
       await adminAPI.suspendUser(userId, 'Suspended by admin');
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: false } : u));
+      toast.success('User suspended successfully');
     } catch (error) {
       console.error('Suspend error:', error);
+      toast.error('Failed to suspend user');
     }
   };
 
@@ -253,8 +272,10 @@ const UserManagementSection = () => {
     try {
       await adminAPI.reactivateUser(userId);
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: true } : u));
+      toast.success('User reactivated successfully');
     } catch (error) {
       console.error('Reactivate error:', error);
+      toast.error('Failed to reactivate user');
     }
   };
 
@@ -328,6 +349,7 @@ const TripsSection = () => {
       setTrips(response.data.trips);
     } catch (error) {
       console.error('Load trips error:', error);
+      toast.error('Failed to load trips');
     } finally {
       setLoading(false);
     }
@@ -394,6 +416,7 @@ const PaymentsSection = () => {
       setSummary(response.data.summary);
     } catch (error) {
       console.error('Load payments error:', error);
+      toast.error('Failed to load payments');
     } finally {
       setLoading(false);
     }
@@ -473,6 +496,7 @@ const SOSAlertsSection = () => {
       setAlerts(response.data.alerts);
     } catch (error) {
       console.error('Load alerts error:', error);
+      toast.error('Failed to load SOS alerts');
     } finally {
       setLoading(false);
     }
@@ -482,8 +506,10 @@ const SOSAlertsSection = () => {
     try {
       await api.put(`/sos/${alertId}/resolve`);
       setAlerts(prev => prev.map(a => a._id === alertId ? { ...a, status: 'resolved' } : a));
+      toast.success('SOS alert resolved');
     } catch (error) {
       console.error('Resolve error:', error);
+      toast.error('Failed to resolve SOS alert');
     }
   };
 
@@ -530,9 +556,36 @@ const ReportsSection = () => {
       setReportData(response.data.report);
     } catch (error) {
       console.error('Generate report error:', error);
+      toast.error('Failed to generate report');
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderReportData = () => {
+    if (!reportData) return null;
+
+    return (
+      <div className="report-cards">
+        {Object.entries(reportData).map(([key, value]) => (
+          <div key={key} className="report-card">
+            <h4>{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</h4>
+            {typeof value === 'object' && value !== null ? (
+              <div className="report-card-details">
+                {Object.entries(value).map(([subKey, subValue]) => (
+                  <div key={subKey} className="report-detail-row">
+                    <span className="detail-label">{subKey.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}:</span>
+                    <span className="detail-value">{String(subValue)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="report-card-value">{String(value)}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -551,7 +604,7 @@ const ReportsSection = () => {
       </div>
       {reportData && (
         <div className="report-data">
-          <pre>{JSON.stringify(reportData, null, 2)}</pre>
+          {renderReportData()}
         </div>
       )}
     </div>

@@ -58,7 +58,7 @@ const RegisterPage = () => {
 
     try {
       const { confirmPassword, ...submitData } = formData;
-      const response = await register(submitData);
+      const response = await register({ ...submitData, vehicleData });
       navigate('/verify-email', {
         state: {
           email: formData.email,

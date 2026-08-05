@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import LoginPage from './pages/LoginPage';
@@ -32,6 +33,7 @@ const PrivateRoute = ({ children }) => {
 
 function App() {
   return (
+    <ErrorBoundary>
     <AuthProvider>
       <LanguageProvider>
         <Router>
@@ -106,6 +108,7 @@ function App() {
         </Router>
       </LanguageProvider>
     </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

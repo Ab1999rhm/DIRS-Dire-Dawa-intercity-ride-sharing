@@ -153,8 +153,7 @@ exports.sendEmailOTP = asyncHandler(async (req, res) => {
   if (result.success) {
     res.json({
       message: 'OTP sent to your email',
-      previewUrl: result.previewUrl || null,
-      otpCode: result.otpCode || null
+      previewUrl: result.previewUrl || null
     });
   } else {
     res.status(500).json({ error: 'Failed to send OTP email' });
@@ -339,6 +338,15 @@ exports.updateLocation = asyncHandler(async (req, res) => {
   });
 
   res.json({ message: 'Location updated' });
+});
+
+exports.logout = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('+refreshToken');
+  if (user) {
+    user.refreshToken = null;
+    await user.save();
+  }
+  res.json({ message: 'Logged out successfully' });
 });
 
 exports.updateDriverStatus = asyncHandler(async (req, res) => {

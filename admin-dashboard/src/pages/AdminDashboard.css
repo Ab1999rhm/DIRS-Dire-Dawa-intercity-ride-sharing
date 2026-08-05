@@ -10,6 +10,8 @@
   color: white;
   position: fixed;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
@@ -399,4 +401,82 @@ th {
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  position: absolute;
+  bottom: 0;
+  width: 250px;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ff6b6b !important;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 0;
+  flex: 1;
+  position: relative;
+}
+
+.report-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.report-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.report-card h4 {
+  margin-bottom: 12px;
+  color: #1a73e8;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.report-card-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.report-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.report-detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #333;
+  font-weight: 600;
 }

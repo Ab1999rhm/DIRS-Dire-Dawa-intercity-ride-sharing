@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { FaExclamationTriangle, FaPhone, FaEye } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI } from '../../services/api';
+import { adminAPI, sosAPI } from '../../services/api';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import Badge from '../../components/common/Badge';
+import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
 const AdminSOS = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const toast = useToast();
   const [alerts, setAlerts] = useState([]);
   const [resolvedAlerts, setResolvedAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,15 +38,16 @@ const AdminSOS = () => {
 
   const handleResolve = async (alertId) => {
     try {
-      await adminAPI.sosAlerts();
+      await sosAPI.resolve(alertId);
       setAlerts(prev => prev.map(a => a._id === alertId ? { ...a, status: 'resolved' } : a));
       const resolved = alerts.find(a => a._id === alertId);
       if (resolved) {
         setResolvedAlerts(prev => [{ ...resolved, status: 'resolved' }, ...prev]);
         setAlerts(prev => prev.filter(a => a._id !== alertId));
       }
+      toast.success('Alert resolved');
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to resolve alert');
+      toast.error(err.response?.data?.message || 'Failed to resolve alert');
     }
   };
 

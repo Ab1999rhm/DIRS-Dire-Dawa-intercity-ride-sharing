@@ -5,11 +5,13 @@ import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import Badge, { StatusBadge } from '../../components/common/Badge';
+import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
 const AdminDrivers = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const toast = useToast();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,7 +37,7 @@ const AdminDrivers = () => {
       await adminAPI.verifyDriver(driverId, action);
       setDrivers(prev => prev.map(d => d._id === driverId ? { ...d, verificationStatus: action === 'approve' ? 'approved' : 'rejected' } : d));
     } catch (err) {
-      alert(err.response?.data?.message || `Failed to ${action} driver`);
+      toast.error(err.response?.data?.message || `Failed to ${action} driver`);
     }
   };
 

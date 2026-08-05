@@ -8,12 +8,15 @@
     "save": "አስቀምጥ",
     "back": "ተመለስ",
     "next": "ቀጥል",
+    "previous": "ቀደመ",
     "submit": "ያስገባ",
     "home": "መነሻ",
     "trips": "ጉዞዎች",
     "vehicle": "ተሽከርካሪ",
     "profile": "መለያ",
-    "skip": "አሁን ደልድል"
+    "skip": "አሁን ደልድል",
+    "search": "ፈልግ",
+    "filter": "ማጣሪያ"
   },
   "auth": {
     "login": "ግባ",
@@ -69,9 +72,19 @@
     "completeTrip": "ጉዞ ጨረስ",
     "confirmArrival": "መድረስ ማረጋገጫ",
     "cancel": "ሰርዝ",
+    "cancelTrip": "ጉዞ ሰርዝ",
+    "sos": "አደጋ ጊዜ",
+    "navigate": "መንገድ አድርግ",
+    "shareTrip": "ጉዞ አካፍል",
+    "callPassenger": "ተጓዦውን ደውል",
+    "chatPassenger": "ተጓዦውን ይወያዩ",
     "driverArriving": "ንርስ በመመጡ ላይ ነው",
     "inProgress": "በሂደት ላይ",
-    "completed": "ተጠናቅቋል"
+    "completed": "ተጠናቅቋል",
+    "rating": "ደረጃ",
+    "ratePassenger": "ተጓዦውን ደረጃ ይስጡ",
+    "skipRating": "ደረጃ ደልድል",
+    "submitRating": "ደረጃ ያስገባ"
   },
   "vehicle": {
     "vehicleType": "የተሽከርካሪ ዓይነት",
@@ -84,7 +97,10 @@
     "serviceType": "የአገልግሎት ዓይነት",
     "intraCity": "ከከተማ ውስጥ ብቻ",
     "intercity": "ከከተማ ወደ ከተማ ብቻ",
-    "both": "ሁለቱም"
+    "both": "ሁለቱም",
+    "register": "ተሽከርካሪ መዝገብ",
+    "update": "ተሽከርካሪ አዘምን",
+    "noVehicle": "ተሽከርካሪ የለም"
   },
   "notifications": {
     "notifications": "ማንቂያዎች",
@@ -102,7 +118,7 @@
     "nationalIdPhoto": "የሀገር መታወቂያ ፎቶ",
     "insuranceExpiry": "የኢንሱረንስ ማብቂያ",
     "vehiclePhoto": "የተሽከርካሪ ፎቶ",
-    "registrationPhoto": "የ註冊 ፎቶ",
+    "registrationPhoto": "የተመዝገቢ ፎቶ",
     "insurancePhoto": "የኢንሱረንስ ፎቶ",
     "uploadPhoto": "ለመጫን ይནኩ",
     "saveDriverDocs": "የንርስ ቁራጮች አስቀምጥ",
@@ -110,6 +126,18 @@
     "pendingVerification": "ማረጋገጫ በመጠበቅ ላይ",
     "verified": "የተረጋግጧል",
     "rejected": "ተቋቋሟል",
-    "underReview": "በ_firestore ላይ"
-  }
+    "underReview": "በስልጠና ላይ",
+    "status": "የቁራጭ ሁኔታ"
+  },
+  "earnings": {
+    "withdraw": "አውጣ",
+    "instantCashout": "ፈጣን ገንዘብ ማውጣት",
+    "paymentHistory": "የክፍያ ታሪክ",
+    "balance": "ቀሪ ገንዘብ"
+  },
+  "chat": "ወያዩ",
+  "settings": "ማስተካከያ",
+  "help": "እርዳታ",
+  "support": "ድጋፍ",
+  "onboarding": "ማስገቢያ"
 }

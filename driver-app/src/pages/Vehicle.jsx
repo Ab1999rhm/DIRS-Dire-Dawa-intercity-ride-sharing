@@ -203,7 +203,7 @@ const VehiclePage = () => {
             <div className="upload-area">
               {(vehiclePhotoPreview || (vehicle?.vehiclePhoto && vehicle.vehiclePhoto !== 'pending')) ? (
                 <img
-                  src={vehiclePhotoPreview || `http://localhost:5000${vehicle.vehiclePhoto}`}
+                  src={vehiclePhotoPreview || `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${vehicle.vehiclePhoto}`}
                   alt="Vehicle"
                   className="upload-preview"
                 />

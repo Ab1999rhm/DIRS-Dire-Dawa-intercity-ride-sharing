@@ -88,6 +88,9 @@ const initializeSocket = (server) => {
     });
 
     socket.on('ride_request', (data) => {
+      if (socket.userRole !== 'passenger') {
+        return socket.emit('error', { message: 'Unauthorized' });
+      }
       io.to('drivers').emit('new_ride_request', data);
     });
 
@@ -114,6 +117,9 @@ const initializeSocket = (server) => {
     });
 
     socket.on('admin_broadcast', (data) => {
+      if (socket.userRole !== 'admin') {
+        return socket.emit('error', { message: 'Unauthorized' });
+      }
       io.to(data.target).emit('broadcast', data);
     });
 
