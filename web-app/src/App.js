@@ -36,6 +36,8 @@ const AdminTrips = React.lazy(() => import('./pages/admin/AdminTrips'));
 const AdminPayments = React.lazy(() => import('./pages/admin/AdminPayments'));
 const AdminSOS = React.lazy(() => import('./pages/admin/AdminSOS'));
 const AdminReports = React.lazy(() => import('./pages/admin/AdminReports'));
+const AdminTariffs = React.lazy(() => import('./pages/admin/AdminTariffs'));
+const AdminPromos = React.lazy(() => import('./pages/admin/AdminPromos'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = () => (
@@ -149,6 +151,8 @@ const AdminRoutes = React.memo(() => (
       <Route path="payments" element={<AdminPayments />} />
       <Route path="sos" element={<AdminSOS />} />
       <Route path="reports" element={<AdminReports />} />
+      <Route path="tariffs" element={<AdminTariffs />} />
+      <Route path="promos" element={<AdminPromos />} />
       <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>
   </Suspense>

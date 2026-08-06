@@ -1,31 +1,110 @@
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
-  z-index: 1000; padding: 16px;
+  z-index: 9999; padding: 16px;
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease;
 }
 .modal-content {
   background: var(--card); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl); width: 100%;
-  max-height: 85vh; overflow-y: auto;
+  max-height: 80vh; overflow-y: auto;
   animation: slideInUp 0.3s ease;
+  border: 2px solid var(--border);
+  margin-bottom: 0;
 }
+.modal-content::-webkit-scrollbar { width: 6px; }
+.modal-content::-webkit-scrollbar-track { background: transparent; }
+.modal-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .modal-sm { max-width: 400px; }
 .modal-md { max-width: 560px; }
 .modal-lg { max-width: 720px; }
 .modal-xl { max-width: 900px; }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px; border-bottom: 1px solid var(--border-light);
+  padding: 20px 24px; border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; background: var(--card); z-index: 1;
 }
 .modal-header h3 { font-size: 18px; font-weight: 700; }
 .modal-close {
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-  background: var(--bg); border-radius: var(--radius-full); color: var(--text-secondary);
-  transition: var(--transition);
+  background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-full);
+  color: var(--text-secondary); transition: var(--transition);
 }
-.modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+.modal-close:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); transform: rotate(90deg); }
 .modal-body { padding: 24px; }
 .modal-message { font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; }
-.modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+.modal-actions {
+  display: flex; gap: 12px; justify-content: flex-end;
+  padding-top: 16px; border-top: 2px solid var(--border);
+}
+
+/* ─── Button Animations ─── */
+@keyframes btnPulse {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(37, 99, 235, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.6), 0 0 40px rgba(37, 99, 235, 0.2); }
+}
+@keyframes btnShine {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+@keyframes btnBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes borderGlow {
+  0%, 100% { border-color: var(--primary); }
+  50% { border-color: var(--primary-dark); }
+}
+
+.btn-animated {
+  position: relative; overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-animated:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+}
+.btn-animated:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-glow {
+  animation: btnGlow 2s ease-in-out infinite;
+}
+.btn-glow:hover {
+  animation: btnPulse 0.6s ease;
+}
+
+.btn-shine {
+  position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: skewX(-20deg); pointer-events: none;
+}
+.btn-animated:hover .btn-shine {
+  animation: btnShine 0.6s ease;
+}
+
+/* Cancel button animation */
+.btn-ghost.btn-animated {
+  border: 2px solid var(--border);
+}
+.btn-ghost.btn-animated:hover {
+  border-color: var(--text-secondary);
+  animation: btnBounce 0.4s ease;
+  background: var(--bg);
+}
+
+/* Danger button glow */
+.btn-danger.btn-animated {
+  animation: btnGlowDanger 2s ease-in-out infinite;
+}
+@keyframes btnGlowDanger {
+  0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.15); }
+}

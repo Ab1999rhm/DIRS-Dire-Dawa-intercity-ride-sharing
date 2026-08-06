@@ -24,12 +24,18 @@ import FareBreakdownModal from '../../components/passenger/FareBreakdownModal';
 import WalletTopupModal from '../../components/passenger/WalletTopupModal';
 import './Passenger.css';
 
-const VEHICLES = [
-  { id: 'bajaj', icon: FaShuttleVan, nameKey: 'bajaj', label: 'Bajaj (TukTuk)', capacity: 3, priceKm: 10, priceMin: 2, baseFare: 30, color: '#10b981' },
-  { id: 'economy', icon: FaCar, nameKey: 'economy', label: 'Economy', capacity: 4, priceKm: 15, priceMin: 3, baseFare: 50, color: '#2563eb' },
-  { id: 'comfort', icon: FaCar, nameKey: 'comfort', label: 'Comfort VIP', capacity: 4, priceKm: 22, priceMin: 4, baseFare: 90, color: '#8b5cf6' },
-  { id: 'minibus', icon: FaBus, nameKey: 'minibus', label: 'Minibus / Coaster', capacity: 14, priceKm: 20, priceMin: 2, baseFare: 150, color: '#ef4444' }
-];
+// Import VEHICLE_CATEGORIES as the single source of truth for vehicle data
+import { VEHICLE_CATEGORIES } from '../../components/passenger/VehicleCategorySelector';
+
+// Normalise VEHICLE_CATEGORIES into the shape PassengerHome expects:
+// adds .label (= .name), .priceKm (= .perKm), .priceMin, .color
+const VEHICLES = VEHICLE_CATEGORIES.map(c => ({
+  ...c,
+  label: c.name,
+  priceKm: c.perKm,
+  priceMin: c.id === 'bajaj' ? 2 : c.id === 'economy' ? 3 : c.id === 'comfort' ? 4 : 2,
+  color: c.id === 'bajaj' ? '#10b981' : c.id === 'economy' ? '#2563eb' : c.id === 'comfort' ? '#8b5cf6' : '#ef4444',
+}));
 
 const pickupIcon = L.divIcon({
   className: 'custom-marker',
@@ -74,17 +80,80 @@ function debounce(fn, ms) {
   };
 }
 
-const HARDCODED_CITIES = [
-  { label: 'Dire Dawa, Ethiopia', lat: 9.6009, lon: 41.8508 },
+// ─── Dire Dawa Intra-City Locations (neighborhoods, markets, hospitals, schools, landmarks) ───
+const DIRE_DAWA_PLACES = [
+  // Neighborhoods / Ketena
+  { label: 'Sabian, Dire Dawa', lat: 9.5950, lon: 41.8600 },
+  { label: 'Kezira, Dire Dawa', lat: 9.6080, lon: 41.8450 },
+  { label: 'Addis Ketema, Dire Dawa', lat: 9.5990, lon: 41.8530 },
+  { label: 'Gendekore, Dire Dawa', lat: 9.6120, lon: 41.8390 },
+  { label: 'Dire Dawa City Center', lat: 9.6009, lon: 41.8508 },
+  { label: 'Melka Jebdu, Dire Dawa', lat: 9.5880, lon: 41.8700 },
+  { label: 'Legehare, Dire Dawa', lat: 9.6050, lon: 41.8470 },
+  { label: 'Taiwan, Dire Dawa', lat: 9.6030, lon: 41.8540 },
+  { label: 'Ashewa, Dire Dawa', lat: 9.6090, lon: 41.8610 },
+  { label: 'Megala, Dire Dawa', lat: 9.5910, lon: 41.8650 },
+  { label: 'Buramedo, Dire Dawa', lat: 9.5870, lon: 41.8430 },
+  { label: 'Kebele 01, Dire Dawa', lat: 9.6015, lon: 41.8495 },
+  { label: 'Kebele 05, Dire Dawa', lat: 9.6035, lon: 41.8515 },
+  { label: 'Kebele 08, Dire Dawa', lat: 9.5970, lon: 41.8560 },
+
+  // Markets & Commercial
+  { label: 'Dire Dawa Main Market (Kezira Market)', lat: 9.6072, lon: 41.8445 },
+  { label: 'Taiwan Market, Dire Dawa', lat: 9.6028, lon: 41.8542 },
+  { label: 'Sabian Market, Dire Dawa', lat: 9.5955, lon: 41.8605 },
+  { label: 'Katar Market, Dire Dawa', lat: 9.5985, lon: 41.8480 },
+  { label: 'Jijiga Ber Market, Dire Dawa', lat: 9.6100, lon: 41.8380 },
+
+  // Hospitals & Health
+  { label: 'Dire Dawa Referral Hospital', lat: 9.6015, lon: 41.8430 },
+  { label: 'Dil Chora Hospital, Dire Dawa', lat: 9.6055, lon: 41.8555 },
+  { label: 'Sabian Health Center, Dire Dawa', lat: 9.5940, lon: 41.8610 },
+  { label: 'Dilchora Referral Hospital', lat: 9.6058, lon: 41.8558 },
+  { label: 'Red Cross Clinic, Dire Dawa', lat: 9.6010, lon: 41.8470 },
+
+  // Schools & Universities
+  { label: 'Dire Dawa University', lat: 9.6133, lon: 41.8617 },
+  { label: 'Dire Dawa Preparatory School', lat: 9.6020, lon: 41.8510 },
+  { label: 'Kezira Primary School, Dire Dawa', lat: 9.6075, lon: 41.8448 },
+  { label: 'Sabian Secondary School', lat: 9.5960, lon: 41.8595 },
+  { label: 'Dire Dawa TVET College', lat: 9.6040, lon: 41.8500 },
+
+  // Transport & Hotels
+  { label: 'Dire Dawa Bus Station (Autobus Tera)', lat: 9.6005, lon: 41.8398 },
+  { label: 'Dire Dawa Railway Station', lat: 9.5998, lon: 41.8462 },
+  { label: 'Dire Dawa Airport', lat: 9.6247, lon: 41.8542 },
+  { label: 'Samrat Hotel, Dire Dawa', lat: 9.6018, lon: 41.8488 },
+  { label: 'Ras Hotel, Dire Dawa', lat: 9.6022, lon: 41.8505 },
+  { label: 'Ethiopia Hotel, Dire Dawa', lat: 9.6012, lon: 41.8498 },
+
+  // Government & Landmarks
+  { label: 'Dire Dawa City Administration', lat: 9.6008, lon: 41.8492 },
+  { label: 'Dire Dawa Police Station', lat: 9.6002, lon: 41.8478 },
+  { label: 'Dire Dawa Post Office', lat: 9.6011, lon: 41.8501 },
+  { label: 'Commercial Bank of Ethiopia, Dire Dawa', lat: 9.6015, lon: 41.8505 },
+  { label: 'Awash Bank, Dire Dawa', lat: 9.6020, lon: 41.8510 },
+  { label: 'Dire Dawa Stadium', lat: 9.6085, lon: 41.8440 },
+  { label: 'Central Mosque, Dire Dawa', lat: 9.6009, lon: 41.8520 },
+  { label: 'St. Gabriel Church, Dire Dawa', lat: 9.5995, lon: 41.8490 },
+];
+
+// ─── Intercity / National destinations ───
+const INTERCITY_PLACES = [
+  { label: 'Harar, Ethiopia', lat: 9.3115, lon: 42.1199 },
+  { label: 'Jigjiga, Ethiopia', lat: 9.3506, lon: 42.7933 },
   { label: 'Addis Ababa, Ethiopia', lat: 9.0192, lon: 38.7525 },
+  { label: 'Adama (Nazret), Ethiopia', lat: 8.5400, lon: 39.2700 },
   { label: 'Hawassa, Ethiopia', lat: 7.0621, lon: 38.4763 },
   { label: 'Bahir Dar, Ethiopia', lat: 11.5938, lon: 37.3909 },
   { label: 'Mekelle, Ethiopia', lat: 13.4967, lon: 39.4753 },
-  { label: 'Adama (Nazret), Ethiopia', lat: 8.5400, lon: 39.2700 },
   { label: 'Jimma, Ethiopia', lat: 7.6789, lon: 36.8340 },
   { label: 'Dessie, Ethiopia', lat: 11.1321, lon: 39.6353 },
-  { label: 'Harar, Ethiopia', lat: 9.3115, lon: 42.1199 },
+  { label: 'Chiro, West Hararghe', lat: 9.0667, lon: 40.8667 },
+  { label: 'Asebe Teferi, Oromia', lat: 9.0667, lon: 40.8667 },
 ];
+
+const HARDCODED_CITIES = [...DIRE_DAWA_PLACES, ...INTERCITY_PLACES];
 
 const PassengerHome = () => {
   const { t } = useLanguage();
@@ -287,18 +356,34 @@ const PassengerHome = () => {
         return;
       }
       const lowerQuery = query.toLowerCase();
-      const localMatches = HARDCODED_CITIES.filter(c =>
+
+      // For intraCity, only show Dire Dawa places first; for intercity show all
+      const localPool = rideType === 'intraCity'
+        ? [...DIRE_DAWA_PLACES, ...INTERCITY_PLACES]
+        : [...INTERCITY_PLACES, ...DIRE_DAWA_PLACES];
+
+      const localMatches = localPool.filter(c =>
         c.label.toLowerCase().includes(lowerQuery)
       );
+
       if (query.length < 3) {
-        setter(localMatches);
+        setter(localMatches.slice(0, 8));
         return;
       }
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        // Bias search toward Dire Dawa bounding box for intraCity
+        const isDireSearch = rideType === 'intraCity';
+        const viewbox = isDireSearch
+          ? '&viewbox=41.80,9.55,41.92,9.66&bounded=1'
+          : '';
+        const countrycodes = '&countrycodes=et';
+
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6${countrycodes}${viewbox}`,
           {
             headers: { 'Accept-Language': 'en' },
             signal: controller.signal,
@@ -311,20 +396,22 @@ const PassengerHome = () => {
           lat: parseFloat(item.lat),
           lon: parseFloat(item.lon),
         }));
+
+        // Local Dire Dawa places always appear first, then remote
         const combined = [...localMatches, ...remoteResults];
         const seen = new Set();
         const unique = combined.filter(item => {
-          const key = `${item.lat},${item.lon}`;
+          const key = `${parseFloat(item.lat).toFixed(3)},${parseFloat(item.lon).toFixed(3)}`;
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
         });
         setter(unique.slice(0, 8));
       } catch (_) {
-        setter(localMatches);
+        setter(localMatches.slice(0, 8));
       }
-    }, 500),
-    []
+    }, 400),
+    [rideType]
   );
 
   const swapLocations = () => {
@@ -1141,10 +1228,11 @@ const PassengerHome = () => {
         </div>
 
         <VehicleCategorySelector
-          selectedCategory={selectedVehicle ? { id: selectedVehicle.id, baseFare: selectedVehicle.baseFare, perKm: selectedVehicle.priceKm, name: selectedVehicle.label } : null}
+          selectedCategory={selectedVehicle || null}
           onSelectCategory={(cat) => {
-            const found = VEHICLES.find(v => v.id === cat.id) || VEHICLES[0];
-            setSelectedVehicle(found);
+            // VEHICLES is derived from VEHICLE_CATEGORIES, so IDs always match
+            const found = VEHICLES.find(v => v.id === cat.id);
+            if (found) setSelectedVehicle(found);
           }}
           rideType={rideType}
           distanceKm={pickupCoords && dropoffCoords ? haversineDistance(pickupCoords[0], pickupCoords[1], dropoffCoords[0], dropoffCoords[1]) : 5}

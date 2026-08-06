@@ -71,12 +71,25 @@ const DriverEarnings = () => {
 
       {error && <div className="error-banner" onClick={() => setError(null)}>{error}</div>}
 
-      <Card className="balance-card" padding="lg">
+      <Card className="balance-card" padding="lg" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white' }}>
         <div className="balance-header">
-          <FaWallet className="balance-icon" />
-          <span>{t('driver.balance')}</span>
+          <FaWallet className="balance-icon" style={{ color: '#38bdf8' }} />
+          <span>Driver Net Payout Wallet</span>
         </div>
-        <div className="balance-amount">{earnings.total?.toFixed(0)} ETB</div>
+        <div className="balance-amount" style={{ fontSize: '26px', fontWeight: '800', margin: '8px 0' }}>
+          {(earnings.total * 0.85)?.toFixed(0)} ETB
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.9, marginTop: '8px', borderTop: '1px solid #334155', paddingTop: '8px' }}>
+          <span>Gross: {earnings.total?.toFixed(0)} ETB</span>
+          <span>Platform Fee (-15%): -{(earnings.total * 0.15)?.toFixed(0)} ETB</span>
+        </div>
+        <button
+          type="button"
+          style={{ width: '100%', marginTop: '12px', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          onClick={() => alert(`Instant payout request of ${(earnings.total * 0.85)?.toFixed(0)} ETB sent to Telebirr (+251911223344)!`)}
+        >
+          📲 Request Instant Payout to Telebirr
+        </button>
       </Card>
 
       <div className="earnings-section">

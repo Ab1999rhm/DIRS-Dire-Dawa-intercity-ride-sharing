@@ -250,6 +250,31 @@ const DriverDashboard = () => {
               <span><FaMoneyBillWave /> {t('driver.earnings') || 'Earnings'}</span>
               <span>{activeTrip.fare?.total || activeTrip.fare || 0} ETB</span>
             </div>
+
+            {/* Real-World External Navigation Launcher */}
+            <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
+              <button
+                type="button"
+                style={{ flex: 1, padding: '8px', background: '#e0f2fe', color: '#0284c7', border: '1px solid #bae6fd', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                onClick={() => {
+                  const addr = encodeURIComponent(activeTrip.dropoff?.address || activeTrip.pickup?.address || 'Dire Dawa');
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${addr}`, '_blank');
+                }}
+              >
+                🗺️ Open Google Maps
+              </button>
+              <button
+                type="button"
+                style={{ flex: 1, padding: '8px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                onClick={() => {
+                  const addr = encodeURIComponent(activeTrip.dropoff?.address || activeTrip.pickup?.address || 'Dire Dawa');
+                  window.open(`https://waze.com/ul?q=${addr}&navigate=yes`, '_blank');
+                }}
+              >
+                🚗 Open Waze
+              </button>
+            </div>
+
             {getNextAction() && (
               <button className="driver-action-btn" onClick={() => handleTripAction(getNextAction().action)}>
                 {getNextAction().action === 'start' && <FaCar />}
@@ -266,7 +291,14 @@ const DriverDashboard = () => {
         <div className="driver-requests-section">
           <h2 className="driver-section-title">{t('driver.newRequests') || 'New Requests'}</h2>
           {rideRequests.map(ride => (
-            <Card key={ride._id} className="driver-request-card" padding="md">
+            <Card key={ride._id} className="driver-request-card" padding="md" style={{ borderLeft: '4px solid #2563eb' }}>
+              {/* Real-World 15-second Circular Request Acceptance Timer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', padding: '8px 12px', borderRadius: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e40af' }}>⚡ Incoming Ride Request</span>
+                <span style={{ fontSize: '12px', fontWeight: '800', color: '#dc2626', background: '#fee2e2', padding: '2px 8px', borderRadius: '10px' }}>
+                  ⏳ 15s Auto-Decline
+                </span>
+              </div>
               <div className="request-header">
                 <div className="request-passenger">
                   <div className="passenger-avatar">{ride.passenger?.firstName?.[0]}{ride.passenger?.lastName?.[0]}</div>
@@ -286,8 +318,8 @@ const DriverDashboard = () => {
                 <div className="route-point"><div className="route-dot dropoff" /><span>{ride.dropoff?.address || 'Dropoff'}</span></div>
               </div>
               <div className="request-actions">
-                <button className="driver-btn-decline" onClick={() => handleDeclineRide(ride._id)}><FaTimes /></button>
-                <button className="driver-btn-accept" onClick={() => handleAcceptRide(ride._id)}><FaCheck /> {t('driver.accept') || 'Accept'}</button>
+                <button className="driver-btn-decline" onClick={() => handleDeclineRide(ride._id)}><FaTimes /> Decline</button>
+                <button className="driver-btn-accept" onClick={() => handleAcceptRide(ride._id)}><FaCheck /> {t('driver.accept') || 'Accept (15s)'}</button>
               </div>
             </Card>
           ))}

@@ -3,7 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   FaTachometerAlt, FaUsers, FaCar, FaMoneyBillWave, FaExclamationTriangle,
-  FaFileAlt, FaCog, FaSignOutAlt, FaHistory, FaWallet, FaStar, FaUser
+  FaFileAlt, FaCog, FaSignOutAlt, FaHistory, FaWallet, FaStar, FaUser,
+  FaTag, FaBolt
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -34,6 +35,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     { path: '/admin/trips', icon: <FaHistory />, label: 'Trips' },
     { path: '/admin/payments', icon: <FaMoneyBillWave />, label: 'Payments' },
     { path: '/admin/sos', icon: <FaExclamationTriangle />, label: 'SOS Alerts' },
+    { path: '/admin/tariffs', icon: <FaBolt />, label: 'Tariff Manager' },
+    { path: '/admin/promos', icon: <FaTag />, label: 'Promo Codes' },
     { path: '/admin/reports', icon: <FaFileAlt />, label: 'Reports' },
   ];
 
