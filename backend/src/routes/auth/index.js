@@ -321,7 +321,10 @@ router.put('/driver/status', protect, authController.updateDriverStatus);
 
 router.get('/documents', protect, documentController.getDocuments);
 
-router.post('/profile-photo', protect, upload.single('photo'), documentController.uploadProfilePhoto);
+router.post('/send-phone-otp', authController.sendPhoneOTP);
+router.post('/verify-phone-otp', authController.verifyPhoneOTP);
+
+router.post('/profile-photo', protect, upload.single('photo'), authController.uploadProfilePhoto);
 
 router.post('/documents', protect, upload.fields([
   { name: 'licensePhoto', maxCount: 1 },

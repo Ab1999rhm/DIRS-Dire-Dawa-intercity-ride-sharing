@@ -4,6 +4,8 @@ const rideController = require('../../controllers/rides/rideController');
 const { protect, authorize } = require('../../middleware/auth');
 const { validateRideRequest } = require('../../middleware/validation');
 
+router.post('/estimate', protect, rideController.estimateFare);
+
 router.post('/', protect, authorize('passenger'), validateRideRequest, rideController.createRideRequest);
 router.post('/:rideRequestId/accept', protect, authorize('driver'), rideController.acceptRideRequest);
 router.post('/:rideRequestId/decline', protect, authorize('driver'), rideController.declineRideRequest);

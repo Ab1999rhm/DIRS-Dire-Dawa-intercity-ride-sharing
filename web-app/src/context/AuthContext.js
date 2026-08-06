@@ -31,6 +31,9 @@ export const AuthProvider = ({ children }) => {
       console.log('Socket connected');
       if (user?.role === 'driver') newSocket.emit('join_drivers');
       if (user?.role === 'admin') newSocket.emit('join_admins');
+      if (user?.role === 'passenger' && user?._id) {
+        newSocket.emit('join_passengers', { userId: user._id });
+      }
     });
 
     newSocket.on('notification', (data) => {

@@ -49,6 +49,7 @@ const initializeSocket = (server) => {
       socket.join('drivers');
     } else if (socket.userRole === 'passenger') {
       socket.join('passengers');
+      socket.emit('join_passengers', { userId: socket.userId });
     } else if (socket.userRole === 'admin') {
       socket.join('admins');
     }

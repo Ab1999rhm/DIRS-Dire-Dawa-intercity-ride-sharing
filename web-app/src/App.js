@@ -15,11 +15,14 @@ const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const PassengerHome = React.lazy(() => import('./pages/passenger/PassengerHome'));
 const PassengerTrips = React.lazy(() => import('./pages/passenger/PassengerTrips'));
 const PassengerHistory = React.lazy(() => import('./pages/passenger/PassengerHistory'));
 const PassengerFavorites = React.lazy(() => import('./pages/passenger/PassengerFavorites'));
 const PassengerProfile = React.lazy(() => import('./pages/passenger/PassengerProfile'));
+const PassengerWallet = React.lazy(() => import('./pages/passenger/PassengerWallet'));
+const PassengerTripDetail = React.lazy(() => import('./pages/passenger/PassengerTripDetail'));
 const DriverDashboard = React.lazy(() => import('./pages/driver/DriverDashboard'));
 const DriverTrips = React.lazy(() => import('./pages/driver/DriverTrips'));
 const DriverEarnings = React.lazy(() => import('./pages/driver/DriverEarnings'));
@@ -43,6 +46,18 @@ const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   return user ? children : <Navigate to="/login" />;
+};
+
+const RoleRoute = ({ children, allowedRole }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Navigate to="/login" />;
+  if (user.role !== allowedRole) {
+    if (user.role === 'driver') return <Navigate to="/driver" />;
+    if (user.role === 'admin') return <Navigate to="/admin" />;
+    return <Navigate to="/passenger" />;
+  }
+  return children;
 };
 
 const PublicRoute = ({ children }) => {
@@ -84,6 +99,8 @@ const PassengerRoutes = () => (
     <Routes>
       <Route index element={<PassengerHome />} />
       <Route path="trips" element={<PassengerTrips />} />
+      <Route path="trip/:tripId" element={<PassengerTripDetail />} />
+      <Route path="wallet" element={<PassengerWallet />} />
       <Route path="history" element={<PassengerHistory />} />
       <Route path="favorites" element={<PassengerFavorites />} />
       <Route path="profile" element={<PassengerProfile />} />
@@ -144,9 +161,10 @@ function App() {
                   <Route path="/" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><PublicLanding /></Suspense></PublicRoute>} />
                   <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><LoginPage /></Suspense></PublicRoute>} />
                   <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><RegisterPage /></Suspense></PublicRoute>} />
-                  <Route path="/passenger/*" element={<PrivateRoute><AppLayout><PassengerRoutes /></AppLayout></PrivateRoute>} />
-                  <Route path="/driver/*" element={<PrivateRoute><AppLayout><DriverRoutes /></AppLayout></PrivateRoute>} />
-                  <Route path="/admin/*" element={<PrivateRoute><AppLayout><AdminRoutes /></AppLayout></PrivateRoute>} />
+                  <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><ForgotPasswordPage /></Suspense></PublicRoute>} />
+                  <Route path="/passenger/*" element={<RoleRoute allowedRole="passenger"><AppLayout><PassengerRoutes /></AppLayout></RoleRoute>} />
+                  <Route path="/driver/*" element={<RoleRoute allowedRole="driver"><AppLayout><DriverRoutes /></AppLayout></RoleRoute>} />
+                  <Route path="/admin/*" element={<RoleRoute allowedRole="admin"><AppLayout><AdminRoutes /></AppLayout></RoleRoute>} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </BrowserRouter>

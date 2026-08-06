@@ -11,6 +11,50 @@ const { getIO } = require('../../sockets/socketManager');
 const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
+const haversineDistance = (coords1, coords2) => {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(coords2[1] - coords1[1]);
+  const dLon = toRad(coords2[0] - coords1[0]);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(coords1[1])) *
+      Math.cos(toRad(coords2[1])) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+exports.estimateFare = asyncHandler(async (req, res) => {
+  const { pickup, dropoff, vehicleType } = req.body;
+
+  if (!pickup || !pickup.coordinates || !dropoff || !dropoff.coordinates) {
+    return res.status(400).json({ error: 'Pickup and dropoff coordinates are required' });
+  }
+
+  const distanceKm = haversineDistance(pickup.coordinates, dropoff.coordinates);
+  const avgSpeedKmh = vehicleType === 'intercity' ? 60 : 30;
+  const durationMinutes = Math.max((distanceKm / avgSpeedKmh) * 60, 5);
+
+  const rideType = vehicleType || 'intra_city';
+  const fareResult = calculateFare(rideType, distanceKm, durationMinutes);
+
+  const estimatedFare = fareResult.totalFare;
+
+  res.json({
+    distance: Math.round(distanceKm * 100) / 100,
+    duration: Math.round(durationMinutes),
+    estimatedFare,
+    breakdown: {
+      baseFare: fareResult.baseFare,
+      distanceFare: fareResult.distanceFare,
+      timeFare: fareResult.timeFare,
+      total: estimatedFare
+    }
+  });
+});
+
 exports.createRideRequest = asyncHandler(async (req, res) => {
   const {
     rideType, pickupLocation, dropoffLocation,

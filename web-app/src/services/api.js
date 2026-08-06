@@ -102,6 +102,9 @@ export const authAPI = {
     () => offlineService.getCachedUser()
   ),
   updateProfile: (data) => api.put('/auth/profile', data),
+  uploadProfilePhoto: (formData) => api.post('/auth/profile-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   updateLocation: (coordinates) => {
     if (navigator.onLine) {
       return api.put('/auth/location', { coordinates });

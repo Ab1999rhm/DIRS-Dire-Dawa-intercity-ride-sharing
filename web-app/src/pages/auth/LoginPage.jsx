@@ -27,6 +27,10 @@ const LoginPage = () => {
       setError(t('auth.phoneRequired') || 'Phone number is required');
       return;
     }
+    if (!/^(\+251|0)?[97]\d{8}$/.test(phoneNumber.trim())) {
+      setError('Please enter a valid Ethiopian phone number');
+      return;
+    }
     if (!password.trim()) {
       setError(t('auth.passwordRequired') || 'Password is required');
       return;
@@ -122,7 +126,7 @@ const LoginPage = () => {
                 />
                 {t('auth.rememberMe') || 'Remember me'}
               </label>
-              <a href="#forgot" className="forgot-link">
+              <a href="/forgot-password" className="forgot-link">
                 {t('auth.forgotPassword') || 'Forgot Password?'}
               </a>
             </div>

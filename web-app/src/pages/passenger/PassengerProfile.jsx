@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe, FaBell, FaShieldAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe, FaBell, FaShieldAlt, FaCamera } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api';
@@ -24,6 +24,9 @@ const PassengerProfile = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -32,8 +35,33 @@ const PassengerProfile = () => {
       setPhone(user.phoneNumber || '');
       setEmail(user.email || '');
       setEmergencyContacts(user.emergencyContacts || []);
+      setProfilePhoto(user.profilePhoto || '');
     }
   }, [user]);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const res = await authAPI.uploadProfilePhoto(formData);
+      const photoUrl = res.data.photoUrl || res.data.profilePhoto;
+      setProfilePhoto(photoUrl);
+      setUser({ ...user, profilePhoto: photoUrl });
+      toast.success('Profile photo updated!');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to upload photo');
+    } finally {
+      setPhotoUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -90,7 +118,40 @@ const PassengerProfile = () => {
       </div>
 
       <div className="profile-avatar-section">
-        <div className="profile-avatar large">{initials}</div>
+        <div
+          className="profile-avatar large"
+          style={{ position: 'relative', cursor: 'pointer' }}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {profilePhoto ? (
+            <img
+              src={profilePhoto}
+              alt="Profile"
+              style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            initials
+          )}
+          <div
+            style={{
+              position: 'absolute', bottom: 0, right: 0,
+              background: 'var(--primary)', color: '#fff',
+              width: 32, height: 32, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '3px solid var(--bg)', fontSize: 14,
+              opacity: photoUploading ? 0.5 : 1
+            }}
+          >
+            <FaCamera />
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            style={{ display: 'none' }}
+          />
+        </div>
         <h3 style={{ fontWeight: 700 }}>{firstName} {lastName}</h3>
         <p className="text-muted" style={{ fontSize: 14 }}>{phone}</p>
       </div>

@@ -5,6 +5,7 @@ const { generateTokens, verifyRefreshToken } = require('../../services/tokenServ
 const { generateOTP, sendOTP: sendOTPSms, sendEmailOTP } = require('../../services/smsService');
 const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
+const upload = require('../../middleware/upload');
 
 const otpStore = new Map();
 
@@ -353,6 +354,106 @@ exports.logout = asyncHandler(async (req, res) => {
     await user.save();
   }
   res.json({ message: 'Logged out successfully' });
+});
+
+exports.sendPhoneOTP = asyncHandler(async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'Phone number is required' });
+  }
+
+  if (!canAttemptOTP(`phone_${phoneNumber}`)) {
+    return res.status(429).json({ error: 'Too many OTP attempts. Please try again later.' });
+  }
+
+  const otp = generateOTP();
+  otpStore.set(`phone_${phoneNumber}`, {
+    otp,
+    expiresAt: Date.now() + 5 * 60 * 1000,
+    [OTP_ATTEMPTS_KEY]: (otpStore.get(`phone_${phoneNumber}`)?.[OTP_ATTEMPTS_KEY] || 0) + 1
+  });
+
+  logger.info(`Phone OTP for ${phoneNumber}: ${otp}`);
+
+  const result = await sendOTPSms(phoneNumber, otp);
+
+  if (result.success) {
+    res.json({ message: 'OTP sent to your phone' });
+  } else {
+    res.json({ message: 'OTP sent (development mode)', otp });
+  }
+});
+
+exports.verifyPhoneOTP = asyncHandler(async (req, res) => {
+  const { phoneNumber, otp } = req.body;
+
+  if (!phoneNumber || !otp) {
+    return res.status(400).json({ error: 'Phone number and OTP are required' });
+  }
+
+  const storedOTP = otpStore.get(`phone_${phoneNumber}`);
+  if (!storedOTP) {
+    return res.status(400).json({ error: 'OTP not found' });
+  }
+
+  if (storedOTP.expiresAt < Date.now()) {
+    otpStore.delete(`phone_${phoneNumber}`);
+    return res.status(400).json({ error: 'OTP expired' });
+  }
+
+  if (storedOTP.otp !== otp) {
+    incrementOTPAttempts(`phone_${phoneNumber}`);
+    return res.status(400).json({ error: 'Invalid OTP' });
+  }
+
+  otpStore.delete(`phone_${phoneNumber}`);
+
+  let user = await User.findOne({ phoneNumber });
+
+  if (!user) {
+    user = await User.create({
+      phoneNumber,
+      firstName: '',
+      lastName: '',
+      role: 'passenger',
+      isVerified: true
+    });
+    logger.info('User created via phone OTP', { userId: user._id });
+  } else {
+    await User.findOneAndUpdate({ phoneNumber }, { isVerified: true });
+  }
+
+  const { accessToken, refreshToken } = generateTokens(user._id);
+  user.refreshToken = refreshToken;
+  user.lastLogin = new Date();
+  await user.save();
+
+  let driverProfile = null;
+  if (user.role === 'driver') {
+    driverProfile = await Driver.findOne({ user: user._id });
+  }
+
+  logger.info('Phone OTP verified', { userId: user._id });
+
+  res.json({
+    message: 'Phone verified successfully',
+    accessToken,
+    refreshToken,
+    user,
+    driverProfile
+  });
+});
+
+exports.uploadProfilePhoto = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const photoUrl = `/uploads/${req.file.filename}`;
+  await User.findByIdAndUpdate(req.user._id, { profilePhoto: photoUrl });
+
+  res.json({ message: 'Profile photo uploaded', profilePhoto: photoUrl });
 });
 
 exports.updateDriverStatus = asyncHandler(async (req, res) => {

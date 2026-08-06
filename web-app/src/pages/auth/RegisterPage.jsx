@@ -44,6 +44,7 @@ const RegisterPage = () => {
     if (!formData.firstName.trim()) return t('auth.firstName') + ' is required';
     if (!formData.lastName.trim()) return t('auth.lastName') + ' is required';
     if (!formData.phoneNumber.trim()) return t('auth.phoneRequired') || 'Phone number is required';
+    if (!/^(\+251|0)?[97]\d{8}$/.test(formData.phoneNumber.trim())) return 'Please enter a valid Ethiopian phone number';
     if (!formData.email.trim()) return 'Email is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Please enter a valid email';
     if (!formData.password) return t('auth.passwordRequired') || 'Password is required';
