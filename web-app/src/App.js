@@ -35,6 +35,7 @@ const AdminTrips = React.lazy(() => import('./pages/admin/AdminTrips'));
 const AdminPayments = React.lazy(() => import('./pages/admin/AdminPayments'));
 const AdminSOS = React.lazy(() => import('./pages/admin/AdminSOS'));
 const AdminReports = React.lazy(() => import('./pages/admin/AdminReports'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = () => (
   <div className="loading-screen">
@@ -165,7 +166,7 @@ function App() {
                   <Route path="/passenger/*" element={<RoleRoute allowedRole="passenger"><AppLayout><PassengerRoutes /></AppLayout></RoleRoute>} />
                   <Route path="/driver/*" element={<RoleRoute allowedRole="driver"><AppLayout><DriverRoutes /></AppLayout></RoleRoute>} />
                   <Route path="/admin/*" element={<RoleRoute allowedRole="admin"><AppLayout><AdminRoutes /></AppLayout></RoleRoute>} />
-                  <Route path="*" element={<Navigate to="/" />} />
+                  <Route path="*" element={<Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
                 </Routes>
               </BrowserRouter>
             </ToastProvider>

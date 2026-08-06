@@ -156,12 +156,15 @@ const PassengerProfile = () => {
         <p className="text-muted" style={{ fontSize: 14 }}>{phone}</p>
       </div>
 
-      <div className="profile-tabs">
+      <div className="profile-tabs" role="tablist" aria-label="Profile sections">
         {tabs.map(tab => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
             className={`profile-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
+            aria-label={`Navigate to ${tab.label}`}
           >
             {tab.icon} {tab.label}
           </button>

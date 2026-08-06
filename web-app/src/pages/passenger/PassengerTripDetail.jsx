@@ -4,7 +4,7 @@ import {
   FaMapMarkerAlt, FaCar, FaStar, FaPhone, FaShareAlt, FaExclamationTriangle,
   FaHome, FaListUl, FaWallet, FaCog, FaClock, FaCheckCircle, FaArrowLeft,
   FaRoute, FaUser, FaMotorcycle, FaShuttleVan, FaBus, FaBolt,
-  FaPlay, FaFlag, FaSms, FaTimes, FaRoute as FaRouteIcon
+  FaPlay, FaFlag, FaSms, FaTimes, FaRoute as FaRouteIcon, FaDownload
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -92,6 +92,54 @@ const PassengerTripDetail = () => {
     if (trip?.driver?.phone) {
       window.location.href = `tel:${trip.driver.phone}`;
     }
+  };
+
+  const handleDownloadReceipt = () => {
+    const fare = trip.fare || {};
+    const driver = trip.driver || {};
+    const pickup = trip.pickupLocation?.address || 'N/A';
+    const dropoff = trip.dropoffLocation?.address || 'N/A';
+    const date = new Date(trip.createdAt).toLocaleString();
+
+    const receipt = `
+========================================
+           TRIP RECEIPT
+========================================
+Date: ${date}
+Trip ID: ${trip._id}
+----------------------------------------
+FROM: ${pickup}
+TO:   ${dropoff}
+----------------------------------------
+Vehicle: ${trip.vehicleType || 'N/A'}
+Status: ${trip.status || 'N/A'}
+----------------------------------------
+Fare Breakdown:
+  Base Fare:     ETB ${fare.baseFare || 0}
+  Distance:      ETB ${fare.distanceFare || 0}
+  Time:          ETB ${fare.timeFare || 0}
+  Surge:         ETB ${fare.surge || 0}
+  Platform Fee:  ETB ${fare.platformFee || 0}
+----------------------------------------
+TOTAL:           ETB ${fare.total || trip.estimatedFare || 0}
+----------------------------------------
+Driver: ${driver.firstName || 'N/A'} ${driver.lastName || ''}
+Rating: ${trip.rating?.rating || 'N/A'}/5
+========================================
+        Thank you for riding!
+========================================
+    `.trim();
+
+    const blob = new Blob([receipt], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `receipt-${trip._id || 'trip'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Receipt downloaded');
   };
 
   const getStatusIndex = (status) => {
@@ -250,9 +298,13 @@ const PassengerTripDetail = () => {
         <div className="passenger-booking-card" style={{ marginTop: 12 }}>
           <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('tripDetail.driverInfo') || 'Driver Information'}</h3>
           <div className="driver-card" style={{ border: 'none', padding: 0, margin: 0, background: 'transparent' }}>
-            <div className="passenger-avatar-lg">
-              {(driver.firstName || 'D')[0]}{(driver.lastName || '')[0]}
-            </div>
+            {driver.profilePhoto ? (
+              <img src={driver.profilePhoto} alt="Driver" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div className="passenger-avatar-lg">
+                {(driver.firstName || 'D')[0]}{(driver.lastName || '')[0]}
+              </div>
+            )}
             <div className="driver-info" style={{ flex: 1 }}>
               <h4>{driver.firstName} {driver.lastName}</h4>
               <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -320,6 +372,9 @@ const PassengerTripDetail = () => {
         </button>
         <button className="passenger-action-btn" onClick={handleShare} style={{ flex: 1 }}>
           <FaShareAlt /> {t('tripDetail.share') || 'Share'}
+        </button>
+        <button className="passenger-action-btn" onClick={handleDownloadReceipt} style={{ flex: 1 }}>
+          <FaDownload /> Receipt
         </button>
         <button className="passenger-action-btn danger" onClick={handleSOS}>
           <FaExclamationTriangle /> SOS

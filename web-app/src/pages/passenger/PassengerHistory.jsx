@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaHistory, FaSearch, FaCalendarAlt, FaRoute, FaWallet, FaStar, FaClock, FaCar } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaHistory, FaSearch, FaCalendarAlt, FaRoute, FaWallet, FaStar, FaClock, FaCar, FaRedo } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI } from '../../services/api';
@@ -12,23 +13,35 @@ const PassengerHistory = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({ totalTrips: 0, totalSpent: 0, avgRating: 0 });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, dateFilter, searchQuery]);
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [page, statusFilter]);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await ridesAPI.passengerTrips({ status: 'completed', limit: 100 });
+      const params = { limit, page };
+      if (statusFilter !== 'all') params.status = statusFilter;
+      const res = await ridesAPI.passengerTrips(params);
       const tripsData = res.data.trips || [];
       setTrips(tripsData);
+      setTotalPages(res.data.totalPages || Math.max(1, Math.ceil((res.data.total || tripsData.length) / limit)));
       const totalSpent = tripsData.reduce((sum, trip) => sum + (trip.fare?.total || trip.fare || 0), 0);
       const ratedTrips = tripsData.filter(trip => trip.rating);
       const avgRating = ratedTrips.length > 0
@@ -84,6 +97,25 @@ const PassengerHistory = () => {
           <span className="history-stat-value">{stats.avgRating}</span>
           <span className="history-stat-label">{t('passenger.avgRating')}</span>
         </Card>
+      </div>
+
+      <div className="history-status-tabs" role="tablist" aria-label="Filter by status">
+        {[
+          { key: 'all', label: 'All' },
+          { key: 'active', label: 'Active' },
+          { key: 'completed', label: 'Completed' },
+          { key: 'cancelled', label: 'Cancelled' },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            role="tab"
+            aria-selected={statusFilter === tab.key}
+            className={`history-status-tab ${statusFilter === tab.key ? 'active' : ''}`}
+            onClick={() => setStatusFilter(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="filter-bar">
@@ -156,14 +188,67 @@ const PassengerHistory = () => {
 
               {trip.driver && (
                 <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--text-secondary)' }}>
-                  <div className="cell-avatar" style={{ width: 28, height: 28, fontSize: 10 }}>
-                    {trip.driver.firstName?.[0]}{trip.driver.lastName?.[0]}
-                  </div>
+                  {trip.driver.profilePhoto ? (
+                    <img src={trip.driver.profilePhoto} alt="Driver" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="cell-avatar" style={{ width: 28, height: 28, fontSize: 10 }}>
+                      {trip.driver.firstName?.[0]}{trip.driver.lastName?.[0]}
+                    </div>
+                  )}
                   {trip.driver.firstName} {trip.driver.lastName}
                 </div>
               )}
+
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (trip.pickupLocation?.address) params.set('pickup', trip.pickupLocation.address);
+                  if (trip.dropoffLocation?.address) params.set('dropoff', trip.dropoffLocation.address);
+                  if (trip.pickupLocation?.coordinates) params.set('pickupCoords', JSON.stringify(trip.pickupLocation.coordinates));
+                  if (trip.dropoffLocation?.coordinates) params.set('dropoffCoords', JSON.stringify(trip.dropoffLocation.coordinates));
+                  navigate(`/passenger?${params.toString()}`);
+                }}
+                style={{
+                  marginTop: 10,
+                  width: '100%',
+                  padding: '8px 0',
+                  borderRadius: 10,
+                  border: '1px solid var(--primary)',
+                  background: 'transparent',
+                  color: 'var(--primary)',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                <FaRedo size={12} /> Rebook
+              </button>
             </Card>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="history-pagination" aria-label="Pagination">
+          <button
+            className="pagination-btn"
+            disabled={page <= 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            Previous
+          </button>
+          <span className="pagination-info">Page {page} of {totalPages}</span>
+          <button
+            className="pagination-btn"
+            disabled={page >= totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

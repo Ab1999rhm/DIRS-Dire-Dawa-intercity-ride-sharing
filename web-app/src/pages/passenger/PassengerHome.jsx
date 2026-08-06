@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FaCar, FaMapMarkerAlt, FaCreditCard, FaStar, FaHistory, FaExclamationTriangle,
   FaExchangeAlt, FaClock, FaMoneyBillWave, FaPhone, FaRoute, FaWallet,
   FaUserShield, FaUsers, FaMobileAlt, FaBell, FaSearch, FaMotorcycle,
-  FaShuttleVan, FaBus, FaBolt, FaHome, FaListUl, FaCog
+  FaShuttleVan, FaBus, FaBolt, FaHome, FaListUl, FaCog, FaShareAlt, FaTimes
 } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -12,6 +12,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, ratingsAPI, sosAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
+import { ConfirmModal } from '../../components/common/Modal';
 import './Passenger.css';
 
 const VEHICLES = [
@@ -63,6 +64,7 @@ const PassengerHome = () => {
   const { t } = useLanguage();
   const { user, socket, tripStatusUpdate, notifications } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
 
   const [pickup, setPickup] = useState('');
@@ -83,10 +85,15 @@ const PassengerHome = () => {
   const [recentTrips, setRecentTrips] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ totalTrips: 0, totalSpent: 0, favoriteRoutes: 0 });
-  const [activeTab, setActiveTab] = useState('home');
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [promoCode, setPromoCode] = useState('');
   const [notifToastShown, setNotifToastShown] = useState(false);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [surgeMultiplier, setSurgeMultiplier] = useState(1);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingTags, setRatingTags] = useState([]);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
@@ -214,6 +221,7 @@ const PassengerHome = () => {
         paymentMethod,
         estimatedFare: fare.total,
         promoCode: promoCode || undefined,
+        scheduledTime: scheduleEnabled && scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
       });
       setActiveRide(
         res.data.ride || {
@@ -248,7 +256,8 @@ const PassengerHome = () => {
   const handleSubmitRating = async () => {
     if (activeRide?._id && activeRide._id !== 'demo' && rating > 0) {
       try {
-        await ratingsAPI.create(activeRide._id, { rating, comment: '' });
+        const fullComment = [...ratingTags, ratingComment].filter(Boolean).join(', ');
+        await ratingsAPI.create(activeRide._id, { rating, comment: fullComment });
       } catch (err) {
         console.error(err);
       }
@@ -257,6 +266,8 @@ const PassengerHome = () => {
     setRideState('idle');
     setActiveRide(null);
     setRating(0);
+    setRatingComment('');
+    setRatingTags([]);
     setPickup('');
     setDropoff('');
     setPickupCoords(null);
@@ -324,17 +335,72 @@ const PassengerHome = () => {
   if (rideState === 'active' && activeRide) {
     const driver = activeRide.driver || { firstName: 'Driver', lastName: 'Assigned', vehiclePlate: '--', rating: '--' };
     const driverPhone = activeRide.driver?.phone || '';
+    const rideStatus = activeRide.status || 'accepted';
+    const statusSteps = ['pending', 'accepted', 'arrived', 'in_progress', 'completed'];
+    const currentStepIndex = statusSteps.indexOf(rideStatus);
+    const progressPercent = currentStepIndex >= 0 ? (currentStepIndex / (statusSteps.length - 1)) * 100 : 0;
+    const canCancel = rideStatus !== 'in_progress' && rideStatus !== 'completed';
+
+    const handleShareTrip = async () => {
+      const shareData = {
+        title: 'My Trip',
+        text: `Trip with ${driver.firstName} ${driver.lastName} from ${activeRide.pickupLocation?.address || 'pickup'} to ${activeRide.dropoffLocation?.address || 'dropoff'}. Fare: ETB ${activeRide.estimatedFare || activeRide.fare?.total || 'N/A'}`,
+      };
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            await navigator.clipboard.writeText(shareData.text);
+            toast.success('Trip details copied to clipboard');
+          }
+        }
+      } else {
+        await navigator.clipboard.writeText(shareData.text);
+        toast.success('Trip details copied to clipboard');
+      }
+    };
+
     return (
       <div className="passenger-page">
         <div className="ride-active">
           <h2 className="passenger-section-title">
             <FaCar /> {t('passenger.rideActive') || 'Ride in Progress'}
           </h2>
-          <div className="driver-card">
-            <div className="passenger-avatar-lg">
-              {(driver.firstName || 'D')[0]}
-              {(driver.lastName || 'A')[0]}
+
+          {/* Progress Bar */}
+          <div style={{ padding: '16px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              {['Requested', 'Accepted', 'Arrived', 'In Progress', 'Completed'].map((label, idx) => (
+                <span key={label} style={{
+                  fontSize: 10,
+                  fontWeight: idx === currentStepIndex ? 700 : 400,
+                  color: idx <= currentStepIndex ? 'var(--primary)' : 'var(--text-muted)',
+                  textAlign: 'center',
+                  flex: 1,
+                }}>{label}</span>
+              ))}
             </div>
+            <div style={{ height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, var(--primary), var(--secondary))',
+                borderRadius: 3,
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+          </div>
+
+          <div className="driver-card">
+            {driver.profilePhoto ? (
+              <img src={driver.profilePhoto} alt="Driver" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div className="passenger-avatar-lg">
+                {(driver.firstName || 'D')[0]}
+                {(driver.lastName || 'A')[0]}
+              </div>
+            )}
             <div className="driver-info">
               <h4>{driver.firstName} {driver.lastName}</h4>
               <p>{driver.vehiclePlate}</p>
@@ -359,19 +425,39 @@ const PassengerHome = () => {
             >
               <FaPhone /> {t('passenger.callDriver') || 'Call'}
             </button>
+            <button className="passenger-action-btn" onClick={handleShareTrip}>
+              <FaShareAlt /> Share Trip
+            </button>
             <button className="passenger-action-btn danger" onClick={handleSOS}>
               <FaExclamationTriangle /> SOS
             </button>
           </div>
-          <button className="passenger-cancel-btn" onClick={handleCancelRide}>
-            {t('passenger.cancelRide') || 'Cancel Ride'}
-          </button>
+          {canCancel && (
+            <button className="passenger-cancel-btn" onClick={() => setShowCancelConfirm(true)}>
+              {t('passenger.cancelRide') || 'Cancel Ride'}
+            </button>
+          )}
         </div>
+
+        <ConfirmModal
+          isOpen={showCancelConfirm}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={() => { setShowCancelConfirm(false); handleCancelRide(); }}
+          title="Cancel Ride"
+          message="Are you sure you want to cancel this ride? A cancellation fee may apply."
+          confirmText="Cancel Ride"
+          danger
+        />
       </div>
     );
   }
 
   if (rideState === 'complete' && completedRide) {
+    const presetTags = ['Clean car', 'Great driving', 'Friendly', 'Good music', 'On time', 'Safe'];
+    const toggleTag = (tag) => {
+      setRatingTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    };
+
     return (
       <div className="passenger-page">
         <div className="ride-complete">
@@ -388,11 +474,49 @@ const PassengerHome = () => {
                   key={s}
                   className={`star ${rating >= s ? 'active' : ''}`}
                   onClick={() => setRating(s)}
+                  aria-label={`Rate ${s} stars`}
                 >
                   <FaStar />
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12, justifyContent: 'center' }}>
+              {presetTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 20,
+                    border: ratingTags.includes(tag) ? '2px solid var(--primary)' : '1px solid var(--border)',
+                    background: ratingTags.includes(tag) ? 'var(--primary)' : 'transparent',
+                    color: ratingTags.includes(tag) ? 'white' : 'var(--text)',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    fontWeight: ratingTags.includes(tag) ? 600 : 400,
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="Add a comment..."
+              value={ratingComment}
+              onChange={(e) => setRatingComment(e.target.value)}
+              style={{
+                marginTop: 12,
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: '1px solid var(--border)',
+                background: 'var(--bg-secondary)',
+                fontSize: 14,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
           </div>
           <button className="passenger-primary-btn" onClick={handleSubmitRating}>
             {t('passenger.done') || 'Done'}
@@ -549,6 +673,10 @@ const PassengerHome = () => {
                 key={v.id}
                 className={`passenger-service-card ${selectedVehicle?.id === v.id ? 'selected' : ''}`}
                 onClick={() => setSelectedVehicle(v)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select ${v.label} - ${v.eta} min`}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedVehicle(v); }}
               >
                 {selectedVehicle?.id === v.id && (
                   <div className="service-check">
@@ -605,6 +733,34 @@ const PassengerHome = () => {
           />
         </div>
 
+        {surgeMultiplier > 1 && (
+          <div className="surge-pricing-indicator" role="status" aria-label={`Surge pricing active at ${surgeMultiplier}x`}>
+            <FaExclamationTriangle size={14} />
+            <span>Surge pricing: {surgeMultiplier.toFixed(1)}x</span>
+          </div>
+        )}
+
+        <div className="schedule-ride-toggle">
+          <span className="schedule-toggle-label">
+            <FaClock /> Schedule Ride
+          </span>
+          <button
+            className={`schedule-toggle-switch ${scheduleEnabled ? 'active' : ''}`}
+            onClick={() => setScheduleEnabled(!scheduleEnabled)}
+            aria-label={scheduleEnabled ? 'Disable schedule ride' : 'Enable schedule ride'}
+            aria-pressed={scheduleEnabled}
+          />
+        </div>
+        {scheduleEnabled && (
+          <input
+            type="datetime-local"
+            className="schedule-datetime-input"
+            value={scheduledTime}
+            onChange={(e) => setScheduledTime(e.target.value)}
+            aria-label="Scheduled ride date and time"
+          />
+        )}
+
         <h3 className="passenger-subsection">{t('passenger.selectPayment')}</h3>
         <div className="passenger-payment-grid">
           {[
@@ -623,7 +779,7 @@ const PassengerHome = () => {
           ))}
         </div>
 
-        <button className="passenger-primary-btn" disabled={loading} onClick={handleBookRide}>
+        <button className="passenger-primary-btn" disabled={loading} onClick={handleBookRide} aria-label="Book ride">
           <FaCar /> {t('passenger.bookNow')}
         </button>
       </div>
@@ -687,31 +843,35 @@ const PassengerHome = () => {
         </div>
       </div>
 
-      <div className="passenger-bottom-nav">
+      <div className="passenger-bottom-nav" role="navigation" aria-label="Main navigation">
         <button
-          className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
+          className={`bottom-nav-item ${location.pathname === '/passenger' || location.pathname === '/passenger/' ? 'active' : ''}`}
+          onClick={() => navigate('/passenger')}
+          aria-label="Navigate to Home"
         >
           <FaHome />
           <span>Home</span>
         </button>
         <button
-          className={`bottom-nav-item ${activeTab === 'trips' ? 'active' : ''}`}
+          className={`bottom-nav-item ${location.pathname.startsWith('/passenger/trips') ? 'active' : ''}`}
           onClick={() => navigate('/passenger/trips')}
+          aria-label="Navigate to Trips"
         >
           <FaListUl />
           <span>Trips</span>
         </button>
         <button
-          className={`bottom-nav-item ${activeTab === 'wallet' ? 'active' : ''}`}
+          className={`bottom-nav-item ${location.pathname.startsWith('/passenger/wallet') ? 'active' : ''}`}
           onClick={() => navigate('/passenger/wallet')}
+          aria-label="Navigate to Wallet"
         >
           <FaWallet />
           <span>Wallet</span>
         </button>
         <button
-          className={`bottom-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+          className={`bottom-nav-item ${location.pathname.startsWith('/passenger/profile') ? 'active' : ''}`}
           onClick={() => navigate('/passenger/profile')}
+          aria-label="Navigate to Settings"
         >
           <FaCog />
           <span>Settings</span>
