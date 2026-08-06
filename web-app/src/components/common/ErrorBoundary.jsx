@@ -13,12 +13,42 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
 
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    console.error('[ErrorBoundary]', {
+      component: errorInfo.componentStack?.trim()?.split('\n')?.[1]?.trim() || 'Unknown',
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
 
     if (window.Sentry) {
       window.Sentry.captureException(error, { extra: errorInfo });
     }
   }
+
+  handleCopyError = async () => {
+    const { error, errorInfo } = this.state;
+    const details = [
+      '=== DIRS Error Report ===',
+      `Time: ${new Date().toISOString()}`,
+      `Error: ${error?.message}`,
+      '',
+      'Stack:',
+      error?.stack,
+      '',
+      'Component Stack:',
+      errorInfo?.componentStack,
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(details);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = details;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  };
 
   handleRetry = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
@@ -97,6 +127,21 @@ class ErrorBoundary extends React.Component {
                 }}
               >
                 Go Home
+              </button>
+              <button
+                onClick={this.handleCopyError}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border, #e2e8f0)',
+                  background: 'transparent',
+                  color: 'var(--text-secondary, #64748b)',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Report
               </button>
             </div>
             {process.env.NODE_ENV === 'development' && this.state.error && (

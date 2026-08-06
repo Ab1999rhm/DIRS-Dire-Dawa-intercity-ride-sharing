@@ -119,6 +119,7 @@ export const authAPI = {
   verifyEmailOTP: (email, otp) => api.post('/auth/verify-email-otp', { email, otp }),
   forgotPassword: (phoneNumber) => api.post('/auth/forgot-password', { phoneNumber }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
+  deleteAccount: () => api.delete('/auth/account'),
 };
 
 export const ridesAPI = {

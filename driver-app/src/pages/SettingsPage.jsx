@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { FaArrowLeft, FaGlobe, FaBell, FaBellSlash, FaMapMarkerAlt, FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
+import { FaArrowLeft, FaGlobe, FaBell, FaBellSlash, FaMapMarkerAlt, FaMoon, FaSun, FaSignOutAlt, FaHome, FaListUl, FaWallet, FaUser } from 'react-icons/fa';
 import './Pages.css';
 
 const SettingsPage = () => {
@@ -118,6 +118,21 @@ const SettingsPage = () => {
           </button>
         </div>
       </div>
+
+      <nav className="bottom-nav">
+        <button className="nav-btn" onClick={() => navigate('/')}>
+          <FaHome /> <span>Home</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/trips')}>
+          <FaListUl /> <span>Trips</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/earnings')}>
+          <FaWallet /> <span>Earnings</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/profile')}>
+          <FaUser /> <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 };

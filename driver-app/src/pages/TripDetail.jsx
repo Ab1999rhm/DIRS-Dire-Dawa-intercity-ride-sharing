@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { driverAPI, ratingsAPI } from '../services/api';
 import {
   FaArrowLeft, FaMapMarkerAlt, FaDirections, FaUser, FaStar,
-  FaMoneyBillWave, FaClock, FaRoute, FaCar
+  FaMoneyBillWave, FaClock, FaRoute, FaCar, FaHome, FaListUl, FaWallet
 } from 'react-icons/fa';
 import './Pages.css';
 
@@ -245,6 +245,21 @@ const TripDetailPage = () => {
           </div>
         )}
       </div>
+
+      <nav className="bottom-nav">
+        <button className="nav-btn" onClick={() => navigate('/')}>
+          <FaHome /> <span>Home</span>
+        </button>
+        <button className="nav-btn active" onClick={() => navigate('/trips')}>
+          <FaListUl /> <span>Trips</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/earnings')}>
+          <FaWallet /> <span>Earnings</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/profile')}>
+          <FaUser /> <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 };

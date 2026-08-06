@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaIdCard, FaCar, FaCamera, FaCheck, FaExclamationTriangle, FaFileUpload } from 'react-icons/fa';
+import { FaArrowLeft, FaIdCard, FaCar, FaCamera, FaCheck, FaExclamationTriangle, FaFileUpload, FaHome, FaListUl, FaWallet, FaUser } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { authAPI } from '../services/api';
 import './Pages.css';
@@ -126,6 +126,21 @@ const OnboardingPage = () => {
           </div>
         )}
       </div>
+
+      <nav className="bottom-nav">
+        <button className="nav-btn" onClick={() => navigate('/')}>
+          <FaHome /> <span>Home</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/trips')}>
+          <FaListUl /> <span>Trips</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/earnings')}>
+          <FaWallet /> <span>Earnings</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/profile')}>
+          <FaUser /> <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 };

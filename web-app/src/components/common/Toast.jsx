@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from 'react-icons/fa';
 import './Toast.css';
 
@@ -16,6 +16,15 @@ export const ToastProvider = ({ children }) => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, duration);
   }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const { message, type } = e.detail;
+      addToast(message, type || 'info');
+    };
+    window.addEventListener('app-toast', handler);
+    return () => window.removeEventListener('app-toast', handler);
+  }, [addToast]);
 
   const toast = {
     success: (msg) => addToast(msg, 'success'),

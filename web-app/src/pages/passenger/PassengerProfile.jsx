@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe, FaBell, FaShieldAlt, FaCamera } from 'react-icons/fa';
+import {
+  FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe,
+  FaBell, FaShieldAlt, FaCamera, FaHome, FaBuilding, FaSchool, FaMapMarkerAlt,
+  FaCreditCard, FaMoneyBillWave, FaWallet, FaCheckCircle, FaExclamationTriangle,
+  FaToggleOn, FaToggleOff, FaUserFriends
+} from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api';
-import { Card, Button, Input, ToggleButton } from '../../components/common';
+import { Card, Button, Input, ToggleButton, ConfirmModal } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import './Passenger.css';
+
+const PLACE_ICONS = {
+  home: { icon: FaHome, className: 'home' },
+  work: { icon: FaBuilding, className: 'work' },
+  school: { icon: FaSchool, className: 'school' },
+  other: { icon: FaMapMarkerAlt, className: 'other' },
+};
 
 const PassengerProfile = () => {
   const { t, language, setLanguage, availableLanguages } = useLanguage();
@@ -28,6 +40,35 @@ const PassengerProfile = () => {
   const [photoUploading, setPhotoUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Saved Places state
+  const [favoriteLocations, setFavoriteLocations] = useState([]);
+  const [showPlaceForm, setShowPlaceForm] = useState(false);
+  const [placeName, setPlaceName] = useState('');
+  const [placeAddress, setPlaceAddress] = useState('');
+  const [placeType, setPlaceType] = useState('home');
+
+  // Payment state
+  const [paymentMethod, setPaymentMethod] = useState(user?.paymentMethod || 'cash');
+
+  // Notification preferences
+  const [prefRideUpdates, setPrefRideUpdates] = useState(true);
+  const [prefPromotions, setPrefPromotions] = useState(true);
+  const [prefSafetyAlerts, setPrefSafetyAlerts] = useState(true);
+  const [prefSound, setPrefSound] = useState(true);
+
+  // Privacy settings
+  const [shareLocation, setShareLocation] = useState(true);
+  const [allowAnalytics, setAllowAnalytics] = useState(false);
+
+  // Delete account modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Email verification
+  const [sendingVerifyOtp, setSendingVerifyOtp] = useState(false);
+  const [showEmailOtp, setShowEmailOtp] = useState(false);
+  const [emailOtp, setEmailOtp] = useState('');
+
   useEffect(() => {
     if (user) {
       setFirstName(user.firstName || '');
@@ -36,6 +77,15 @@ const PassengerProfile = () => {
       setEmail(user.email || '');
       setEmergencyContacts(user.emergencyContacts || []);
       setProfilePhoto(user.profilePhoto || '');
+      setFavoriteLocations(user.favoriteLocations || []);
+      setPaymentMethod(user.paymentMethod || 'cash');
+      const prefs = user.preferences || {};
+      setPrefRideUpdates(prefs.rideUpdates !== false);
+      setPrefPromotions(prefs.promotions !== false);
+      setPrefSafetyAlerts(prefs.safetyAlerts !== false);
+      setPrefSound(prefs.sound !== false);
+      setShareLocation(prefs.shareLocation !== false);
+      setAllowAnalytics(prefs.allowAnalytics === true);
     }
   }, [user]);
 
@@ -98,6 +148,96 @@ const PassengerProfile = () => {
     toast.success('Contact removed');
   };
 
+  // Saved Places handlers
+  const handleAddPlace = async () => {
+    if (!placeName.trim() || !placeAddress.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    const newPlace = { name: placeName, address: placeAddress, type: placeType, _id: Date.now().toString() };
+    const updated = [...favoriteLocations, newPlace];
+    setFavoriteLocations(updated);
+    await authAPI.updateProfile({ favoriteLocations: updated });
+    setPlaceName('');
+    setPlaceAddress('');
+    setPlaceType('home');
+    setShowPlaceForm(false);
+    toast.success('Place saved');
+  };
+
+  const handleDeletePlace = async (id) => {
+    const updated = favoriteLocations.filter(p => p._id !== id);
+    setFavoriteLocations(updated);
+    await authAPI.updateProfile({ favoriteLocations: updated });
+    toast.success('Place removed');
+  };
+
+  // Payment handler
+  const handleSetPayment = async (method) => {
+    setPaymentMethod(method);
+    await authAPI.updateProfile({ paymentMethod: method });
+    toast.success('Payment method updated');
+  };
+
+  // Notification preference save
+  const savePreference = async (key, value) => {
+    try {
+      const prefs = {
+        rideUpdates: prefRideUpdates,
+        promotions: prefPromotions,
+        safetyAlerts: prefSafetyAlerts,
+        sound: prefSound,
+        shareLocation,
+        allowAnalytics,
+        [key]: value,
+      };
+      await authAPI.updateProfile({ preferences: prefs });
+    } catch {
+      toast.error('Failed to save preference');
+    }
+  };
+
+  // Email verification
+  const handleSendVerifyEmail = async () => {
+    setSendingVerifyOtp(true);
+    try {
+      await authAPI.sendEmailOTP(email);
+      setShowEmailOtp(true);
+      toast.success('Verification code sent to your email');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to send verification email');
+    } finally {
+      setSendingVerifyOtp(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async () => {
+    try {
+      await authAPI.verifyEmailOTP(email, emailOtp);
+      setUser({ ...user, isVerified: true });
+      setShowEmailOtp(false);
+      setEmailOtp('');
+      toast.success('Email verified successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Invalid verification code');
+    }
+  };
+
+  // Delete account
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await authAPI.deleteAccount();
+      localStorage.clear();
+      logout();
+      window.location.href = '/login';
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete account');
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     window.location.href = '/login';
@@ -106,6 +246,8 @@ const PassengerProfile = () => {
   const tabs = [
     { id: 'personal', label: t('passenger.personalInfo'), icon: <FaUser /> },
     { id: 'emergency', label: t('passenger.emergencyContacts'), icon: <FaShieldAlt /> },
+    { id: 'places', label: 'Saved Places', icon: <FaMapMarkerAlt /> },
+    { id: 'payment', label: 'Payment', icon: <FaCreditCard /> },
     { id: 'settings', label: t('passenger.settings'), icon: <FaGlobe /> },
   ];
 
@@ -171,6 +313,7 @@ const PassengerProfile = () => {
         ))}
       </div>
 
+      {/* PERSONAL TAB */}
       {activeTab === 'personal' && (
         <Card className="profile-card">
           <div className="profile-form">
@@ -195,13 +338,49 @@ const PassengerProfile = () => {
               icon={<FaPhone />}
               helperText="Contact support to change phone number"
             />
-            <Input
-              label={t('passenger.email')}
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              icon={<FaEnvelope />}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <Input
+                  label={t('passenger.email')}
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  icon={<FaEnvelope />}
+                />
+              </div>
+              {user?.isVerified ? (
+                <span className="verification-badge verified">
+                  <FaCheckCircle size={12} /> Verified
+                </span>
+              ) : (
+                <span
+                  className="verification-badge unverified"
+                  onClick={handleSendVerifyEmail}
+                  title="Click to verify"
+                >
+                  <FaExclamationTriangle size={12} />
+                  {sendingVerifyOtp ? 'Sending...' : 'Unverified'}
+                </span>
+              )}
+            </div>
+            {showEmailOtp && (
+              <div style={{ padding: 12, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
+                <p style={{ fontSize: 13, margin: '0 0 8px', color: 'var(--text-secondary)' }}>
+                  Enter the verification code sent to {email}
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Input
+                    placeholder="Enter OTP"
+                    value={emailOtp}
+                    onChange={e => setEmailOtp(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <Button variant="primary" size="sm" onClick={handleVerifyEmailOtp}>
+                    Verify
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="form-actions">
               <Button variant="primary" loading={saving} onClick={handleSaveProfile}>
                 {t('passenger.save')}
@@ -211,6 +390,7 @@ const PassengerProfile = () => {
         </Card>
       )}
 
+      {/* EMERGENCY TAB */}
       {activeTab === 'emergency' && (
         <Card className="profile-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -267,9 +447,134 @@ const PassengerProfile = () => {
         </Card>
       )}
 
+      {/* SAVED PLACES TAB */}
+      {activeTab === 'places' && (
+        <Card className="profile-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontWeight: 700 }}>Saved Places</h3>
+            <Button variant="outline" size="sm" icon={<FaPlus />} onClick={() => setShowPlaceForm(!showPlaceForm)}>
+              Add Place
+            </Button>
+          </div>
+
+          {showPlaceForm && (
+            <div style={{ marginBottom: 16, padding: 16, background: 'var(--bg)', borderRadius: 10 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                {['home', 'work', 'school', 'other'].map(type => {
+                  const IconComp = PLACE_ICONS[type].icon;
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setPlaceType(type)}
+                      style={{
+                        flex: 1, padding: '8px 4px', borderRadius: 8, border: '1px solid',
+                        borderColor: placeType === type ? 'var(--primary)' : 'var(--border-light)',
+                        background: placeType === type ? 'var(--primary-50)' : 'var(--card)',
+                        color: placeType === type ? 'var(--primary)' : 'var(--text-secondary)',
+                        cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
+                      }}
+                    >
+                      <IconComp size={16} />
+                      {type}
+                    </button>
+                  );
+                })}
+              </div>
+              <Input
+                label="Place Name"
+                value={placeName}
+                onChange={e => setPlaceName(e.target.value)}
+                placeholder="e.g. Home, Office"
+              />
+              <Input
+                label="Address"
+                value={placeAddress}
+                onChange={e => setPlaceAddress(e.target.value)}
+                placeholder="Enter address"
+                style={{ marginTop: 8 }}
+              />
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+                <Button variant="ghost" size="sm" onClick={() => { setShowPlaceForm(false); setPlaceName(''); setPlaceAddress(''); }}>Cancel</Button>
+                <Button variant="primary" size="sm" onClick={handleAddPlace}>Save Place</Button>
+              </div>
+            </div>
+          )}
+
+          {favoriteLocations.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
+              <FaMapMarkerAlt size={32} style={{ marginBottom: 12, opacity: 0.4 }} />
+              <p>No saved places yet</p>
+            </div>
+          ) : (
+            favoriteLocations.map(place => {
+              const placeIcon = PLACE_ICONS[place.type] || PLACE_ICONS.other;
+              const IconComp = placeIcon.icon;
+              return (
+                <div key={place._id} className="saved-place-item">
+                  <div className={`saved-place-icon ${placeIcon.className}`}>
+                    <IconComp />
+                  </div>
+                  <div className="saved-place-info">
+                    <h4>{place.name}</h4>
+                    <p>{place.address}</p>
+                  </div>
+                  <button className="saved-place-delete" onClick={() => handleDeletePlace(place._id)}>
+                    <FaTrash size={14} />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </Card>
+      )}
+
+      {/* PAYMENT TAB */}
+      {activeTab === 'payment' && (
+        <Card className="profile-card">
+          <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Payment Methods</h3>
+
+          {[
+            { key: 'cash', label: 'Cash', icon: FaMoneyBillWave, iconClass: 'cash', desc: 'Pay with cash' },
+            { key: 'telebirr', label: 'Telebirr', icon: FaPhone, iconClass: 'telebirr', desc: 'Mobile money' },
+            { key: 'chapa', label: 'Chapa', icon: FaWallet, iconClass: 'chapa', desc: 'Online payment' },
+          ].map(method => (
+            <div
+              key={method.key}
+              className={`payment-method-item ${paymentMethod === method.key ? 'selected' : ''}`}
+              onClick={() => handleSetPayment(method.key)}
+            >
+              <div className={`payment-method-icon ${method.iconClass}`}>
+                <method.icon />
+              </div>
+              <div className="payment-method-info">
+                <h4>{method.label}</h4>
+                <p>{method.desc}</p>
+              </div>
+              {paymentMethod === method.key && (
+                <span className="payment-default-badge">Default</span>
+              )}
+            </div>
+          ))}
+
+          <div style={{ marginTop: 16 }}>
+            <Button
+              variant="outline"
+              fullWidth
+              icon={<FaPlus />}
+              onClick={() => toast.info('Coming soon')}
+            >
+              Add Payment Method
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* SETTINGS TAB */}
       {activeTab === 'settings' && (
         <Card className="profile-card">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Language */}
             <div>
               <h3 style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FaGlobe /> {t('passenger.language')}
@@ -288,36 +593,187 @@ const PassengerProfile = () => {
               </div>
             </div>
 
+            {/* Notification Preferences */}
             <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
               <h3 style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FaBell /> {t('passenger.notifications')}
+                <FaBell /> Notification Preferences
               </h3>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14 }}>{t('passenger.notifications')}</span>
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="settings-toggle-label">Ride Updates</div>
+                  <div className="settings-toggle-desc">Trip status, driver arrival, etc.</div>
+                </div>
                 <ToggleButton
-                  active={notifications}
-                  onToggle={async () => {
-                    const newValue = !notifications;
-                    setNotifications(newValue);
-                    try {
-                      await authAPI.updateProfile({ notifications: newValue });
-                    } catch (err) {
-                      toast.error('Failed to update notification setting');
-                    }
+                  active={prefRideUpdates}
+                  onToggle={() => {
+                    setPrefRideUpdates(!prefRideUpdates);
+                    savePreference('rideUpdates', !prefRideUpdates);
                   }}
-                  label={notifications ? 'On' : 'Off'}
+                  label={prefRideUpdates ? 'On' : 'Off'}
+                />
+              </div>
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="settings-toggle-label">Promotions</div>
+                  <div className="settings-toggle-desc">Discounts and special offers</div>
+                </div>
+                <ToggleButton
+                  active={prefPromotions}
+                  onToggle={() => {
+                    setPrefPromotions(!prefPromotions);
+                    savePreference('promotions', !prefPromotions);
+                  }}
+                  label={prefPromotions ? 'On' : 'Off'}
+                />
+              </div>
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="settings-toggle-label">Safety Alerts</div>
+                  <div className="settings-toggle-desc">SOS confirmations and safety notices</div>
+                </div>
+                <ToggleButton
+                  active={prefSafetyAlerts}
+                  onToggle={() => {
+                    setPrefSafetyAlerts(!prefSafetyAlerts);
+                    savePreference('safetyAlerts', !prefSafetyAlerts);
+                  }}
+                  label={prefSafetyAlerts ? 'On' : 'Off'}
+                />
+              </div>
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="settings-toggle-label">Sound</div>
+                  <div className="settings-toggle-desc">Notification sounds</div>
+                </div>
+                <ToggleButton
+                  active={prefSound}
+                  onToggle={() => {
+                    setPrefSound(!prefSound);
+                    savePreference('sound', !prefSound);
+                  }}
+                  label={prefSound ? 'On' : 'Off'}
                 />
               </div>
             </div>
 
+            {/* Privacy Settings */}
+            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
+              <h3 style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FaShieldAlt /> Privacy Settings
+              </h3>
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="settings-toggle-label">Location Sharing</div>
+                  <div className="settings-toggle-desc">Share location with driver during ride</div>
+                </div>
+                <ToggleButton
+                  active={shareLocation}
+                  onToggle={() => {
+                    setShareLocation(!shareLocation);
+                    savePreference('shareLocation', !shareLocation);
+                  }}
+                  label={shareLocation ? 'On' : 'Off'}
+                />
+              </div>
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="settings-toggle-label">Data Usage</div>
+                  <div className="settings-toggle-desc">Allow analytics and improvement data</div>
+                </div>
+                <ToggleButton
+                  active={allowAnalytics}
+                  onToggle={() => {
+                    setAllowAnalytics(!allowAnalytics);
+                    savePreference('allowAnalytics', !allowAnalytics);
+                  }}
+                  label={allowAnalytics ? 'On' : 'Off'}
+                />
+              </div>
+            </div>
+
+            {/* Invite Friends */}
+            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
+              <h3 style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FaUserFriends /> {t('passenger.inviteFriends') || 'Invite Friends'}
+              </h3>
+              <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                  Share DIRS with friends and earn rewards!
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('passenger.referralCode') || 'Referral Code'}:</span>
+                  <code style={{ padding: '6px 12px', background: 'var(--card)', borderRadius: 6, fontWeight: 700, fontSize: 14, border: '1px solid var(--border)', letterSpacing: 1 }}>
+                    {user?._id?.slice(-8)?.toUpperCase() || 'DIRS0000'}
+                  </code>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+                  <FaUserFriends size={12} style={{ marginRight: 4 }} />
+                  0 friends have joined
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<FaUserFriends />}
+                    onClick={async () => {
+                      const code = user?._id?.slice(-8)?.toUpperCase() || 'DIRS0000';
+                      const shareData = {
+                        title: 'Join DIRS',
+                        text: `Join DIRS ride-sharing! Use my code: ${code}`,
+                        url: window.location.origin,
+                      };
+                      try {
+                        if (navigator.share) {
+                          await navigator.share(shareData);
+                        } else {
+                          await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+                          toast.success('Referral link copied to clipboard!');
+                        }
+                      } catch {
+                        try {
+                          await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+                          toast.success('Referral link copied to clipboard!');
+                        } catch {
+                          toast.error('Failed to share');
+                        }
+                      }
+                    }}
+                  >
+                    {t('passenger.shareReferral') || 'Share Referral'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout */}
             <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
               <Button variant="danger" fullWidth icon={<FaSignOutAlt />} onClick={handleLogout}>
                 {t('passenger.logout')}
               </Button>
             </div>
+
+            {/* Danger Zone - Delete Account */}
+            <div className="danger-zone">
+              <h3>Danger Zone</h3>
+              <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+              <Button variant="danger" size="sm" icon={<FaTrash />} onClick={() => setShowDeleteModal(true)}>
+                Delete Account
+              </Button>
+            </div>
           </div>
         </Card>
       )}
+
+      {/* Delete Account Confirm Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        title="Delete Account"
+        message="This action is permanent. All your data will be deleted. Are you sure you want to proceed?"
+        confirmText={deleting ? 'Deleting...' : 'Delete Account'}
+        danger
+      />
     </div>
   );
 };

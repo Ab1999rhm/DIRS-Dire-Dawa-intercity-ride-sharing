@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   FaMapMarkerAlt, FaCar, FaStar, FaPhone, FaShareAlt, FaExclamationTriangle,
   FaHome, FaListUl, FaWallet, FaCog, FaClock, FaCheckCircle, FaArrowLeft,
   FaRoute, FaUser, FaMotorcycle, FaShuttleVan, FaBus, FaBolt,
-  FaPlay, FaFlag, FaSms, FaTimes, FaRoute as FaRouteIcon, FaDownload
+  FaPlay, FaFlag, FaSms, FaTimes, FaRoute as FaRouteIcon, FaDownload,
+  FaQuestionCircle, FaSuitcase, FaDollarSign, FaShieldAlt, FaUserSlash, FaEllipsisH
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -37,10 +38,18 @@ const PassengerTripDetail = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
+  const [searchParams] = useSearchParams();
+  const isHelpMode = searchParams.get('help') === 'true';
+
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('trips');
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Report issue state
+  const [reportCategory, setReportCategory] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   useEffect(() => {
     fetchTripDetail();
@@ -56,6 +65,36 @@ const PassengerTripDetail = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const REPORT_OPTIONS = [
+    { key: 'lost_item', label: 'Lost item', icon: FaSuitcase },
+    { key: 'fare_dispute', label: 'Fare dispute', icon: FaDollarSign },
+    { key: 'safety_concern', label: 'Safety concern', icon: FaShieldAlt },
+    { key: 'driver_behavior', label: 'Driver behavior', icon: FaUserSlash },
+    { key: 'other', label: 'Other', icon: FaEllipsisH },
+  ];
+
+  const handleReportIssue = async () => {
+    if (!reportCategory) {
+      toast.error('Please select an issue type');
+      return;
+    }
+    setSubmittingReport(true);
+    try {
+      await sosAPI.trigger({
+        tripId,
+        description: `[${reportCategory}] ${reportDescription}`,
+        location: null,
+      });
+      toast.success('Issue reported successfully. We will get back to you.');
+      setReportCategory('');
+      setReportDescription('');
+    } catch (err) {
+      toast.error('Failed to submit report');
+    } finally {
+      setSubmittingReport(false);
     }
   };
 
@@ -361,6 +400,45 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
           </div>
           {trip.rating.comment && (
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8, fontStyle: 'italic' }}>"{trip.rating.comment}"</p>
+          )}
+        </div>
+      )}
+
+      {/* Report Issue Section (help mode) */}
+      {isHelpMode && trip?.status === 'completed' && (
+        <div className="report-issue-section">
+          <h3><FaQuestionCircle style={{ color: 'var(--primary)' }} /> Report Issue</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+            Select the issue you experienced with this trip
+          </p>
+          {REPORT_OPTIONS.map(opt => (
+            <div
+              key={opt.key}
+              className={`report-option ${reportCategory === opt.key ? 'selected' : ''}`}
+              onClick={() => setReportCategory(opt.key)}
+            >
+              <opt.icon size={14} />
+              {opt.label}
+            </div>
+          ))}
+          {reportCategory && (
+            <>
+              <textarea
+                className="report-description"
+                placeholder="Describe the issue in detail (optional)..."
+                value={reportDescription}
+                onChange={e => setReportDescription(e.target.value)}
+              />
+              <Button
+                variant="primary"
+                fullWidth
+                loading={submittingReport}
+                onClick={handleReportIssue}
+                style={{ marginTop: 10 }}
+              >
+                Submit Report
+              </Button>
+            </>
           )}
         </div>
       )}

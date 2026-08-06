@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaPaperPlane, FaUser, FaHeadset } from 'react-icons/fa';
+import { FaArrowLeft, FaPaperPlane, FaUser, FaHeadset, FaHome, FaListUl, FaWallet } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import './Pages.css';
@@ -87,6 +87,21 @@ const SupportChatPage = () => {
           <FaPaperPlane />
         </button>
       </div>
+
+      <nav className="bottom-nav">
+        <button className="nav-btn" onClick={() => navigate('/')}>
+          <FaHome /> <span>Home</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/trips')}>
+          <FaListUl /> <span>Trips</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/earnings')}>
+          <FaWallet /> <span>Earnings</span>
+        </button>
+        <button className="nav-btn" onClick={() => navigate('/profile')}>
+          <FaUser /> <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 };

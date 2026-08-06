@@ -456,6 +456,18 @@ exports.uploadProfilePhoto = asyncHandler(async (req, res) => {
   res.json({ message: 'Profile photo uploaded', profilePhoto: photoUrl });
 });
 
+exports.deleteAccount = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  user.isActive = false;
+  user.refreshToken = null;
+  await user.save();
+  logger.info('Account soft-deleted', { userId: user._id });
+  res.json({ message: 'Account deleted successfully' });
+});
+
 exports.updateDriverStatus = asyncHandler(async (req, res) => {
   const { isOnline } = req.body;
 

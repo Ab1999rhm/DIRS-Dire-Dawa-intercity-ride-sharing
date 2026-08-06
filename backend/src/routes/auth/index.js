@@ -337,6 +337,8 @@ router.post('/vehicle-documents', protect, upload.fields([
   { name: 'insurancePhoto', maxCount: 1 }
 ]), documentController.uploadVehicleDocuments);
 
+router.delete('/account', protect, authController.deleteAccount);
+
 router.post('/logout', protect, authController.logout);
 
 module.exports = router;

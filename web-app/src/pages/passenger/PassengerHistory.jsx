@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaHistory, FaSearch, FaCalendarAlt, FaRoute, FaWallet, FaStar, FaClock, FaCar, FaRedo } from 'react-icons/fa';
+import { FaHistory, FaSearch, FaCalendarAlt, FaRoute, FaWallet, FaStar, FaClock, FaCar, FaRedo, FaQuestionCircle } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI } from '../../services/api';
@@ -19,6 +19,8 @@ const PassengerHistory = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({ totalTrips: 0, totalSpent: 0, avgRating: 0 });
   const [page, setPage] = useState(1);
@@ -27,7 +29,29 @@ const PassengerHistory = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, dateFilter, searchQuery]);
+  }, [statusFilter, dateFilter, searchQuery, fromDate, toDate]);
+
+  const exportCSV = () => {
+    const headers = ['Date', 'Pickup', 'Dropoff', 'Distance', 'Duration', 'Fare', 'Status', 'Driver'];
+    const rows = filteredTrips.map(trip => [
+      new Date(trip.createdAt).toLocaleDateString(),
+      trip.pickupLocation?.address || '',
+      trip.dropoffLocation?.address || '',
+      trip.distance || '',
+      trip.duration || '',
+      trip.fare?.total || trip.fare || 0,
+      trip.status || '',
+      trip.driver ? `${trip.driver.firstName} ${trip.driver.lastName}` : ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trip-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     fetchHistory();
@@ -61,18 +85,30 @@ const PassengerHistory = () => {
       trip.dropoffLocation?.address?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
-    if (dateFilter === 'all') return true;
 
     const tripDate = new Date(trip.createdAt);
-    const now = new Date();
-    if (dateFilter === 'today') return tripDate.toDateString() === now.toDateString();
-    if (dateFilter === 'week') {
-      const weekAgo = new Date(now.setDate(now.getDate() - 7));
-      return tripDate >= weekAgo;
+    if (fromDate) {
+      const from = new Date(fromDate);
+      from.setHours(0, 0, 0, 0);
+      if (tripDate < from) return false;
     }
-    if (dateFilter === 'month') {
-      const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-      return tripDate >= monthAgo;
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      if (tripDate > to) return false;
+    }
+    if (!fromDate && !toDate) {
+      if (dateFilter === 'all') return true;
+      const now = new Date();
+      if (dateFilter === 'today') return tripDate.toDateString() === now.toDateString();
+      if (dateFilter === 'week') {
+        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+        return tripDate >= weekAgo;
+      }
+      if (dateFilter === 'month') {
+        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+        return tripDate >= monthAgo;
+      }
     }
     return true;
   });
@@ -128,16 +164,37 @@ const PassengerHistory = () => {
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <select
-          className="filter-select"
-          value={dateFilter}
-          onChange={e => setDateFilter(e.target.value)}
-        >
-          <option value="all">{t('passenger.allDates') || 'All Dates'}</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-        </select>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={e => { setFromDate(e.target.value); setDateFilter('all'); }}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 13 }}
+            aria-label={t('passenger.fromDate') || 'From date'}
+          />
+          <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>to</span>
+          <input
+            type="date"
+            value={toDate}
+            onChange={e => { setToDate(e.target.value); setDateFilter('all'); }}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', fontSize: 13 }}
+            aria-label={t('passenger.toDate') || 'To date'}
+          />
+          {(fromDate || toDate) && (
+            <button
+              onClick={() => { setFromDate(''); setToDate(''); }}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--text-secondary)' }}
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={exportCSV}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--primary)', background: 'var(--primary)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            {t('passenger.exportHistory') || 'Export CSV'}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -227,6 +284,14 @@ const PassengerHistory = () => {
               >
                 <FaRedo size={12} /> Rebook
               </button>
+              {trip.status === 'completed' && (
+                <button
+                  className="help-btn"
+                  onClick={() => navigate(`/passenger/trip/${trip._id}?help=true`)}
+                >
+                  <FaQuestionCircle size={12} /> Get Help
+                </button>
+              )}
             </Card>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPhone, FaLock, FaEye, FaEyeSlash, FaUser, FaCheckCircle, FaEnvelope, FaExternalLinkAlt } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
@@ -34,6 +34,18 @@ const RegisterPage = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [resendTimer, setResendTimer] = useState(60);
+  const [phoneOtpDigits, setPhoneOtpDigits] = useState(['', '', '', '', '', '']);
+  const [phoneOtpLoading, setPhoneOtpLoading] = useState(false);
+  const [phoneOtpSending, setPhoneOtpSending] = useState(false);
+  const [phoneOtpCode, setPhoneOtpCode] = useState('');
+  const [phoneResendTimer, setPhoneResendTimer] = useState(60);
+
+  useEffect(() => {
+    const code = otpDigits.join('');
+    if (code.length === 6 && !otpLoading) {
+      handleVerifyOTP();
+    }
+  }, [otpDigits]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -129,17 +141,79 @@ const RegisterPage = () => {
 
     setOtpLoading(true);
     try {
-      const res = await authAPI.verifyEmailOTP(formData.email, code);
+      await authAPI.verifyEmailOTP(formData.email, code);
+      toast.success('Email verified!');
+      sendPhoneOTP();
+      setStep(3);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Invalid OTP');
+    }
+    setOtpLoading(false);
+  };
+
+  const sendPhoneOTP = async () => {
+    setPhoneOtpSending(true);
+    try {
+      const res = await authAPI.sendPhoneOTP({ phoneNumber: formData.phoneNumber });
+      setPhoneOtpCode(res.data.otpCode || '');
+      toast.success('OTP sent to your phone!');
+      setPhoneResendTimer(60);
+      const interval = setInterval(() => {
+        setPhoneResendTimer(prev => {
+          if (prev <= 0) { clearInterval(interval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      toast.error('Failed to send phone OTP');
+    }
+    setPhoneOtpSending(false);
+  };
+
+  const handlePhoneOtpChange = (index, value) => {
+    if (value.length > 1) value = value.slice(-1);
+    if (value && !/^\d$/.test(value)) return;
+    const newOtp = [...phoneOtpDigits];
+    newOtp[index] = value;
+    setPhoneOtpDigits(newOtp);
+    if (value && index < 5) {
+      document.getElementById(`phone-otp-${index + 1}`)?.focus();
+    }
+  };
+
+  const handlePhoneOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !phoneOtpDigits[index] && index > 0) {
+      document.getElementById(`phone-otp-${index - 1}`)?.focus();
+    }
+  };
+
+  useEffect(() => {
+    const code = phoneOtpDigits.join('');
+    if (code.length === 6 && !phoneOtpLoading) {
+      handleVerifyPhoneOTP();
+    }
+  }, [phoneOtpDigits]);
+
+  const handleVerifyPhoneOTP = async () => {
+    const code = phoneOtpDigits.join('');
+    if (code.length !== 6) {
+      toast.error('Enter the 6-digit code');
+      return;
+    }
+
+    setPhoneOtpLoading(true);
+    try {
+      const res = await authAPI.verifyPhoneOTP({ phoneNumber: formData.phoneNumber, otp: code });
       const { accessToken, refreshToken, user: verifiedUser, driverProfile } = res.data;
       completeRegistration(accessToken, refreshToken, verifiedUser, driverProfile);
-      toast.success('Email verified!');
+      toast.success('Phone verified!');
       const userRole = formData.role;
       if (userRole === 'driver') navigate('/driver');
       else navigate('/passenger');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Invalid OTP');
     }
-    setOtpLoading(false);
+    setPhoneOtpLoading(false);
   };
 
   const userRole = formData.role;
@@ -153,8 +227,8 @@ const RegisterPage = () => {
             <div className="auth-logo-wrapper">
               <DireDawaLogo />
             </div>
-            <h2>{step === 1 ? (t('auth.registerTitle') || 'Create account') : 'Verify Your Email'}</h2>
-            <p>{step === 1 ? (t('auth.registerSubtitle') || 'Join the ride-sharing community') : `Enter the code sent to ${formData.email}`}</p>
+            <h2>{step === 1 ? (t('auth.registerTitle') || 'Create account') : step === 2 ? 'Verify Your Email' : 'Verify Your Phone'}</h2>
+            <p>{step === 1 ? (t('auth.registerSubtitle') || 'Join the ride-sharing community') : step === 2 ? `Enter the code sent to ${formData.email}` : `Enter the code sent to ${formData.phoneNumber}`}</p>
           </div>
 
           <div className="step-indicator">
@@ -162,9 +236,13 @@ const RegisterPage = () => {
               <div className="step-number">{step === 1 ? '1' : <FaCheckCircle />}</div>
               <span>{t('auth.stepAccount') || 'Account'}</span>
             </div>
-            <div className={`step ${step === 2 ? 'active' : ''}`}>
-              <div className="step-number">2</div>
+            <div className={`step ${step === 2 ? 'active' : step > 2 ? 'completed' : ''}`}>
+              <div className="step-number">{step === 2 ? '2' : step > 2 ? <FaCheckCircle /> : '2'}</div>
               <span>{t('auth.stepOtp') || 'Verify'}</span>
+            </div>
+            <div className={`step ${step === 3 ? 'active' : ''}`}>
+              <div className="step-number">3</div>
+              <span>{t('auth.phoneVerification') || 'Phone'}</span>
             </div>
           </div>
 
@@ -298,7 +376,7 @@ const RegisterPage = () => {
                 )}
               </button>
             </form>
-          ) : (
+          ) : step === 2 ? (
             <div className="auth-form">
               {otpCode && (
                 <div
@@ -389,7 +467,82 @@ const RegisterPage = () => {
                 ← Back
               </button>
             </div>
-          )}
+          ) : step === 3 ? (
+            <div className="auth-form">
+              {phoneOtpCode && (
+                <div
+                  style={{
+                    padding: '12px 16px', background: '#fef3c7', borderRadius: 8,
+                    color: '#92400e', fontWeight: 700, fontSize: 20,
+                    marginBottom: 16, border: '1px solid #fbbf24',
+                    textAlign: 'center', letterSpacing: 6
+                  }}
+                >
+                  Your OTP: {phoneOtpCode}
+                </div>
+              )}
+
+              <div className="otp-inputs" style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
+                {phoneOtpDigits.map((digit, i) => (
+                  <input
+                    key={i}
+                    id={`phone-otp-${i}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={e => handlePhoneOtpChange(i, e.target.value)}
+                    onKeyDown={e => handlePhoneOtpKeyDown(i, e)}
+                    className="otp-input"
+                    style={{
+                      width: 48, height: 52, textAlign: 'center',
+                      border: '2px solid var(--border)', borderRadius: 8,
+                      fontSize: 20, fontWeight: 700, outline: 'none',
+                      transition: 'border-color 0.2s'
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                className="auth-submit"
+                onClick={handleVerifyPhoneOTP}
+                disabled={phoneOtpLoading}
+                style={{ width: '100%' }}
+              >
+                {phoneOtpLoading ? 'Verifying...' : 'Verify Phone'}
+              </button>
+
+              <div style={{ textAlign: 'center', marginTop: 16 }}>
+                {phoneResendTimer > 0 ? (
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Resend in {phoneResendTimer}s</span>
+                ) : (
+                  <button
+                    onClick={sendPhoneOTP}
+                    disabled={phoneOtpSending}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--primary)',
+                      fontWeight: 600, fontSize: 14, cursor: 'pointer'
+                    }}
+                  >
+                    {phoneOtpSending ? 'Sending...' : 'Resend Code'}
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => setStep(2)}
+                style={{
+                  display: 'block', width: '100%', marginTop: 12,
+                  padding: 12, background: 'var(--bg)', border: '2px solid var(--border)',
+                  borderRadius: 8, fontWeight: 600, fontSize: 14,
+                  color: 'var(--text-secondary)', cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+            </div>
+          ) : null}
 
           <div className="auth-footer">
             <p>

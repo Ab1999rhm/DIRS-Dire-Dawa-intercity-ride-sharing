@@ -19,6 +19,51 @@ export const AuthProvider = ({ children }) => {
 
   const socketRef = useRef(null);
 
+  useEffect(() => {
+    const api = authAPI;
+    const instance = api?.axios || api;
+    if (!instance?.interceptors) return;
+
+    const interceptor = instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            try {
+              const res = await authAPI.refreshToken(refreshToken);
+              const { accessToken } = res.data;
+              localStorage.setItem('accessToken', accessToken);
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+              return instance(originalRequest);
+            } catch {
+              window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Session expired. Please login again.', type: 'error' } }));
+              localStorage.clear();
+              setUser(null);
+              setDriverProfile(null);
+              window.location.href = '/login';
+            }
+          } else {
+            window.dispatchEvent(new CustomEvent('app-toast', { detail: { message: 'Session expired. Please login again.', type: 'error' } }));
+            localStorage.clear();
+            setUser(null);
+            setDriverProfile(null);
+            window.location.href = '/login';
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      if (instance?.interceptors?.response?.eject) {
+        instance.interceptors.response.eject(interceptor);
+      }
+    };
+  }, []);
+
   const connectSocket = useCallback((token) => {
     if (socketRef.current?.connected) return socketRef.current;
 
