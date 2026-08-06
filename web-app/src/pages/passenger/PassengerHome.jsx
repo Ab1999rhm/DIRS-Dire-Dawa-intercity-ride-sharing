@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, ratingsAPI, sosAPI } from '../../services/api';
@@ -60,6 +61,18 @@ function debounce(fn, ms) {
   };
 }
 
+const HARDCODED_CITIES = [
+  { label: 'Dire Dawa, Ethiopia', lat: 9.6009, lon: 41.8508 },
+  { label: 'Addis Ababa, Ethiopia', lat: 9.0192, lon: 38.7525 },
+  { label: 'Hawassa, Ethiopia', lat: 7.0621, lon: 38.4763 },
+  { label: 'Bahir Dar, Ethiopia', lat: 11.5938, lon: 37.3909 },
+  { label: 'Mekelle, Ethiopia', lat: 13.4967, lon: 39.4753 },
+  { label: 'Adama (Nazret), Ethiopia', lat: 8.5400, lon: 39.2700 },
+  { label: 'Jimma, Ethiopia', lat: 7.6789, lon: 36.8340 },
+  { label: 'Dessie, Ethiopia', lat: 11.1321, lon: 39.6353 },
+  { label: 'Harar, Ethiopia', lat: 9.3115, lon: 42.1199 },
+];
+
 const PassengerHome = () => {
   const { t } = useLanguage();
   const { user, socket, tripStatusUpdate, notifications } = useAuth();
@@ -107,14 +120,24 @@ const PassengerHome = () => {
         setMapCenter([lat, lng]);
         setPickupCoords([lat, lng]);
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+            { headers: { 'Accept-Language': 'en' }, signal: controller.signal }
           );
+          clearTimeout(timeoutId);
           const data = await res.json();
           if (data.display_name) setPickup(data.display_name);
-        } catch (_) {}
+        } catch (_) {
+          setPickup('Current Location');
+        }
       },
-      () => {},
+      () => {
+        setMapCenter([9.6009, 41.8508]);
+        setPickupCoords([9.6009, 41.8508]);
+        setPickup('Dire Dawa, Ethiopia');
+      },
       { timeout: 8000 }
     );
   }, []);
@@ -152,24 +175,46 @@ const PassengerHome = () => {
 
   const fetchSuggestions = useCallback(
     debounce(async (query, setter) => {
-      if (query.length < 3) {
+      if (query.length < 2) {
         setter([]);
         return;
       }
+      const lowerQuery = query.toLowerCase();
+      const localMatches = HARDCODED_CITIES.filter(c =>
+        c.label.toLowerCase().includes(lowerQuery)
+      );
+      if (query.length < 3) {
+        setter(localMatches);
+        return;
+      }
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+          {
+            headers: { 'Accept-Language': 'en' },
+            signal: controller.signal,
+          }
         );
+        clearTimeout(timeoutId);
         const data = await res.json();
-        setter(
-          data.map((item) => ({
-            label: item.display_name,
-            lat: parseFloat(item.lat),
-            lon: parseFloat(item.lon),
-          }))
-        );
+        const remoteResults = data.map((item) => ({
+          label: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+        }));
+        const combined = [...localMatches, ...remoteResults];
+        const seen = new Set();
+        const unique = combined.filter(item => {
+          const key = `${item.lat},${item.lon}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setter(unique.slice(0, 8));
       } catch (_) {
-        setter([]);
+        setter(localMatches);
       }
     }, 500),
     []

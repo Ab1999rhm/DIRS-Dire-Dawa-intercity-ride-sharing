@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, Suspense } from 'react';
+import React, { useState, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -44,13 +44,13 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = React.memo(({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   return user ? children : <Navigate to="/login" />;
-};
+});
 
-const RoleRoute = ({ children, allowedRole }) => {
+const RoleRoute = React.memo(({ children, allowedRole }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   if (!user) return <Navigate to="/login" />;
@@ -60,9 +60,9 @@ const RoleRoute = ({ children, allowedRole }) => {
     return <Navigate to="/passenger" />;
   }
   return children;
-};
+});
 
-const PublicRoute = ({ children }) => {
+const PublicRoute = React.memo(({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   if (user) {
@@ -71,9 +71,9 @@ const PublicRoute = ({ children }) => {
     return <Navigate to="/passenger" />;
   }
   return children;
-};
+});
 
-const AppLayout = ({ children, bottomNav }) => {
+const AppLayout = React.memo(({ children, bottomNav }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = useCallback((open) => setSidebarOpen(open), []);
 
@@ -109,9 +109,9 @@ const AppLayout = ({ children, bottomNav }) => {
       )}
     </div>
   );
-};
+});
 
-const PassengerRoutes = () => (
+const PassengerRoutes = React.memo(() => (
   <Suspense fallback={<LoadingSpinner />}>
     <Routes>
       <Route index element={<PassengerHome />} />
@@ -124,9 +124,9 @@ const PassengerRoutes = () => (
       <Route path="*" element={<Navigate to="/passenger" />} />
     </Routes>
   </Suspense>
-);
+));
 
-const DriverRoutes = () => (
+const DriverRoutes = React.memo(() => (
   <Suspense fallback={<LoadingSpinner />}>
     <Routes>
       <Route index element={<DriverDashboard />} />
@@ -137,9 +137,9 @@ const DriverRoutes = () => (
       <Route path="*" element={<Navigate to="/driver" />} />
     </Routes>
   </Suspense>
-);
+));
 
-const AdminRoutes = () => (
+const AdminRoutes = React.memo(() => (
   <Suspense fallback={<LoadingSpinner />}>
     <Routes>
       <Route index element={<AdminDashboard />} />
@@ -152,12 +152,42 @@ const AdminRoutes = () => (
       <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>
   </Suspense>
-);
+));
 
 function App() {
   useEffect(() => {
     offlineService.init();
   }, []);
+
+  const passengerRoute = useMemo(() => (
+    <RoleRoute allowedRole="passenger">
+      <AppLayout bottomNav>
+        <PassengerRoutes />
+      </AppLayout>
+    </RoleRoute>
+  ), []);
+
+  const driverRoute = useMemo(() => (
+    <RoleRoute allowedRole="driver">
+      <AppLayout>
+        <DriverRoutes />
+      </AppLayout>
+    </RoleRoute>
+  ), []);
+
+  const adminRoute = useMemo(() => (
+    <RoleRoute allowedRole="admin">
+      <AppLayout>
+        <AdminRoutes />
+      </AppLayout>
+    </RoleRoute>
+  ), []);
+
+  const publicLanding = useMemo(() => <PublicLanding />, []);
+  const loginPage = useMemo(() => <LoginPage />, []);
+  const registerPage = useMemo(() => <RegisterPage />, []);
+  const forgotPasswordPage = useMemo(() => <ForgotPasswordPage />, []);
+  const notFoundPage = useMemo(() => <NotFound />, []);
 
   return (
     <ErrorBoundary>
@@ -175,14 +205,14 @@ function App() {
                   Skip to main content
                 </a>
                 <Routes>
-                  <Route path="/" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><PublicLanding /></Suspense></PublicRoute>} />
-                  <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><LoginPage /></Suspense></PublicRoute>} />
-                  <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><RegisterPage /></Suspense></PublicRoute>} />
-                  <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><ForgotPasswordPage /></Suspense></PublicRoute>} />
-                  <Route path="/passenger/*" element={<RoleRoute allowedRole="passenger"><AppLayout bottomNav><PassengerRoutes /></AppLayout></RoleRoute>} />
-                  <Route path="/driver/*" element={<RoleRoute allowedRole="driver"><AppLayout><DriverRoutes /></AppLayout></RoleRoute>} />
-                  <Route path="/admin/*" element={<RoleRoute allowedRole="admin"><AppLayout><AdminRoutes /></AppLayout></RoleRoute>} />
-                  <Route path="*" element={<Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
+                  <Route path="/" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{publicLanding}</Suspense></PublicRoute>} />
+                  <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{loginPage}</Suspense></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{registerPage}</Suspense></PublicRoute>} />
+                  <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{forgotPasswordPage}</Suspense></PublicRoute>} />
+                  <Route path="/passenger/*" element={passengerRoute} />
+                  <Route path="/driver/*" element={driverRoute} />
+                  <Route path="/admin/*" element={adminRoute} />
+                  <Route path="*" element={<Suspense fallback={<LoadingSpinner />}>{notFoundPage}</Suspense>} />
                 </Routes>
               </BrowserRouter>
             </ToastProvider>

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef, useMemo } from 'react';
 import { authAPI } from '../services/api';
 import { io } from 'socket.io-client';
 
@@ -170,17 +170,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const contextValue = useMemo(() => ({
+    user, driverProfile, loading, socket,
+    login, register, completeRegistration, logout, setUser, setDriverProfile,
+    notifications, unreadCount, setNotifications, setUnreadCount,
+    newRideRequest, clearNewRideRequest,
+    rideAccepted, clearRideAccepted,
+    driverLocation, tripStatusUpdate,
+    sosAlert, clearSosAlert,
+    emitLocationUpdate,
+  }), [
+    user, driverProfile, loading, socket,
+    notifications, unreadCount,
+    newRideRequest, rideAccepted,
+    driverLocation, tripStatusUpdate, sosAlert,
+  ]);
+
   return (
-    <AuthContext.Provider value={{
-      user, driverProfile, loading, socket,
-      login, register, completeRegistration, logout, setUser, setDriverProfile,
-      notifications, unreadCount, setNotifications, setUnreadCount,
-      newRideRequest, clearNewRideRequest,
-      rideAccepted, clearRideAccepted,
-      driverLocation, tripStatusUpdate,
-      sosAlert, clearSosAlert,
-      emitLocationUpdate,
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
