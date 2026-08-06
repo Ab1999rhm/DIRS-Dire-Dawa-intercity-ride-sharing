@@ -276,24 +276,7 @@
 }
 .action-icon.danger { background: var(--danger-bg); color: var(--danger); }
 
-/* Bottom Navigation */
-.passenger-bottom-nav {
-  position: fixed; bottom: 0; left: 260px; right: 0;
-  display: flex; align-items: center; justify-content: space-around;
-  padding: 10px 0 env(safe-area-inset-bottom, 8px);
-  background: var(--card); border-top: 1px solid var(--border-light);
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
-  z-index: 50;
-}
-.bottom-nav-item {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 6px 12px; background: none; border: none;
-  font-size: 10px; font-weight: 600; color: var(--text-muted);
-  cursor: pointer; transition: var(--transition);
-}
-.bottom-nav-item svg { font-size: 20px; }
-.bottom-nav-item.active { color: var(--primary); }
-.bottom-nav-item:hover { color: var(--primary); }
+/* Bottom Navigation (now in pages.css for persistent rendering) */
 
 /* Skeleton */
 .skeleton-card {
@@ -436,9 +419,6 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .passenger-bottom-nav { left: 0; }
-}
 @media (max-width: 480px) {
   .passenger-page { padding: 16px 12px 100px; }
   .passenger-greeting { font-size: 20px; }
@@ -465,7 +445,6 @@
 [data-theme="dark"] .favorite-card,
 [data-theme="dark"] .profile-card,
 [data-theme="dark"] .suggestions-dropdown,
-[data-theme="dark"] .passenger-bottom-nav,
 [data-theme="dark"] .passenger-service-card,
 [data-theme="dark"] .passenger-payment-option {
   background: #16213e;
@@ -490,7 +469,6 @@
 [data-theme="dark"] .service-card-eta,
 [data-theme="dark"] .text-muted,
 [data-theme="dark"] .driver-info p,
-[data-theme="dark"] .bottom-nav-item,
 [data-theme="dark"] .trip-item-date,
 [data-theme="dark"] .trip-item-meta,
 [data-theme="dark"] .pagination-info {

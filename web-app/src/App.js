@@ -12,6 +12,7 @@ import './styles/pages.css';
 
 const Navbar = React.lazy(() => import('./components/layout/Navbar'));
 const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
+const PassengerBottomNav = React.lazy(() => import('./components/layout/PassengerBottomNav'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
@@ -72,7 +73,7 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-const AppLayout = ({ children }) => {
+const AppLayout = ({ children, bottomNav }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = useCallback((open) => setSidebarOpen(open), []);
 
@@ -82,15 +83,30 @@ const AppLayout = ({ children }) => {
         <Navbar onMenuToggle={toggleSidebar} />
       </Suspense>
       <div className="app-body">
-        <Suspense fallback={<LoadingSpinner />}>
-          <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        </Suspense>
-        <main className="app-main">
-          <Suspense fallback={<LoadingSpinner />}>
-            {children}
-          </Suspense>
-        </main>
+        {bottomNav ? (
+          <main className="app-main has-bottom-nav" style={{ marginLeft: 0 }}>
+            <Suspense fallback={<LoadingSpinner />}>
+              {children}
+            </Suspense>
+          </main>
+        ) : (
+          <>
+            <Suspense fallback={<LoadingSpinner />}>
+              <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </Suspense>
+            <main className="app-main">
+              <Suspense fallback={<LoadingSpinner />}>
+                {children}
+              </Suspense>
+            </main>
+          </>
+        )}
       </div>
+      {bottomNav && (
+        <Suspense fallback={<LoadingSpinner />}>
+          <PassengerBottomNav />
+        </Suspense>
+      )}
     </div>
   );
 };
@@ -163,7 +179,7 @@ function App() {
                   <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><LoginPage /></Suspense></PublicRoute>} />
                   <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><RegisterPage /></Suspense></PublicRoute>} />
                   <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}><ForgotPasswordPage /></Suspense></PublicRoute>} />
-                  <Route path="/passenger/*" element={<RoleRoute allowedRole="passenger"><AppLayout><PassengerRoutes /></AppLayout></RoleRoute>} />
+                  <Route path="/passenger/*" element={<RoleRoute allowedRole="passenger"><AppLayout bottomNav><PassengerRoutes /></AppLayout></RoleRoute>} />
                   <Route path="/driver/*" element={<RoleRoute allowedRole="driver"><AppLayout><DriverRoutes /></AppLayout></RoleRoute>} />
                   <Route path="/admin/*" element={<RoleRoute allowedRole="admin"><AppLayout><AdminRoutes /></AppLayout></RoleRoute>} />
                   <Route path="*" element={<Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   FaCar, FaMapMarkerAlt, FaCreditCard, FaStar, FaHistory, FaExclamationTriangle,
   FaExchangeAlt, FaClock, FaMoneyBillWave, FaPhone, FaRoute, FaWallet,
   FaUserShield, FaUsers, FaMobileAlt, FaBell, FaSearch, FaMotorcycle,
-  FaShuttleVan, FaBus, FaBolt, FaHome, FaListUl, FaCog, FaShareAlt, FaTimes
+  FaShuttleVan, FaBus, FaBolt, FaShareAlt, FaTimes
 } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -64,7 +64,6 @@ const PassengerHome = () => {
   const { t } = useLanguage();
   const { user, socket, tripStatusUpdate, notifications } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const toast = useToast();
 
   const [pickup, setPickup] = useState('');
@@ -843,40 +842,7 @@ const PassengerHome = () => {
         </div>
       </div>
 
-      <div className="passenger-bottom-nav" role="navigation" aria-label="Main navigation">
-        <button
-          className={`bottom-nav-item ${location.pathname === '/passenger' || location.pathname === '/passenger/' ? 'active' : ''}`}
-          onClick={() => navigate('/passenger')}
-          aria-label="Navigate to Home"
-        >
-          <FaHome />
-          <span>Home</span>
-        </button>
-        <button
-          className={`bottom-nav-item ${location.pathname.startsWith('/passenger/trips') ? 'active' : ''}`}
-          onClick={() => navigate('/passenger/trips')}
-          aria-label="Navigate to Trips"
-        >
-          <FaListUl />
-          <span>Trips</span>
-        </button>
-        <button
-          className={`bottom-nav-item ${location.pathname.startsWith('/passenger/wallet') ? 'active' : ''}`}
-          onClick={() => navigate('/passenger/wallet')}
-          aria-label="Navigate to Wallet"
-        >
-          <FaWallet />
-          <span>Wallet</span>
-        </button>
-        <button
-          className={`bottom-nav-item ${location.pathname.startsWith('/passenger/profile') ? 'active' : ''}`}
-          onClick={() => navigate('/passenger/profile')}
-          aria-label="Navigate to Settings"
-        >
-          <FaCog />
-          <span>Settings</span>
-        </button>
-      </div>
+
     </div>
   );
 };

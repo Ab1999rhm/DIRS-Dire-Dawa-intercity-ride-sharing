@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaWallet, FaHistory, FaMoneyBillWave, FaMobileAlt, FaCreditCard,
-  FaArrowUp, FaArrowDown, FaHome, FaListUl, FaCog, FaPlus,
+  FaArrowUp, FaArrowDown, FaPlus,
   FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
@@ -289,13 +289,7 @@ const PassengerWallet = () => {
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <div className="passenger-bottom-nav">
-        <button className="bottom-nav-item" onClick={() => navigate('/passenger')}><FaHome /><span>Home</span></button>
-        <button className="bottom-nav-item" onClick={() => navigate('/passenger/trips')}><FaListUl /><span>Trips</span></button>
-        <button className={`bottom-nav-item active`}><FaWallet /><span>Wallet</span></button>
-        <button className="bottom-nav-item" onClick={() => navigate('/passenger/profile')}><FaCog /><span>Settings</span></button>
-      </div>
+
     </div>
   );
 };

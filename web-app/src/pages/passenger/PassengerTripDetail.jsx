@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   FaMapMarkerAlt, FaCar, FaStar, FaPhone, FaShareAlt, FaExclamationTriangle,
-  FaHome, FaListUl, FaWallet, FaCog, FaClock, FaCheckCircle, FaArrowLeft,
+  FaClock, FaCheckCircle, FaArrowLeft,
   FaRoute, FaUser, FaMotorcycle, FaShuttleVan, FaBus, FaBolt,
   FaPlay, FaFlag, FaSms, FaTimes, FaRoute as FaRouteIcon, FaDownload,
   FaQuestionCircle, FaSuitcase, FaDollarSign, FaShieldAlt, FaUserSlash, FaEllipsisH
@@ -459,13 +459,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         </button>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="passenger-bottom-nav">
-        <button className="bottom-nav-item" onClick={() => navigate('/passenger')}><FaHome /><span>Home</span></button>
-        <button className={`bottom-nav-item active`} onClick={() => navigate('/passenger/trips')}><FaListUl /><span>Trips</span></button>
-        <button className="bottom-nav-item" onClick={() => navigate('/passenger/wallet')}><FaWallet /><span>Wallet</span></button>
-        <button className="bottom-nav-item" onClick={() => navigate('/passenger/profile')}><FaCog /><span>Settings</span></button>
-      </div>
+
     </div>
   );
 };
