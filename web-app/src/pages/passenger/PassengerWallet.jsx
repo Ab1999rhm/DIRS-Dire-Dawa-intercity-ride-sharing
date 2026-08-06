@@ -54,7 +54,7 @@ const PassengerWallet = () => {
   const handleTopUp = async () => {
     const amount = parseFloat(topUpAmount);
     if (!amount || amount <= 0) {
-      toast.error(t('wallet.invalidAmount') || 'Please enter a valid amount');
+      toast.error(t('passenger.invalidAmount'));
       return;
     }
     setTopUpLoading(true);
@@ -65,7 +65,7 @@ const PassengerWallet = () => {
         method: topUpMethod,
         currency: 'ETB',
       });
-      toast.success(t('wallet.topUpSuccess') || 'Top-up successful!');
+      toast.success(t('passenger.topUpSuccess'));
       setTopUpAmount('');
       fetchWalletData();
     } catch (err) {
@@ -78,17 +78,17 @@ const PassengerWallet = () => {
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
-      toast.error(t('wallet.invalidAmount') || 'Please enter a valid amount');
+      toast.error(t('passenger.invalidAmount'));
       return;
     }
     if (amount > balance) {
-      toast.error(t('wallet.insufficientBalance') || 'Insufficient balance');
+      toast.error(t('passenger.insufficientBalance'));
       return;
     }
     setWithdrawLoading(true);
     try {
       await paymentsAPI.withdraw({ amount, currency: 'ETB' });
-      toast.success(t('wallet.withdrawSuccess') || 'Withdrawal request submitted!');
+      toast.success(t('passenger.withdrawSuccess'));
       setWithdrawAmount('');
       fetchWalletData();
     } catch (err) {
@@ -118,15 +118,15 @@ const PassengerWallet = () => {
     <div className="passenger-page">
       <div className="passenger-header-row">
         <div>
-          <h1 className="passenger-greeting">{t('wallet.title') || 'My Wallet'}</h1>
-          <p className="passenger-location"><FaWallet /> {t('wallet.subtitle') || 'Manage your balance'}</p>
+          <h1 className="passenger-greeting">{t('passenger.walletTitle')}</h1>
+          <p className="passenger-location"><FaWallet /> {t('passenger.walletSubtitle')}</p>
         </div>
       </div>
 
       {/* Balance Card */}
       <div className="passenger-booking-card" style={{ background: 'linear-gradient(135deg, var(--primary), #1e3a5f)', color: 'white', border: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 13, opacity: 0.8 }}>{t('wallet.currentBalance') || 'Current Balance'}</span>
+          <span style={{ fontSize: 13, opacity: 0.8 }}>{t('passenger.currentBalance')}</span>
           <FaWallet size={24} style={{ opacity: 0.7 }} />
         </div>
         <div style={{ fontSize: 32, fontWeight: 800, marginBottom: 16 }}>
@@ -138,14 +138,14 @@ const PassengerWallet = () => {
             style={{ background: 'rgba(255,255,255,0.2)', color: 'white', margin: 0, fontSize: 13, padding: '10px 0', flex: 1 }}
             onClick={() => setActiveSection('topup')}
           >
-            <FaPlus /> {t('wallet.topUp') || 'Top Up'}
+            <FaPlus /> {t('passenger.topUp')}
           </button>
           <button
             className="passenger-primary-btn"
             style={{ background: 'rgba(255,255,255,0.2)', color: 'white', margin: 0, fontSize: 13, padding: '10px 0', flex: 1 }}
             onClick={() => setActiveSection('withdraw')}
           >
-            <FaArrowUp /> {t('wallet.withdraw') || 'Withdraw'}
+            <FaArrowUp /> {t('passenger.withdraw')}
           </button>
         </div>
       </div>
@@ -153,20 +153,20 @@ const PassengerWallet = () => {
       {/* Section Tabs */}
       <div className="passenger-tab-bar" style={{ marginBottom: 16 }}>
         <button className={`passenger-tab ${activeSection === 'history' ? 'active' : ''}`} onClick={() => setActiveSection('history')}>
-          <FaHistory /> {t('wallet.history') || 'History'}
+          <FaHistory /> {t('passenger.history')}
         </button>
         <button className={`passenger-tab ${activeSection === 'topup' ? 'active' : ''}`} onClick={() => setActiveSection('topup')}>
-          <FaPlus /> {t('wallet.topUp') || 'Top Up'}
+          <FaPlus /> {t('passenger.topUp')}
         </button>
         <button className={`passenger-tab ${activeSection === 'withdraw' ? 'active' : ''}`} onClick={() => setActiveSection('withdraw')}>
-          <FaArrowUp /> {t('wallet.withdraw') || 'Withdraw'}
+          <FaArrowUp /> {t('passenger.withdraw')}
         </button>
       </div>
 
       {/* Top Up Section */}
       {activeSection === 'topup' && (
         <div className="passenger-booking-card">
-          <h3 className="passenger-subsection">{t('wallet.topUpBalance') || 'Top Up Balance'}</h3>
+          <h3 className="passenger-subsection">{t('passenger.topUpBalance')}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
             {quickAmounts.map(amt => (
               <button
@@ -180,7 +180,7 @@ const PassengerWallet = () => {
             ))}
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{t('wallet.amount') || 'Amount (ETB)'}</label>
+            <label>{t('passenger.amount')}</label>
             <div className="input-wrapper">
               <FaMoneyBillWave className="input-icon" />
               <input
@@ -191,7 +191,7 @@ const PassengerWallet = () => {
               />
             </div>
           </div>
-          <h3 className="passenger-subsection">{t('wallet.selectMethod') || 'Payment Method'}</h3>
+          <h3 className="passenger-subsection">{t('passenger.selectMethod')}</h3>
           <div className="passenger-payment-grid" style={{ marginBottom: 16 }}>
             {[
               { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
@@ -208,7 +208,7 @@ const PassengerWallet = () => {
             ))}
           </div>
           <button className="passenger-primary-btn" disabled={topUpLoading} onClick={handleTopUp}>
-            {topUpLoading ? 'Processing...' : (t('wallet.topUpNow') || 'Top Up Now')}
+            {topUpLoading ? 'Processing...' : (t('passenger.topUpNow'))}
           </button>
         </div>
       )}
@@ -216,12 +216,12 @@ const PassengerWallet = () => {
       {/* Withdraw Section */}
       {activeSection === 'withdraw' && (
         <div className="passenger-booking-card">
-          <h3 className="passenger-subsection">{t('wallet.withdrawFunds') || 'Withdraw Funds'}</h3>
+          <h3 className="passenger-subsection">{t('passenger.withdrawFunds')}</h3>
           <div style={{ padding: 14, background: 'var(--bg)', borderRadius: 12, marginBottom: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
-            {t('wallet.availableBalance') || 'Available Balance'}: <strong style={{ color: 'var(--text)', fontSize: 15 }}>ETB {balance.toFixed(2)}</strong>
+            {t('passenger.availableBalance')}: <strong style={{ color: 'var(--text)', fontSize: 15 }}>ETB {balance.toFixed(2)}</strong>
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{t('wallet.amount') || 'Amount (ETB)'}</label>
+            <label>{t('passenger.amount')}</label>
             <div className="input-wrapper">
               <FaMoneyBillWave className="input-icon" />
               <input
@@ -234,7 +234,7 @@ const PassengerWallet = () => {
             </div>
           </div>
           <button className="passenger-primary-btn" disabled={withdrawLoading} onClick={handleWithdraw}>
-            {withdrawLoading ? 'Processing...' : (t('wallet.withdrawNow') || 'Withdraw Now')}
+            {withdrawLoading ? 'Processing...' : (t('passenger.withdrawNow'))}
           </button>
         </div>
       )}
@@ -242,7 +242,7 @@ const PassengerWallet = () => {
       {/* Transaction History */}
       {activeSection === 'history' && (
         <div>
-          <h3 className="passenger-subsection" style={{ marginBottom: 12 }}>{t('wallet.recentTransactions') || 'Recent Transactions'}</h3>
+          <h3 className="passenger-subsection" style={{ marginBottom: 12 }}>{t('passenger.recentTransactions')}</h3>
           {loading ? (
             <div className="trips-list">
               {[1, 2, 3].map(i => <div key={i} className="skeleton-card" />)}
@@ -250,8 +250,8 @@ const PassengerWallet = () => {
           ) : transactions.length === 0 ? (
             <div className="passenger-booking-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
               <FaWallet size={40} style={{ color: 'var(--text-muted)', marginBottom: 12 }} />
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{t('wallet.noTransactions') || 'No transactions yet'}</h3>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('wallet.noTransactionsDesc') || 'Your transaction history will appear here'}</p>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{t('passenger.noTransactions')}</h3>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('passenger.noTransactionsDesc')}</p>
             </div>
           ) : (
             <div className="passenger-trips-list">

@@ -28,7 +28,7 @@ const LoginPage = () => {
       return;
     }
     if (!/^(\+251|0)?[97]\d{8}$/.test(phoneNumber.trim())) {
-      setError('Please enter a valid Ethiopian phone number');
+      setError(t('auth.validPhoneRequired'));
       return;
     }
     if (!password.trim()) {
@@ -46,7 +46,7 @@ const LoginPage = () => {
     } catch (err) {
       console.error('Login error:', err);
       const data = err.response?.data;
-      const msg = data?.error || data?.errors?.[0]?.msg || err.message || 'Login failed. Please check your credentials.';
+      const msg = data?.error || data?.errors?.[0]?.msg || err.message || t('auth.loginFailed');
       setError(msg);
     } finally {
       setLoading(false);

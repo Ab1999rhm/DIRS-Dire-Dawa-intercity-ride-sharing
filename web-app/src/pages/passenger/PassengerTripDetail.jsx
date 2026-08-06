@@ -14,11 +14,11 @@ import { useToast } from '../../components/common/Toast';
 import './Passenger.css';
 
 const STATUS_STEPS = [
-  { key: 'pending', label: 'Requested', icon: <FaClock /> },
-  { key: 'accepted', label: 'Accepted', icon: <FaCheckCircle /> },
-  { key: 'arrived', label: 'Driver Arrived', icon: <FaMapMarkerAlt /> },
-  { key: 'in_progress', label: 'In Progress', icon: <FaCar /> },
-  { key: 'completed', label: 'Completed', icon: <FaFlag /> },
+  { key: 'pending', labelKey: 'passenger.requested', icon: <FaClock /> },
+  { key: 'accepted', labelKey: 'passenger.accepted', icon: <FaCheckCircle /> },
+  { key: 'arrived', labelKey: 'passenger.arrived', icon: <FaMapMarkerAlt /> },
+  { key: 'in_progress', labelKey: 'passenger.inProgress', icon: <FaCar /> },
+  { key: 'completed', labelKey: 'passenger.completedStatus', icon: <FaFlag /> },
 ];
 
 const getVehicleIcon = (type) => {
@@ -195,7 +195,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
           <button onClick={() => navigate(-1)} style={{ background: 'var(--card)', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <FaArrowLeft />
           </button>
-          <h1 className="passenger-greeting" style={{ fontSize: 18 }}>{t('tripDetail.loading') || 'Loading...'}</h1>
+          <h1 className="passenger-greeting" style={{ fontSize: 18 }}>{t('passenger.tripDetailLoading')}</h1>
         </div>
         <div className="trips-list">
           {[1, 2, 3].map(i => <div key={i} className="skeleton-card" />)}
@@ -211,13 +211,13 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
           <button onClick={() => navigate(-1)} style={{ background: 'var(--card)', border: 'none', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <FaArrowLeft />
           </button>
-          <h1 className="passenger-greeting" style={{ fontSize: 18 }}>{t('tripDetail.notFound') || 'Trip Not Found'}</h1>
+          <h1 className="passenger-greeting" style={{ fontSize: 18 }}>{t('passenger.tripNotFound')}</h1>
         </div>
         <div className="passenger-booking-card" style={{ textAlign: 'center', padding: 40 }}>
           <FaExclamationTriangle size={40} style={{ color: 'var(--text-muted)', marginBottom: 12 }} />
-          <p style={{ color: 'var(--text-muted)' }}>{t('tripDetail.notFoundDesc') || 'This trip could not be found'}</p>
+          <p style={{ color: 'var(--text-muted)' }}>{t('passenger.tripNotFoundDesc')}</p>
           <button className="passenger-primary-btn" onClick={() => navigate('/passenger/trips')} style={{ marginTop: 16 }}>
-            {t('tripDetail.backToTrips') || 'Back to Trips'}
+            {t('passenger.backToTrips')}
           </button>
         </div>
       </div>
@@ -238,7 +238,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
             <FaArrowLeft />
           </button>
           <div>
-            <h1 className="passenger-greeting" style={{ fontSize: 18 }}>{t('tripDetail.title') || 'Trip Details'}</h1>
+            <h1 className="passenger-greeting" style={{ fontSize: 18 }}>{t('passenger.tripDetails')}</h1>
             <p className="passenger-location" style={{ fontSize: 12 }}>
               <FaClock /> {new Date(trip.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -297,7 +297,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
 
       {/* Status Timeline */}
       <div className="passenger-booking-card" style={{ marginTop: 12 }}>
-        <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('tripDetail.tripStatus') || 'Trip Status'}</h3>
+        <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('passenger.tripStatus')}</h3>
         <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', padding: '0 8px' }}>
           {/* Progress line */}
           <div style={{
@@ -326,7 +326,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
                 fontSize: 9, marginTop: 6, fontWeight: idx === currentStep ? 700 : 500,
                 color: idx === currentStep ? 'var(--primary)' : 'var(--text-muted)',
                 textAlign: 'center', lineHeight: 1.2,
-              }}>{step.label}</span>
+              }}>{t(step.labelKey)}</span>
             </div>
           ))}
         </div>
@@ -335,7 +335,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
       {/* Driver Info Card */}
       {driver._id && (
         <div className="passenger-booking-card" style={{ marginTop: 12 }}>
-          <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('tripDetail.driverInfo') || 'Driver Information'}</h3>
+          <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('passenger.driverInfo')}</h3>
           <div className="driver-card" style={{ border: 'none', padding: 0, margin: 0, background: 'transparent' }}>
             {driver.profilePhoto ? (
               <img src={driver.profilePhoto} alt="Driver" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }} />
@@ -362,7 +362,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
 
       {/* Fare Breakdown */}
       <div className="passenger-booking-card" style={{ marginTop: 12 }}>
-        <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('tripDetail.fareBreakdown') || 'Fare Breakdown'}</h3>
+        <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('passenger.fareBreakdown')}</h3>
         <div className="fare-summary" style={{ background: 'transparent', padding: 0 }}>
           {fare.baseFare !== undefined && (
             <div className="fare-row"><span>{t('passenger.baseFare') || 'Base Fare'}</span><span>ETB {fare.baseFare || 0}</span></div>
@@ -374,7 +374,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
             <div className="fare-row"><span>{t('passenger.timeFare') || 'Time'}</span><span>ETB {fare.timeFare || 0}</span></div>
           )}
           {fare.surge > 0 && (
-            <div className="fare-row"><span>{t('tripDetail.surge') || 'Surge'}</span><span>ETB {fare.surge}</span></div>
+            <div className="fare-row"><span>{t('passenger.surge')}</span><span>ETB {fare.surge}</span></div>
           )}
           {fare.platformFee !== undefined && (
             <div className="fare-row"><span>{t('passenger.platformFee') || 'Platform Fee'}</span><span>ETB {fare.platformFee || 0}</span></div>
@@ -389,7 +389,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
       {/* Rating Display */}
       {trip.rating && (
         <div className="passenger-booking-card" style={{ marginTop: 12 }}>
-          <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('tripDetail.yourRating') || 'Your Rating'}</h3>
+          <h3 className="passenger-subsection" style={{ marginTop: 0 }}>{t('passenger.yourRating')}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex', gap: 4 }}>
               {[1, 2, 3, 4, 5].map(s => (
@@ -446,10 +446,10 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
         <button className="passenger-action-btn" onClick={callDriver} style={{ flex: 1 }}>
-          <FaPhone /> {t('tripDetail.callDriver') || 'Call Driver'}
+          <FaPhone /> {t('passenger.callDriver')}
         </button>
         <button className="passenger-action-btn" onClick={handleShare} style={{ flex: 1 }}>
-          <FaShareAlt /> {t('tripDetail.share') || 'Share'}
+          <FaShareAlt /> {t('passenger.share')}
         </button>
         <button className="passenger-action-btn" onClick={handleDownloadReceipt} style={{ flex: 1 }}>
           <FaDownload /> Receipt

@@ -137,10 +137,10 @@ const PassengerHistory = () => {
 
       <div className="history-status-tabs" role="tablist" aria-label="Filter by status">
         {[
-          { key: 'all', label: 'All' },
-          { key: 'active', label: 'Active' },
-          { key: 'completed', label: 'Completed' },
-          { key: 'cancelled', label: 'Cancelled' },
+          { key: 'all', labelKey: 'passenger.all' },
+          { key: 'active', labelKey: 'passenger.activeStatus' },
+          { key: 'completed', labelKey: 'passenger.completed' },
+          { key: 'cancelled', labelKey: 'passenger.cancelled' },
         ].map(tab => (
           <button
             key={tab.key}
@@ -149,7 +149,7 @@ const PassengerHistory = () => {
             className={`history-status-tab ${statusFilter === tab.key ? 'active' : ''}`}
             onClick={() => setStatusFilter(tab.key)}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -185,7 +185,7 @@ const PassengerHistory = () => {
               onClick={() => { setFromDate(''); setToDate(''); }}
               style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--text-secondary)' }}
             >
-              Clear
+              {t('passenger.clear')}
             </button>
           )}
           <button
@@ -282,14 +282,14 @@ const PassengerHistory = () => {
                   gap: 6,
                 }}
               >
-                <FaRedo size={12} /> Rebook
+                <FaRedo size={12} /> {t('passenger.rebook')}
               </button>
               {trip.status === 'completed' && (
                 <button
                   className="help-btn"
                   onClick={() => navigate(`/passenger/trip/${trip._id}?help=true`)}
                 >
-                  <FaQuestionCircle size={12} /> Get Help
+                  <FaQuestionCircle size={12} /> {t('passenger.getHelp')}
                 </button>
               )}
             </Card>
@@ -304,15 +304,15 @@ const PassengerHistory = () => {
             disabled={page <= 1}
             onClick={() => setPage(p => Math.max(1, p - 1))}
           >
-            Previous
+            {t('common.previous')}
           </button>
-          <span className="pagination-info">Page {page} of {totalPages}</span>
+          <span className="pagination-info">{t('passenger.pageOf', { current: page, total: totalPages })}</span>
           <button
             className="pagination-btn"
             disabled={page >= totalPages}
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
           >
-            Next
+            {t('common.next')}
           </button>
         </div>
       )}

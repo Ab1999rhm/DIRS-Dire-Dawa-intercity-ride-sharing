@@ -55,13 +55,13 @@ const RegisterPage = () => {
   const validate = () => {
     if (!formData.firstName.trim()) return t('auth.firstName') + ' is required';
     if (!formData.lastName.trim()) return t('auth.lastName') + ' is required';
-    if (!formData.phoneNumber.trim()) return t('auth.phoneRequired') || 'Phone number is required';
-    if (!/^(\+251|0)?[97]\d{8}$/.test(formData.phoneNumber.trim())) return 'Please enter a valid Ethiopian phone number';
-    if (!formData.email.trim()) return 'Email is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Please enter a valid email';
-    if (!formData.password) return t('auth.passwordRequired') || 'Password is required';
-    if (formData.password.length < 6) return 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) return t('auth.passwordMismatch') || 'Passwords do not match';
+    if (!formData.phoneNumber.trim()) return t('auth.phoneRequired');
+    if (!/^(\+251|0)?[97]\d{8}$/.test(formData.phoneNumber.trim())) return t('auth.validPhoneRequired');
+    if (!formData.email.trim()) return t('auth.emailRequired');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return t('auth.validEmailRequired');
+    if (!formData.password) return t('auth.passwordRequired');
+    if (formData.password.length < 6) return t('auth.passwordMinChars');
+    if (formData.password !== formData.confirmPassword) return t('auth.passwordMismatch');
     return null;
   };
 
@@ -88,7 +88,7 @@ const RegisterPage = () => {
       sendEmailOTP();
       setStep(2);
     } catch (err) {
-      const msg = err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Registration failed. Please try again.';
+      const msg = err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || t('auth.registrationFailed');
       setError(msg);
     } finally {
       setLoading(false);
@@ -227,8 +227,8 @@ const RegisterPage = () => {
             <div className="auth-logo-wrapper">
               <DireDawaLogo />
             </div>
-            <h2>{step === 1 ? (t('auth.registerTitle') || 'Create account') : step === 2 ? 'Verify Your Email' : 'Verify Your Phone'}</h2>
-            <p>{step === 1 ? (t('auth.registerSubtitle') || 'Join the ride-sharing community') : step === 2 ? `Enter the code sent to ${formData.email}` : `Enter the code sent to ${formData.phoneNumber}`}</p>
+            <h2>{step === 1 ? (t('auth.registerTitle')) : step === 2 ? t('auth.verifyEmail') : t('auth.verifyPhoneAction')}</h2>
+            <p>{step === 1 ? (t('auth.registerSubtitle')) : step === 2 ? `Enter the code sent to ${formData.email}` : `Enter the code sent to ${formData.phoneNumber}`}</p>
           </div>
 
           <div className="step-indicator">
@@ -311,7 +311,7 @@ const RegisterPage = () => {
               </div>
 
               <div className="input-group">
-                <label>Email Address</label>
+                <label>{t('auth.emailAddress')}</label>
                 <div className="input-wrapper">
                   <FaEnvelope className="input-icon" />
                   <input
@@ -435,12 +435,12 @@ const RegisterPage = () => {
                 disabled={otpLoading}
                 style={{ width: '100%' }}
               >
-                {otpLoading ? 'Verifying...' : 'Verify Email'}
+                {otpLoading ? t('auth.verifying') : t('auth.verifyEmail')}
               </button>
 
               <div style={{ textAlign: 'center', marginTop: 16 }}>
                 {resendTimer > 0 ? (
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Resend in {resendTimer}s</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('auth.resendIn', { seconds: resendTimer })}</span>
                 ) : (
                   <button
                     onClick={sendEmailOTP}
@@ -450,7 +450,7 @@ const RegisterPage = () => {
                       fontWeight: 600, fontSize: 14, cursor: 'pointer'
                     }}
                   >
-                    {otpSending ? 'Sending...' : 'Resend Code'}
+                    {otpSending ? t('auth.sendingCode') : t('auth.resendCode')}
                   </button>
                 )}
               </div>
@@ -464,7 +464,7 @@ const RegisterPage = () => {
                   color: 'var(--text-secondary)', cursor: 'pointer'
                 }}
               >
-                ← Back
+                ← {t('auth.back')}
               </button>
             </div>
           ) : step === 3 ? (
@@ -510,12 +510,12 @@ const RegisterPage = () => {
                 disabled={phoneOtpLoading}
                 style={{ width: '100%' }}
               >
-                {phoneOtpLoading ? 'Verifying...' : 'Verify Phone'}
+                {phoneOtpLoading ? t('auth.verifying') : t('auth.verifyPhoneAction')}
               </button>
 
               <div style={{ textAlign: 'center', marginTop: 16 }}>
                 {phoneResendTimer > 0 ? (
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Resend in {phoneResendTimer}s</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('auth.resendIn', { seconds: phoneResendTimer })}</span>
                 ) : (
                   <button
                     onClick={sendPhoneOTP}
@@ -525,7 +525,7 @@ const RegisterPage = () => {
                       fontWeight: 600, fontSize: 14, cursor: 'pointer'
                     }}
                   >
-                    {phoneOtpSending ? 'Sending...' : 'Resend Code'}
+                    {phoneOtpSending ? t('auth.sendingCode') : t('auth.resendCode')}
                   </button>
                 )}
               </div>
@@ -539,7 +539,7 @@ const RegisterPage = () => {
                   color: 'var(--text-secondary)', cursor: 'pointer'
                 }}
               >
-                ← Back
+                ← {t('auth.back')}
               </button>
             </div>
           ) : null}

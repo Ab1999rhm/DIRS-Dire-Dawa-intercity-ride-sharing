@@ -33,7 +33,7 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     try {
       await authAPI.forgotPassword(phoneNumber);
-      toast.success(t('auth.otpSent') || 'OTP sent to your phone!');
+      toast.success(t('auth.otpSent'));
       setStep(2);
       setResendTimer(60);
       const interval = setInterval(() => {
@@ -52,7 +52,7 @@ const ForgotPasswordPage = () => {
   const handleResendOTP = async () => {
     try {
       await authAPI.forgotPassword(phoneNumber);
-      toast.success(t('auth.otpResent') || 'OTP resent!');
+      toast.success(t('auth.otpResent'));
       setResendTimer(60);
       const interval = setInterval(() => {
         setResendTimer(prev => {
@@ -129,10 +129,10 @@ const ForgotPasswordPage = () => {
   };
 
   const stepLabels = [
-    { num: 1, label: 'Phone' },
-    { num: 2, label: 'Verify' },
-    { num: 3, label: 'Reset' },
-    { num: 4, label: 'Done' },
+    { num: 1, labelKey: 'auth.phoneNumber' },
+    { num: 2, labelKey: 'auth.stepOtp' },
+    { num: 3, labelKey: 'auth.resetPassword' },
+    { num: 4, labelKey: 'common.confirm' },
   ];
 
   return (
@@ -146,15 +146,15 @@ const ForgotPasswordPage = () => {
             </div>
             <h2>
               {step === 4
-                ? (t('auth.passwordResetDone') || 'Password Reset!')
-                : (t('auth.forgotPasswordTitle') || 'Reset Password')
+                ? (t('auth.passwordResetDone'))
+                : (t('auth.forgotPasswordTitle'))
               }
             </h2>
             <p>
-              {step === 1 && (t('auth.forgotPasswordSubtitle') || 'Enter your phone number to reset password')}
-              {step === 2 && (t('auth.enterOtp') || 'Enter the verification code')}
-              {step === 3 && (t('auth.createNewPassword') || 'Create a new password')}
-              {step === 4 && (t('auth.loginAgain') || 'You can now log in with your new password')}
+              {step === 1 && (t('auth.forgotPasswordSubtitle'))}
+              {step === 2 && (t('auth.enterOtp'))}
+              {step === 3 && (t('auth.createNewPassword'))}
+              {step === 4 && (t('auth.loginAgain'))}
             </p>
           </div>
 
@@ -163,7 +163,7 @@ const ForgotPasswordPage = () => {
             {stepLabels.slice(0, 3).map((s) => (
               <div key={s.num} className={`step ${step === s.num ? 'active' : step > s.num ? 'completed' : ''}`}>
                 <div className="step-number">{step > s.num ? <FaCheckCircle /> : s.num}</div>
-                <span>{s.label}</span>
+                <span>{t(s.labelKey)}</span>
               </div>
             ))}
           </div>
@@ -174,7 +174,7 @@ const ForgotPasswordPage = () => {
           {step === 1 && (
             <form className="auth-form" onSubmit={handleSendOTP}>
               <div className="input-group">
-                <label>{t('auth.phoneNumber') || 'Phone Number'}</label>
+                <label>{t('auth.phoneNumber')}</label>
                 <div className="input-wrapper">
                   <FaPhone className="input-icon" />
                   <input
@@ -189,7 +189,7 @@ const ForgotPasswordPage = () => {
                 {loading ? (
                   <span className="loading-dots"><span></span><span></span><span></span></span>
                 ) : (
-                  t('auth.sendOtp') || 'Send OTP'
+                  t('auth.sendOtp')
                 )}
               </button>
             </form>
@@ -223,12 +223,12 @@ const ForgotPasswordPage = () => {
                 {loading ? (
                   <span className="loading-dots"><span></span><span></span><span></span></span>
                 ) : (
-                  t('auth.verifyOtp') || 'Verify OTP'
+                  t('auth.verifyOtp')
                 )}
               </button>
               <div style={{ textAlign: 'center', marginTop: 16 }}>
                 {resendTimer > 0 ? (
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Resend in {resendTimer}s</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('auth.resendIn', { seconds: resendTimer })}</span>
                 ) : (
                   <button
                     onClick={handleResendOTP}
@@ -237,7 +237,7 @@ const ForgotPasswordPage = () => {
                       fontWeight: 600, fontSize: 14, cursor: 'pointer',
                     }}
                   >
-                    {t('auth.resendCode') || 'Resend Code'}
+                    {t('auth.resendCode')}
                   </button>
                 )}
               </div>
@@ -246,7 +246,7 @@ const ForgotPasswordPage = () => {
                 className="btn-back"
                 style={{ marginTop: 12 }}
               >
-                <FaArrowLeft /> {t('auth.back') || 'Back'}
+                <FaArrowLeft /> {t('auth.back')}
               </button>
             </div>
           )}
@@ -255,7 +255,7 @@ const ForgotPasswordPage = () => {
           {step === 3 && (
             <form className="auth-form" onSubmit={handleResetPassword}>
               <div className="input-group">
-                <label>{t('auth.newPassword') || 'New Password'}</label>
+                <label>{t('auth.newPassword')}</label>
                 <div className="input-wrapper">
                   <FaLock className="input-icon" />
                   <input
@@ -274,7 +274,7 @@ const ForgotPasswordPage = () => {
                 </div>
               </div>
               <div className="input-group">
-                <label>{t('auth.confirmPassword') || 'Confirm Password'}</label>
+                <label>{t('auth.confirmPassword')}</label>
                 <div className="input-wrapper">
                   <FaLock className="input-icon" />
                   <input
@@ -296,7 +296,7 @@ const ForgotPasswordPage = () => {
                 {loading ? (
                   <span className="loading-dots"><span></span><span></span><span></span></span>
                 ) : (
-                  t('auth.resetPassword') || 'Reset Password'
+                  t('auth.resetPassword')
                 )}
               </button>
             </form>
@@ -314,10 +314,10 @@ const ForgotPasswordPage = () => {
                 <FaCheckCircle />
               </div>
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>
-                {t('auth.passwordResetSuccess') || 'Your password has been reset successfully'}
+                {t('auth.passwordResetSuccess')}
               </p>
               <button className="auth-submit" onClick={() => navigate('/login')}>
-                {t('auth.goToLogin') || 'Go to Login'}
+                {t('auth.goToLogin')}
               </button>
             </div>
           )}
@@ -325,8 +325,8 @@ const ForgotPasswordPage = () => {
           <div className="auth-footer">
             {step < 4 && (
               <p>
-                {t('auth.rememberPassword') || 'Remember your password?'}{' '}
-                <Link to="/login">{t('auth.login') || 'Login'}</Link>
+                {t('auth.rememberPassword')}{' '}
+                <Link to="/login">{t('auth.login')}</Link>
               </p>
             )}
           </div>

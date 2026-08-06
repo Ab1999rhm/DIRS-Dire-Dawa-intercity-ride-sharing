@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaHome, FaExclamationTriangle } from 'react-icons/fa';
+import { useLanguage } from '../context/LanguageContext';
 import './passenger/Passenger.css';
 
 const NotFound = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="passenger-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '80vh' }}>
@@ -19,10 +21,10 @@ const NotFound = () => {
         404
       </h1>
       <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text, #1a1a2e)', marginBottom: 8 }}>
-        Page Not Found
+        {t('passenger.pageNotFound')}
       </h2>
       <p style={{ fontSize: 14, color: 'var(--text-muted, #6b7280)', marginBottom: 32, maxWidth: 320 }}>
-        The page you're looking for doesn't exist or has been moved.
+        {t('passenger.pageNotFoundDesc')}
       </p>
       <button
         className="passenger-primary-btn"
@@ -30,7 +32,7 @@ const NotFound = () => {
         style={{ maxWidth: 200 }}
         aria-label="Go Home"
       >
-        <FaHome /> Go Home
+        <FaHome /> {t('passenger.goHome')}
       </button>
     </div>
   );

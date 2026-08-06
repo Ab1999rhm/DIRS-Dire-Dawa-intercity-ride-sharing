@@ -305,9 +305,9 @@ const PassengerHome = () => {
 
   const getGreetingText = () => {
     const h = new Date().getHours();
-    if (h < 12) return t('passenger.goodMorning') || 'Good Morning';
-    if (h < 17) return t('passenger.goodAfternoon') || 'Good Afternoon';
-    return t('passenger.goodEvening') || 'Good Evening';
+    if (h < 12) return t('passenger.goodMorning');
+    if (h < 17) return t('passenger.goodAfternoon');
+    return t('passenger.goodEvening');
   };
 
   if (rideState === 'searching') {
@@ -370,7 +370,7 @@ const PassengerHome = () => {
           {/* Progress Bar */}
           <div style={{ padding: '16px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              {['Requested', 'Accepted', 'Arrived', 'In Progress', 'Completed'].map((label, idx) => (
+              {[t('passenger.requested'), t('passenger.accepted'), t('passenger.arrived'), t('passenger.inProgress'), t('passenger.completedStatus')].map((label, idx) => (
                 <span key={label} style={{
                   fontSize: 10,
                   fontWeight: idx === currentStepIndex ? 700 : 400,
@@ -531,7 +531,7 @@ const PassengerHome = () => {
         <div>
           <h1 className="passenger-greeting">{getGreetingText()} {userName}</h1>
           <p className="passenger-location">
-            <FaMapMarkerAlt /> {t('passenger.currentLocation') || 'Dire Dawa, Ethiopia'}
+            <FaMapMarkerAlt /> {t('passenger.currentLocation')}
           </p>
         </div>
         <button className="passenger-bell-btn" onClick={handleBellClick}>

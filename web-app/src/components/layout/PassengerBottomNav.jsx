@@ -4,10 +4,10 @@ import { FaHome, FaListUl, FaWallet, FaCog } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 
 const tabs = [
-  { labelKey: 'passenger.home', label: 'Home', path: '/passenger', icon: FaHome, matchExact: true },
-  { labelKey: 'passenger.trips', label: 'Trips', path: '/passenger/trips', icon: FaListUl, matchExact: false },
-  { labelKey: 'passenger.wallet', label: 'Wallet', path: '/passenger/wallet', icon: FaWallet, matchExact: false },
-  { labelKey: 'passenger.profile', label: 'Settings', path: '/passenger/profile', icon: FaCog, matchExact: false },
+  { labelKey: 'passenger.home', path: '/passenger', icon: FaHome, matchExact: true },
+  { labelKey: 'passenger.trips', path: '/passenger/trips', icon: FaListUl, matchExact: false },
+  { labelKey: 'passenger.wallet', path: '/passenger/wallet', icon: FaWallet, matchExact: false },
+  { labelKey: 'passenger.settings', path: '/passenger/profile', icon: FaCog, matchExact: false },
 ];
 
 const PassengerBottomNav = () => {
@@ -35,7 +35,7 @@ const PassengerBottomNav = () => {
             aria-label={`Navigate to ${tab.label}`}
           >
             <Icon />
-            <span>{tab.label}</span>
+            <span>{t(tab.labelKey)}</span>
           </button>
         );
       })}

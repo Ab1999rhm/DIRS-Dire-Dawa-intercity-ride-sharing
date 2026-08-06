@@ -246,8 +246,8 @@ const PassengerProfile = () => {
   const tabs = [
     { id: 'personal', label: t('passenger.personalInfo'), icon: <FaUser /> },
     { id: 'emergency', label: t('passenger.emergencyContacts'), icon: <FaShieldAlt /> },
-    { id: 'places', label: 'Saved Places', icon: <FaMapMarkerAlt /> },
-    { id: 'payment', label: 'Payment', icon: <FaCreditCard /> },
+    { id: 'places', label: t('passenger.savedPlaces'), icon: <FaMapMarkerAlt /> },
+    { id: 'payment', label: t('passenger.paymentMethods'), icon: <FaCreditCard /> },
     { id: 'settings', label: t('passenger.settings'), icon: <FaGlobe /> },
   ];
 
@@ -350,7 +350,7 @@ const PassengerProfile = () => {
               </div>
               {user?.isVerified ? (
                 <span className="verification-badge verified">
-                  <FaCheckCircle size={12} /> Verified
+                  <FaCheckCircle size={12} /> {t('passenger.verified')}
                 </span>
               ) : (
                 <span
@@ -359,7 +359,7 @@ const PassengerProfile = () => {
                   title="Click to verify"
                 >
                   <FaExclamationTriangle size={12} />
-                  {sendingVerifyOtp ? 'Sending...' : 'Unverified'}
+                  {sendingVerifyOtp ? t('passenger.sending') : t('passenger.unverified')}
                 </span>
               )}
             </div>
@@ -426,7 +426,7 @@ const PassengerProfile = () => {
           {emergencyContacts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
               <FaShieldAlt size={32} style={{ marginBottom: 12, opacity: 0.4 }} />
-              <p>No emergency contacts added yet</p>
+              <p>{t('passenger.noEmergencyContacts')}</p>
             </div>
           ) : (
             emergencyContacts.map(contact => (
@@ -451,9 +451,9 @@ const PassengerProfile = () => {
       {activeTab === 'places' && (
         <Card className="profile-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ fontWeight: 700 }}>Saved Places</h3>
-            <Button variant="outline" size="sm" icon={<FaPlus />} onClick={() => setShowPlaceForm(!showPlaceForm)}>
-              Add Place
+            <h3 style={{ fontWeight: 700 }}>{t('passenger.savedPlaces')}</h3>
+            <Button variant="outline" size="sm" icon={<FaPlus />} onClick={() => setShowPlaceForm(!showForm)}>
+              {t('passenger.addPlace')}
             </Button>
           </div>
 
@@ -482,21 +482,21 @@ const PassengerProfile = () => {
                 })}
               </div>
               <Input
-                label="Place Name"
+                label={t('passenger.placeName')}
                 value={placeName}
                 onChange={e => setPlaceName(e.target.value)}
                 placeholder="e.g. Home, Office"
               />
               <Input
-                label="Address"
+                label={t('passenger.address')}
                 value={placeAddress}
                 onChange={e => setPlaceAddress(e.target.value)}
-                placeholder="Enter address"
+                placeholder={t('passenger.enterAddress')}
                 style={{ marginTop: 8 }}
               />
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-                <Button variant="ghost" size="sm" onClick={() => { setShowPlaceForm(false); setPlaceName(''); setPlaceAddress(''); }}>Cancel</Button>
-                <Button variant="primary" size="sm" onClick={handleAddPlace}>Save Place</Button>
+                <Button variant="ghost" size="sm" onClick={() => { setShowPlaceForm(false); setPlaceName(''); setPlaceAddress(''); }}>{t('common.cancel')}</Button>
+                <Button variant="primary" size="sm" onClick={handleAddPlace}>{t('passenger.savePlace')}</Button>
               </div>
             </div>
           )}
@@ -504,7 +504,7 @@ const PassengerProfile = () => {
           {favoriteLocations.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
               <FaMapMarkerAlt size={32} style={{ marginBottom: 12, opacity: 0.4 }} />
-              <p>No saved places yet</p>
+              <p>{t('passenger.noSavedPlaces')}</p>
             </div>
           ) : (
             favoriteLocations.map(place => {
@@ -532,12 +532,12 @@ const PassengerProfile = () => {
       {/* PAYMENT TAB */}
       {activeTab === 'payment' && (
         <Card className="profile-card">
-          <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Payment Methods</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: 16 }}>{t('passenger.paymentMethods')}</h3>
 
           {[
-            { key: 'cash', label: 'Cash', icon: FaMoneyBillWave, iconClass: 'cash', desc: 'Pay with cash' },
-            { key: 'telebirr', label: 'Telebirr', icon: FaPhone, iconClass: 'telebirr', desc: 'Mobile money' },
-            { key: 'chapa', label: 'Chapa', icon: FaWallet, iconClass: 'chapa', desc: 'Online payment' },
+            { key: 'cash', label: t('passenger.cash'), icon: FaMoneyBillWave, iconClass: 'cash', desc: t('passenger.payWithCash') },
+            { key: 'telebirr', label: t('passenger.telebirr'), icon: FaPhone, iconClass: 'telebirr', desc: t('passenger.mobileMoney') },
+            { key: 'chapa', label: t('passenger.chapa'), icon: FaWallet, iconClass: 'chapa', desc: t('passenger.onlinePayment') },
           ].map(method => (
             <div
               key={method.key}
@@ -552,7 +552,7 @@ const PassengerProfile = () => {
                 <p>{method.desc}</p>
               </div>
               {paymentMethod === method.key && (
-                <span className="payment-default-badge">Default</span>
+                <span className="payment-default-badge">{t('passenger.default')}</span>
               )}
             </div>
           ))}
@@ -564,7 +564,7 @@ const PassengerProfile = () => {
               icon={<FaPlus />}
               onClick={() => toast.info('Coming soon')}
             >
-              Add Payment Method
+              {t('passenger.addPaymentMethod')}
             </Button>
           </div>
         </Card>
@@ -596,12 +596,12 @@ const PassengerProfile = () => {
             {/* Notification Preferences */}
             <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
               <h3 style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FaBell /> Notification Preferences
+                <FaBell /> {t('passenger.notificationPreferences')}
               </h3>
               <div className="settings-toggle-row">
                 <div>
-                  <div className="settings-toggle-label">Ride Updates</div>
-                  <div className="settings-toggle-desc">Trip status, driver arrival, etc.</div>
+                  <div className="settings-toggle-label">{t('passenger.rideUpdatesLabel')}</div>
+                  <div className="settings-toggle-desc">{t('passenger.rideUpdatesDesc')}</div>
                 </div>
                 <ToggleButton
                   active={prefRideUpdates}
@@ -614,8 +614,8 @@ const PassengerProfile = () => {
               </div>
               <div className="settings-toggle-row">
                 <div>
-                  <div className="settings-toggle-label">Promotions</div>
-                  <div className="settings-toggle-desc">Discounts and special offers</div>
+                  <div className="settings-toggle-label">{t('passenger.promotionsLabel')}</div>
+                  <div className="settings-toggle-desc">{t('passenger.promotionsDesc')}</div>
                 </div>
                 <ToggleButton
                   active={prefPromotions}
@@ -628,8 +628,8 @@ const PassengerProfile = () => {
               </div>
               <div className="settings-toggle-row">
                 <div>
-                  <div className="settings-toggle-label">Safety Alerts</div>
-                  <div className="settings-toggle-desc">SOS confirmations and safety notices</div>
+                  <div className="settings-toggle-label">{t('passenger.safetyAlertsLabel')}</div>
+                  <div className="settings-toggle-desc">{t('passenger.safetyAlertsDesc')}</div>
                 </div>
                 <ToggleButton
                   active={prefSafetyAlerts}
@@ -642,8 +642,8 @@ const PassengerProfile = () => {
               </div>
               <div className="settings-toggle-row">
                 <div>
-                  <div className="settings-toggle-label">Sound</div>
-                  <div className="settings-toggle-desc">Notification sounds</div>
+                  <div className="settings-toggle-label">{t('passenger.soundLabel')}</div>
+                  <div className="settings-toggle-desc">{t('passenger.soundDesc')}</div>
                 </div>
                 <ToggleButton
                   active={prefSound}
@@ -659,12 +659,12 @@ const PassengerProfile = () => {
             {/* Privacy Settings */}
             <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20 }}>
               <h3 style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FaShieldAlt /> Privacy Settings
+                <FaShieldAlt /> {t('passenger.privacySettings')}
               </h3>
               <div className="settings-toggle-row">
                 <div>
-                  <div className="settings-toggle-label">Location Sharing</div>
-                  <div className="settings-toggle-desc">Share location with driver during ride</div>
+                  <div className="settings-toggle-label">{t('passenger.locationSharingLabel')}</div>
+                  <div className="settings-toggle-desc">{t('passenger.locationSharingDesc')}</div>
                 </div>
                 <ToggleButton
                   active={shareLocation}
@@ -677,8 +677,8 @@ const PassengerProfile = () => {
               </div>
               <div className="settings-toggle-row">
                 <div>
-                  <div className="settings-toggle-label">Data Usage</div>
-                  <div className="settings-toggle-desc">Allow analytics and improvement data</div>
+                  <div className="settings-toggle-label">{t('passenger.dataUsageLabel')}</div>
+                  <div className="settings-toggle-desc">{t('passenger.dataUsageDesc')}</div>
                 </div>
                 <ToggleButton
                   active={allowAnalytics}
@@ -698,7 +698,7 @@ const PassengerProfile = () => {
               </h3>
               <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
                 <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>
-                  Share DIRS with friends and earn rewards!
+                  {t('passenger.shareWithFriends')}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('passenger.referralCode') || 'Referral Code'}:</span>
@@ -708,7 +708,7 @@ const PassengerProfile = () => {
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
                   <FaUserFriends size={12} style={{ marginRight: 4 }} />
-                  0 friends have joined
+                  {t('passenger.friendsJoined')}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <Button
@@ -754,10 +754,10 @@ const PassengerProfile = () => {
 
             {/* Danger Zone - Delete Account */}
             <div className="danger-zone">
-              <h3>Danger Zone</h3>
-              <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+              <h3>{t('passenger.dangerZone')}</h3>
+              <p>{t('passenger.dangerZoneDesc')}</p>
               <Button variant="danger" size="sm" icon={<FaTrash />} onClick={() => setShowDeleteModal(true)}>
-                Delete Account
+                {t('passenger.deleteAccount')}
               </Button>
             </div>
           </div>
@@ -769,9 +769,9 @@ const PassengerProfile = () => {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteAccount}
-        title="Delete Account"
-        message="This action is permanent. All your data will be deleted. Are you sure you want to proceed?"
-        confirmText={deleting ? 'Deleting...' : 'Delete Account'}
+        title={t('passenger.deleteAccount')}
+        message={t('passenger.deleteWarning')}
+        confirmText={deleting ? 'Deleting...' : t('passenger.deleteAccount')}
         danger
       />
     </div>
