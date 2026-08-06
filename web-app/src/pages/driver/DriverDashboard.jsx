@@ -11,6 +11,7 @@ import {
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
   FaHome, FaListUl, FaWallet, FaCog
 } from 'react-icons/fa';
+import FlexibleMap from '../../components/common/FlexibleMap';
 import './Driver.css';
 
 const SERVICES = [
@@ -194,6 +195,21 @@ const DriverDashboard = () => {
             <span><FaStar /> {stats.rating?.toFixed(1) || 'N/A'}</span>
           </div>
         )}
+      </div>
+
+      <div style={{ margin: '14px 0' }}>
+        <FlexibleMap
+          center={[9.6009, 41.8508]}
+          zoom={14}
+          defaultHeight="260px"
+          markers={[
+            { position: [9.6009, 41.8508], popup: 'Driver Current Position' },
+            ...(activeTrip?.pickup?.coordinates ? [{ position: activeTrip.pickup.coordinates, popup: 'Passenger Pickup' }] : []),
+            ...(activeTrip?.dropoff?.coordinates ? [{ position: activeTrip.dropoff.coordinates, popup: 'Passenger Dropoff' }] : [])
+          ]}
+          polylinePoints={activeTrip?.pickup?.coordinates && activeTrip?.dropoff?.coordinates ? [activeTrip.pickup.coordinates, activeTrip.dropoff.coordinates] : null}
+          showControls={true}
+        />
       </div>
 
       <h2 className="driver-section-title">All Services</h2>

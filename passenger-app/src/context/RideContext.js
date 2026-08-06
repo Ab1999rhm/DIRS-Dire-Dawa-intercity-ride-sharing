@@ -11,6 +11,12 @@ export const RideProvider = ({ children }) => {
   const [rideType, setRideType] = useState('intra_city');
   const [routeInfo, setRouteInfo] = useState(null);
 
+  const [currentRideRequestId, setCurrentRideRequestId] = useState(null);
+  const [vehicleCategory, setVehicleCategory] = useState({ id: 'economy', name: 'Economy', baseFare: 50, perKm: 15 });
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(500); // 500 ETB starting wallet
+
   const selectPickup = useCallback((location) => {
     setPickupLocation(location);
   }, []);
@@ -24,12 +30,25 @@ export const RideProvider = ({ children }) => {
     setDropoffLocation(null);
     setEstimatedFare(null);
     setRouteInfo(null);
+    setCurrentRideRequestId(null);
+    setSelectedSeats([]);
+    setAppliedPromo(null);
   }, []);
 
   return (
     <RideContext.Provider value={{
       currentRide,
       setCurrentRide,
+      currentRideRequestId,
+      setCurrentRideRequestId,
+      vehicleCategory,
+      setVehicleCategory,
+      selectedSeats,
+      setSelectedSeats,
+      appliedPromo,
+      setAppliedPromo,
+      walletBalance,
+      setWalletBalance,
       rideRequests,
       setRideRequests,
       pickupLocation,

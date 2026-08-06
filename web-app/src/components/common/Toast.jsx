@@ -47,7 +47,7 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((t) => (
           <div key={t.id} className={`toast toast-${t.type}`}>
             <span className="toast-icon">{icons[t.type]}</span>
-            <span className="toast-message">{t.message}</span>
+            <span className="toast-message">{typeof t.message === 'object' ? t.message?.message || t.message?.error || JSON.stringify(t.message) : t.message}</span>
           </div>
         ))}
       </div>

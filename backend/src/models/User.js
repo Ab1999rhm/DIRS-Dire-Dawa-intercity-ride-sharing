@@ -84,6 +84,24 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  credits: {
+    type: Number,
+    default: 0
+  },
+  totalCreditsEarned: {
+    type: Number,
+    default: 0
+  },
   refreshToken: {
     type: String,
     select: false

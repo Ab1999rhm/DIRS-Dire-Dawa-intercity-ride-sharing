@@ -1,0 +1,128 @@
+.chat-drawer-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.chat-drawer {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  height: 80vh;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.driver-chat-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.privacy-badge {
+  font-size: 10px;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: block;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.chat-bubble.passenger {
+  align-self: flex-end;
+  background: #2563eb;
+  color: white;
+}
+
+.chat-bubble.driver {
+  align-self: flex-start;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.chat-time {
+  font-size: 9px;
+  opacity: 0.7;
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+}
+
+.quick-chips {
+  padding: 8px 12px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  background: #f8fafc;
+}
+
+.chip-btn {
+  background: white;
+  border: 1px solid #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chat-input-row {
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  outline: none;
+}
+
+.send-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -58,13 +58,30 @@ exports.estimateFare = asyncHandler(async (req, res) => {
 exports.createRideRequest = asyncHandler(async (req, res) => {
   const {
     rideType, pickupLocation, dropoffLocation,
-    route, estimatedFare, passengersCount,
-    scheduledTime, isScheduled, promoCode, notes
+    route: routeInput, estimatedFare, passengersCount,
+    scheduledTime, isScheduled, promoCode, notes,
+    vehicleType, paymentMethod
   } = req.body;
+
+  let route = routeInput;
+  if (!route || !route.distance) {
+    const distKm = haversineDistance(
+      pickupLocation.coordinates,
+      dropoffLocation.coordinates
+    );
+    const avgSpeedKmh = rideType === 'intercity' ? 60 : 30;
+    const durationMin = Math.max((distKm / avgSpeedKmh) * 60, 5);
+    route = {
+      distance: Math.round(distKm * 1000),
+      duration: Math.round(durationMin * 60)
+    };
+  }
+
+  const normalizedRideType = rideType === 'intraCity' ? 'intra_city' : (rideType || 'intra_city');
 
   const rideRequest = await RideRequest.create({
     passenger: req.user._id,
-    rideType,
+    rideType: normalizedRideType,
     pickupLocation: {
       address: pickupLocation.address,
       coordinates: {
@@ -85,26 +102,33 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
     estimatedFare,
     passengersCount,
     scheduledTime,
-    isScheduled,
+    isScheduled: isScheduled || !!scheduledTime,
     promoCode,
-    notes
+    notes,
+    vehicleType,
+    paymentMethod
   });
 
   const nearbyDrivers = await findNearbyDrivers(
     pickupLocation.coordinates,
-    rideType,
+    normalizedRideType,
     15000
   );
 
+  const io = getIO();
+
   if (nearbyDrivers.length > 0) {
-    const io = getIO();
     io.to('drivers').emit('new_ride_request', {
       rideRequest: rideRequest.toObject(),
       nearbyDriversCount: nearbyDrivers.length
     });
   }
 
-  logger.info('Ride request created', { rideRequestId: rideRequest._id, rideType });
+  logger.info('Ride request created', {
+    rideRequestId: rideRequest._id,
+    rideType: normalizedRideType,
+    nearbyDriversCount: nearbyDrivers.length
+  });
 
   res.status(201).json({
     message: 'Ride request created',
@@ -144,12 +168,23 @@ exports.acceptRideRequest = asyncHandler(async (req, res) => {
   driver.currentTrip = rideRequest._id;
   await driver.save();
 
+  const distanceKm = rideRequest.route?.distance
+    ? rideRequest.route.distance / 1000
+    : haversineDistance(
+        rideRequest.pickupLocation.coordinates.coordinates,
+        rideRequest.dropoffLocation.coordinates.coordinates
+      );
+  const durationMin = rideRequest.route?.duration
+    ? rideRequest.route.duration / 60
+    : Math.max((distanceKm / 30) * 60, 5);
+
   const trip = await Trip.create({
     rideRequest: rideRequest._id,
     passenger: rideRequest.passenger,
     driver: driver._id,
     vehicle: vehicle._id,
     status: 'driver_arriving',
+    rideType: rideRequest.rideType,
     pickupLocation: {
       address: rideRequest.pickupLocation.address,
       coordinates: rideRequest.pickupLocation.coordinates.coordinates
@@ -159,13 +194,14 @@ exports.acceptRideRequest = asyncHandler(async (req, res) => {
       coordinates: rideRequest.dropoffLocation.coordinates.coordinates
     },
     fare: calculateFare(
-      rideRequest.rideType,
-      rideRequest.route.distance / 1000,
-      rideRequest.route.duration / 60
+      rideRequest.rideType || 'intra_city',
+      distanceKm,
+      durationMin
     )
   });
 
   const io = getIO();
+
   io.to(`user_${rideRequest.passenger}`).emit('ride_accepted', {
     rideRequestId: rideRequest._id,
     tripId: trip._id,
@@ -173,11 +209,13 @@ exports.acceptRideRequest = asyncHandler(async (req, res) => {
       name: `${req.user.firstName} ${req.user.lastName}`,
       phone: req.user.phoneNumber,
       rating: req.user.averageRating,
+      profilePhoto: req.user.profilePhoto,
       vehicle: {
         make: vehicle.make,
         model: vehicle.model,
         color: vehicle.color,
-        plateNumber: vehicle.plateNumber
+        plateNumber: vehicle.plateNumber,
+        vehicleType: vehicle.vehicleType,
       }
     }
   });
@@ -237,6 +275,13 @@ exports.cancelRideRequest = asyncHandler(async (req, res) => {
 
     await notifyRideUpdate(driver.user, 'ride_cancelled', {
       rideRequestId: rideRequest._id,
+      reason: cancellationReason
+    });
+
+    const io = getIO();
+    io.to(`user_${driver.user}`).emit('ride_cancelled', {
+      rideRequestId: rideRequest._id,
+      passengerId: req.user._id,
       reason: cancellationReason
     });
   }
@@ -309,6 +354,10 @@ exports.startTrip = asyncHandler(async (req, res) => {
     tripId: trip._id,
     status: 'in_progress'
   });
+  io.to(`user_${trip.passenger}`).emit('trip_status', {
+    tripId: trip._id,
+    status: 'in_progress'
+  });
 
   logger.info('Trip started', { tripId });
 
@@ -325,7 +374,9 @@ exports.completeTrip = asyncHandler(async (req, res) => {
 
   trip.status = 'completed';
   trip.endTime = new Date();
-  trip.actualDuration = Math.round((trip.endTime - trip.startTime) / 60000);
+  if (trip.startTime) {
+    trip.actualDuration = Math.round((trip.endTime - trip.startTime) / 60000);
+  }
   await trip.save();
 
   const driver = await Driver.findById(trip.driver);
@@ -344,7 +395,7 @@ exports.completeTrip = asyncHandler(async (req, res) => {
 
   await notifyRideUpdate(trip.passenger, 'trip_completed', {
     tripId: trip._id,
-    fare: trip.fare.totalFare
+    fare: trip.fare
   });
 
   const io = getIO();
@@ -353,8 +404,21 @@ exports.completeTrip = asyncHandler(async (req, res) => {
     status: 'completed',
     fare: trip.fare
   });
+  io.to(`user_${trip.passenger}`).emit('trip_status', {
+    tripId: trip._id,
+    status: 'completed',
+    fare: trip.fare,
+    ride: trip
+  });
 
-  logger.info('Trip completed', { tripId, fare: trip.fare.totalFare });
+  logger.info('Trip completed', { tripId, fare: trip.fare?.totalFare });
+
+  try {
+    const referralController = require('../referrals/referralController');
+    await referralController.completeReferral(trip.passenger);
+  } catch (err) {
+    logger.warn('Failed to process referral completion', { error: err.message });
+  }
 
   res.json({ message: 'Trip completed', trip });
 });
@@ -436,18 +500,24 @@ exports.confirmArrival = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Trip not found' });
   }
 
-  trip.status = 'driver_arriving';
+  trip.status = 'driver_arrived';
   await trip.save();
 
-  await notifyRideUpdate(trip.passenger, 'driver_arriving', {
+  await notifyRideUpdate(trip.passenger, 'driver_arrived', {
     tripId: trip._id
   });
 
   const io = getIO();
   io.to(`trip_${tripId}`).emit('trip_status', {
     tripId: trip._id,
-    status: 'driver_arriving'
+    status: 'driver_arrived'
   });
+  io.to(`user_${trip.passenger}`).emit('trip_status', {
+    tripId: trip._id,
+    status: 'driver_arrived'
+  });
+
+  logger.info('Driver arrived at pickup', { tripId });
 
   res.json({ message: 'Arrival confirmed' });
 });
@@ -490,6 +560,10 @@ exports.cancelTrip = asyncHandler(async (req, res) => {
 
   const io = getIO();
   io.to(`trip_${tripId}`).emit('trip_status', {
+    tripId: trip._id,
+    status: 'cancelled'
+  });
+  io.to(`user_${trip.passenger}`).emit('trip_status', {
     tripId: trip._id,
     status: 'cancelled'
   });

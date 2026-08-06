@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState(null);
 
+  const [notifications, setNotifications] = useState([]);
+
   const connectSocket = useCallback((token) => {
     const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
       auth: { token }
@@ -20,10 +22,13 @@ export const AuthProvider = ({ children }) => {
 
     newSocket.on('notification', (data) => {
       console.log('New notification:', data);
+      setNotifications((prev) => [data, ...prev]);
     });
 
     newSocket.on('ride_accepted', (data) => {
       console.log('Ride accepted:', data);
+      // Dispatch custom event for active navigation across pages
+      window.dispatchEvent(new CustomEvent('dirs_ride_accepted', { detail: data }));
     });
 
     newSocket.on('driver_location', (data) => {
@@ -94,6 +99,7 @@ export const AuthProvider = ({ children }) => {
       user,
       loading,
       socket,
+      notifications,
       login,
       register,
       logout,

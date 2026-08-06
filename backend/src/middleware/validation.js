@@ -41,19 +41,16 @@ const validateSendEmailOTP = [
 ];
 
 const validateRideRequest = [
-  body('rideType').isIn(['intra_city', 'intercity']).withMessage('Ride type must be intra_city or intercity'),
   body('pickupLocation.address').notEmpty().withMessage('Pickup address is required'),
   body('pickupLocation.coordinates').isArray({ min: 2, max: 2 }).withMessage('Pickup coordinates required'),
   body('dropoffLocation.address').notEmpty().withMessage('Dropoff address is required'),
   body('dropoffLocation.coordinates').isArray({ min: 2, max: 2 }).withMessage('Dropoff coordinates required'),
-  body('route.distance').isNumeric().withMessage('Distance must be a number'),
-  body('route.duration').isNumeric().withMessage('Duration must be a number'),
   body('estimatedFare').isNumeric().withMessage('Estimated fare must be a number'),
   handleValidation
 ];
 
 const validateVehicle = [
-  body('vehicleType').isIn(['car', 'minivan', 'minibus', 'bajaj', 'bus']).withMessage('Invalid vehicle type'),
+  body('vehicleType').isIn(['car', 'minivan', 'minibus', 'bajaj', 'bus', 'sedan', 'bike', 'electric']).withMessage('Invalid vehicle type'),
   body('make').trim().notEmpty().withMessage('Vehicle make is required'),
   body('model').trim().notEmpty().withMessage('Vehicle model is required'),
   body('year').isInt({ min: 2000 }).withMessage('Invalid vehicle year'),

@@ -13,10 +13,14 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
 
+    const sensitivePatterns = /mongodb|mongoose|ENOTFOUND|ECONNREFUSED|getaddrinfo|password|token|jwt|tls|certificate|uri|connection string/i;
+    const safeMessage = sensitivePatterns.test(error.message)
+      ? 'A service error occurred'
+      : error.message;
+
     console.error('[ErrorBoundary]', {
       component: errorInfo.componentStack?.trim()?.split('\n')?.[1]?.trim() || 'Unknown',
-      error: error.message,
-      stack: error.stack,
+      error: safeMessage,
       timestamp: new Date().toISOString(),
     });
 
@@ -26,17 +30,12 @@ class ErrorBoundary extends React.Component {
   }
 
   handleCopyError = async () => {
-    const { error, errorInfo } = this.state;
     const details = [
       '=== DIRS Error Report ===',
       `Time: ${new Date().toISOString()}`,
-      `Error: ${error?.message}`,
+      `Error: An unexpected error occurred`,
       '',
-      'Stack:',
-      error?.stack,
-      '',
-      'Component Stack:',
-      errorInfo?.componentStack,
+      'Please contact support with this report.',
     ].join('\n');
     try {
       await navigator.clipboard.writeText(details);
@@ -144,25 +143,6 @@ class ErrorBoundary extends React.Component {
                 Report
               </button>
             </div>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details style={{
-                marginTop: '24px',
-                textAlign: 'left',
-                padding: '16px',
-                background: '#fef2f2',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontFamily: 'monospace'
-              }}>
-                <summary style={{ cursor: 'pointer', fontWeight: '600', color: '#dc2626' }}>
-                  Error Details (Development)
-                </summary>
-                <pre style={{ marginTop: '8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  {this.state.error.toString()}
-                  {this.state.errorInfo?.componentStack}
-                </pre>
-              </details>
-            )}
           </div>
         </div>
       );

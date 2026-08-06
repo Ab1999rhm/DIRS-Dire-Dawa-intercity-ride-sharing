@@ -99,4 +99,8 @@ export const usersAPI = {
   removeFavoriteLocation: (locationId) => api.delete(`/users/favorite-locations/${locationId}`)
 };
 
+export const promosAPI = {
+  validateCode: (code, fare) => api.post('/promos/validate', { code, fare })
+};
+
 export default api;

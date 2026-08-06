@@ -1,0 +1,136 @@
+.digital-ticket-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ticket-card-printable {
+  padding: 20px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ticket-top-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 2px dashed #e0e0e0;
+}
+
+.brand-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #1a73e8;
+  letter-spacing: 1px;
+}
+
+.ticket-no {
+  font-size: 13px;
+  font-family: monospace;
+  font-weight: 700;
+  background: #f1f3f4;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #3c4043;
+}
+
+.ticket-route-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e8f0fe;
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
+.city-point {
+  display: flex;
+  flex-direction: column;
+}
+
+.city-code {
+  font-size: 20px;
+  font-weight: 900;
+  color: #1a73e8;
+}
+
+.city-name {
+  font-size: 11px;
+  color: #5f6368;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-arrow {
+  font-size: 20px;
+  color: #1a73e8;
+}
+
+.ticket-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-label {
+  font-size: 11px;
+  color: #70757a;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.badge-highlight {
+  color: #1a73e8;
+}
+
+.qr-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #f8f9fa;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.qr-box {
+  background: white;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.qr-instructions p {
+  font-size: 12px;
+  color: #3c4043;
+  margin-bottom: 6px;
+}
+
+.qr-instructions small {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e8e3e;
+}

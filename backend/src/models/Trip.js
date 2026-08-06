@@ -23,7 +23,7 @@ const tripSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['driver_arriving', 'in_progress', 'completed', 'cancelled'],
+    enum: ['driver_arriving', 'driver_arrived', 'in_progress', 'completed', 'cancelled'],
     default: 'driver_arriving'
   },
   pickupLocation: {

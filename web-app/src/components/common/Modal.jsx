@@ -33,7 +33,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', showClose = true
 
 export const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', danger = false }) => (
   <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-    <p className="modal-message">{message}</p>
+    <div className="modal-message">{typeof message === 'object' && message?.message ? message.message : message}</div>
     <div className="modal-actions">
       <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
       <button className={`btn ${danger ? 'btn-danger' : 'btn-primary'}`} onClick={onConfirm}>

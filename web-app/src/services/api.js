@@ -188,6 +188,13 @@ export const sosAPI = {
   shareTrip: (data) => api.post('/sos/share-trip', data),
 };
 
+export const referralAPI = {
+  getMyCode: () => api.get('/referrals/code'),
+  getMyReferrals: () => api.get('/referrals/list'),
+  applyCode: (referralCode) => api.post('/referrals/apply', { referralCode }),
+  validateCode: (code) => api.get(`/referrals/validate/${code}`),
+};
+
 export const vehiclesAPI = {
   getMy: () => api.get('/vehicles/my'),
   register: (data) => api.post('/vehicles', data),

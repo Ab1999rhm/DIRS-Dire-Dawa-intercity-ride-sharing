@@ -1,5 +1,17 @@
 const logger = require('../config/logger');
 
+const sanitizeMessage = (msg) => {
+  if (!msg) return 'Internal Server Error';
+  const lower = msg.toLowerCase();
+  if (lower.includes('mongodb') || lower.includes('mongoose') || lower.includes('connection') ||
+      lower.includes('eaddrinuse') || lower.includes('enotfound') || lower.includes('ETIMEOUT') ||
+      lower.includes('getaddrinfo') || lower.includes('srv') || lower.includes('replicaSet') ||
+      lower.includes('tls') || lower.includes('certificate') || lower.includes('password')) {
+    return 'Service temporarily unavailable. Please try again later.';
+  }
+  return msg;
+};
+
 const errorHandler = (err, req, res, next) => {
   const requestId = req.headers['x-request-id'] || req.id;
 
@@ -14,16 +26,10 @@ const errorHandler = (err, req, res, next) => {
   });
 
   const statusCode = err.statusCode || 500;
-  const message = process.env.NODE_ENV === 'production'
-    ? 'Internal Server Error'
-    : err.message;
+  const message = 'Service temporarily unavailable. Please try again later.';
 
   res.status(statusCode).json({
-    error: {
-      message,
-      status: statusCode,
-      requestId
-    }
+    error: message
   });
 };
 

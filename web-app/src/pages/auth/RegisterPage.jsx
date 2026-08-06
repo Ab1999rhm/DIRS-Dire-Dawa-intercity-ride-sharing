@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPhone, FaLock, FaEye, FaEyeSlash, FaUser, FaCheckCircle, FaEnvelope, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaPhone, FaLock, FaEye, FaEyeSlash, FaUser, FaCheckCircle, FaEnvelope, FaExternalLinkAlt, FaGift } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
+import safeErrorMessage from '../../utils/safeErrorMessage';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api';
 import { DireDawaLogo } from '../../components/common/Backgrounds';
@@ -23,6 +24,7 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: '',
     role: 'passenger',
+    referralCode: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -84,11 +86,12 @@ const RegisterPage = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
+        referralCode: formData.referralCode || undefined,
       });
       sendEmailOTP();
       setStep(2);
     } catch (err) {
-      const msg = err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || t('auth.registrationFailed');
+      const msg = safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
       setError(msg);
     } finally {
       setLoading(false);
@@ -146,7 +149,7 @@ const RegisterPage = () => {
       sendPhoneOTP();
       setStep(3);
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Invalid OTP');
+      toast.error(safeErrorMessage(err, 'Invalid OTP'));
     }
     setOtpLoading(false);
   };
@@ -211,7 +214,7 @@ const RegisterPage = () => {
       if (userRole === 'driver') navigate('/driver');
       else navigate('/passenger');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Invalid OTP');
+      toast.error(safeErrorMessage(err, 'Invalid OTP'));
     }
     setPhoneOtpLoading(false);
   };
@@ -364,6 +367,25 @@ const RegisterPage = () => {
                     {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
+              </div>
+
+              <div className="input-group">
+                <label>Referral Code (optional)</label>
+                <div className="input-wrapper">
+                  <FaGift className="input-icon" />
+                  <input
+                    type="text"
+                    name="referralCode"
+                    placeholder="DIRS-XXXX00002026"
+                    value={formData.referralCode}
+                    onChange={handleChange}
+                  />
+                </div>
+                {formData.referralCode && (
+                  <span style={{ fontSize: '11px', color: '#4caf50', marginTop: '4px', display: 'block' }}>
+                    You and your friend will earn credits after your first trip!
+                  </span>
+                )}
               </div>
 
               <button type="submit" className="auth-submit" disabled={loading}>

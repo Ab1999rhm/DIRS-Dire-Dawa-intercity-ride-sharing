@@ -259,13 +259,43 @@
   margin-bottom: 16px;
 }
 
-.btn-submit {
-  padding: 14px 28px;
+.action-head-btn {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.driver-action-bar {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-driver-action {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.btn-driver-action.chat {
   background: #1a73e8;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
+}
+
+.btn-driver-action.call {
+  background: #2e7d32;
+  color: white;
+  border: none;
 }

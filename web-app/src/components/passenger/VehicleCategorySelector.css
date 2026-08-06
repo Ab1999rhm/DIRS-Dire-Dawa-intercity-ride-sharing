@@ -1,0 +1,74 @@
+.vehicle-tier-container {
+  margin: 16px 0;
+}
+
+.tier-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.tier-card {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tier-card:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.tier-card.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.tier-icon {
+  font-size: 24px;
+  color: #2563eb;
+}
+
+.tier-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tier-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.tier-price {
+  font-size: 13px;
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.tier-sub {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.tier-desc {
+  font-size: 10px;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.2;
+}

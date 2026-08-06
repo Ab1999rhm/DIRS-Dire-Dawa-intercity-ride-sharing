@@ -1,6 +1,7 @@
 const User = require('../../models/User');
 const Driver = require('../../models/Driver');
 const Vehicle = require('../../models/Vehicle');
+const Referral = require('../../models/Referral');
 const { generateTokens, verifyRefreshToken } = require('../../services/tokenService');
 const { generateOTP, sendOTP: sendOTPSms, sendEmailOTP } = require('../../services/smsService');
 const logger = require('../../config/logger');
@@ -11,6 +12,13 @@ const otpStore = new Map();
 
 const OTP_ATTEMPTS_KEY = 'attempts';
 const MAX_OTP_ATTEMPTS = 5;
+
+function generateReferralCode(firstName) {
+  const prefix = (firstName || 'USER').toUpperCase().slice(0, 4);
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const year = new Date().getFullYear();
+  return `DIRS-${prefix}${random}${year}`;
+}
 
 function canAttemptOTP(key) {
   const data = otpStore.get(key);
@@ -27,15 +35,17 @@ function incrementOTPAttempts(key) {
 }
 
 exports.register = asyncHandler(async (req, res) => {
-  const { firstName, lastName, phoneNumber, email, password, role } = req.body;
+  const { firstName, lastName, phoneNumber, email, password, role, referralCode } = req.body;
 
   const existingUser = await User.findOne({ phoneNumber });
   if (existingUser) {
     return res.status(400).json({ error: 'Phone number already registered' });
   }
 
+  const userReferralCode = generateReferralCode(firstName);
+
   const user = await User.create({
-    firstName, lastName, phoneNumber, email, password, role
+    firstName, lastName, phoneNumber, email, password, role, referralCode: userReferralCode
   });
 
   if (role === 'driver') {
@@ -47,6 +57,15 @@ exports.register = asyncHandler(async (req, res) => {
       nationalId: 'PENDING',
       nationalIdPhoto: 'pending'
     });
+  }
+
+  if (referralCode) {
+    try {
+      const referralController = require('../referrals/referralController');
+      await referralController.applyReferralCodeDuringRegistration(user._id, referralCode);
+    } catch (err) {
+      logger.warn('Failed to apply referral code during registration', { error: err.message });
+    }
   }
 
   logger.info('User registered (pending email verification)', { userId: user._id, role: user.role });

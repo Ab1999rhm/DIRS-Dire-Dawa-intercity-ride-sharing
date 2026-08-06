@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import safeErrorMessage from '../utils/safeErrorMessage';
 import './AdminLogin.css';
 
 const AdminLoginPage = () => {
@@ -28,7 +29,7 @@ const AdminLoginPage = () => {
       localStorage.setItem('adminRefreshToken', refreshToken);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(safeErrorMessage(err, 'Login failed'));
     } finally {
       setLoading(false);
     }

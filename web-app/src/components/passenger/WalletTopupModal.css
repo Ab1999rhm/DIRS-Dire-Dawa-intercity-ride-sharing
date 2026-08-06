@@ -1,0 +1,86 @@
+.wallet-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.wallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.provider-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.provider-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.provider-btn.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.input-lbl {
+  font-size: 12px;
+  color: #64748b;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.presets-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.preset-chip {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.preset-chip.selected {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.custom-amt-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.confirm-topup-btn {
+  width: 100%;
+  padding: 12px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}

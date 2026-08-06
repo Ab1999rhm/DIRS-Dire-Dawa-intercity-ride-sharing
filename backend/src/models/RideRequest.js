@@ -28,8 +28,8 @@ const rideRequestSchema = new mongoose.Schema({
     placeId: String
   },
   route: {
-    distance: { type: Number, required: true },
-    duration: { type: Number, required: true },
+    distance: { type: Number, default: 0 },
+    duration: { type: Number, default: 0 },
     polyline: String
   },
   estimatedFare: {
@@ -42,7 +42,7 @@ const rideRequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted', 'driver_arriving', 'in_progress', 'completed', 'cancelled', 'expired'],
+    enum: ['pending', 'accepted', 'driver_arriving', 'driver_arrived', 'in_progress', 'completed', 'cancelled', 'expired'],
     default: 'pending'
   },
   driver: {
@@ -72,7 +72,7 @@ const rideRequestSchema = new mongoose.Schema({
   cancellationReason: String,
   cancelledBy: {
     type: String,
-    enum: ['passenger', 'driver', 'system'],
+    enum: ['passenger', 'driver', 'system', null],
     default: null
   },
   cancelledAt: Date,

@@ -3,13 +3,14 @@ import {
   FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe,
   FaBell, FaShieldAlt, FaCamera, FaHome, FaBuilding, FaSchool, FaMapMarkerAlt,
   FaCreditCard, FaMoneyBillWave, FaWallet, FaCheckCircle, FaExclamationTriangle,
-  FaToggleOn, FaToggleOff, FaUserFriends
+  FaToggleOn, FaToggleOff, FaUserFriends, FaGift, FaCopy
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api';
+import { authAPI, referralAPI } from '../../services/api';
 import { Card, Button, Input, ToggleButton, ConfirmModal } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
+import WalletTopupModal from '../../components/passenger/WalletTopupModal';
 import './Passenger.css';
 
 const PLACE_ICONS = {
@@ -68,6 +69,41 @@ const PassengerProfile = () => {
   const [sendingVerifyOtp, setSendingVerifyOtp] = useState(false);
   const [showEmailOtp, setShowEmailOtp] = useState(false);
   const [emailOtp, setEmailOtp] = useState('');
+
+  // Real-world Wallet & Referral state
+  const [showWalletTopup, setShowWalletTopup] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(150);
+  const [referralCode, setReferralCode] = useState('');
+  const [referralStats, setReferralStats] = useState({ totalReferred: 0, completedReferrals: 0, credits: 0 });
+  const [referralList, setReferralList] = useState([]);
+
+  useEffect(() => {
+    const loadReferralData = async () => {
+      try {
+        const [codeRes, listRes] = await Promise.all([
+          referralAPI.getMyCode(),
+          referralAPI.getMyReferrals()
+        ]);
+        setReferralCode(codeRes.data.referralCode || '');
+        setWalletBalance(codeRes.data.credits || 0);
+        setReferralStats(listRes.data.stats || {});
+        setReferralList(listRes.data.referrals || []);
+      } catch (err) {
+        // Fallback for offline or error
+        setReferralCode(`DIRS-${(user?.firstName || 'REF').toUpperCase()}2026`);
+      }
+    };
+    if (user) loadReferralData();
+  }, [user]);
+
+  const handleCopyReferral = async () => {
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      toast.success(`Referral code ${referralCode} copied to clipboard!`);
+    } catch {
+      toast.info(`Referral code: ${referralCode}`);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -296,6 +332,39 @@ const PassengerProfile = () => {
         </div>
         <h3 style={{ fontWeight: 700 }}>{firstName} {lastName}</h3>
         <p className="text-muted" style={{ fontSize: 14 }}>{phone}</p>
+
+        {/* Real-World App Wallet Card */}
+        <div style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', borderRadius: '12px', padding: '16px', margin: '16px 0 10px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <FaWallet style={{ fontSize: '28px', color: '#93c5fd' }} />
+            <div>
+              <span style={{ fontSize: '11px', opacity: 0.9, display: 'block' }}>App Wallet Balance</span>
+              <strong style={{ fontSize: '20px', fontWeight: 800 }}>{walletBalance} ETB</strong>
+            </div>
+          </div>
+          <button onClick={() => setShowWalletTopup(true)} style={{ background: 'white', color: '#2563eb', border: 'none', padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>
+            + Top Up
+          </button>
+        </div>
+
+        {/* Real-World Referral Card */}
+        <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '12px', padding: '14px', margin: '0 0 16px 0', width: '100%', maxWidth: '400px', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <FaGift style={{ color: '#ff8f00', fontSize: '20px' }} />
+            <div>
+              <strong style={{ fontSize: '13px', color: '#bf360c', display: 'block' }}>Refer & Earn 50 ETB</strong>
+              <span style={{ fontSize: '11px', color: '#7f6000' }}>Give friends 30 ETB off & earn 50 ETB credit</span>
+            </div>
+          </div>
+          <div onClick={handleCopyReferral} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', border: '1px dashed #ffb300', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', color: '#d84315' }}>
+            <span>{referralCode || 'Loading...'}</span>
+            <FaCopy />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '11px', color: '#7f6000' }}>
+            <span>Referred: {referralStats.totalReferred || 0} friends</span>
+            <span>Credits earned: {referralStats.totalCreditsEarned || 0} ETB</span>
+          </div>
+        </div>
       </div>
 
       <div className="profile-tabs" role="tablist" aria-label="Profile sections">
@@ -773,6 +842,15 @@ const PassengerProfile = () => {
         message={t('passenger.deleteWarning')}
         confirmText={deleting ? 'Deleting...' : t('passenger.deleteAccount')}
         danger
+      />
+
+      <WalletTopupModal
+        isOpen={showWalletTopup}
+        onClose={() => setShowWalletTopup(false)}
+        onTopupSuccess={(amt) => {
+          setWalletBalance(prev => prev + amt);
+          toast.success(`Successfully added ${amt} ETB to App Wallet!`);
+        }}
       />
     </div>
   );

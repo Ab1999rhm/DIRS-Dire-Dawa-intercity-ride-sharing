@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPhone, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
+import safeErrorMessage from '../../utils/safeErrorMessage';
 import { useAuth } from '../../context/AuthContext';
 import { DireDawaLogo } from '../../components/common/Backgrounds';
 import './Auth.css';
@@ -45,8 +46,7 @@ const LoginPage = () => {
       else navigate('/passenger');
     } catch (err) {
       console.error('Login error:', err);
-      const data = err.response?.data;
-      const msg = data?.error || data?.errors?.[0]?.msg || err.message || t('auth.loginFailed');
+      const msg = safeErrorMessage(err, t('auth.loginFailed') || 'Login failed. Please try again.');
       setError(msg);
     } finally {
       setLoading(false);

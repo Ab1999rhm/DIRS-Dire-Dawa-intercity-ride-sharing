@@ -5,12 +5,15 @@ import {
   FaClock, FaCheckCircle, FaArrowLeft,
   FaRoute, FaUser, FaMotorcycle, FaShuttleVan, FaBus, FaBolt,
   FaPlay, FaFlag, FaSms, FaTimes, FaRoute as FaRouteIcon, FaDownload,
-  FaQuestionCircle, FaSuitcase, FaDollarSign, FaShieldAlt, FaUserSlash, FaEllipsisH
+  FaQuestionCircle, FaSuitcase, FaDollarSign, FaShieldAlt, FaUserSlash, FaEllipsisH,
+  FaComments, FaQrcode
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, sosAPI, ratingsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
+import InAppChat from '../../components/passenger/InAppChat';
+import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
 import './Passenger.css';
 
 const STATUS_STEPS = [
@@ -45,6 +48,10 @@ const PassengerTripDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('trips');
   const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Real-world modals state
+  const [showChat, setShowChat] = useState(false);
+  const [showTicket, setShowTicket] = useState(false);
 
   // Report issue state
   const [reportCategory, setReportCategory] = useState('');
@@ -444,22 +451,38 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
       )}
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+        <button className="passenger-action-btn" onClick={() => setShowChat(true)} style={{ flex: 1, background: '#2563eb', color: 'white' }}>
+          <FaComments /> Chat with Driver
+        </button>
+        <button className="passenger-action-btn" onClick={() => setShowTicket(true)} style={{ flex: 1, background: '#1e293b', color: 'white' }}>
+          <FaQrcode /> Digital Ticket
+        </button>
         <button className="passenger-action-btn" onClick={callDriver} style={{ flex: 1 }}>
           <FaPhone /> {t('passenger.callDriver')}
         </button>
         <button className="passenger-action-btn" onClick={handleShare} style={{ flex: 1 }}>
           <FaShareAlt /> {t('passenger.share')}
         </button>
-        <button className="passenger-action-btn" onClick={handleDownloadReceipt} style={{ flex: 1 }}>
-          <FaDownload /> Receipt
-        </button>
         <button className="passenger-action-btn danger" onClick={handleSOS}>
           <FaExclamationTriangle /> SOS
         </button>
       </div>
 
+      {/* Real-World Modals */}
+      <InAppChat
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        tripId={tripId}
+        driverName={trip?.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName || ''}` : 'Driver'}
+      />
 
+      <DigitalTicketModal
+        isOpen={showTicket}
+        onClose={() => setShowTicket(false)}
+        trip={trip}
+        passenger={user}
+      />
     </div>
   );
 };

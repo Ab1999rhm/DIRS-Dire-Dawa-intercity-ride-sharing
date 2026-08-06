@@ -9,3 +9,4 @@ export { ToastProvider, useToast } from './Toast';
 export { default as OTPVerify } from './OTPVerify';
 export { HeroBackground, AuthBackground, EmptyStateIllustration, MapPlaceholder, WaveDecoration } from './Backgrounds';
 export { Skeleton, SkeletonCard, SkeletonTable, SkeletonStat } from './Skeleton';
+export { default as FlexibleMap } from './FlexibleMap';

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaPhone, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { authAPI } from '../../services/api';
+import safeErrorMessage from '../../utils/safeErrorMessage';
 import { DireDawaLogo } from '../../components/common/Backgrounds';
 import { useToast } from '../../components/common/Toast';
 import './Auth.css';
@@ -43,7 +44,7 @@ const ForgotPasswordPage = () => {
         });
       }, 1000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send OTP');
+      setError(safeErrorMessage(err, 'Failed to send OTP'));
     } finally {
       setLoading(false);
     }
@@ -95,7 +96,7 @@ const ForgotPasswordPage = () => {
       toast.success('OTP verified!');
       setStep(3);
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid OTP');
+      setError(safeErrorMessage(err, 'Invalid OTP'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ const ForgotPasswordPage = () => {
       toast.success(t('auth.passwordReset') || 'Password reset successfully!');
       setStep(4);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to reset password');
+      setError(safeErrorMessage(err, 'Failed to reset password'));
     } finally {
       setLoading(false);
     }
