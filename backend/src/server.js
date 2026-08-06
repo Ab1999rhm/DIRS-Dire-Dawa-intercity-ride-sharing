@@ -36,9 +36,11 @@ app.use(helmet({
       connectSrc: ["'self'", "ws:", "wss:", "https://*.tile.openstreetmap.org"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"]
-    }
+    },
+    reportOnly: false
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  hsts: { maxAge: 0 }
 }));
 
 app.use(cors({
