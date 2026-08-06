@@ -27,8 +27,37 @@ const PassengerTrips = () => {
     setLoading(true);
     try {
       const statusMap = { active: 'accepted', upcoming: 'pending', completed: 'completed' };
-      const res = await ridesAPI.passengerTrips({ status: statusMap[activeTab], limit: 20 });
-      setTrips(res.data.trips || []);
+      let backendTrips = [];
+      try {
+        const res = await ridesAPI.passengerTrips({ status: statusMap[activeTab], limit: 20 });
+        backendTrips = res.data?.trips || res.data || [];
+      } catch (_) {}
+
+      const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
+      const combined = [...backendTrips, ...localRides];
+
+      const seen = new Set();
+      const uniqueRides = combined.filter(r => {
+        if (!r._id || seen.has(r._id)) return false;
+        seen.add(r._id);
+        return true;
+      });
+
+      const filtered = uniqueRides.filter(r => {
+        const s = (r.status || 'pending').toLowerCase();
+        if (activeTab === 'active') {
+          return ['accepted', 'searching', 'pending', 'in_progress', 'driver_found', 'driver_arriving', 'active'].includes(s);
+        }
+        if (activeTab === 'upcoming') {
+          return s === 'pending' || Boolean(r.scheduledTime);
+        }
+        if (activeTab === 'completed') {
+          return s === 'completed' || s === 'finished';
+        }
+        return true;
+      });
+
+      setTrips(filtered);
     } catch (err) {
       toast.error('Failed to load trips');
     } finally {

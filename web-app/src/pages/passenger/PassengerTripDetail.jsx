@@ -12,6 +12,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, sosAPI, ratingsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
+import { Button } from '../../components/common';
 import InAppChat from '../../components/passenger/InAppChat';
 import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
 import './Passenger.css';
@@ -52,6 +53,7 @@ const PassengerTripDetail = () => {
   // Real-world modals state
   const [showChat, setShowChat] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
+  const [showReportSection, setShowReportSection] = useState(false);
 
   // Report issue state
   const [reportCategory, setReportCategory] = useState('');
@@ -411,23 +413,46 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         </div>
       )}
 
-      {/* Report Issue Section (help mode) */}
-      {isHelpMode && trip?.status === 'completed' && (
-        <div className="report-issue-section">
-          <h3><FaQuestionCircle style={{ color: 'var(--primary)' }} /> Report Issue</h3>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+      {/* Report Issue Section */}
+      {(isHelpMode || showReportSection) && (
+        <div className="report-issue-section" style={{ background: '#fff', padding: 20, borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginTop: 16 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaQuestionCircle style={{ color: 'var(--primary)' }} /> Report Issue
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 14px' }}>
             Select the issue you experienced with this trip
           </p>
-          {REPORT_OPTIONS.map(opt => (
-            <div
-              key={opt.key}
-              className={`report-option ${reportCategory === opt.key ? 'selected' : ''}`}
-              onClick={() => setReportCategory(opt.key)}
-            >
-              <opt.icon size={14} />
-              {opt.label}
-            </div>
-          ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginBottom: 14 }}>
+            {REPORT_OPTIONS.map(opt => {
+              const IconComp = opt.icon;
+              const isSelected = reportCategory === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setReportCategory(opt.key)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    border: `1.5px solid ${isSelected ? '#2563eb' : '#e2e8f0'}`,
+                    background: isSelected ? '#eff6ff' : '#f8fafc',
+                    color: isSelected ? '#2563eb' : '#334155',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <IconComp size={15} style={{ color: isSelected ? '#2563eb' : '#64748b' }} />
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
           {reportCategory && (
             <>
               <textarea
@@ -435,6 +460,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
                 placeholder="Describe the issue in detail (optional)..."
                 value={reportDescription}
                 onChange={e => setReportDescription(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, minHeight: 80 }}
               />
               <Button
                 variant="primary"
@@ -452,19 +478,22 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-        <button className="passenger-action-btn" onClick={() => setShowChat(true)} style={{ flex: 1, background: '#2563eb', color: 'white' }}>
+        <button type="button" className="passenger-action-btn" onClick={() => setShowChat(true)} style={{ flex: 1, background: '#2563eb', color: 'white' }}>
           <FaComments /> Chat with Driver
         </button>
-        <button className="passenger-action-btn" onClick={() => setShowTicket(true)} style={{ flex: 1, background: '#1e293b', color: 'white' }}>
+        <button type="button" className="passenger-action-btn" onClick={() => setShowTicket(true)} style={{ flex: 1, background: '#1e293b', color: 'white' }}>
           <FaQrcode /> Digital Ticket
         </button>
-        <button className="passenger-action-btn" onClick={callDriver} style={{ flex: 1 }}>
-          <FaPhone /> {t('passenger.callDriver')}
+        <button type="button" className="passenger-action-btn" onClick={callDriver} style={{ flex: 1 }}>
+          <FaPhone /> {t('passenger.callDriver') || 'Call Driver'}
         </button>
-        <button className="passenger-action-btn" onClick={handleShare} style={{ flex: 1 }}>
-          <FaShareAlt /> {t('passenger.share')}
+        <button type="button" className="passenger-action-btn" onClick={handleShare} style={{ flex: 1 }}>
+          <FaShareAlt /> {t('passenger.share') || 'Share'}
         </button>
-        <button className="passenger-action-btn danger" onClick={handleSOS}>
+        <button type="button" className="passenger-action-btn" onClick={() => setShowReportSection(!showReportSection)} style={{ flex: 1, background: '#f59e0b', color: 'white' }}>
+          <FaQuestionCircle /> Report Issue
+        </button>
+        <button type="button" className="passenger-action-btn danger" onClick={handleSOS}>
           <FaExclamationTriangle /> SOS
         </button>
       </div>
@@ -474,7 +503,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         isOpen={showChat}
         onClose={() => setShowChat(false)}
         tripId={tripId}
-        driverName={trip?.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName || ''}` : 'Driver'}
+        driverName={trip?.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName || ''}` : 'Abebe Kebede'}
       />
 
       <DigitalTicketModal

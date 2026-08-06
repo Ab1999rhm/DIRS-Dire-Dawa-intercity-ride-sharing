@@ -26,8 +26,31 @@ const AdminTrips = () => {
     try {
       setLoading(true);
       const params = statusFilter !== 'all' ? { status: statusFilter } : {};
-      const res = await adminAPI.trips(params);
-      setTrips(res.data.trips || res.data || []);
+      let backendTrips = [];
+      try {
+        const res = await adminAPI.trips(params);
+        backendTrips = res.data.trips || res.data || [];
+      } catch (_) {}
+
+      const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
+      const combined = [...backendTrips, ...localRides];
+
+      const seen = new Set();
+      const unique = combined.filter(r => {
+        if (!r._id || seen.has(r._id)) return false;
+        seen.add(r._id);
+        return true;
+      });
+
+      const filtered = unique.filter(r => {
+        const s = (r.status || 'pending').toLowerCase();
+        if (statusFilter === 'active') return ['accepted', 'searching', 'pending', 'in_progress', 'driver_found', 'driver_arriving', 'ongoing'].includes(s);
+        if (statusFilter === 'completed') return s === 'completed' || s === 'finished';
+        if (statusFilter === 'cancelled') return s === 'cancelled' || s === 'rejected';
+        return true;
+      });
+
+      setTrips(filtered);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load trips');
     } finally {

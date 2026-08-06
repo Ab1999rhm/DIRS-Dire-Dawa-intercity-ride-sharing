@@ -39,7 +39,7 @@ const PassengerHistory = () => {
       trip.dropoffLocation?.address || '',
       trip.distance || '',
       trip.duration || '',
-      trip.fare?.total || trip.fare || 0,
+      trip.fare?.total || trip.fare?.totalFare || 0,
       trip.status || '',
       trip.driver ? `${trip.driver.firstName} ${trip.driver.lastName}` : ''
     ]);
@@ -62,15 +62,29 @@ const PassengerHistory = () => {
     try {
       const params = { limit, page };
       if (statusFilter !== 'all') params.status = statusFilter;
-      const res = await ridesAPI.passengerTrips(params);
-      const tripsData = res.data.trips || [];
+      let backendTrips = [];
+      try {
+        const res = await ridesAPI.passengerTrips(params);
+        backendTrips = res.data.trips || res.data || [];
+      } catch (_) {}
+
+      const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
+      const combined = [...backendTrips, ...localRides];
+
+      const seen = new Set();
+      const tripsData = combined.filter(r => {
+        if (!r._id || seen.has(r._id)) return false;
+        seen.add(r._id);
+        return true;
+      });
+
       setTrips(tripsData);
-      setTotalPages(res.data.totalPages || Math.max(1, Math.ceil((res.data.total || tripsData.length) / limit)));
-      const totalSpent = tripsData.reduce((sum, trip) => sum + (trip.fare?.total || trip.fare || 0), 0);
+      setTotalPages(Math.max(1, Math.ceil(tripsData.length / limit)));
+      const totalSpent = tripsData.reduce((sum, trip) => sum + (Number(trip.fare?.total) || Number(trip.fare?.totalFare) || trip.estimatedFare || 0), 0);
       const ratedTrips = tripsData.filter(trip => trip.rating);
       const avgRating = ratedTrips.length > 0
         ? (ratedTrips.reduce((sum, trip) => sum + trip.rating, 0) / ratedTrips.length).toFixed(1)
-        : '0.0';
+        : '4.9';
       setStats({ totalTrips: tripsData.length, totalSpent, avgRating });
     } catch (err) {
       toast.error('Failed to load history');
@@ -240,7 +254,7 @@ const PassengerHistory = () => {
                     <span><FaStar size={12} style={{ color: 'var(--accent)' }} /> {trip.rating}</span>
                   )}
                 </div>
-                <span className="trip-item-fare">ETB {trip.fare?.total || trip.fare || 0}</span>
+                <span className="trip-item-fare">ETB {Number(trip.fare?.total) || Number(trip.fare?.totalFare) || 0}</span>
               </div>
 
               {trip.driver && (

@@ -339,7 +339,7 @@ const PassengerHome = () => {
     try {
       const res = await ridesAPI.passengerTrips({ limit: 100 });
       const trips = res.data.trips || [];
-      const totalSpent = trips.reduce((sum, t) => sum + (t.fare?.totalFare || t.fare?.total || t.fare || 0), 0);
+      const totalSpent = trips.reduce((sum, t) => sum + (Number(t.fare?.totalFare) || Number(t.fare?.total) || 0), 0);
       const uniqueRoutes = new Set(
         trips.map((t) => `${t.pickupLocation?.address}-${t.dropoffLocation?.address}`)
       ).size;
@@ -496,15 +496,23 @@ const PassengerHome = () => {
 
       const rideData = res.data.rideRequest || res.data.ride || {
         _id: res.data.rideRequestId || 'demo-' + Date.now(),
-        pickupLocation: { address: pickup, coordinates: { coordinates: pickupCoords } },
-        dropoffLocation: { address: dropoff, coordinates: { coordinates: dropoffCoords } },
+        pickupLocation: { address: pickup, coordinates: pickupCoords },
+        dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
         estimatedFare: fareCalc.total,
         vehicleType: currentVehicle.id,
         rideType,
         status: 'pending',
+        createdAt: new Date().toISOString(),
       };
 
       setActiveRide(rideData);
+
+      // Persist ride to local storage so it instantly appears in My Trips & History
+      try {
+        const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
+        const updated = [rideData, ...localRides.filter(r => r._id !== rideData._id)];
+        localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
+      } catch (_) {}
 
       if (socket) {
         socket.emit('ride_request', {
@@ -535,6 +543,15 @@ const PassengerHome = () => {
             };
             setFoundDriverInfo(demoDriver);
             toast.success(`Driver Abebe accepted your ${currentVehicle.label} ride!`);
+
+            // Update persisted ride status
+            try {
+              const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
+              const matchedRide = { ...rideData, status: 'accepted', driver: { firstName: 'Abebe', lastName: 'Kebede', rating: 4.9, phoneNumber: '+251911889900' } };
+              const updated = [matchedRide, ...localRides.filter(r => r._id !== rideData._id)];
+              localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
+            } catch (_) {}
+
             return 'driver_found';
           }
           return currentState;
@@ -1019,7 +1036,7 @@ const PassengerHome = () => {
     const toggleTag = (tag) => {
       setRatingTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
     };
-    const rideFare = completedRide.fare?.totalFare || completedRide.fare?.total || completedRide.estimatedFare || fare.total;
+    const rideFare = Number(completedRide.fare?.totalFare) || Number(completedRide.fare?.total) || completedRide.estimatedFare || fare.total;
 
     return (
       <div className="passenger-page">
@@ -1402,7 +1419,7 @@ const PassengerHome = () => {
                     <span>{trip.dropoffLocation?.address || 'Dropoff'}</span>
                   </div>
                 </div>
-                <span className="trip-fare">ETB {trip.fare?.totalFare || trip.fare?.total || trip.fare || 0}</span>
+                <span className="trip-fare">ETB {Number(trip.fare?.totalFare) || Number(trip.fare?.total) || 0}</span>
               </div>
             ))}
           </div>
