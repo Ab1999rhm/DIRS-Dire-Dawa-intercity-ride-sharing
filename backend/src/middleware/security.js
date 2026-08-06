@@ -1,5 +1,6 @@
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss');
+const logger = require('../config/logger');
 
 const sanitizeOptions = {
   whiteList: {},
@@ -47,7 +48,5 @@ const securityMiddleware = (app) => {
 
   app.use(xssMiddleware);
 };
-
-const logger = require('../config/logger');
 
 module.exports = { securityMiddleware };

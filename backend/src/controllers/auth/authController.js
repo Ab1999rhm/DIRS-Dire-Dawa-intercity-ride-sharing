@@ -299,10 +299,16 @@ exports.getMe = asyncHandler(async (req, res) => {
 
   let driverProfile = null;
   if (user.role === 'driver') {
-    driverProfile = await Driver.findOne({ user: user._id }).populate('vehicle');
+    driverProfile = await Driver.findOne({ user: user._id });
   }
 
-  res.json({ user, driverProfile });
+  let vehicle = null;
+  if (driverProfile) {
+    const Vehicle = require('../../models/Vehicle');
+    vehicle = await Vehicle.findOne({ driver: driverProfile._id });
+  }
+
+  res.json({ user, driverProfile, vehicle });
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {

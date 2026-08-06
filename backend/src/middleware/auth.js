@@ -49,6 +49,8 @@ const verified = (req, res, next) => {
       }
       req.driver = driver;
       next();
+    }).catch(err => {
+      return res.status(500).json({ error: 'Error checking verification status' });
     });
   } else {
     next();
