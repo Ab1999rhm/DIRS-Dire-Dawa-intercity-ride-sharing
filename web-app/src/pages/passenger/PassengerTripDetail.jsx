@@ -272,6 +272,19 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         </div>
       </div>
 
+      {/* Pickup/Dropoff Header Card */}
+      <div className="passenger-booking-card" style={{ padding: '12px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--secondary)', flexShrink: 0 }}></div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{pickup}</span>
+        </div>
+        <div style={{ marginLeft: 4, width: 2, height: 12, background: 'var(--border)', borderRadius: 1 }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--danger)', flexShrink: 0 }}></div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{dropoff}</span>
+        </div>
+      </div>
+
       {/* Map Area */}
       <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 250 }}>
         <FlexibleMap
@@ -279,32 +292,13 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
           zoom={14}
           defaultHeight="250px"
           markers={[
-            ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: pickup }] : []),
-            ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: dropoff }] : []),
+            ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: `Pickup: ${pickup}` }] : []),
+            ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: `Dropoff: ${dropoff}` }] : []),
           ]}
           polylinePoints={
             pickupCoords && dropoffCoords ? [pickupCoords, dropoffCoords] : []
           }
         />
-      </div>
-
-      {/* Trip Route Info */}
-      <div className="passenger-booking-card" style={{ marginTop: 12 }}>
-        <div className="location-inputs">
-          <div className="location-input-wrapper">
-            <div className="location-dot pickup"></div>
-            <span style={{ padding: '14px 0', fontSize: 14, color: 'var(--text)' }}>{pickup}</span>
-          </div>
-          <div className="location-divider">
-            <div className="divider-line"></div>
-            <div style={{ width: 32, display: 'flex', justifyContent: 'center' }}><FaRouteIcon size={12} color="var(--text-muted)" /></div>
-            <div className="divider-line"></div>
-          </div>
-          <div className="location-input-wrapper">
-            <div className="location-dot dropoff"></div>
-            <span style={{ padding: '14px 0', fontSize: 14, color: 'var(--text)' }}>{dropoff}</span>
-          </div>
-        </div>
       </div>
 
       {/* Status Timeline */}
