@@ -8,11 +8,12 @@ function srvToDirect(uri) {
   const match = uri.match(/^mongodb\+srv:\/\/([^:]+):([^@]+)@([^/]+)(\/.*)?$/);
   if (!match) return null;
   const [, user, pass, host, rest] = match;
+  const basePath = (rest || '').split('?')[0] || '/dirs_diredawa';
   return new Promise((resolve, reject) => {
     dns.resolveSrv(`_mongodb._tcp.${host}`, (err, records) => {
       if (err) return reject(err);
       const hosts = records.map(r => `${r.name}:${r.port}`).join(',');
-      resolve(`mongodb://${user}:${pass}@${hosts}${rest || ''}`);
+      resolve(`mongodb://${user}:${pass}@${hosts}${basePath}?retryWrites=true&w=majority&authSource=admin`);
     });
   });
 }
