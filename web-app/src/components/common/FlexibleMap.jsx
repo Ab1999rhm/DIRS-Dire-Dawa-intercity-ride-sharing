@@ -184,9 +184,9 @@ const FlexibleMap = ({
         </div>
       )}
 
-      {/* Top Center: Style Selector + Fullscreen Button */}
+      {/* Top Center: Style Selector + Fullscreen Button side by side */}
       {showControls && (
-        <div className="flexible-map-top-center" style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'auto' }}>
+        <div className="flexible-map-top-center" style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6, pointerEvents: 'auto' }}>
           <button
             type="button"
             className="map-ctrl-btn map-style-btn"
