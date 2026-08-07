@@ -7,8 +7,8 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
   '/offline.html'
 ];
 
@@ -16,7 +16,12 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      // Cache each asset individually so one 404 doesn't break the whole SW install
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          cache.add(url).catch(err => console.warn('SW cache skip:', url, err))
+        )
+      );
     })
   );
   self.skipWaiting();
@@ -273,8 +278,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'New update from DIRS',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
     vibrate: [200, 100, 200],
     tag: data.tag || 'dirs-notification',
     renotify: true,
