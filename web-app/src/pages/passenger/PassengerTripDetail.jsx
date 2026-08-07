@@ -286,11 +286,11 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
       </div>
 
       {/* Map Area */}
-      <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 250 }}>
+      <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 300 }}>
         <FlexibleMap
           center={pickupCoords || [9.6, 41.85]}
-          zoom={14}
-          defaultHeight="250px"
+          zoom={15}
+          defaultHeight="300px"
           markers={[
             ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: `Pickup: ${pickup}` }] : []),
             ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: `Dropoff: ${dropoff}` }] : []),
