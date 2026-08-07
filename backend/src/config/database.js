@@ -15,6 +15,14 @@ const connectDB = async () => {
     const uri = rawUri.trim();
     logger.info('Connecting to MongoDB...');
 
+    // Log the host portion only (safe - no credentials) to help diagnose issues
+    try {
+      const uriObj = new URL(uri);
+      logger.info(`MongoDB target host: ${uriObj.hostname} | protocol: ${uriObj.protocol}`);
+    } catch (_) {
+      logger.warn('Could not parse MONGODB_URI for diagnostics');
+    }
+
     if (uri === 'memory') {
       const { MongoMemoryServer } = require('mongodb-memory-server');
       mongod = await MongoMemoryServer.create();
