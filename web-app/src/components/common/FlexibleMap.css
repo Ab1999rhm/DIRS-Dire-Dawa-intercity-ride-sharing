@@ -21,43 +21,66 @@
 
 .flexible-map-controls {
   position: absolute;
-  top: 14px;
-  right: 14px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  pointer-events: auto;
 }
 
 .map-ctrl-btn {
   background: white;
   color: #1e293b;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #e2e8f0;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: all 0.2s ease;
+  pointer-events: auto;
 }
 
 .map-ctrl-btn:hover {
   background: #f1f5f9;
   color: #2563eb;
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.map-ctrl-btn:active {
+  transform: scale(0.95);
 }
 
 .map-ctrl-btn.expand {
   background: #2563eb;
   color: white;
   border-color: #2563eb;
+  border-radius: 10px;
 }
 
 .map-ctrl-btn.expand:hover {
   background: #1d4ed8;
   color: white;
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.5);
+}
+
+.map-ctrl-btn.expand:active {
+  transform: scale(0.95);
+}
+
+/* Dark mode */
+[data-theme="dark"] .map-ctrl-btn {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+[data-theme="dark"] .map-ctrl-btn:hover {
+  background: #334155;
+  color: #60a5fa;
 }

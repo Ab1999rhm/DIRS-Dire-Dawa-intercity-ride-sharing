@@ -150,14 +150,14 @@ const FlexibleMap = ({
         )}
       </MapContainer>
 
-      {/* Floating Interactive Controls Bar */}
+      {/* Floating Controls - Top Right: Recenter, Zoom, Layer */}
       {showControls && (
-        <div className="flexible-map-controls">
+        <div className="flexible-map-controls" style={{ top: 10, right: 10 }}>
           <button
             type="button"
             className="map-ctrl-btn"
             onClick={handleRecenter}
-            title="Recenter Map to Location"
+            title="Recenter Map"
             aria-label="Recenter Map"
           >
             <FaCrosshairs />
@@ -187,17 +187,22 @@ const FlexibleMap = ({
             type="button"
             className="map-ctrl-btn"
             onClick={toggleTileStyle}
-            title={`Switch Map Style (Current: ${tileStyle})`}
+            title={`Map Style: ${tileStyle}`}
             aria-label="Switch Map Style"
           >
             <FaLayerGroup />
           </button>
+        </div>
+      )}
 
+      {/* Fullscreen Button - Bottom Right */}
+      {showControls && (
+        <div className="flexible-map-controls" style={{ top: 'auto', bottom: 10, right: 10 }}>
           <button
             type="button"
             className="map-ctrl-btn expand"
             onClick={toggleFullscreen}
-            title={isFullscreen ? "Exit Fullscreen" : "Expand Map Fullscreen"}
+            title={isFullscreen ? "Exit Fullscreen" : "Expand Fullscreen"}
             aria-label="Toggle Fullscreen Map"
           >
             {isFullscreen ? <FaCompress /> : <FaExpand />}
