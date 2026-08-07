@@ -1,4 +1,5 @@
 services:
+  # ── Backend API + WebSocket Server ────────────────────────────────────────
   - type: web
     name: dirs-backend
     runtime: node
@@ -11,16 +12,18 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: MONGODB_URI
-        sync: false
+        sync: false          # Set manually in Render Dashboard
       - key: JWT_SECRET
-        sync: false
+        sync: false          # Set manually in Render Dashboard
       - key: JWT_EXPIRE
         value: 7d
       - key: JWT_REFRESH_EXPIRE
         value: 30d
       - key: FRONTEND_URL
-        sync: false
+        sync: false          # e.g. https://dirs-web-app.vercel.app
       - key: PASSENGER_APP_URL
         sync: false
       - key: DRIVER_APP_URL
@@ -29,3 +32,27 @@ services:
         sync: false
       - key: BACKEND_URL
         sync: false
+
+  # ── Frontend Static Site (optional — can also deploy to Vercel) ───────────
+  - type: web
+    name: dirs-web-app
+    runtime: static
+    region: oregon
+    plan: free
+    rootDir: web-app
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    pullRequestPreviewsEnabled: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /static/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false          # e.g. https://dirs-backend.onrender.com/api
+      - key: REACT_APP_NAME
+        value: DIRS Ride Sharing
