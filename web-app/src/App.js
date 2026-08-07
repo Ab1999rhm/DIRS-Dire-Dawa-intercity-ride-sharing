@@ -40,21 +40,34 @@ const AdminTariffs = React.lazy(() => import('./pages/admin/AdminTariffs'));
 const AdminPromos = React.lazy(() => import('./pages/admin/AdminPromos'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 
-const LoadingSpinner = () => (
+const LoadingSpinner = ({ waking }) => (
   <div className="loading-screen">
     <div className="loading-spinner"></div>
+    {waking && (
+      <div style={{
+        marginTop: '20px',
+        color: '#94a3b8',
+        fontSize: '14px',
+        textAlign: 'center',
+        padding: '0 24px',
+        lineHeight: '1.6'
+      }}>
+        ⏳ Waking up server...<br />
+        <span style={{ fontSize: '12px', opacity: 0.7 }}>This takes up to 30 seconds on first load</span>
+      </div>
+    )}
   </div>
 );
 
 const PrivateRoute = React.memo(({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
+  const { user, loading, serverWaking } = useAuth();
+  if (loading) return <LoadingSpinner waking={serverWaking} />;
   return user ? children : <Navigate to="/login" />;
 });
 
 const RoleRoute = React.memo(({ children, allowedRole }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
+  const { user, loading, serverWaking } = useAuth();
+  if (loading) return <LoadingSpinner waking={serverWaking} />;
   if (!user) return <Navigate to="/login" />;
   if (user.role !== allowedRole) {
     if (user.role === 'driver') return <Navigate to="/driver" />;
