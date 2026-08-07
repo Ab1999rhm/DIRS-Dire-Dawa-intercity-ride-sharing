@@ -149,7 +149,7 @@ const FlexibleMap = ({
         )}
       </MapContainer>
 
-      {/* Floating Controls - Top Right: Recenter, Zoom, Layer */}
+      {/* Floating Controls - Top Right: Recenter, Zoom */}
       {showControls && (
         <div className="flexible-map-controls" style={{ top: 10, right: 10 }}>
           <button
@@ -181,22 +181,23 @@ const FlexibleMap = ({
           >
             <FaMinus />
           </button>
-
-          <button
-            type="button"
-            className="map-ctrl-btn"
-            onClick={toggleTileStyle}
-            title={`Map Style: ${tileStyle}`}
-            aria-label="Switch Map Style"
-          >
-            <FaLayerGroup />
-          </button>
         </div>
       )}
 
-      {/* Fullscreen Button - Top Center */}
+      {/* Top Center: Style Selector + Fullscreen Button */}
       {showControls && (
-        <div className="flexible-map-controls" style={{ top: 10, left: '50%', transform: 'translateX(-50%)', right: 'auto', flexDirection: 'row' }}>
+        <div className="flexible-map-top-center" style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, pointerEvents: 'auto' }}>
+          <button
+            type="button"
+            className="map-ctrl-btn map-style-btn"
+            onClick={toggleTileStyle}
+            title={`Map Style: ${tileStyle}`}
+            aria-label="Switch Map Style"
+            style={{ width: 'auto', padding: '6px 12px', borderRadius: 20, gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: 0.3 }}
+          >
+            <FaLayerGroup />
+            <span style={{ textTransform: 'capitalize' }}>{tileStyle}</span>
+          </button>
           <button
             type="button"
             className="map-ctrl-btn expand"

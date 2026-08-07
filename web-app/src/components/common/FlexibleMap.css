@@ -84,3 +84,24 @@
   background: #334155;
   color: #60a5fa;
 }
+
+.map-style-btn {
+  background: white;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.map-style-btn:hover {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #93c5fd;
+}
+[data-theme="dark"] .map-style-btn {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+[data-theme="dark"] .map-style-btn:hover {
+  background: #334155;
+  color: #60a5fa;
+}
