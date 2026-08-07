@@ -5,13 +5,14 @@ let mongod;
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGODB_URI;
-    
-    if (!uri) {
-      logger.error('MONGODB_URI is not set');
+    const rawUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+    if (!rawUri) {
+      logger.error('MONGODB_URI (or MONGO_URI) is not set in environment variables');
       process.exit(1);
     }
 
+    const uri = rawUri.trim();
     logger.info('Connecting to MongoDB...');
 
     if (uri === 'memory') {
@@ -21,12 +22,12 @@ const connectDB = async () => {
       await mongoose.connect(memUri);
       logger.info(`MongoDB Memory Server Connected: ${memUri}`);
     } else {
-      await mongoose.connect(uri, {
+      const options = {
         serverSelectionTimeoutMS: 30000,
         socketTimeoutMS: 45000,
-        tls: true,
-        tlsAllowInvalidCertificates: true,
-      });
+      };
+
+      await mongoose.connect(uri, options);
       logger.info(`MongoDB Connected: ${mongoose.connection.host}`);
     }
   } catch (error) {
