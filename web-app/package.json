@@ -4,6 +4,7 @@
   "description": "Digital Intercity and Ride Sharing System - Unified Web App",
   "private": true,
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "axios": "^1.6.0",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
@@ -31,5 +32,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
   }
 }
