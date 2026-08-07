@@ -1,14 +1,14 @@
-const CACHE_NAME = 'dirs-v2';
-const STATIC_CACHE = 'dirs-static-v2';
-const API_CACHE = 'dirs-api-v2';
-const IMAGE_CACHE = 'dirs-images-v2';
+const CACHE_NAME = 'dirs-v3';
+const STATIC_CACHE = 'dirs-static-v3';
+const API_CACHE = 'dirs-api-v3';
+const IMAGE_CACHE = 'dirs-images-v3';
 
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/icon-192.png',
+  '/icon-512.png',
   '/offline.html'
 ];
 
@@ -273,8 +273,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body || 'New update from DIRS',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     tag: data.tag || 'dirs-notification',
     renotify: true,
