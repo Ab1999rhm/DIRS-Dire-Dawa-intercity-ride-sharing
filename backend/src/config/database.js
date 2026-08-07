@@ -1,27 +1,33 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const logger = require('./logger');
 
 let mongod;
 
+function srvToDirect(uri) {
+  const match = uri.match(/^mongodb\+srv:\/\/([^:]+):([^@]+)@([^/]+)(\/.*)?$/);
+  if (!match) return null;
+  const [, user, pass, host, rest] = match;
+  return new Promise((resolve, reject) => {
+    dns.resolveSrv(`_mongodb._tcp.${host}`, (err, records) => {
+      if (err) return reject(err);
+      const hosts = records.map(r => `${r.name}:${r.port}`).join(',');
+      resolve(`mongodb://${user}:${pass}@${hosts}${rest || ''}`);
+    });
+  });
+}
+
 const connectDB = async () => {
   try {
-    const rawUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-
-    if (!rawUri) {
-      logger.error('MONGODB_URI (or MONGO_URI) is not set in environment variables');
+    const uri = process.env.MONGODB_URI;
+    
+    if (!uri) {
+      logger.error('MONGODB_URI is not set');
       process.exit(1);
     }
 
-    const uri = rawUri.trim();
     logger.info('Connecting to MongoDB...');
-
-    // Log the host portion only (safe - no credentials) to help diagnose issues
-    try {
-      const uriObj = new URL(uri);
-      logger.info(`MongoDB target host: ${uriObj.hostname} | protocol: ${uriObj.protocol}`);
-    } catch (_) {
-      logger.warn('Could not parse MONGODB_URI for diagnostics');
-    }
+    logger.info(`URI starts with: ${uri.substring(0, 20)}...`);
 
     if (uri === 'memory') {
       const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -35,8 +41,30 @@ const connectDB = async () => {
         socketTimeoutMS: 45000,
       };
 
-      await mongoose.connect(uri, options);
-      logger.info(`MongoDB Connected: ${mongoose.connection.host}`);
+      try {
+        await mongoose.connect(uri, options);
+        logger.info(`MongoDB Connected: ${mongoose.connection.host}`);
+      } catch (firstError) {
+        logger.warn(`First connection attempt failed: ${firstError.message}`);
+        if (uri.startsWith('mongodb+srv')) {
+          logger.info('Attempting DNS SRV resolution to direct connection...');
+          try {
+            const directUri = await srvToDirect(uri);
+            if (directUri) {
+              logger.info('Resolved to direct connection, retrying...');
+              await mongoose.connect(directUri, options);
+              logger.info(`MongoDB Connected via direct: ${mongoose.connection.host}`);
+            } else {
+              throw firstError;
+            }
+          } catch (srvError) {
+            logger.error(`SRV resolution also failed: ${srvError.message}`);
+            throw firstError;
+          }
+        } else {
+          throw firstError;
+        }
+      }
     }
   } catch (error) {
     logger.error(`Database connection error: ${error.message}`);
