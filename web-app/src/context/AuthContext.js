@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   const connectSocket = useCallback((token) => {
     if (socketRef.current?.connected) return socketRef.current;
 
-    const newSocket = io(process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000', {
+    const newSocket = io(process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://dirs-dire-dawa-intercity-ride-sharing.onrender.com', {
       auth: { token },
       transports: ['websocket', 'polling'],
     });
