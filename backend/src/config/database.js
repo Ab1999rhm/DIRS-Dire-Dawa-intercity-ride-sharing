@@ -7,7 +7,14 @@ const connectDB = async () => {
   try {
     const uri = process.env.MONGODB_URI;
     
-    if (!uri || uri === 'memory') {
+    if (!uri) {
+      logger.error('MONGODB_URI is not set');
+      process.exit(1);
+    }
+
+    logger.info('Connecting to MongoDB...');
+
+    if (uri === 'memory') {
       const { MongoMemoryServer } = require('mongodb-memory-server');
       mongod = await MongoMemoryServer.create();
       const memUri = mongod.getUri();
@@ -24,6 +31,8 @@ const connectDB = async () => {
     }
   } catch (error) {
     logger.error(`Database connection error: ${error.message}`);
+    logger.error(`Error name: ${error.name}`);
+    if (error.stack) logger.error(`Stack: ${error.stack}`);
     process.exit(1);
   }
 };
@@ -40,7 +49,7 @@ mongoose.connection.on('disconnected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-  logger.error(`MongoDB error: ${err}`);
+  logger.error(`MongoDB error: ${err.message}`);
 });
 
 module.exports = { connectDB, disconnectDB };
