@@ -59,6 +59,33 @@ const LoadingSpinner = ({ waking }) => (
   </div>
 );
 
+class LazyErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          minHeight: '60vh', padding: 20, textAlign: 'center'
+        }}>
+          <p style={{ fontSize: 16, marginBottom: 16 }}>Failed to load this page.</p>
+          <button onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
+            style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#2563eb', color: 'white', fontWeight: 600, cursor: 'pointer' }}>
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const PrivateRoute = React.memo(({ children }) => {
   const { user, loading, serverWaking } = useAuth();
   if (loading) return <LoadingSpinner waking={serverWaking} />;
@@ -222,14 +249,14 @@ function App() {
                   Skip to main content
                 </a>
                 <Routes>
-                  <Route path="/" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{publicLanding}</Suspense></PublicRoute>} />
-                  <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{loginPage}</Suspense></PublicRoute>} />
-                  <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{registerPage}</Suspense></PublicRoute>} />
-                  <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingSpinner />}>{forgotPasswordPage}</Suspense></PublicRoute>} />
+                  <Route path="/" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{publicLanding}</Suspense></LazyErrorBoundary></PublicRoute>} />
+                  <Route path="/login" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{loginPage}</Suspense></LazyErrorBoundary></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{registerPage}</Suspense></LazyErrorBoundary></PublicRoute>} />
+                  <Route path="/forgot-password" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{forgotPasswordPage}</Suspense></LazyErrorBoundary></PublicRoute>} />
                   <Route path="/passenger/*" element={passengerRoute} />
                   <Route path="/driver/*" element={driverRoute} />
                   <Route path="/admin/*" element={adminRoute} />
-                  <Route path="*" element={<Suspense fallback={<LoadingSpinner />}>{notFoundPage}</Suspense>} />
+                  <Route path="*" element={<LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{notFoundPage}</Suspense></LazyErrorBoundary>} />
                 </Routes>
               </BrowserRouter>
             </ToastProvider>

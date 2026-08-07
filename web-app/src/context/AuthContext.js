@@ -145,6 +145,8 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
+    const globalTimeout = setTimeout(() => setLoading(false), 20000);
+    return () => clearTimeout(globalTimeout);
   }, []);
 
   const login = async (phoneNumber, password) => {

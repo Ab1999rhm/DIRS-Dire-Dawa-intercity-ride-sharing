@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { FaCrosshairs, FaExpand, FaCompress, FaLayerGroup, FaPlus, FaMinus } from 'react-icons/fa';
 import './FlexibleMap.css';
 

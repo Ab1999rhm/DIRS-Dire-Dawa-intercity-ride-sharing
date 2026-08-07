@@ -1,7 +1,7 @@
-const CACHE_NAME = 'dirs-v3';
-const STATIC_CACHE = 'dirs-static-v3';
-const API_CACHE = 'dirs-api-v3';
-const IMAGE_CACHE = 'dirs-images-v3';
+const CACHE_NAME = 'dirs-v4';
+const STATIC_CACHE = 'dirs-static-v4';
+const API_CACHE = 'dirs-api-v4';
+const IMAGE_CACHE = 'dirs-images-v4';
 
 const STATIC_ASSETS = [
   '/',
