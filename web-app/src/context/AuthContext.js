@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [driverProfile, setDriverProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [serverWaking, setServerWaking] = useState(false); // true when backend is cold-starting
   const [socket, setSocket] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -114,13 +115,32 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
+      // Show 'waking server' message after 3s if still loading
+      const wakingTimer = setTimeout(() => setServerWaking(true), 3000);
+      // Hard timeout after 12s — clear session and show login
+      const hardTimeout = setTimeout(() => {
+        clearTimeout(wakingTimer);
+        setServerWaking(false);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        setLoading(false);
+      }, 12000);
+
       authAPI.getMe()
         .then((res) => {
+          clearTimeout(wakingTimer);
+          clearTimeout(hardTimeout);
+          setServerWaking(false);
           setUser(res.data.user);
           setDriverProfile(res.data.driverProfile);
           connectSocket(token);
         })
-        .catch(() => { localStorage.clear(); })
+        .catch(() => {
+          clearTimeout(wakingTimer);
+          clearTimeout(hardTimeout);
+          setServerWaking(false);
+          localStorage.clear();
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -171,7 +191,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const contextValue = useMemo(() => ({
-    user, driverProfile, loading, socket,
+    user, driverProfile, loading, serverWaking, socket,
     login, register, completeRegistration, logout, setUser, setDriverProfile,
     notifications, unreadCount, setNotifications, setUnreadCount,
     newRideRequest, clearNewRideRequest,
@@ -180,7 +200,7 @@ export const AuthProvider = ({ children }) => {
     sosAlert, clearSosAlert,
     emitLocationUpdate,
   }), [
-    user, driverProfile, loading, socket,
+    user, driverProfile, loading, serverWaking, socket,
     notifications, unreadCount,
     newRideRequest, rideAccepted,
     driverLocation, tripStatusUpdate, sosAlert,

@@ -12,8 +12,12 @@ export const AuthProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
   const connectSocket = useCallback((token) => {
-    const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
-      auth: { token }
+    // Use socket URL (strip /api suffix if present from the API URL env var)
+    const socketUrl = process.env.REACT_APP_SOCKET_URL ||
+      (process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
+    const newSocket = io(socketUrl, {
+      auth: { token },
+      transports: ['websocket', 'polling']
     });
 
     newSocket.on('connect', () => {
@@ -46,12 +50,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
+      // Apply a 10-second timeout so the app never hangs indefinitely on mobile
+      // when the backend is unreachable (e.g. localhost doesn't resolve on a phone)
+      const timeoutId = setTimeout(() => {
+        console.warn('Auth check timed out — clearing session');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        setLoading(false);
+      }, 10000);
+
       authAPI.getMe()
         .then(response => {
+          clearTimeout(timeoutId);
           setUser(response.data.user);
           connectSocket(token);
         })
         .catch(() => {
+          clearTimeout(timeoutId);
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
         })

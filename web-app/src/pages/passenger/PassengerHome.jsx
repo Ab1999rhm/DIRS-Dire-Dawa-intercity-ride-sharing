@@ -13,7 +13,7 @@ import 'leaflet/dist/leaflet.css';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, ratingsAPI, sosAPI } from '../../services/api';
+import { ridesAPI, ratingsAPI, sosAPI, paymentsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import { ConfirmModal } from '../../components/common/Modal';
 import VehicleCategorySelector from '../../components/passenger/VehicleCategorySelector';
@@ -206,6 +206,8 @@ const PassengerHome = () => {
   const [showWalletTopup, setShowWalletTopup] = useState(false);
   const [walletBalance, setWalletBalance] = useState(150);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -624,6 +626,54 @@ const PassengerHome = () => {
     setSelectedVehicle(null);
     fetchRecentTrips();
     fetchStats();
+  };
+
+  const handleProcessPayment = async () => {
+    if (paymentMethod === 'cash') return;
+    const rideId = completedRide?._id || activeRide?._id;
+    if (!rideId || rideId.startsWith('demo')) {
+      toast.info('Cash payment — pay the driver directly');
+      return;
+    }
+    setPaymentProcessing(true);
+    try {
+      if (paymentMethod === 'telebirr') {
+        const res = await paymentsAPI.process(rideId, {
+          method: 'telebirr',
+          amount: Number(completedRide.fare?.totalFare) || fare.total,
+          phoneNumber: user?.phoneNumber,
+        });
+        const data = res.data;
+        if (data.success) {
+          setPaymentStatus('processing');
+          toast.success('Telebirr payment request sent! Check your phone for the USSD prompt.');
+        } else {
+          toast.error(data.error || 'Payment failed. Please try again.');
+          setPaymentStatus('failed');
+        }
+      } else if (paymentMethod === 'chapa') {
+        const res = await paymentsAPI.process(rideId, {
+          method: 'chapa',
+          amount: Number(completedRide.fare?.totalFare) || fare.total,
+          email: user?.email || 'passenger@dirs.et',
+        });
+        const data = res.data;
+        if (data.checkoutUrl) {
+          setPaymentStatus('processing');
+          window.open(data.checkoutUrl, '_blank');
+          toast.success('Redirecting to Chapa payment page...');
+        } else {
+          toast.error(data.error || 'Payment failed. Please try again.');
+          setPaymentStatus('failed');
+        }
+      }
+    } catch (err) {
+      console.error('Payment error:', err);
+      toast.error('Payment processing failed. You can pay later from trip history.');
+      setPaymentStatus('failed');
+    } finally {
+      setPaymentProcessing(false);
+    }
   };
 
   const handleSOS = async () => {
@@ -1049,6 +1099,58 @@ const PassengerHome = () => {
           </div>
           <h3>{t('passenger.rideComplete') || 'Trip Complete!'}</h3>
           <p className="fare-display">ETB {rideFare}</p>
+
+          {paymentMethod !== 'cash' && !paymentStatus && (
+            <button
+              className="passenger-primary-btn"
+              onClick={handleProcessPayment}
+              disabled={paymentProcessing}
+              style={{
+                background: paymentMethod === 'telebirr' ? '#1a8917' : '#1a8917',
+                marginBottom: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+              }}
+            >
+              {paymentProcessing ? (
+                <><FaSpinner className="fa-spin" /> Processing...</>
+              ) : paymentMethod === 'telebirr' ? (
+                <><FaMobileAlt /> Pay {rideFare} ETB with Telebirr</>
+              ) : (
+                <><FaCreditCard /> Pay {rideFare} ETB with Chapa</>
+              )}
+            </button>
+          )}
+
+          {paymentMethod !== 'cash' && paymentStatus === 'processing' && (
+            <div style={{
+              background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10,
+              padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#15803d', textAlign: 'center'
+            }}>
+              {paymentMethod === 'telebirr'
+                ? '✓ Payment request sent! Check your phone for the Telebirr USSD prompt.'
+                : '✓ Redirected to Chapa. Complete payment in the new tab.'}
+            </div>
+          )}
+
+          {paymentMethod !== 'cash' && paymentStatus === 'failed' && (
+            <button
+              className="passenger-primary-btn"
+              onClick={handleProcessPayment}
+              disabled={paymentProcessing}
+              style={{ background: '#ef4444', marginBottom: 12 }}
+            >
+              <FaExclamationTriangle /> Retry Payment
+            </button>
+          )}
+
+          {paymentMethod === 'cash' && (
+            <div style={{
+              background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10,
+              padding: '12px 16px', marginBottom: 12, fontSize: 13, color: '#92400e', textAlign: 'center'
+            }}>
+              💵 Pay {rideFare} ETB directly to the driver
+            </div>
+          )}
 
           <div className="rating-section">
             <h4>{t('passenger.rateExperience') || 'Rate your experience'}</h4>
