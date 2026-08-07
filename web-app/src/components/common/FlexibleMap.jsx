@@ -195,17 +195,19 @@ const FlexibleMap = ({
         </div>
       )}
 
-      {/* Fullscreen Button - Bottom Right */}
+      {/* Fullscreen Button - Top Center */}
       {showControls && (
-        <div className="flexible-map-controls" style={{ top: 'auto', bottom: 10, right: 10 }}>
+        <div className="flexible-map-controls" style={{ top: 10, left: '50%', transform: 'translateX(-50%)', right: 'auto', flexDirection: 'row' }}>
           <button
             type="button"
             className="map-ctrl-btn expand"
             onClick={toggleFullscreen}
             title={isFullscreen ? "Exit Fullscreen" : "Expand Fullscreen"}
             aria-label="Toggle Fullscreen Map"
+            style={{ width: 'auto', padding: '6px 14px', borderRadius: 20, gap: 6 }}
           >
             {isFullscreen ? <FaCompress /> : <FaExpand />}
+            <span style={{ fontSize: 12, fontWeight: 600 }}>{isFullscreen ? 'Exit' : 'Expand'}</span>
           </button>
         </div>
       )}
