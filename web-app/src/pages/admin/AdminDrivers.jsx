@@ -265,21 +265,57 @@ const AdminDrivers = () => {
               <StatusBadge status={inspectDriver.verificationStatus || 'pending'} />
             </div>
 
-            {/* Documents */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
-              {(MOCK_DOCS[inspectDriver._id] || MOCK_DOCS.default).map((doc, idx) => (
-                <div key={idx} style={{ border: `2px solid ${doc.status === 'verified' ? '#86efac' : '#fde68a'}`, borderRadius: 12, padding: 14, background: doc.status === 'verified' ? '#f0fdf4' : '#fffbeb' }}>
-                  <div style={{ fontSize: 26, marginBottom: 6 }}>{doc.fileIcon}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>{doc.title}</div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: doc.status === 'verified' ? '#dcfce7' : '#fef3c7', color: doc.status === 'verified' ? '#15803d' : '#b45309' }}>
-                    {doc.status === 'verified' ? '✅ VERIFIED' : '⏳ PENDING REVIEW'}
-                  </span>
-                  <button type="button" style={{ display: 'block', marginTop: 8, fontSize: 11, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                    🔍 View Full Document
-                  </button>
+            {/* Documents Grid with Real Uploaded Image Display */}
+            {(() => {
+              const uploadedDocs = JSON.parse(localStorage.getItem('dirs_driver_documents') || '{}');
+              const docList = [
+                { key: 'licensePhoto', title: 'Driving License', fileIcon: '🪪' },
+                { key: 'librePhoto', title: 'Vehicle Libre (Bolo)', fileIcon: '📄' },
+                { key: 'insurancePhoto', title: 'Commercial Insurance', fileIcon: '📋' },
+                { key: 'policeClearancePhoto', title: 'Police Clearance Record', fileIcon: '🛡️' }
+              ];
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
+                  {docList.map(item => {
+                    const docObj = uploadedDocs[item.key] || {};
+                    const hasImage = Boolean(docObj.data);
+                    const status = docObj.status || 'pending';
+
+                    return (
+                      <div key={item.key} style={{
+                        border: `2px solid ${status === 'verified' ? '#86efac' : hasImage ? '#93c5fd' : '#fde68a'}`,
+                        borderRadius: 12,
+                        padding: 14,
+                        background: status === 'verified' ? '#f0fdf4' : hasImage ? '#eff6ff' : '#fffbeb'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <span style={{ fontSize: 22 }}>{item.fileIcon}</span>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                            background: status === 'verified' ? '#dcfce7' : '#fef3c7',
+                            color: status === 'verified' ? '#15803d' : '#b45309'
+                          }}>
+                            {status === 'verified' ? '✅ VERIFIED' : hasImage ? '⏳ UPLOADED — REVIEW' : '⚠️ NOT UPLOADED'}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>{item.title}</div>
+
+                        {/* Real Uploaded Photo Thumbnail */}
+                        {hasImage ? (
+                          <div style={{ borderRadius: 8, overflow: 'hidden', height: 120, background: '#e2e8f0', margin: '8px 0', border: '1px solid #cbd5e1' }}>
+                            <img src={docObj.data} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic', margin: '8px 0' }}>No image file attached</div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
 
             {/* Rejection Reason Selector */}
             {(inspectDriver.verificationStatus === 'pending' || !inspectDriver.verificationStatus) && (

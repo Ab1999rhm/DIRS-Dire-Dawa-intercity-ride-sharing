@@ -173,6 +173,7 @@ const PassengerHome = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [rideState, setRideState] = useState('idle');
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [completedRide, setCompletedRide] = useState(null);
   const [rating, setRating] = useState(0);
@@ -525,38 +526,40 @@ const PassengerHome = () => {
         });
       }
 
-      // Auto-Match Fallback mechanism: guarantees response to passenger within 3.5s if no socket driver accepts first
-      setTimeout(() => {
-        setRideState((currentState) => {
-          if (currentState === 'searching') {
-            clearInterval(searchingIntervalRef.current);
-            const demoDriver = {
-              name: 'Abebe Kebede (Verified Driver)',
-              phone: '+251911889900',
-              rating: '4.9',
-              vehicle: {
-                make: currentVehicle.label,
-                model: '2024 Edition',
-                color: 'Blue & White',
-                plateNumber: 'DIR-3-B4592'
-              }
-            };
-            setFoundDriverInfo(demoDriver);
-            toast.success(`Driver Abebe accepted your ${currentVehicle.label} ride!`);
+      // Only run auto-match fallback if single-device demo mode is enabled
+      if (isDemoMode) {
+        setTimeout(() => {
+          setRideState((currentState) => {
+            if (currentState === 'searching') {
+              clearInterval(searchingIntervalRef.current);
+              const demoDriver = {
+                name: 'Abebe Kebede (Verified Driver)',
+                phone: '+251911889900',
+                rating: '4.9',
+                vehicle: {
+                  make: currentVehicle.label,
+                  model: '2024 Edition',
+                  color: 'Blue & White',
+                  plateNumber: 'DIR-3-B4592'
+                }
+              };
+              setFoundDriverInfo(demoDriver);
+              toast.success(`Driver Abebe accepted your ${currentVehicle.label} ride!`);
 
-            // Update persisted ride status
-            try {
-              const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
-              const matchedRide = { ...rideData, status: 'accepted', driver: { firstName: 'Abebe', lastName: 'Kebede', rating: 4.9, phoneNumber: '+251911889900' } };
-              const updated = [matchedRide, ...localRides.filter(r => r._id !== rideData._id)];
-              localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
-            } catch (_) {}
+              // Update persisted ride status
+              try {
+                const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
+                const matchedRide = { ...rideData, status: 'accepted', driver: { firstName: 'Abebe', lastName: 'Kebede', rating: 4.9, phoneNumber: '+251911889900' } };
+                const updated = [matchedRide, ...localRides.filter(r => r._id !== rideData._id)];
+                localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
+              } catch (_) {}
 
-            return 'driver_found';
-          }
-          return currentState;
-        });
-      }, 3500);
+              return 'driver_found';
+            }
+            return currentState;
+          });
+        }, 3500);
+      }
 
     } catch (err) {
       console.warn('Backend API note:', err);
@@ -1117,6 +1120,45 @@ const PassengerHome = () => {
           <button onClick={handleSMSFallback} style={{ background: 'white', color: '#ef4444', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}><FaSms /> Book via SMS</button>
         </div>
       )}
+      {/* Mode Selector: Real 2-Phone Mode (pure sockets) vs Single-Device Demo Mode */}
+      <div style={{
+        background: isDemoMode ? '#fffbeb' : '#f0fdf4',
+        border: `1.5px solid ${isDemoMode ? '#fde68a' : '#86efac'}`,
+        borderRadius: 12,
+        padding: '10px 14px',
+        marginBottom: 16,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <div>
+          <strong style={{ fontSize: 13, color: isDemoMode ? '#92400e' : '#15803d', display: 'block' }}>
+            {isDemoMode ? '⚡ Single-Device Test Mode (3.5s Auto-Match)' : '📱 Real Dual-Device Mode (Live GPS & WebSockets)'}
+          </strong>
+          <span style={{ fontSize: 11, color: '#64748b' }}>
+            {isDemoMode ? 'Auto-accepts for easy 1-laptop testing' : 'Waits 100% for real driver device to press Accept'}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsDemoMode(!isDemoMode)}
+          style={{
+            background: isDemoMode ? '#d97706' : '#16a34a',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '6px 12px',
+            fontSize: 12,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            flexShrink: 0
+          }}
+        >
+          Switch to {isDemoMode ? '📱 Real 2-Phone Mode' : '⚡ Single-Device Mode'}
+        </button>
+      </div>
+
       <div className="passenger-header-row">
         <div>
           <h1 className="passenger-greeting">{getGreetingText()} {userName}</h1>

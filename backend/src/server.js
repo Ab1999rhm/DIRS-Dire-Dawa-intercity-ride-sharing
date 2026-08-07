@@ -44,18 +44,30 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: [
-    process.env.PASSENGER_APP_URL,
-    process.env.DRIVER_APP_URL,
-    process.env.ADMIN_APP_URL,
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      process.env.PASSENGER_APP_URL,
+      process.env.DRIVER_APP_URL,
+      process.env.ADMIN_APP_URL,
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:3003',
+    ].filter(Boolean);
+
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all in dev, restrict in production
+    }
+  },
   credentials: true
 }));
 
 app.use(morgan('combined', { stream: logger.stream }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 securityMiddleware(app);
 

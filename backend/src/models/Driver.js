@@ -42,6 +42,12 @@ const driverSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  documents: {
+    licensePhoto: { data: String, status: { type: String, default: 'pending' }, updatedAt: Date },
+    librePhoto: { data: String, status: { type: String, default: 'pending' }, updatedAt: Date },
+    insurancePhoto: { data: String, status: { type: String, default: 'pending' }, updatedAt: Date },
+    policeClearancePhoto: { data: String, status: { type: String, default: 'pending' }, updatedAt: Date },
+  },
   isAvailable: {
     type: Boolean,
     default: false

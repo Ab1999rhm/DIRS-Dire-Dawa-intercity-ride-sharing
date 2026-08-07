@@ -250,10 +250,21 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
   const driver = trip.driver || {};
   const pickup = trip.pickupLocation?.address || 'Pickup location';
   const dropoff = trip.dropoffLocation?.address || 'Drop-off location';
-  const pickupCoords = trip.pickupLocation?.coordinates?.length === 2
-    ? [trip.pickupLocation.coordinates[1], trip.pickupLocation.coordinates[0]] : null;
-  const dropoffCoords = trip.dropoffLocation?.coordinates?.length === 2
-    ? [trip.dropoffLocation.coordinates[1], trip.dropoffLocation.coordinates[0]] : null;
+  // Smart coordinate parser to ensure [lat, lng] is always in Dire Dawa/Ethiopia bounds
+  const parseCoords = (input) => {
+    if (!input) return null;
+    const coords = input.coordinates || input;
+    if (!Array.isArray(coords) || coords.length < 2) return null;
+    let [v1, v2] = [parseFloat(coords[0]), parseFloat(coords[1])];
+    if (isNaN(v1) || isNaN(v2)) return null;
+    // In Ethiopia: Lat is ~3..15, Lng is ~33..48
+    if (v1 > 30 && v2 < 20) return [v2, v1];
+    return [v1, v2];
+  };
+
+  const pickupCoords = parseCoords(trip.pickupLocation);
+  const dropoffCoords = parseCoords(trip.dropoffLocation);
+  const mapCenter = pickupCoords || dropoffCoords || [9.6009, 41.8508];
 
   return (
     <div className="passenger-page">
@@ -285,19 +296,22 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         </div>
       </div>
 
-      {/* Map Area */}
-      <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 300 }}>
+      {/* Map Area with FlexibleMap */}
+      <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 320, borderRadius: 16 }}>
         <FlexibleMap
-          center={pickupCoords || [9.6, 41.85]}
-          zoom={15}
-          defaultHeight="300px"
+          center={mapCenter}
+          zoom={14}
+          defaultHeight="320px"
           markers={[
-            ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: `Pickup: ${pickup}` }] : []),
-            ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: `Dropoff: ${dropoff}` }] : []),
+            ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: `🟢 Pickup: ${pickup}` }] : []),
+            ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: `🔴 Dropoff: ${dropoff}` }] : []),
           ]}
           polylinePoints={
             pickupCoords && dropoffCoords ? [pickupCoords, dropoffCoords] : []
           }
+          showRecenter={true}
+          showFullscreen={true}
+          showZoomButtons={true}
         />
       </div>
 
