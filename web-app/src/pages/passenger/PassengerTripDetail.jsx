@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import L from 'leaflet';
 import {
   FaMapMarkerAlt, FaCar, FaStar, FaPhone, FaShareAlt, FaExclamationTriangle,
   FaClock, FaCheckCircle, FaArrowLeft,
@@ -13,9 +14,21 @@ import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, sosAPI, ratingsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/common';
+import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
 import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
 import './Passenger.css';
+
+const pickupIcon = L.divIcon({
+  className: 'custom-marker',
+  html: '<div style="background:#16a34a;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">P</div>',
+  iconSize: [28, 28], iconAnchor: [14, 14],
+});
+const dropoffIcon = L.divIcon({
+  className: 'custom-marker',
+  html: '<div style="background:#dc2626;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">D</div>',
+  iconSize: [28, 28], iconAnchor: [14, 14],
+});
 
 const STATUS_STEPS = [
   { key: 'pending', labelKey: 'passenger.requested', icon: <FaClock /> },
@@ -237,6 +250,10 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
   const driver = trip.driver || {};
   const pickup = trip.pickupLocation?.address || 'Pickup location';
   const dropoff = trip.dropoffLocation?.address || 'Drop-off location';
+  const pickupCoords = trip.pickupLocation?.coordinates?.length === 2
+    ? [trip.pickupLocation.coordinates[1], trip.pickupLocation.coordinates[0]] : null;
+  const dropoffCoords = trip.dropoffLocation?.coordinates?.length === 2
+    ? [trip.dropoffLocation.coordinates[1], trip.dropoffLocation.coordinates[0]] : null;
 
   return (
     <div className="passenger-page">
@@ -256,33 +273,19 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
       </div>
 
       {/* Map Area */}
-      <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 200, position: 'relative', background: 'var(--bg-secondary)' }}>
-        <div style={{
-          width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)',
-          position: 'relative',
-        }}>
-          {/* Simulated map with route line */}
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <div style={{ position: 'absolute', top: '30%', left: '15%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, boxShadow: '0 2px 8px rgba(16,185,129,0.4)' }}>
-                <FaMapMarkerAlt />
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--secondary)', background: 'white', padding: '2px 6px', borderRadius: 4, boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>Pickup</span>
-            </div>
-            <div style={{ position: 'absolute', top: '55%', right: '15%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, boxShadow: '0 2px 8px rgba(220,38,38,0.4)' }}>
-                <FaMapMarkerAlt />
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--danger)', background: 'white', padding: '2px 6px', borderRadius: 4, boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>Dropoff</span>
-            </div>
-            {/* Route line */}
-            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-              <path d="M 38% 32% Q 50% 50% 72% 58%" fill="none" stroke="var(--primary)" strokeWidth="3" strokeDasharray="8,4" opacity="0.6" />
-            </svg>
-          </div>
-          <FaRouteIcon size={60} style={{ color: 'var(--primary)', opacity: 0.1, position: 'absolute', bottom: 20, right: 20 }} />
-        </div>
+      <div className="passenger-booking-card" style={{ padding: 0, overflow: 'hidden', height: 250 }}>
+        <FlexibleMap
+          center={pickupCoords || [9.6, 41.85]}
+          zoom={14}
+          defaultHeight="250px"
+          markers={[
+            ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: pickup }] : []),
+            ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: dropoff }] : []),
+          ]}
+          polylinePoints={
+            pickupCoords && dropoffCoords ? [pickupCoords, dropoffCoords] : []
+          }
+        />
       </div>
 
       {/* Trip Route Info */}
