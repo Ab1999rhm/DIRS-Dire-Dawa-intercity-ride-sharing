@@ -1121,6 +1121,7 @@ const PassengerHome = () => {
         </div>
       )}
       {/* Mode Selector: Real 2-Phone Mode (pure sockets) vs Single-Device Demo Mode */}
+      {process.env.NODE_ENV !== 'production' && (
       <div style={{
         background: isDemoMode ? '#fffbeb' : '#f0fdf4',
         border: `1.5px solid ${isDemoMode ? '#fde68a' : '#86efac'}`,
@@ -1158,6 +1159,7 @@ const PassengerHome = () => {
           Switch to {isDemoMode ? '📱 Real 2-Phone Mode' : '⚡ Single-Device Mode'}
         </button>
       </div>
+      )}
 
       <div className="passenger-header-row">
         <div>

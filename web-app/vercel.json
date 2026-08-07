@@ -43,6 +43,14 @@
       "dest": "/robots.txt"
     },
     {
+      "src": "/icons/(.*)",
+      "dest": "/icons/$1"
+    },
+    {
+      "src": "/icon-(192|512)\\.png",
+      "dest": "/icon-$1.png"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
