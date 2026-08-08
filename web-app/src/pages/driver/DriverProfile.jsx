@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api';
+import { authAPI, documentsAPI } from '../../services/api';
 import { Card, Button, Input, Modal } from '../../components/common';
 import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
@@ -27,10 +27,21 @@ const DriverProfile = () => {
   });
 
   const [documents, setDocuments] = useState({
-    license: driverProfile?.documents?.license || null,
-    insurance: driverProfile?.documents?.insurance || null,
-    registration: driverProfile?.documents?.registration || null
+    licensePhoto: driverProfile?.licensePhoto || null,
+    licenseNumber: driverProfile?.licenseNumber || '',
+    licenseExpiry: driverProfile?.licenseExpiry || '',
+    nationalIdPhoto: driverProfile?.nationalIdPhoto || null,
+    nationalId: driverProfile?.nationalId || '',
+    verificationStatus: driverProfile?.verificationStatus || 'pending',
+    rejectionReason: driverProfile?.rejectionReason || null,
+    vehiclePhoto: null,
+    registrationPhoto: null,
+    insurancePhoto: null,
+    insuranceExpiry: '',
+    registrationExpiry: ''
   });
+  const fileInputRef = { licensePhoto: useRef(null), nationalIdPhoto: useRef(null), vehiclePhoto: useRef(null), registrationPhoto: useRef(null), insurancePhoto: useRef(null) };
+  const [uploadingDoc, setUploadingDoc] = useState(null);
 
   const [settings, setSettings] = useState({
     notifications: driverProfile?.settings?.notifications ?? true,
@@ -39,6 +50,70 @@ const DriverProfile = () => {
   });
 
   const toast = useToast();
+
+  useEffect(() => {
+    documentsAPI.get().then(res => {
+      if (res.data) {
+        setDocuments(prev => ({
+          ...prev,
+          licensePhoto: res.data.driver?.licensePhoto || null,
+          licenseNumber: res.data.driver?.licenseNumber || '',
+          licenseExpiry: res.data.driver?.licenseExpiry || '',
+          nationalIdPhoto: res.data.driver?.nationalIdPhoto || null,
+          nationalId: res.data.driver?.nationalId || '',
+          verificationStatus: res.data.driver?.verificationStatus || 'pending',
+          rejectionReason: res.data.driver?.rejectionReason || null,
+          vehiclePhoto: res.data.vehicle?.vehiclePhoto || null,
+          registrationPhoto: res.data.vehicle?.registrationPhoto || null,
+          insurancePhoto: res.data.vehicle?.insurancePhoto || null,
+          insuranceExpiry: res.data.vehicle?.insuranceExpiry || '',
+          registrationExpiry: res.data.vehicle?.registrationExpiry || ''
+        }));
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleDocUpload = async (docKey, isDriverDoc, extraFields) => {
+    const file = fileInputRef[docKey]?.current?.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File must be under 5MB');
+      return;
+    }
+    try {
+      setUploadingDoc(docKey);
+      const fd = new FormData();
+      fd.append(docKey, file);
+      if (extraFields) Object.entries(extraFields).forEach(([k, v]) => fd.append(k, v));
+      if (isDriverDoc) {
+        await documentsAPI.uploadDriver(fd);
+      } else {
+        await documentsAPI.uploadVehicle(fd);
+      }
+      setDocuments(prev => ({ ...prev, [docKey]: URL.createObjectURL(file) }));
+      toast.success('Document uploaded');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Upload failed');
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  const handleDocTextUpdate = async (fields) => {
+    try {
+      setLoading(true);
+      const fd = new FormData();
+      Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+      await documentsAPI.uploadDriver(fd);
+      setDocuments(prev => ({ ...prev, ...fields }));
+      setSuccess('Document info updated');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Update failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const tabs = [
     { id: 'info', label: t('profile.personalInfo'), icon: <FaUser /> },
@@ -161,41 +236,102 @@ const DriverProfile = () => {
       )}
 
       {activeTab === 'documents' && (
-        <Card padding="lg">
-          <h2 className="section-title">{t('profile.documents')}</h2>
-          <div className="documents-list">
-            <div className="document-item">
-              <FaIdCard className="doc-icon" />
-              <div className="doc-info">
-                <h4>{t('profile.drivingLicense')}</h4>
-                <p>{documents.license ? t('profile.uploaded') : t('profile.notUploaded')}</p>
+        <div className="documents-section">
+          {documents.verificationStatus && (
+            <Card padding="lg">
+              <div className="verification-status">
+                <h3>Verification Status</h3>
+                <span className={`status-badge ${documents.verificationStatus}`}>
+                  {documents.verificationStatus}
+                </span>
+                {documents.rejectionReason && (
+                  <p className="rejection-reason">Reason: {documents.rejectionReason}</p>
+                )}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => toast.info('Document upload coming soon')}>
-                {documents.license ? t('profile.view') : t('profile.upload')}
-              </Button>
+            </Card>
+          )}
+
+          <Card padding="lg">
+            <h2 className="section-title"><FaIdCard /> Driving License</h2>
+            <div className="document-upload-area">
+              <input type="file" accept="image/*" ref={fileInputRef.licensePhoto} style={{ display: 'none' }}
+                onChange={() => handleDocUpload('licensePhoto', true)} />
+              {documents.licensePhoto ? (
+                <div className="doc-preview">
+                  <img src={documents.licensePhoto} alt="License" style={{ maxHeight: 120, borderRadius: 8 }} />
+                  <Button variant="ghost" size="sm" onClick={() => fileInputRef.licensePhoto.current?.click()}>
+                    Replace
+                  </Button>
+                </div>
+              ) : (
+                <button className="doc-upload-btn" onClick={() => fileInputRef.licensePhoto.current?.click()}>
+                  <FaIdCard size={24} />
+                  <span>{uploadingDoc === 'licensePhoto' ? 'Uploading...' : 'Upload License Photo'}</span>
+                </button>
+              )}
             </div>
-            <div className="document-item">
-              <FaShieldAlt className="doc-icon" />
-              <div className="doc-info">
-                <h4>{t('profile.insurance')}</h4>
-                <p>{documents.insurance ? t('profile.uploaded') : t('profile.notUploaded')}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => toast.info('Document upload coming soon')}>
-                {documents.insurance ? t('profile.view') : t('profile.upload')}
-              </Button>
+            <div className="form-grid" style={{ marginTop: 12 }}>
+              <Input label="License Number" value={documents.licenseNumber}
+                onChange={(e) => setDocuments({ ...documents, licenseNumber: e.target.value })}
+                onBlur={() => handleDocTextUpdate({ licenseNumber: documents.licenseNumber })} />
+              <Input label="Expiry Date" type="date" value={documents.licenseExpiry ? documents.licenseExpiry.slice(0,10) : ''}
+                onChange={(e) => setDocuments({ ...documents, licenseExpiry: e.target.value })}
+                onBlur={() => handleDocTextUpdate({ licenseExpiry: documents.licenseExpiry })} />
             </div>
-            <div className="document-item">
-              <FaCar className="doc-icon" />
-              <div className="doc-info">
-                <h4>{t('profile.vehicleRegistration')}</h4>
-                <p>{documents.registration ? t('profile.uploaded') : t('profile.notUploaded')}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => toast.info('Document upload coming soon')}>
-                {documents.registration ? t('profile.view') : t('profile.upload')}
-              </Button>
+          </Card>
+
+          <Card padding="lg">
+            <h2 className="section-title"><FaShieldAlt /> National ID</h2>
+            <div className="document-upload-area">
+              <input type="file" accept="image/*" ref={fileInputRef.nationalIdPhoto} style={{ display: 'none' }}
+                onChange={() => handleDocUpload('nationalIdPhoto', true)} />
+              {documents.nationalIdPhoto ? (
+                <div className="doc-preview">
+                  <img src={documents.nationalIdPhoto} alt="National ID" style={{ maxHeight: 120, borderRadius: 8 }} />
+                  <Button variant="ghost" size="sm" onClick={() => fileInputRef.nationalIdPhoto.current?.click()}>
+                    Replace
+                  </Button>
+                </div>
+              ) : (
+                <button className="doc-upload-btn" onClick={() => fileInputRef.nationalIdPhoto.current?.click()}>
+                  <FaShieldAlt size={24} />
+                  <span>{uploadingDoc === 'nationalIdPhoto' ? 'Uploading...' : 'Upload National ID'}</span>
+                </button>
+              )}
             </div>
-          </div>
-        </Card>
+            <div className="form-grid" style={{ marginTop: 12 }}>
+              <Input label="National ID Number" value={documents.nationalId}
+                onChange={(e) => setDocuments({ ...documents, nationalId: e.target.value })}
+                onBlur={() => handleDocTextUpdate({ nationalId: documents.nationalId })} />
+            </div>
+          </Card>
+
+          <Card padding="lg">
+            <h2 className="section-title"><FaCar /> Vehicle Documents</h2>
+            <div className="document-upload-grid">
+              {[
+                { key: 'vehiclePhoto', label: 'Vehicle Photo', icon: <FaCar /> },
+                { key: 'registrationPhoto', label: 'Registration', icon: <FaFileAlt /> },
+                { key: 'insurancePhoto', label: 'Insurance', icon: <FaShieldAlt /> }
+              ].map(doc => (
+                <div key={doc.key} className="document-upload-item">
+                  <input type="file" accept="image/*" ref={fileInputRef[doc.key]} style={{ display: 'none' }}
+                    onChange={() => handleDocUpload(doc.key, false)} />
+                  {documents[doc.key] ? (
+                    <div className="doc-preview small">
+                      <img src={documents[doc.key]} alt={doc.label} style={{ maxHeight: 80, borderRadius: 6 }} />
+                    </div>
+                  ) : (
+                    <button className="doc-upload-btn small" onClick={() => fileInputRef[doc.key].current?.click()}>
+                      {doc.icon}
+                      <span>{uploadingDoc === doc.key ? '...' : doc.label}</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       )}
 
       {activeTab === 'settings' && (

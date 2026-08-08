@@ -818,6 +818,77 @@
   margin: 0;
 }
 
+/* === Document Upload (real) === */
+.documents-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.verification-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.verification-status h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.rejection-reason {
+  color: #ef4444;
+  font-size: 13px;
+  margin: 0;
+}
+.document-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.doc-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: var(--bg, #fff);
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  width: 100%;
+}
+.doc-upload-btn:hover {
+  border-color: var(--primary, #3b82f6);
+  background: #f0f9ff;
+  color: var(--primary, #3b82f6);
+}
+.doc-upload-btn.small {
+  padding: 12px;
+  flex-direction: column;
+  text-align: center;
+  font-size: 12px;
+}
+.doc-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: var(--bg, #fff);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.doc-preview.small {
+  padding: 4px;
+}
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.document-upload-item {
+  min-width: 0;
+}
+
 /* === Settings Section === */
 .settings-section {
   display: flex;
