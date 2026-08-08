@@ -102,18 +102,6 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/referrals', require('./routes/referrals'));
 app.use('/uploads', express.static(uploadsDir));
 
-// TEMPORARY: Seed endpoint (remove after seeding)
-app.get('/api/_seed', async (req, res) => {
-  if (req.query.key !== 'dirs-seed-2026') return res.status(403).json({ error: 'Forbidden' });
-  try {
-    const { execSync } = require('child_process');
-    const output = execSync('node src/seed.js', { cwd: __dirname + '/..', timeout: 60000, encoding: 'utf8' });
-    res.json({ message: 'Database seeded', output: output.slice(-500) });
-  } catch (err) {
-    res.status(500).json({ error: err.message, stdout: err.stdout?.slice(-500), stderr: err.stderr?.slice(-500) });
-  }
-});
-
 setupSwagger(app);
 
 app.get('/api/health', async (req, res) => {
