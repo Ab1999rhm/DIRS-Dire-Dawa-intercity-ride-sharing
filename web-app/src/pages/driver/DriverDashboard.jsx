@@ -80,6 +80,22 @@ const DriverDashboard = () => {
   const [vehicle, setVehicle] = useState(null);
   const [intendedDestination, setIntendedDestination] = useState(user?.intendedDestination?.city || null);
 
+  // Sync isOnline with user data when it loads async
+  useEffect(() => {
+    if (user && typeof user.isOnline === 'boolean') {
+      setIsOnline(user.isOnline);
+      // If user was online, restart geolocation tracking
+      if (user.isOnline && !watchId && navigator.geolocation) {
+        const id = navigator.geolocation.watchPosition(
+          (pos) => emitLocationUpdate([pos.coords.longitude, pos.coords.latitude]),
+          (err) => console.error('Geolocation error:', err),
+          { enableHighAccuracy: true, maximumAge: 10000 }
+        );
+        setWatchId(id);
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchData();
     if (navigator.geolocation) {
