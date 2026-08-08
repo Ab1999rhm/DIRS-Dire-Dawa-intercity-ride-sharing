@@ -92,7 +92,6 @@ const initializeSocket = (server) => {
       if (socket.userRole !== 'passenger') {
         return socket.emit('error', { message: 'Unauthorized' });
       }
-      io.to('drivers').emit('new_ride_request', data);
     });
 
     socket.on('ride_accepted', (data) => {

@@ -84,7 +84,8 @@ const DriverDashboard = () => {
 
   useEffect(() => {
     if (newRideRequest) {
-      setRideRequests(prev => [newRideRequest, ...prev]);
+      const rr = newRideRequest.rideRequest || newRideRequest;
+      setRideRequests(prev => [rr, ...prev]);
       clearNewRideRequest();
     }
   }, [newRideRequest]);
@@ -111,8 +112,9 @@ const DriverDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [tripsRes, earningsRes, vehicleRes] = await Promise.all([
-        ridesAPI.driverTrips({ status: 'ongoing' }).catch(() => ({ data: {} })),
+      const [activeTripsRes, completedTripsRes, earningsRes, vehicleRes] = await Promise.all([
+        ridesAPI.driverTrips({ status: 'driver_arriving' }).catch(() => ({ data: { trips: [] } })),
+        ridesAPI.driverTrips({ status: 'in_progress' }).catch(() => ({ data: { trips: [] } })),
         paymentsAPI.earnings().catch(() => ({ data: {} })),
         vehiclesAPI.getMy().catch(() => ({ data: {} }))
       ]);
@@ -122,8 +124,9 @@ const DriverDashboard = () => {
         setVehicleType(vehicleRes.data.vehicle.type);
       }
 
-      const backendTrip = tripsRes.data?.trip;
-      const backendRides = tripsRes.data?.availableRides || [];
+      const activeTrips = [...(activeTripsRes.data?.trips || []), ...(completedTripsRes.data?.trips || [])];
+      const backendTrip = activeTrips.find(t => ['driver_arriving', 'driver_arrived', 'in_progress'].includes(t.status)) || null;
+      const backendRides = activeTrips.filter(t => t.status === 'pending');
 
       // Merge with persisted passenger orders from localStorage
       const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
@@ -175,15 +178,13 @@ const DriverDashboard = () => {
 
   const handleAcceptRide = async (rideId) => {
     try {
-      await ridesAPI.accept(rideId).catch(() => {});
-      // Update local storage status so passenger sees acceptance
-      const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
-      const acceptedRide = localRides.find(r => r._id === rideId) || { _id: rideId, status: 'accepted' };
-      const updatedRide = { ...acceptedRide, status: 'accepted', driver: { firstName: user?.firstName || 'Abebe', lastName: user?.lastName || 'Kebede', rating: 4.9 } };
-      const updated = [updatedRide, ...localRides.filter(r => r._id !== rideId)];
-      localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
-
-      setActiveTrip(updatedRide);
+      const res = await ridesAPI.accept(rideId).catch(() => null);
+      const trip = res?.data?.trip;
+      if (trip) {
+        setActiveTrip(trip);
+      } else {
+        setActiveTrip({ _id: rideId, status: 'driver_arriving', passenger: { firstName: 'Passenger' } });
+      }
       setRideRequests(prev => prev.filter(r => r._id !== rideId));
       toast.success('Ride Request Accepted! Proceeding to pickup location.');
     } catch (err) { setError(err.response?.data?.message || 'Failed to accept ride'); }
@@ -200,23 +201,20 @@ const DriverDashboard = () => {
   const handleTripAction = async (action) => {
     if (!activeTrip) return;
     try {
-      if (action === 'start') await ridesAPI.start(activeTrip._id).catch(() => {});
-      else if (action === 'arrival') await ridesAPI.confirmArrival(activeTrip._id).catch(() => {});
-      else if (action === 'complete') await ridesAPI.complete(activeTrip._id).catch(() => {});
+      let res;
+      if (action === 'start') res = await ridesAPI.start(activeTrip._id).catch(() => null);
+      else if (action === 'arrival') res = await ridesAPI.confirmArrival(activeTrip._id).catch(() => null);
+      else if (action === 'complete') res = await ridesAPI.complete(activeTrip._id).catch(() => null);
 
       const newStatusMap = { start: 'in_progress', arrival: 'driver_arrived', complete: 'completed' };
       const newStatus = newStatusMap[action] || 'completed';
-
-      // Update local storage
-      const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
-      const updated = localRides.map(r => r._id === activeTrip._id ? { ...r, status: newStatus } : r);
-      localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
 
       if (newStatus === 'completed') {
         setActiveTrip(null);
         toast.success(`Trip Completed! Payment recorded.`);
       } else {
-        setActiveTrip(prev => ({ ...prev, status: newStatus }));
+        const updatedTrip = res?.data?.trip || { ...activeTrip, status: newStatus };
+        setActiveTrip(updatedTrip);
         toast.success(`Status updated: ${newStatus}`);
       }
       fetchData();
@@ -226,9 +224,9 @@ const DriverDashboard = () => {
   const getNextAction = () => {
     if (!activeTrip) return null;
     switch (activeTrip.status) {
-      case 'accepted': return { action: 'start', label: t('driver.startTrip') || 'Start Trip' };
-      case 'arrived': return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
-      case 'ongoing': return { action: 'arrival', label: t('driver.confirmArrival') || 'Confirm Arrival' };
+      case 'driver_arriving': return { action: 'arrival', label: t('driver.confirmArrival') || 'Confirm Arrival' };
+      case 'driver_arrived': return { action: 'start', label: t('driver.startTrip') || 'Start Trip' };
+      case 'in_progress': return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
       default: return null;
     }
   };

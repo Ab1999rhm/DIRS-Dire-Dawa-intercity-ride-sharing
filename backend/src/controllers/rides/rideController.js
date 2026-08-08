@@ -118,8 +118,19 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
   const io = getIO();
 
   if (nearbyDrivers.length > 0) {
+    const populated = await RideRequest.findById(rideRequest._id).populate('passenger', 'firstName lastName phoneNumber rating');
+    const rr = populated.toObject();
     io.to('drivers').emit('new_ride_request', {
-      rideRequest: rideRequest.toObject(),
+      rideRequest: {
+        ...rr,
+        _id: rr._id,
+        passenger: rr.passenger,
+        pickup: rr.pickupLocation,
+        dropoff: rr.dropoffLocation,
+        fare: { totalFare: rr.estimatedFare, currency: 'ETB' },
+        distance: rr.route?.distance ? rr.route.distance / 1000 : 0,
+        duration: rr.route?.duration ? rr.route.duration / 60 : 0,
+      },
       nearbyDriversCount: nearbyDrivers.length
     });
   }
