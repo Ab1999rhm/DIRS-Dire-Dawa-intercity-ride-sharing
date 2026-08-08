@@ -903,15 +903,7 @@ const PassengerHome = () => {
                 popup: m.props?.children?.props?.children || '',
               })),
             ]}
-            polyline={activeRide ? {
-              positions: [pickupCoords, dropoffCoords].filter(Boolean),
-              color: '#2563eb',
-              weight: 4,
-              dashArray: '8 8',
-            } : null}
-            showRecenter={true}
-            showFullscreen={true}
-            showZoomButtons={true}
+            polylinePoints={activeRide ? [pickupCoords, dropoffCoords].filter(Boolean) : null}
           />
 
           <div className={`driver-arriving-badge ${rideState === 'driver_arriving' ? 'arriving' : ''}`}>
@@ -998,15 +990,7 @@ const PassengerHome = () => {
                 popup: m.props?.children?.props?.children || '',
               })),
             ]}
-            polyline={activeRide ? {
-              positions: [pickupCoords, dropoffCoords].filter(Boolean),
-              color: '#2563eb',
-              weight: 4,
-              dashArray: '8 8',
-            } : null}
-            showRecenter={true}
-            showFullscreen={true}
-            showZoomButtons={true}
+            polylinePoints={activeRide ? [pickupCoords, dropoffCoords].filter(Boolean) : null}
           />
 
           <h2 className="passenger-section-title">

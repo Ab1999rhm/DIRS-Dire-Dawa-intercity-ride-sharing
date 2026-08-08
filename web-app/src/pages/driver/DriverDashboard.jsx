@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, paymentsAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
+import L from 'leaflet';
 import {
   FaCar, FaPowerOff, FaMapMarkerAlt, FaPhone, FaCheck, FaTimes,
   FaStar, FaMoneyBillWave, FaClock, FaRoad, FaBell, FaSearch,
@@ -13,6 +14,27 @@ import {
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import './Driver.css';
+
+const driverIcon = L.divIcon({
+  className: 'driver-marker',
+  html: '<div style="background:#2563eb;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">D</div>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
+
+const pickupIcon = L.divIcon({
+  className: 'pickup-marker',
+  html: '<div style="background:#16a34a;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">P</div>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
+
+const dropoffIcon = L.divIcon({
+  className: 'dropoff-marker',
+  html: '<div style="background:#dc2626;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">D</div>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
 
 const SERVICES = [
   { id: 'sedan', icon: FaCar, label: 'Sedan', color: '#2563eb' },
@@ -45,9 +67,17 @@ const DriverDashboard = () => {
   const [error, setError] = useState(null);
   const [watchId, setWatchId] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
 
   useEffect(() => {
     fetchData();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setMapCenter([pos.coords.latitude, pos.coords.longitude]),
+        () => {},
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
     return () => { if (watchId) navigator.geolocation.clearWatch(watchId); };
   }, []);
 
@@ -241,15 +271,15 @@ const DriverDashboard = () => {
         )}
       </div>
 
-      <div style={{ margin: '14px 0' }}>
+      <div className="driver-map-container">
         <FlexibleMap
-          center={[9.6009, 41.8508]}
-          zoom={14}
-          defaultHeight="260px"
+          center={activeTrip?.pickup?.coordinates || mapCenter}
+          zoom={activeTrip ? 15 : 14}
+          defaultHeight="280px"
           markers={[
-            { position: [9.6009, 41.8508], popup: 'Driver Current Position' },
-            ...(activeTrip?.pickup?.coordinates ? [{ position: activeTrip.pickup.coordinates, popup: 'Passenger Pickup' }] : []),
-            ...(activeTrip?.dropoff?.coordinates ? [{ position: activeTrip.dropoff.coordinates, popup: 'Passenger Dropoff' }] : [])
+            { position: mapCenter, icon: driverIcon, popup: 'My Position' },
+            ...(activeTrip?.pickup?.coordinates ? [{ position: activeTrip.pickup.coordinates, icon: pickupIcon, popup: 'Pickup' }] : []),
+            ...(activeTrip?.dropoff?.coordinates ? [{ position: activeTrip.dropoff.coordinates, icon: dropoffIcon, popup: 'Dropoff' }] : [])
           ]}
           polylinePoints={activeTrip?.pickup?.coordinates && activeTrip?.dropoff?.coordinates ? [activeTrip.pickup.coordinates, activeTrip.dropoff.coordinates] : null}
           showControls={true}
