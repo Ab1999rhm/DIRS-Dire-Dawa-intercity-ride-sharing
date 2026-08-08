@@ -8,7 +8,7 @@ import { useToast } from '../../components/common/Toast';
 import L from 'leaflet';
 import {
   FaCar, FaPowerOff, FaMapMarkerAlt, FaPhone, FaCheck, FaTimes,
-  FaStar, FaMoneyBillWave, FaClock, FaRoad, FaBell, FaSearch,
+  FaStar, FaMoneyBillWave, FaClock, FaRoad, FaBell,
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
   FaHome, FaListUl, FaWallet, FaCog, FaChevronRight
 } from 'react-icons/fa';
@@ -258,15 +258,6 @@ const DriverDashboard = () => {
           <FaBell />
           {rideRequests.length > 0 && <span className="bell-badge">{rideRequests.length}</span>}
         </button>
-      </div>
-
-      <div className="driver-search-bar">
-        <FaSearch className="search-icon" />
-        <input
-          className="search-input"
-          type="text"
-          placeholder={t('passenger.whereTo') || 'Where are you going?'}
-        />
       </div>
 
       <div className="driver-online-row">
