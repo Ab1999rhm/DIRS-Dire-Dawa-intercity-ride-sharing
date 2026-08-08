@@ -76,7 +76,7 @@ exports.processPayment = asyncHandler(async (req, res) => {
     gatewayResponse = result;
   } else if (method === 'chapa') {
     const result = await processChapaPayment(trip.fare.totalFare, req.user.email);
-    paymentStatus = result.success ? 'completed' : 'failed';
+    paymentStatus = result.success ? 'pending' : 'failed';
     transactionId = result.transactionId;
     gatewayResponse = result;
   }
@@ -119,7 +119,7 @@ exports.processPayment = asyncHandler(async (req, res) => {
     });
   }
 
-  const result = { payment };
+  const result = { payment, checkoutUrl: gatewayResponse?.checkoutUrl || null };
   setIdempotencyKey(idempotencyKey, result);
 
   logger.info('Payment processed', {
@@ -273,8 +273,8 @@ const processChapaPayment = async (amount, email) => {
         currency: 'ETB',
         email,
         tx_ref: `DIRS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
-        callback_url: `${process.env.BACKEND_URL}/api/payments/chapa/callback`,
-        return_url: `${process.env.FRONTEND_URL}/payment/success`
+        callback_url: `${process.env.BACKEND_URL}/api/payments/chapa/webhook`,
+        return_url: `${process.env.FRONTEND_URL}`
       },
       {
         headers: {
