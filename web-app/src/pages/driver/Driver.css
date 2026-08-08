@@ -15,14 +15,14 @@
 
 /* === Logo Bar === */
 .driver-logo-bar {
-  display: flex;
-  justify-content: center;
-  padding: 12px 0 8px;
+  width: 100%;
   margin-bottom: 8px;
+  line-height: 0;
 }
 .driver-logo {
-  width: 300px;
+  width: 100%;
   height: auto;
+  display: block;
   filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));
 }
 
