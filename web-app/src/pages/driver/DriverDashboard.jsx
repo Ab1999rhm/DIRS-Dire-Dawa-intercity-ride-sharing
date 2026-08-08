@@ -10,7 +10,7 @@ import {
   FaCar, FaPowerOff, FaMapMarkerAlt, FaPhone, FaCheck, FaTimes,
   FaStar, FaMoneyBillWave, FaClock, FaRoad, FaBell, FaSearch,
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
-  FaHome, FaListUl, FaWallet, FaCog
+  FaHome, FaListUl, FaWallet, FaCog, FaChevronRight
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import './Driver.css';
@@ -69,6 +69,7 @@ const DriverDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [vehicleType, setVehicleType] = useState(null);
+  const [vehicle, setVehicle] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -118,6 +119,7 @@ const DriverDashboard = () => {
       ]);
 
       if (vehicleRes.data?.vehicle) {
+        setVehicle(vehicleRes.data.vehicle);
         setVehicleType(vehicleRes.data.vehicle.type);
       }
 
@@ -292,27 +294,39 @@ const DriverDashboard = () => {
         />
       </div>
 
-      <h2 className="driver-section-title">My Vehicle</h2>
-      <div className="driver-services-grid">
-        {SERVICES.map(s => {
-          const Icon = s.icon;
-          const isActive = vehicleType === s.id;
-          return (
-            <div
-              key={s.id}
-              className={`driver-service-card ${isActive ? 'active' : ''}`}
-              onClick={() => navigate('/driver/vehicle')}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="service-card-icon" style={{ color: isActive ? '#fff' : s.color, background: isActive ? s.color : undefined }}>
-                <Icon />
-              </div>
-              <span className="service-card-label">{s.label}</span>
-              {isActive && <span className="service-card-badge">Registered</span>}
+      {vehicle ? (
+        <div className="driver-vehicle-card" onClick={() => navigate('/driver/vehicle')} style={{ cursor: 'pointer' }}>
+          <div className="vehicle-card-left">
+            <div className="vehicle-card-icon">
+              <FaCar />
             </div>
-          );
-        })}
-      </div>
+            <div className="vehicle-card-info">
+              <h3>{vehicle.make} {vehicle.model}</h3>
+              <p>{vehicle.color} • {vehicle.year}</p>
+              <span className="vehicle-plate">{vehicle.plateNumber}</span>
+            </div>
+          </div>
+          <div className="vehicle-card-right">
+            <span className={`vehicle-status-badge ${vehicle.status || 'active'}`}>
+              {vehicle.status === 'approved' ? 'Active' : vehicle.status === 'pending' ? 'Pending' : 'Active'}
+            </span>
+            <FaChevronRight style={{ color: 'var(--text-muted)', fontSize: 14 }} />
+          </div>
+        </div>
+      ) : (
+        <div className="driver-vehicle-card empty" onClick={() => navigate('/driver/vehicle')} style={{ cursor: 'pointer' }}>
+          <div className="vehicle-card-left">
+            <div className="vehicle-card-icon empty-icon">
+              <FaCar />
+            </div>
+            <div className="vehicle-card-info">
+              <h3>No Vehicle Registered</h3>
+              <p>Add your vehicle to start accepting rides</p>
+            </div>
+          </div>
+          <FaChevronRight style={{ color: 'var(--text-muted)', fontSize: 14 }} />
+        </div>
+      )}
 
       {activeTrip && (
         <div className="driver-active-section">
