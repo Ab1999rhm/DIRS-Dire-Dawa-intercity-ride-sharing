@@ -5,7 +5,7 @@ import {
   FaExchangeAlt, FaClock, FaMoneyBillWave, FaPhone, FaRoute, FaWallet,
   FaUserShield, FaUsers, FaMobileAlt, FaBell, FaMotorcycle,
   FaShuttleVan, FaBus, FaBolt, FaShareAlt, FaTimes, FaCheck, FaChevronRight,
-  FaLocationArrow, FaSpinner, FaTimesCircle, FaSmile, FaThumbsUp, FaTag, FaChair, FaComments, FaQrcode, FaWifi, FaSms, FaCalculator
+  FaLocationArrow, FaSpinner, FaTimesCircle, FaSmile, FaThumbsUp, FaTag, FaChair, FaComments, FaQrcode, FaWifi, FaSms, FaCalculator, FaArrowRight
 } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -182,6 +182,7 @@ const PassengerHome = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [rideState, setRideState] = useState('idle');
+  const [bookingStep, setBookingStep] = useState(1);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [completedRide, setCompletedRide] = useState(null);
@@ -221,6 +222,7 @@ const PassengerHome = () => {
   useEffect(() => {
     if (dropoff) {
       setRideType(isWithinDireDawa(dropoff, dropoffCoords) ? 'intraCity' : 'intercity');
+      setBookingStep(prev => Math.max(prev, 2));
     }
   }, [dropoff, dropoffCoords]);
 
@@ -333,6 +335,7 @@ const PassengerHome = () => {
 
   const resetBookingState = () => {
     setRideState('idle');
+    setBookingStep(1);
     setActiveRide(null);
     setFoundDriverInfo(null);
     setDriverLocationState(null);
@@ -340,6 +343,11 @@ const PassengerHome = () => {
     setLiveFare(0);
     setTripTimer(0);
     setSearchingDrivers(0);
+    setSelectedVehicle(null);
+    setSelectedSeats([]);
+    setPromoCode('');
+    setScheduleEnabled(false);
+    setScheduledTime('');
     clearInterval(searchingIntervalRef.current);
     clearInterval(timerIntervalRef.current);
   };
@@ -1295,148 +1303,156 @@ const PassengerHome = () => {
       </div>
 
       <div className="passenger-booking-card">
-        <div className="location-inputs">
-          <div className="location-input-wrapper" style={{ position: 'relative' }}>
-            <div className="location-dot pickup"></div>
-            <input
-              ref={pickupInputRef}
-              className="location-input"
-              type="text"
-              placeholder={t('passenger.pickup') || 'Pickup location'}
-              value={pickup}
-              onChange={(e) => {
-                setPickup(e.target.value);
-                setPickupCoords(null);
-                setShowPickupSuggestions(true);
-                fetchSuggestions(e.target.value, setPickupSuggestions);
-              }}
-              onFocus={() => setShowPickupSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
-            />
-            {showPickupSuggestions && pickupSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {pickupSuggestions.map((s, i) => (
-                  <div
-                    key={i}
-                    className="suggestion-item"
-                    onMouseDown={() => {
-                      setPickup(s.label);
-                      setPickupCoords([s.lat, s.lon]);
-                      setPickupSuggestions([]);
-                      setShowPickupSuggestions(false);
-                    }}
-                  >
-                    <FaMapMarkerAlt className="suggestion-icon" />
-                    <span>{s.label}</span>
-                  </div>
-                ))}
-              </div>
+        {/* STEP 1: Location Inputs — always shown */}
+        <div className="booking-step">
+          <div className="booking-step-header">
+            <span className="booking-step-number">1</span>
+            <span className="booking-step-label">Set Locations</span>
+            {bookingStep > 1 && pickupCoords && dropoffCoords && (
+              <span className="booking-step-done">✓ {pickup} → {dropoff}</span>
             )}
           </div>
-          <div className="location-divider">
-            <div className="divider-line"></div>
-            <button className="location-btn" onClick={swapLocations}>
-              <FaExchangeAlt />
-            </button>
-            <div className="divider-line"></div>
+          <div className="location-inputs">
+            <div className="location-input-wrapper" style={{ position: 'relative' }}>
+              <div className="location-dot pickup"></div>
+              <input
+                ref={pickupInputRef}
+                className="location-input"
+                type="text"
+                placeholder={t('passenger.pickup') || 'Pickup location'}
+                value={pickup}
+                onChange={(e) => {
+                  setPickup(e.target.value);
+                  setPickupCoords(null);
+                  setShowPickupSuggestions(true);
+                  fetchSuggestions(e.target.value, setPickupSuggestions);
+                }}
+                onFocus={() => setShowPickupSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
+              />
+              {showPickupSuggestions && pickupSuggestions.length > 0 && (
+                <div className="suggestions-dropdown">
+                  {pickupSuggestions.map((s, i) => (
+                    <div
+                      key={i}
+                      className="suggestion-item"
+                      onMouseDown={() => {
+                        setPickup(s.label);
+                        setPickupCoords([s.lat, s.lon]);
+                        setPickupSuggestions([]);
+                        setShowPickupSuggestions(false);
+                      }}
+                    >
+                      <FaMapMarkerAlt className="suggestion-icon" />
+                      <span>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="location-divider">
+              <div className="divider-line"></div>
+              <button className="location-btn" onClick={swapLocations}>
+                <FaExchangeAlt />
+              </button>
+              <div className="divider-line"></div>
+            </div>
+            <div className="location-input-wrapper" style={{ position: 'relative' }}>
+              <div className="location-dot dropoff"></div>
+              <input
+                ref={dropoffInputRef}
+                className="location-input"
+                type="text"
+                placeholder={t('passenger.dropoff') || 'Drop-off location'}
+                value={dropoff}
+                onChange={(e) => {
+                  setDropoff(e.target.value);
+                  setDropoffCoords(null);
+                  setShowDropoffSuggestions(true);
+                  fetchSuggestions(e.target.value, setDropoffSuggestions);
+                }}
+                onFocus={() => setShowDropoffSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
+              />
+              {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
+                <div className="suggestions-dropdown">
+                  {dropoffSuggestions.map((s, i) => (
+                    <div
+                      key={i}
+                      className="suggestion-item"
+                      onMouseDown={() => {
+                        setDropoff(s.label);
+                        setDropoffCoords([s.lat, s.lon]);
+                        setDropoffSuggestions([]);
+                        setShowDropoffSuggestions(false);
+                      }}
+                    >
+                      <FaMapMarkerAlt className="suggestion-icon" />
+                      <span>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="location-input-wrapper" style={{ position: 'relative' }}>
-            <div className="location-dot dropoff"></div>
-            <input
-              ref={dropoffInputRef}
-              className="location-input"
-              type="text"
-              placeholder={t('passenger.dropoff') || 'Drop-off location'}
-              value={dropoff}
-              onChange={(e) => {
-                setDropoff(e.target.value);
-                setDropoffCoords(null);
-                setShowDropoffSuggestions(true);
-                fetchSuggestions(e.target.value, setDropoffSuggestions);
+          {bookingStep === 1 && pickupCoords && dropoffCoords && (
+            <button className="booking-continue-btn" onClick={() => setBookingStep(2)}>
+              Continue <FaArrowRight />
+            </button>
+          )}
+        </div>
+
+        {/* STEP 2: Ride Type + Vehicle Selector */}
+        {bookingStep >= 2 && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">2</span>
+              <span className="booking-step-label">
+                {rideType === 'intercity' ? 'Intercity Ride' : 'Intra-City Ride'}
+              </span>
+              {bookingStep > 2 && selectedVehicle && (
+                <span className="booking-step-done">✓ {selectedVehicle.name}</span>
+              )}
+            </div>
+            <div className="passenger-tab-bar" style={{ marginBottom: 12 }}>
+              <button
+                className={`passenger-tab ${rideType === 'intraCity' ? 'active' : ''}`}
+                disabled
+              >
+                {t('passenger.intraCity') || 'Intra-City'}
+              </button>
+              <button
+                className={`passenger-tab ${rideType === 'intercity' ? 'active' : ''}`}
+                disabled
+              >
+                {t('passenger.intercity') || 'Intercity'}
+              </button>
+            </div>
+            <VehicleCategorySelector
+              selectedCategory={selectedVehicle || null}
+              onSelectCategory={(cat) => {
+                const found = VEHICLES.find(v => v.id === cat.id);
+                if (found) {
+                  setSelectedVehicle(found);
+                  setBookingStep(3);
+                }
               }}
-              onFocus={() => setShowDropoffSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
+              rideType={rideType}
+              distanceKm={pickupCoords && dropoffCoords ? haversineDistance(pickupCoords[0], pickupCoords[1], dropoffCoords[0], dropoffCoords[1]) : 5}
+              passengersCount={passengersCount}
             />
-            {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {dropoffSuggestions.map((s, i) => (
-                  <div
-                    key={i}
-                    className="suggestion-item"
-                    onMouseDown={() => {
-                      setDropoff(s.label);
-                      setDropoffCoords([s.lat, s.lon]);
-                      setDropoffSuggestions([]);
-                      setShowDropoffSuggestions(false);
-                    }}
-                  >
-                    <FaMapMarkerAlt className="suggestion-icon" />
-                    <span>{s.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="passenger-tab-bar">
-          <button
-            className={`passenger-tab ${rideType === 'intraCity' ? 'active' : ''}`}
-            onClick={() => setRideType('intraCity')}
-            disabled={dropoff && !isWithinDireDawa(dropoff, dropoffCoords)}
-          >
-            {t('passenger.intraCity') || 'Intra-City'}
-          </button>
-          <button
-            className={`passenger-tab ${rideType === 'intercity' ? 'active' : ''}`}
-            onClick={() => setRideType('intercity')}
-            disabled={dropoff && isWithinDireDawa(dropoff, dropoffCoords)}
-          >
-            {t('passenger.intercity') || 'Intercity'}
-          </button>
-        </div>
-
-        <VehicleCategorySelector
-          selectedCategory={selectedVehicle || null}
-          onSelectCategory={(cat) => {
-            // VEHICLES is derived from VEHICLE_CATEGORIES, so IDs always match
-            const found = VEHICLES.find(v => v.id === cat.id);
-            if (found) setSelectedVehicle(found);
-          }}
-          rideType={rideType}
-          distanceKm={pickupCoords && dropoffCoords ? haversineDistance(pickupCoords[0], pickupCoords[1], dropoffCoords[0], dropoffCoords[1]) : 5}
-          passengersCount={passengersCount}
-        />
-
-        {rideType === 'intercity' && (
-          <div style={{ margin: '12px 0' }}>
-            <button
-              type="button"
-              onClick={() => setShowSeatPicker(true)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: '#eff6ff',
-                color: '#2563eb',
-                border: '1px dashed #2563eb',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <FaChair /> {selectedSeats.length > 0 ? `Seats Selected: ${selectedSeats.join(', ')}` : 'Pick Intercity Bus Seats'}
-            </button>
           </div>
         )}
 
-        {selectedVehicle && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '12px 0 6px 0' }}>
-              <h3 className="passenger-subsection" style={{ margin: 0 }}>{t('passenger.fareBreakdown') || 'Fare Breakdown'}</h3>
+        {/* STEP 3: Fare Breakdown */}
+        {bookingStep >= 3 && selectedVehicle && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">3</span>
+              <span className="booking-step-label">Fare Breakdown</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 8px 0' }}>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>Estimated Total</span>
               <button
                 type="button"
                 onClick={() => setShowFareBreakdown(true)}
@@ -1473,35 +1489,95 @@ const PassengerHome = () => {
                 <span>ETB {fare.total}</span>
               </div>
             </div>
-          </>
+            {bookingStep === 3 && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 4 : 5)}>
+                Continue <FaArrowRight />
+              </button>
+            )}
+          </div>
         )}
 
-        {selectedVehicle && hasBothLocations && (
-          <>
-            <h3 className="passenger-subsection">Promo Code</h3>
+        {/* STEP 4: Seat Picker (intercity only) */}
+        {bookingStep >= 4 && rideType === 'intercity' && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">4</span>
+              <span className="booking-step-label">Select Bus Seats</span>
+              {bookingStep > 4 && selectedSeats.length > 0 && (
+                <span className="booking-step-done">✓ Seats: {selectedSeats.join(', ')}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSeatPicker(true)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#eff6ff',
+                color: '#2563eb',
+                border: '1px dashed #2563eb',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                fontSize: 14
+              }}
+            >
+              <FaChair /> {selectedSeats.length > 0 ? `Seats: ${selectedSeats.join(', ')} (Tap to change)` : 'Pick Intercity Bus Seats'}
+            </button>
+            {bookingStep === 4 && selectedSeats.length > 0 && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(5)}>
+                Continue <FaArrowRight />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* STEP 5: Promo Code */}
+        {bookingStep >= 5 && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">{rideType === 'intercity' ? '5' : '4'}</span>
+              <span className="booking-step-label">Promo Code</span>
+              {promoCode && <span className="booking-step-done">✓ {promoCode}</span>}
+            </div>
             <div className="promo-code-input">
               <input
                 className="location-input"
                 type="text"
-                placeholder="Enter promo code"
+                placeholder="Enter promo code (optional)"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
               />
             </div>
-          </>
+            {bookingStep === (rideType === 'intercity' ? 5 : 4) && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 6 : 5)}>
+                {promoCode ? 'Apply & Continue' : 'Skip'} <FaArrowRight />
+              </button>
+            )}
+          </div>
         )}
 
-        {selectedVehicle && (
-          <>
+        {/* STEP 6: Schedule Ride */}
+        {bookingStep >= 6 && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">{rideType === 'intercity' ? '6' : '5'}</span>
+              <span className="booking-step-label">Schedule Ride</span>
+              {scheduleEnabled && scheduledTime && (
+                <span className="booking-step-done">✓ {new Date(scheduledTime).toLocaleString()}</span>
+              )}
+            </div>
             <div className="schedule-ride-toggle">
               <span className="schedule-toggle-label">
-                <FaClock /> Schedule Ride
+                <FaClock /> Schedule for later
               </span>
               <button
                 className={`schedule-toggle-switch ${scheduleEnabled ? 'active' : ''}`}
                 onClick={() => setScheduleEnabled(!scheduleEnabled)}
-                aria-label={scheduleEnabled ? 'Disable schedule ride' : 'Enable schedule ride'}
-                aria-pressed={scheduleEnabled}
               />
             </div>
             {scheduleEnabled && (
@@ -1510,15 +1586,24 @@ const PassengerHome = () => {
                 className="schedule-datetime-input"
                 value={scheduledTime}
                 onChange={(e) => setScheduledTime(e.target.value)}
-                aria-label="Scheduled ride date and time"
+                style={{ marginTop: 8 }}
               />
             )}
-          </>
+            {bookingStep === (rideType === 'intercity' ? 6 : 5) && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 7 : 6)}>
+                Continue <FaArrowRight />
+              </button>
+            )}
+          </div>
         )}
 
-        {selectedVehicle && (
-          <>
-            <h3 className="passenger-subsection">{t('passenger.selectPayment') || 'Payment Method'}</h3>
+        {/* STEP 7: Payment Method */}
+        {bookingStep >= 7 && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">{rideType === 'intercity' ? '7' : '6'}</span>
+              <span className="booking-step-label">Payment Method</span>
+            </div>
             <div className="passenger-payment-grid">
               {[
                 { id: 'cash', icon: <FaMoneyBillWave />, label: t('passenger.cash') || 'Cash' },
@@ -1535,17 +1620,50 @@ const PassengerHome = () => {
                 </div>
               ))}
             </div>
-          </>
+            {bookingStep === (rideType === 'intercity' ? 7 : 6) && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 8 : 7)}>
+                Continue <FaArrowRight />
+              </button>
+            )}
+          </div>
         )}
 
-        <button
-          className="passenger-primary-btn"
-          disabled={loading || !selectedVehicle}
-          onClick={handleOpenBookingConfirm}
-          aria-label="Book ride"
-        >
-          <FaCar /> {t('passenger.bookNow') || 'Book Ride'}
-        </button>
+        {/* STEP 8/7: Book Now */}
+        {bookingStep >= (rideType === 'intercity' ? 8 : 7) && (
+          <div className="booking-step">
+            <div className="booking-step-header">
+              <span className="booking-step-number">{rideType === 'intercity' ? '8' : '7'}</span>
+              <span className="booking-step-label">Confirm & Book</span>
+            </div>
+            <div className="booking-summary">
+              <div className="booking-summary-row">
+                <span>Route</span>
+                <span>{pickup} → {dropoff}</span>
+              </div>
+              <div className="booking-summary-row">
+                <span>Vehicle</span>
+                <span>{selectedVehicle?.name}</span>
+              </div>
+              <div className="booking-summary-row">
+                <span>Payment</span>
+                <span style={{ textTransform: 'capitalize' }}>{paymentMethod}</span>
+              </div>
+              <div className="booking-summary-row total">
+                <span>Total</span>
+                <span>ETB {fare.total}</span>
+              </div>
+            </div>
+            <button
+              className="passenger-primary-btn"
+              disabled={loading || !selectedVehicle}
+              onClick={handleOpenBookingConfirm}
+              aria-label="Book ride"
+              style={{ marginTop: 12 }}
+            >
+              <FaCar /> {t('passenger.bookNow') || 'Book Ride'} — ETB {fare.total}
+            </button>
+          </div>
+        )}
       </div>
 
       {recentTrips.length > 0 && (
@@ -1664,7 +1782,10 @@ const PassengerHome = () => {
         isOpen={showSeatPicker}
         onClose={() => setShowSeatPicker(false)}
         selectedSeats={selectedSeats}
-        onConfirmSeats={setSelectedSeats}
+        onConfirmSeats={(seats) => {
+          setSelectedSeats(seats);
+          if (seats.length > 0) setBookingStep(prev => Math.max(prev, 6));
+        }}
         passengersCount={passengersCount}
       />
 
