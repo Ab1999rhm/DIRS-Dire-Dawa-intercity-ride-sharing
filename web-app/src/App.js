@@ -150,18 +150,20 @@ const PassengerRoutes = React.memo(() => (
 
 const DriverRoutes = React.memo(() => (
   <div className="app-layout">
-    <main className="app-main" style={{ marginLeft: 0, paddingBottom: '70px' }}>
-      <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          <Route index element={<DriverDashboard />} />
-          <Route path="trips" element={<DriverTrips />} />
-          <Route path="earnings" element={<DriverEarnings />} />
-          <Route path="vehicle" element={<DriverVehicle />} />
-          <Route path="profile" element={<DriverProfile />} />
-          <Route path="*" element={<Navigate to="/driver" />} />
-        </Routes>
-      </Suspense>
-    </main>
+    <div className="app-body">
+      <main className="app-main" style={{ marginLeft: 0, paddingBottom: '70px' }}>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            <Route index element={<DriverDashboard />} />
+            <Route path="trips" element={<DriverTrips />} />
+            <Route path="earnings" element={<DriverEarnings />} />
+            <Route path="vehicle" element={<DriverVehicle />} />
+            <Route path="profile" element={<DriverProfile />} />
+            <Route path="*" element={<Navigate to="/driver" />} />
+          </Routes>
+        </Suspense>
+      </main>
+    </div>
     <Suspense fallback={null}>
       <DriverBottomNav />
     </Suspense>
@@ -200,9 +202,7 @@ function App() {
 
   const driverRoute = useMemo(() => (
     <RoleRoute allowedRole="driver">
-      <AppLayout>
-        <DriverRoutes />
-      </AppLayout>
+      <DriverRoutes />
     </RoleRoute>
   ), []);
 

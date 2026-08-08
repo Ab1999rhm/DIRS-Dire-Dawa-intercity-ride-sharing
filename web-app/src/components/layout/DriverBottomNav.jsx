@@ -21,7 +21,7 @@ const DriverBottomNav = () => {
   };
 
   return (
-    <nav className="passenger-bottom-nav" role="navigation" aria-label="Driver navigation">
+    <nav className="driver-bottom-nav" role="navigation" aria-label="Driver navigation">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = isActive(tab);
