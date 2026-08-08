@@ -171,6 +171,55 @@
   color: var(--text-secondary);
 }
 
+/* === Destination Picker === */
+.driver-destination-picker {
+  margin: 12px 0;
+  padding: 14px;
+  background: var(--card);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+}
+.destination-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.destination-label svg { color: var(--primary); }
+.destination-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.destination-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 2px solid var(--border-light);
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+.destination-chip:hover {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+.destination-chip.active {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+}
+.dest-emoji { font-size: 18px; }
+
 /* === Section Titles === */
 .driver-section-title {
   font-size: 17px;

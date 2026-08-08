@@ -319,6 +319,20 @@ router.put('/location', protect, validateUpdateLocation, authController.updateLo
 
 router.put('/driver/status', protect, authController.updateDriverStatus);
 
+router.put('/driver/destination', protect, async (req, res) => {
+  try {
+    const User = require('../../models/User');
+    const { city, coordinates } = req.body;
+    const update = {
+      intendedDestination: city ? { city, coordinates, updatedAt: new Date() } : { city: null, coordinates: null, updatedAt: null }
+    };
+    await User.findByIdAndUpdate(req.user._id, update);
+    res.json({ message: 'Destination updated', intendedDestination: update.intendedDestination });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/documents', protect, documentController.getDocuments);
 
 router.post('/send-phone-otp', authController.sendPhoneOTP);

@@ -15,6 +15,15 @@ import {
 import FlexibleMap from '../../components/common/FlexibleMap';
 import './Driver.css';
 
+const INTERCITY_DESTINATIONS = [
+  { key: 'harar', label: 'Harar', emoji: '🕌' },
+  { key: 'addis ababa', label: 'Addis Ababa', emoji: '🏙️' },
+  { key: 'combolcha', label: 'Combolcha', emoji: '🏔️' },
+  { key: 'jijiga', label: 'Jijiga', emoji: '🏜️' },
+  { key: 'awash', label: 'Awash', emoji: '🌿' },
+  { key: 'debre markos', label: 'Debre Markos', emoji: '⛪' },
+];
+
 const driverIcon = L.divIcon({
   className: 'driver-marker',
   html: '<div style="background:#2563eb;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">D</div>',
@@ -69,6 +78,7 @@ const DriverDashboard = () => {
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [vehicleType, setVehicleType] = useState(null);
   const [vehicle, setVehicle] = useState(null);
+  const [intendedDestination, setIntendedDestination] = useState(user?.intendedDestination?.city || null);
 
   useEffect(() => {
     fetchData();
@@ -121,7 +131,7 @@ const DriverDashboard = () => {
 
       if (vehicleRes.data?.vehicle) {
         setVehicle(vehicleRes.data.vehicle);
-        setVehicleType(vehicleRes.data.vehicle.type);
+        setVehicleType(vehicleRes.data.vehicle.serviceType || vehicleRes.data.vehicle.type);
       }
 
       const activeTrips = [...(activeTripsRes.data?.trips || []), ...(completedTripsRes.data?.trips || [])];
@@ -155,10 +165,21 @@ const DriverDashboard = () => {
     }
   };
 
+  const handleDestinationChange = useCallback(async (dest) => {
+    setIntendedDestination(dest?.key || null);
+    try {
+      await authAPI.updateDriverDestination(dest?.key || null, dest ? undefined : undefined);
+      toast.success(dest ? `Destination set to ${dest.label}` : 'Destination cleared');
+    } catch { toast.error('Failed to update destination'); }
+  }, [toast]);
+
   const toggleOnline = useCallback(() => {
     const newStatus = !isOnline;
+    if (newStatus && vehicleType === 'intercity' && !intendedDestination) {
+      toast.error('Please select a destination city before going online for intercity');
+      return;
+    }
     setIsOnline(newStatus);
-    // Persist online/offline status to backend
     const coords = mapCenter;
     authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]]).catch(() => {});
     if (newStatus) {
@@ -177,7 +198,7 @@ const DriverDashboard = () => {
       toast.info('You are now OFFLINE');
       if (watchId) { navigator.geolocation.clearWatch(watchId); setWatchId(null); }
     }
-  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter]);
+  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, vehicleType, intendedDestination]);
 
   const handleAcceptRide = async (rideId) => {
     try {
@@ -275,6 +296,26 @@ const DriverDashboard = () => {
           </div>
         )}
       </div>
+
+      {isOnline && (vehicleType === 'intercity' || vehicleType === 'both') && (
+        <div className="driver-destination-picker">
+          <p className="destination-label">
+            <FaMapMarkerAlt /> Where are you heading? (Intercity)
+          </p>
+          <div className="destination-grid">
+            {INTERCITY_DESTINATIONS.map(dest => (
+              <button
+                key={dest.key}
+                className={`destination-chip ${intendedDestination === dest.key ? 'active' : ''}`}
+                onClick={() => handleDestinationChange(intendedDestination === dest.key ? null : dest)}
+              >
+                <span className="dest-emoji">{dest.emoji}</span>
+                <span>{dest.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="driver-map-container">
         <FlexibleMap

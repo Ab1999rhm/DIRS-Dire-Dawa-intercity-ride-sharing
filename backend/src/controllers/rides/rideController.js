@@ -118,7 +118,8 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
   const nearbyDrivers = await findNearbyDrivers(
     toLngLat(pickupLocation.coordinates),
     normalizedRideType,
-    15000
+    15000,
+    dropoffLocation
   );
 
   const io = getIO();

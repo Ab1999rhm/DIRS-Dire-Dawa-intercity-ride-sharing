@@ -2,8 +2,44 @@ const Driver = require('../models/Driver');
 const Vehicle = require('../models/Vehicle');
 const User = require('../models/User');
 
-const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 10000) => {
+const INTERCITY_DESTINATIONS = {
+  'harar': { label: 'Harar', coordinates: [42.1200, 9.3110] },
+  'addis ababa': { label: 'Addis Ababa', coordinates: [38.7578, 9.0192] },
+  'combolcha': { label: 'Combolcha', coordinates: [39.8700, 8.9300] },
+  'jijiga': { label: 'Jijiga', coordinates: [42.8000, 9.3500] },
+  'dire dawa': { label: 'Dire Dawa', coordinates: [41.8500, 9.6000] },
+  'awash': { label: 'Awash', coordinates: [40.1500, 8.9833] },
+  'debre markos': { label: 'Debre Markos', coordinates: [37.7300, 10.3400] },
+};
+
+const matchDestinationCity = (dropoffAddress) => {
+  if (!dropoffAddress) return null;
+  const lower = dropoffAddress.toLowerCase();
+  for (const [key, dest] of Object.entries(INTERCITY_DESTINATIONS)) {
+    if (lower.includes(key)) return { key, ...dest };
+  }
+  return null;
+};
+
+const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 15000, dropoffInfo = null) => {
   // pickupCoordinates should already be [lng, lat] from the controller
+  const query = {
+    role: 'driver',
+    isActive: true,
+    isOnline: true,
+    'currentLocation.updatedAt': {
+      $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+    }
+  };
+
+  // For intercity rides, only match drivers whose destination matches
+  if (rideType === 'intercity' && dropoffInfo) {
+    const destCity = matchDestinationCity(dropoffInfo.address);
+    if (destCity) {
+      query['intendedDestination.city'] = destCity.key;
+    }
+  }
+
   const nearbyUsers = await User.aggregate([
     {
       $geoNear: {
@@ -11,14 +47,7 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1000
         distanceField: 'distance',
         maxDistance: maxDistance,
         spherical: true,
-        query: {
-          role: 'driver',
-          isActive: true,
-          isOnline: true,
-          'currentLocation.updatedAt': {
-            $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
-          }
-        }
+        query
       }
     },
     { $limit: 50 }
@@ -81,4 +110,4 @@ const calculateETA = (distanceMeters) => {
   return Math.ceil(distanceMeters / avgSpeedMs / 60);
 };
 
-module.exports = { findNearbyDrivers, calculateETA };
+module.exports = { findNearbyDrivers, calculateETA, INTERCITY_DESTINATIONS, matchDestinationCity };

@@ -53,6 +53,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  intendedDestination: {
+    city: { type: String, default: null },
+    coordinates: { type: [Number], default: null },
+    updatedAt: { type: Date, default: null }
+  },
   currentLocation: {
     type: { type: String, enum: ['Point'], default: 'Point' },
     coordinates: { type: [Number], default: [0, 0] },
