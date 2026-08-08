@@ -155,6 +155,15 @@ const INTERCITY_PLACES = [
 
 const HARDCODED_CITIES = [...DIRE_DAWA_PLACES, ...INTERCITY_PLACES];
 
+const isWithinDireDawa = (label, coords) => {
+  if (label && label.toLowerCase().includes('dire dawa')) return true;
+  if (coords && coords.length === 2) {
+    const [lat, lon] = coords;
+    return lat >= 9.55 && lat <= 9.66 && lon >= 41.80 && lon <= 41.92;
+  }
+  return false;
+};
+
 const PassengerHome = () => {
   const { t } = useLanguage();
   const { user, socket, tripStatusUpdate, rideAccepted, driverLocation, notifications } = useAuth();
@@ -208,6 +217,12 @@ const PassengerHome = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+
+  useEffect(() => {
+    if (dropoff) {
+      setRideType(isWithinDireDawa(dropoff, dropoffCoords) ? 'intraCity' : 'intercity');
+    }
+  }, [dropoff, dropoffCoords]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -1368,12 +1383,14 @@ const PassengerHome = () => {
           <button
             className={`passenger-tab ${rideType === 'intraCity' ? 'active' : ''}`}
             onClick={() => setRideType('intraCity')}
+            disabled={dropoff && !isWithinDireDawa(dropoff, dropoffCoords)}
           >
             {t('passenger.intraCity') || 'Intra-City'}
           </button>
           <button
             className={`passenger-tab ${rideType === 'intercity' ? 'active' : ''}`}
             onClick={() => setRideType('intercity')}
+            disabled={dropoff && isWithinDireDawa(dropoff, dropoffCoords)}
           >
             {t('passenger.intercity') || 'Intercity'}
           </button>
