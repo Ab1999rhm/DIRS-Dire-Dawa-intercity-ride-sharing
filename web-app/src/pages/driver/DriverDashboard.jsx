@@ -241,6 +241,10 @@ const DriverDashboard = () => {
 
   return (
     <div className="driver-page">
+      <div className="driver-logo-bar">
+        <img src="/logo.svg" alt="DIRS - Dire Dawa Ride Sharing" className="driver-logo" />
+      </div>
+
       {error && <div className="error-banner" onClick={() => setError(null)}>{error}</div>}
 
       <div className="driver-header-row">

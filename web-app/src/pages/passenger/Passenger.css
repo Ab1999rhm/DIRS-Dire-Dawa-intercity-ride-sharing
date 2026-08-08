@@ -4,6 +4,19 @@
   min-height: 100vh; background: var(--bg);
 }
 
+/* Logo Bar */
+.passenger-logo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+  margin-bottom: 4px;
+}
+.passenger-logo {
+  height: 44px;
+  width: auto;
+}
+
 /* Header */
 .passenger-header-row {
   display: flex; align-items: flex-start; justify-content: space-between;

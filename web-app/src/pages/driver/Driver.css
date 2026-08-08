@@ -13,6 +13,19 @@
   background: var(--bg);
 }
 
+/* === Logo Bar === */
+.driver-logo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+  margin-bottom: 4px;
+}
+.driver-logo {
+  height: 44px;
+  width: auto;
+}
+
 /* === Entrance Animations === */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(16px); }
