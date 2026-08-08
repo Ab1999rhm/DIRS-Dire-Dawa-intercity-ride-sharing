@@ -368,34 +368,7 @@ export const MapPlaceholder = () => (
 );
 
 export const DireDawaLogo = () => (
-  <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 200, height: 60 }}>
-    <defs>
-      <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#2563eb"/>
-        <stop offset="100%" stopColor="#1d4ed8"/>
-      </linearGradient>
-    </defs>
-    {/* Car icon */}
-    <g transform="translate(5, 12)">
-      <rect x="8" y="10" width="38" height="16" rx="5" fill="url(#logo-grad)"/>
-      <rect x="2" y="16" width="50" height="12" rx="4" fill="url(#logo-grad)"/>
-      <rect x="5" y="6" width="12" height="8" rx="2" fill="#3b82f6"/>
-      <rect x="20" y="4" width="22" height="10" rx="2" fill="#3b82f6"/>
-      <rect x="45" y="7" width="8" height="8" rx="2" fill="#3b82f6"/>
-      <circle cx="14" cy="28" r="5" fill="#1e293b"/>
-      <circle cx="46" cy="28" r="5" fill="#1e293b"/>
-      <circle cx="14" cy="28" r="2.5" fill="#64748b"/>
-      <circle cx="46" cy="28" r="2.5" fill="#64748b"/>
-      <rect x="50" y="18" width="4" height="5" rx="1.5" fill="#fbbf24"/>
-      <rect x="-1" y="18" width="3" height="5" rx="1.5" fill="#ef4444" opacity="0.8"/>
-    </g>
-    {/* Text */}
-    <text x="65" y="25" fill="#1e293b" fontSize="14" fontWeight="800" fontFamily="Inter, sans-serif">DIRE DAWA</text>
-    <text x="65" y="42" fill="#64748b" fontSize="9" fontWeight="500" fontFamily="Inter, sans-serif" letterSpacing="2">TRANSPORTATION</text>
-    {/* Road line under text */}
-    <line x1="65" y1="48" x2="195" y2="48" stroke="#e2e8f0" strokeWidth="1.5"/>
-    <line x1="65" y1="48" x2="130" y2="48" stroke="#2563eb" strokeWidth="1.5"/>
-  </svg>
+  <img src="/logo.png" alt="DIRS - Dire Dawa Ride Sharing" style={{ width: 200, height: 'auto', maxHeight: 60 }} />
 );
 
 export const WaveDecoration = () => (
