@@ -76,6 +76,19 @@ const userSchema = new mongoose.Schema({
     enum: ['en', 'am', 'om', 'so'],
     default: 'en'
   },
+  preferences: {
+    rideUpdates: { type: Boolean, default: true },
+    promotions: { type: Boolean, default: true },
+    safetyAlerts: { type: Boolean, default: true },
+    sound: { type: Boolean, default: true },
+    shareLocation: { type: Boolean, default: true },
+    allowAnalytics: { type: Boolean, default: false }
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'telebirr', 'chapa', 'wallet'],
+    default: 'cash'
+  },
   totalRatings: {
     type: Number,
     default: 0

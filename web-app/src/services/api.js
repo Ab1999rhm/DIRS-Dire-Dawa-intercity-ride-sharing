@@ -121,6 +121,7 @@ export const authAPI = {
   forgotPassword: (phoneNumber) => api.post('/auth/forgot-password', { phoneNumber }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
   deleteAccount: () => api.delete('/auth/account'),
+  updateDriverStatus: (isOnline, coordinates) => api.put('/auth/driver/status', { isOnline, coordinates }),
 };
 
 export const ridesAPI = {

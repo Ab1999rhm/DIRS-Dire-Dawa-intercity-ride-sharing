@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, paymentsAPI, vehiclesAPI } from '../../services/api';
+import { ridesAPI, paymentsAPI, vehiclesAPI, authAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import L from 'leaflet';
@@ -58,7 +58,7 @@ const DriverDashboard = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState(user?.isOnline || false);
   const [rideRequests, setRideRequests] = useState([]);
   const [activeTrip, setActiveTrip] = useState(null);
   const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0 });
@@ -158,6 +158,9 @@ const DriverDashboard = () => {
   const toggleOnline = useCallback(() => {
     const newStatus = !isOnline;
     setIsOnline(newStatus);
+    // Persist online/offline status to backend
+    const coords = mapCenter;
+    authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]]).catch(() => {});
     if (newStatus) {
       toast.success('You are now ONLINE — receiving nearby ride requests!');
       // Load pending passenger orders
@@ -174,7 +177,7 @@ const DriverDashboard = () => {
       toast.info('You are now OFFLINE');
       if (watchId) { navigator.geolocation.clearWatch(watchId); setWatchId(null); }
     }
-  }, [isOnline, watchId, emitLocationUpdate, toast]);
+  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter]);
 
   const handleAcceptRide = async (rideId) => {
     try {

@@ -77,6 +77,11 @@ const driverSchema = new mongoose.Schema({
   telebirrNumber: {
     type: String
   },
+  settings: {
+    notifications: { type: Boolean, default: true },
+    availabilityStart: { type: String, default: '08:00' },
+    availabilityEnd: { type: String, default: '18:00' }
+  },
   createdAt: {
     type: Date,
     default: Date.now

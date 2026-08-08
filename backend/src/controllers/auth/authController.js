@@ -332,13 +332,26 @@ exports.getMe = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations } = req.body;
+  const { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations, preferences, paymentMethod, settings } = req.body;
+
+  const updateData = { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations };
+  if (preferences) updateData.preferences = preferences;
+  if (paymentMethod) updateData.paymentMethod = paymentMethod;
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
-    { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations },
+    updateData,
     { new: true, runValidators: true }
   );
+
+  // If driver is updating settings, save to Driver model too
+  if (req.user.role === 'driver' && settings) {
+    await Driver.findOneAndUpdate(
+      { user: req.user._id },
+      { settings },
+      { new: true }
+    );
+  }
 
   res.json({ user });
 });
