@@ -28,6 +28,19 @@
   pointer-events: auto;
 }
 
+.flexible-map-top-center {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
 .map-ctrl-btn {
   background: white;
   color: #1e293b;
