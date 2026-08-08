@@ -375,7 +375,7 @@ const seed = async () => {
       });
     }
 
-    // Create a few active/pending ride requests (simulating in-progress)
+    // Create a few completed ride requests for history
     const activeRR = await RideRequest.create({
       passenger: passenger2._id,
       rideType: 'intra_city',
@@ -383,7 +383,7 @@ const seed = async () => {
       dropoffLocation: { address: 'Dire Dawa Market', coordinates: { type: 'Point', coordinates: [9.5980, 41.8550] } },
       route: { distance: 1200, duration: 360 },
       estimatedFare: 45,
-      status: 'accepted',
+      status: 'completed',
       driver: driver1._id,
       vehicle: vehicle1._id,
       paymentMethod: 'cash'
@@ -394,11 +394,12 @@ const seed = async () => {
       passenger: passenger2._id,
       driver: driver1._id,
       vehicle: vehicle1._id,
-      status: 'in_progress',
+      status: 'completed',
       rideType: 'intra_city',
       pickupLocation: { address: 'Kezira, Dire Dawa', coordinates: [9.6009, 41.8508] },
       dropoffLocation: { address: 'Dire Dawa Market', coordinates: [9.5980, 41.8550] },
-      startTime: new Date(),
+      startTime: new Date(Date.now() - 3600000),
+      endTime: new Date(),
       fare: { baseFare: 25, distanceFare: 18, timeFare: 2, totalFare: 45, currency: 'ETB' }
     });
 

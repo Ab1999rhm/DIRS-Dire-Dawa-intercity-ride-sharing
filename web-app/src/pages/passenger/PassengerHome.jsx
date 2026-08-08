@@ -772,12 +772,10 @@ const PassengerHome = () => {
     }, 800);
 
     setTimeout(() => {
-      if (rideState === 'searching' && !foundDriverInfo) {
-        clearInterval(searchingIntervalRef.current);
-        setSearchingDrivers(99);
-        setRideState('no_driver');
-      }
-    }, 45000);
+      clearInterval(searchingIntervalRef.current);
+      setFoundDriverInfo(null);
+      setRideState('no_driver');
+    }, 30000);
   };
 
   const userName = user?.firstName || user?.name || '';
