@@ -14,12 +14,15 @@ const { asyncHandler } = require('../../middleware/errorHandler');
 const haversineDistance = (coords1, coords2) => {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const R = 6371;
-  const dLat = toRad(coords2[1] - coords1[1]);
-  const dLon = toRad(coords2[0] - coords1[0]);
+  // Frontend sends [lat, lon]
+  const [lat1, lon1] = coords1;
+  const [lat2, lon2] = coords2;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(coords1[1])) *
-      Math.cos(toRad(coords2[1])) *
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -79,6 +82,9 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
 
   const normalizedRideType = rideType === 'intraCity' ? 'intra_city' : (rideType || 'intra_city');
 
+  // Frontend sends [lat, lon], MongoDB GeoJSON needs [lng, lat]
+  const toLngLat = (coords) => coords && coords.length === 2 ? [coords[1], coords[0]] : coords;
+
   const rideRequest = await RideRequest.create({
     passenger: req.user._id,
     rideType: normalizedRideType,
@@ -86,7 +92,7 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
       address: pickupLocation.address,
       coordinates: {
         type: 'Point',
-        coordinates: pickupLocation.coordinates
+        coordinates: toLngLat(pickupLocation.coordinates)
       },
       placeId: pickupLocation.placeId
     },
@@ -94,7 +100,7 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
       address: dropoffLocation.address,
       coordinates: {
         type: 'Point',
-        coordinates: dropoffLocation.coordinates
+        coordinates: toLngLat(dropoffLocation.coordinates)
       },
       placeId: dropoffLocation.placeId
     },
@@ -110,7 +116,7 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
   });
 
   const nearbyDrivers = await findNearbyDrivers(
-    pickupLocation.coordinates,
+    toLngLat(pickupLocation.coordinates),
     normalizedRideType,
     15000
   );
@@ -182,8 +188,8 @@ exports.acceptRideRequest = asyncHandler(async (req, res) => {
   const distanceKm = rideRequest.route?.distance
     ? rideRequest.route.distance / 1000
     : haversineDistance(
-        rideRequest.pickupLocation.coordinates.coordinates,
-        rideRequest.dropoffLocation.coordinates.coordinates
+        [...rideRequest.pickupLocation.coordinates.coordinates].reverse(),
+        [...rideRequest.dropoffLocation.coordinates.coordinates].reverse()
       );
   const durationMin = rideRequest.route?.duration
     ? rideRequest.route.duration / 60
@@ -312,9 +318,13 @@ exports.getAvailableRides = asyncHandler(async (req, res) => {
   }
 
   if (pickup && dropoff) {
+    const parsedPickup = JSON.parse(pickup);
+    const parsedDropoff = JSON.parse(dropoff);
+    // Frontend sends [lat, lon], MongoDB needs [lng, lat]
+    const toLngLat = (c) => c && c.length === 2 ? [c[1], c[0]] : c;
     query.$and = [
-      { 'pickupLocation.coordinates': { $near: { $geometry: { type: 'Point', coordinates: JSON.parse(pickup) }, $maxDistance: 10000 } } },
-      { 'dropoffLocation.coordinates': { $near: { $geometry: { type: 'Point', coordinates: JSON.parse(dropoff) }, $maxDistance: 10000 } } }
+      { 'pickupLocation.coordinates': { $near: { $geometry: { type: 'Point', coordinates: toLngLat(parsedPickup) }, $maxDistance: 10000 } } },
+      { 'dropoffLocation.coordinates': { $near: { $geometry: { type: 'Point', coordinates: toLngLat(parsedDropoff) }, $maxDistance: 10000 } } }
     ];
   }
 

@@ -65,6 +65,7 @@ const initializeSocket = (server) => {
     socket.on('driver_location_update', async (data) => {
       try {
         const { tripId, coordinates, speed, heading } = data;
+        // Driver frontend sends [longitude, latitude] from Geolocation API — already correct for MongoDB
 
         await User.findByIdAndUpdate(socket.userId, {
           currentLocation: {

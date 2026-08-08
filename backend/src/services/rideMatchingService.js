@@ -3,12 +3,11 @@ const Vehicle = require('../models/Vehicle');
 const User = require('../models/User');
 
 const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 10000) => {
-  const [lng, lat] = pickupCoordinates;
-
+  // pickupCoordinates should already be [lng, lat] from the controller
   const nearbyUsers = await User.aggregate([
     {
       $geoNear: {
-        near: { type: 'Point', coordinates: [lng, lat] },
+        near: { type: 'Point', coordinates: pickupCoordinates },
         distanceField: 'distance',
         maxDistance: maxDistance,
         spherical: true,

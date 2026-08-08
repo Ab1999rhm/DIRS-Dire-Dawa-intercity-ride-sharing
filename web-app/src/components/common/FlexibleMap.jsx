@@ -5,6 +5,18 @@ import 'leaflet/dist/leaflet.css';
 import { FaCrosshairs, FaExpand, FaCompress, FaLayerGroup, FaPlus, FaMinus } from 'react-icons/fa';
 import './FlexibleMap.css';
 
+// Normalize coordinates to [lat, lng] for Leaflet
+// Detects [lng, lat] format (first value > 30 for Ethiopia) and swaps
+const normalizeCoords = (coords) => {
+  if (!coords || !Array.isArray(coords) || coords.length < 2) return coords;
+  const [v1, v2] = [parseFloat(coords[0]), parseFloat(coords[1])];
+  if (isNaN(v1) || isNaN(v2)) return coords;
+  // In Ethiopia: Lat is ~3..15, Lng is ~33..48
+  // If first value > 30 and second < 20, it's [lng, lat] — swap to [lat, lng]
+  if (v1 > 30 && v2 < 20) return [v2, v1];
+  return [v1, v2];
+};
+
 // Leaflet Helper to automatically adjust bounds when markers change
 const AutoFitBounds = ({ markers, polylinePoints, center }) => {
   const map = useMap();
@@ -79,6 +91,11 @@ const FlexibleMap = ({
   const [tileStyle, setTileStyle] = useState('streets');
   const [mapInstance, setMapInstance] = useState(null);
 
+  // Normalize all incoming coordinates to [lat, lng] for Leaflet
+  const normCenter = normalizeCoords(center);
+  const normMarkers = (markers || []).map(m => m ? { ...m, position: normalizeCoords(m.position) } : m);
+  const normPolyline = polylinePoints ? polylinePoints.map(normalizeCoords) : null;
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
     setTimeout(() => {
@@ -90,10 +107,10 @@ const FlexibleMap = ({
     if (onRecenter) {
       onRecenter();
     } else if (mapInstance) {
-      if (markers && markers.length > 0 && markers[0].position) {
-        mapInstance.setView(markers[0].position, 15, { animate: true });
+      if (normMarkers && normMarkers.length > 0 && normMarkers[0].position) {
+        mapInstance.setView(normMarkers[0].position, 15, { animate: true });
       } else {
-        mapInstance.setView(center, 14, { animate: true });
+        mapInstance.setView(normCenter, 14, { animate: true });
       }
     }
   };
@@ -115,7 +132,7 @@ const FlexibleMap = ({
   return (
     <div className={`flexible-map-wrapper ${isFullscreen ? 'fullscreen' : ''}`} style={{ height: isFullscreen ? '100vh' : defaultHeight }}>
       <MapContainer
-        center={center}
+        center={normCenter}
         zoom={zoom}
         style={{ height: '100%', width: '100%', borderRadius: isFullscreen ? '0px' : '14px' }}
         scrollWheelZoom={true}
@@ -128,9 +145,9 @@ const FlexibleMap = ({
           url={activeTile.url}
         />
 
-        <AutoFitBounds markers={markers} polylinePoints={polylinePoints} center={center} />
+        <AutoFitBounds markers={normMarkers} polylinePoints={normPolyline} center={normCenter} />
 
-        {markers.map((m, idx) => {
+        {normMarkers.map((m, idx) => {
           if (!m || !m.position) return null;
           const defaultIcon = L.divIcon({
             className: 'default-marker',
@@ -145,18 +162,18 @@ const FlexibleMap = ({
           );
         })}
 
-        {polylinePoints && polylinePoints.length >= 2 && (
+        {normPolyline && normPolyline.length >= 2 && (
           <>
             {/* Glow effect behind the line */}
             <Polyline
-              positions={polylinePoints}
+              positions={normPolyline}
               color="#93c5fd"
               weight={10}
               opacity={0.3}
             />
             {/* Main route line */}
             <Polyline
-              positions={polylinePoints}
+              positions={normPolyline}
               color="#2563eb"
               weight={5}
               opacity={0.9}
@@ -165,11 +182,11 @@ const FlexibleMap = ({
               lineJoin="round"
             />
             {/* Directional arrow at midpoint */}
-            {polylinePoints.length === 2 && (
+            {normPolyline.length === 2 && (
               <Marker
                 position={[
-                  (polylinePoints[0][0] + polylinePoints[1][0]) / 2,
-                  (polylinePoints[0][1] + polylinePoints[1][1]) / 2
+                  (normPolyline[0][0] + normPolyline[1][0]) / 2,
+                  (normPolyline[0][1] + normPolyline[1][1]) / 2
                 ]}
                 icon={L.divIcon({
                   className: 'route-arrow',
@@ -180,8 +197,8 @@ const FlexibleMap = ({
                     font-size:14px;font-weight:bold;
                     border:2px solid #fff;box-shadow:0 2px 8px rgba(37,99,235,0.4);
                     transform:rotate(${Math.atan2(
-                      polylinePoints[1][1] - polylinePoints[0][1],
-                      polylinePoints[1][0] - polylinePoints[0][0]
+                      normPolyline[1][1] - normPolyline[0][1],
+                      normPolyline[1][0] - normPolyline[0][0]
                     ) * 180 / Math.PI + 90}deg);
                   ">▶</div>`,
                   iconSize: [28, 28],

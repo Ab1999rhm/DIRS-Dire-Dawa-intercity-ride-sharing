@@ -130,11 +130,11 @@ const seed = async () => {
       email: 'sara@email.com', password: await hash('password123'),
       role: 'passenger', isVerified: true, isActive: true, preferredLanguage: 'en',
       averageRating: 4.9, totalRatings: 12,
-      currentLocation: { type: 'Point', coordinates: [9.6009, 41.8508], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8508, 9.6009], updatedAt: now },
       emergencyContacts: [{ name: 'Ahmed Hassan', phoneNumber: '+251922222222', relationship: 'Brother' }],
       favoriteLocations: [
-        { name: 'Home', address: 'Kezira, Dire Dawa', location: { type: 'Point', coordinates: [9.6009, 41.8508] } },
-        { name: 'Work', address: 'Dire Dawa University', location: { type: 'Point', coordinates: [9.6150, 41.8600] } }
+        { name: 'Home', address: 'Kezira, Dire Dawa', location: { type: 'Point', coordinates: [41.8508, 9.6009] } },
+        { name: 'Work', address: 'Dire Dawa University', location: { type: 'Point', coordinates: [41.8600, 9.6150] } }
       ],
       referralCode: 'DIRS-SARA2026', credits: 100, totalCreditsEarned: 100
     });
@@ -144,7 +144,7 @@ const seed = async () => {
       email: 'fatima@email.com', password: await hash('password123'),
       role: 'passenger', isVerified: true, isActive: true, preferredLanguage: 'am',
       averageRating: 4.7, totalRatings: 8,
-      currentLocation: { type: 'Point', coordinates: [9.6020, 41.8560], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8560, 9.6020], updatedAt: now },
       referralCode: 'DIRS-FATI2026', credits: 30, totalCreditsEarned: 30
     });
 
@@ -153,7 +153,7 @@ const seed = async () => {
       email: 'john@email.com', password: await hash('password123'),
       role: 'passenger', isVerified: true, isActive: true, preferredLanguage: 'en',
       averageRating: 4.5, totalRatings: 5,
-      currentLocation: { type: 'Point', coordinates: [9.6050, 41.8620], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8620, 9.6050], updatedAt: now },
       referralCode: 'DIRS-JOHN2026', referredBy: null, credits: 0, totalCreditsEarned: 0
     });
 
@@ -162,7 +162,7 @@ const seed = async () => {
       email: 'ahmed@email.com', password: await hash('password123'),
       role: 'driver', isVerified: true, isActive: true, isOnline: true, preferredLanguage: 'en',
       averageRating: 4.8, totalRatings: 156,
-      currentLocation: { type: 'Point', coordinates: [9.6050, 41.8530], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8530, 9.6050], updatedAt: now },
       referralCode: 'DIRS-AHME2026', credits: 0, totalCreditsEarned: 0
     });
 
@@ -171,7 +171,7 @@ const seed = async () => {
       email: 'mohan@email.com', password: await hash('password123'),
       role: 'driver', isVerified: true, isActive: true, isOnline: true, preferredLanguage: 'am',
       averageRating: 4.6, totalRatings: 98,
-      currentLocation: { type: 'Point', coordinates: [9.5980, 41.8550], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8550, 9.5980], updatedAt: now },
       referralCode: 'DIRS-MOHA2026', credits: 0, totalCreditsEarned: 0
     });
 
@@ -180,7 +180,7 @@ const seed = async () => {
       email: 'abel@email.com', password: await hash('password123'),
       role: 'driver', isVerified: true, isActive: true, isOnline: true, preferredLanguage: 'en',
       averageRating: 4.3, totalRatings: 45,
-      currentLocation: { type: 'Point', coordinates: [9.6100, 41.8480], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8480, 9.6100], updatedAt: now },
       referralCode: 'DIRS-ABEL2026', credits: 0, totalCreditsEarned: 0
     });
 
@@ -189,7 +189,7 @@ const seed = async () => {
       email: 'hana@email.com', password: await hash('password123'),
       role: 'driver', isVerified: true, isActive: true, isOnline: true, preferredLanguage: 'en',
       averageRating: 4.9, totalRatings: 210,
-      currentLocation: { type: 'Point', coordinates: [9.5920, 41.8620], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8620, 9.5920], updatedAt: now },
       referralCode: 'DIRS-HANA2026', credits: 0, totalCreditsEarned: 0
     });
 
@@ -197,7 +197,7 @@ const seed = async () => {
       firstName: 'Admin', lastName: 'DIRS', phoneNumber: '+251933333333',
       email: 'admin@dirs.com', password: await hash('password123'),
       role: 'admin', isVerified: true, isActive: true, preferredLanguage: 'en',
-      currentLocation: { type: 'Point', coordinates: [9.6009, 41.8508], updatedAt: now },
+      currentLocation: { type: 'Point', coordinates: [41.8508, 9.6009], updatedAt: now },
       referralCode: 'DIRS-ADMI2026', credits: 0, totalCreditsEarned: 0
     });
 
@@ -379,8 +379,8 @@ const seed = async () => {
     const activeRR = await RideRequest.create({
       passenger: passenger2._id,
       rideType: 'intra_city',
-      pickupLocation: { address: 'Kezira, Dire Dawa', coordinates: { type: 'Point', coordinates: [9.6009, 41.8508] } },
-      dropoffLocation: { address: 'Dire Dawa Market', coordinates: { type: 'Point', coordinates: [9.5980, 41.8550] } },
+      pickupLocation: { address: 'Kezira, Dire Dawa', coordinates: { type: 'Point', coordinates: [41.8508, 9.6009] } },
+      dropoffLocation: { address: 'Dire Dawa Market', coordinates: { type: 'Point', coordinates: [41.8550, 9.5980] } },
       route: { distance: 1200, duration: 360 },
       estimatedFare: 45,
       status: 'completed',
@@ -396,8 +396,8 @@ const seed = async () => {
       vehicle: vehicle1._id,
       status: 'completed',
       rideType: 'intra_city',
-      pickupLocation: { address: 'Kezira, Dire Dawa', coordinates: [9.6009, 41.8508] },
-      dropoffLocation: { address: 'Dire Dawa Market', coordinates: [9.5980, 41.8550] },
+      pickupLocation: { address: 'Kezira, Dire Dawa', coordinates: [41.8508, 9.6009] },
+      dropoffLocation: { address: 'Dire Dawa Market', coordinates: [41.8550, 9.5980] },
       startTime: new Date(Date.now() - 3600000),
       endTime: new Date(),
       fare: { baseFare: 25, distanceFare: 18, timeFare: 2, totalFare: 45, currency: 'ETB' }
