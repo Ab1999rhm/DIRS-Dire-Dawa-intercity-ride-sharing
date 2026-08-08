@@ -66,7 +66,6 @@ const DriverDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [watchId, setWatchId] = useState(null);
-  const [activeTab, setActiveTab] = useState('home');
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [vehicleType, setVehicleType] = useState(null);
   const [vehicle, setVehicle] = useState(null);
@@ -445,20 +444,6 @@ const DriverDashboard = () => {
         </div>
       </div>
 
-      <div className="driver-bottom-nav">
-        <button className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
-          <FaHome /><span>Home</span>
-        </button>
-        <button className={`bottom-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => navigate('/driver/trips')}>
-          <FaListUl /><span>Orders</span>
-        </button>
-        <button className={`bottom-nav-item ${activeTab === 'wallet' ? 'active' : ''}`} onClick={() => navigate('/driver/earnings')}>
-          <FaWallet /><span>Wallet</span>
-        </button>
-        <button className={`bottom-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => navigate('/driver/profile')}>
-          <FaCog /><span>Settings</span>
-        </button>
-      </div>
     </div>
   );
 };

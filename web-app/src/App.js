@@ -13,6 +13,7 @@ import './styles/pages.css';
 const Navbar = React.lazy(() => import('./components/layout/Navbar'));
 const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
 const PassengerBottomNav = React.lazy(() => import('./components/layout/PassengerBottomNav'));
+const DriverBottomNav = React.lazy(() => import('./components/layout/DriverBottomNav'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
@@ -169,16 +170,23 @@ const PassengerRoutes = React.memo(() => (
 ));
 
 const DriverRoutes = React.memo(() => (
-  <Suspense fallback={<LoadingSpinner />}>
-    <Routes>
-      <Route index element={<DriverDashboard />} />
-      <Route path="trips" element={<DriverTrips />} />
-      <Route path="earnings" element={<DriverEarnings />} />
-      <Route path="vehicle" element={<DriverVehicle />} />
-      <Route path="profile" element={<DriverProfile />} />
-      <Route path="*" element={<Navigate to="/driver" />} />
-    </Routes>
-  </Suspense>
+  <div className="app-layout">
+    <main className="app-main" style={{ marginLeft: 0, paddingBottom: '70px' }}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route index element={<DriverDashboard />} />
+          <Route path="trips" element={<DriverTrips />} />
+          <Route path="earnings" element={<DriverEarnings />} />
+          <Route path="vehicle" element={<DriverVehicle />} />
+          <Route path="profile" element={<DriverProfile />} />
+          <Route path="*" element={<Navigate to="/driver" />} />
+        </Routes>
+      </Suspense>
+    </main>
+    <Suspense fallback={null}>
+      <DriverBottomNav />
+    </Suspense>
+  </div>
 ));
 
 const AdminRoutes = React.memo(() => (
