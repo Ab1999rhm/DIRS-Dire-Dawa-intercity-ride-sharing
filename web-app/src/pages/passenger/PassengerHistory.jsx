@@ -39,7 +39,7 @@ const PassengerHistory = () => {
       trip.dropoffLocation?.address || '',
       trip.distance || '',
       trip.duration || '',
-      trip.fare?.total || trip.fare?.totalFare || 0,
+      trip.fare?.totalFare || trip.fare?.total || 0,
       trip.status || '',
       trip.driver ? `${trip.driver.firstName} ${trip.driver.lastName}` : ''
     ]);

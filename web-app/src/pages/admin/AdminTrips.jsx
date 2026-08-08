@@ -130,7 +130,7 @@ const AdminTrips = () => {
                 <div style={{ fontSize: 13 }}>{trip.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName}` : 'Unassigned'}</div>
               </div>
               <div>
-                <Badge variant="success">ETB {(trip.fare?.total || trip.fare || trip.estimatedFare || 0).toLocaleString()}</Badge>
+                <Badge variant="success">ETB {(trip.fare?.totalFare || trip.fare?.total || trip.estimatedFare || 0).toLocaleString()}</Badge>
               </div>
               <div><StatusBadge status={trip.status} /></div>
               <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
@@ -151,7 +151,7 @@ const AdminTrips = () => {
             <div className="detail-row"><span className="detail-key">Dropoff</span><span className="detail-val">{selectedTrip.dropoffLocation?.address || 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">Passenger</span><span className="detail-val">{selectedTrip.passenger?.firstName} {selectedTrip.passenger?.lastName}</span></div>
             <div className="detail-row"><span className="detail-key">Driver</span><span className="detail-val">{selectedTrip.driver?.firstName ? `${selectedTrip.driver.firstName} ${selectedTrip.driver.lastName}` : 'Unassigned'}</span></div>
-            <div className="detail-row"><span className="detail-key">Fare</span><span className="detail-val">ETB {(selectedTrip.fare?.total || selectedTrip.fare || selectedTrip.estimatedFare || 0).toLocaleString()}</span></div>
+            <div className="detail-row"><span className="detail-key">Fare</span><span className="detail-val">ETB {(selectedTrip.fare?.totalFare || selectedTrip.fare?.total || selectedTrip.estimatedFare || 0).toLocaleString()}</span></div>
             <div className="detail-row"><span className="detail-key">Distance</span><span className="detail-val">{selectedTrip.distance ? `${selectedTrip.distance.toFixed(1)} km` : 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">Duration</span><span className="detail-val">{selectedTrip.duration ? `${selectedTrip.duration} min` : 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">Payment</span><span className="detail-val">{selectedTrip.paymentMethod || 'Cash'}</span></div>

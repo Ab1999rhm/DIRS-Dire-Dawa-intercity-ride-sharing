@@ -349,7 +349,7 @@ const DriverDashboard = () => {
             </div>
             <div className="trip-earnings">
               <span><FaMoneyBillWave /> {t('driver.earnings') || 'Earnings'}</span>
-              <span>{activeTrip.fare?.total || activeTrip.fare || 0} ETB</span>
+              <span>{activeTrip.fare?.totalFare || activeTrip.fare?.total || 0} ETB</span>
             </div>
 
             {/* Real-World External Navigation Launcher */}
@@ -409,7 +409,7 @@ const DriverDashboard = () => {
                   </div>
                 </div>
                 <div className="request-fare">
-                  <span className="fare-amount">{ride.fare?.total || ride.fare || 0} ETB</span>
+                  <span className="fare-amount">{ride.fare?.totalFare || ride.fare?.total || 0} ETB</span>
                   <span className="fare-distance">{ride.distance?.toFixed(1)} km</span>
                 </div>
               </div>

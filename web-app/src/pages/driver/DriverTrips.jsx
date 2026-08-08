@@ -105,7 +105,7 @@ const DriverTrips = () => {
                 </div>
               </div>
               <div className="driver-trip-meta">
-                <span className="driver-trip-fare">{trip.fare?.total || trip.fare || 0} ETB</span>
+                <span className="driver-trip-fare">{trip.fare?.totalFare || trip.fare?.total || 0} ETB</span>
                 {trip.rating?.driver && (
                   <span className="driver-trip-rating">
                     <FaStar /> {trip.rating.driver}
