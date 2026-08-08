@@ -10,8 +10,6 @@ import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import offlineService from './services/offlineService';
 import './styles/pages.css';
 
-const Navbar = React.lazy(() => import('./components/layout/Navbar'));
-const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
 const PassengerBottomNav = React.lazy(() => import('./components/layout/PassengerBottomNav'));
 const DriverBottomNav = React.lazy(() => import('./components/layout/DriverBottomNav'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
@@ -117,33 +115,14 @@ const PublicRoute = React.memo(({ children }) => {
 });
 
 const AppLayout = React.memo(({ children, bottomNav }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const toggleSidebar = useCallback((open) => setSidebarOpen(open), []);
-
   return (
     <div className="app-layout">
-      <Suspense fallback={<LoadingSpinner />}>
-        <Navbar onMenuToggle={toggleSidebar} />
-      </Suspense>
       <div className="app-body">
-        {bottomNav ? (
-          <main className="app-main has-bottom-nav" style={{ marginLeft: 0 }}>
-            <Suspense fallback={<LoadingSpinner />}>
-              {children}
-            </Suspense>
-          </main>
-        ) : (
-          <>
-            <Suspense fallback={<LoadingSpinner />}>
-              <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            </Suspense>
-            <main className="app-main">
-              <Suspense fallback={<LoadingSpinner />}>
-                {children}
-              </Suspense>
-            </main>
-          </>
-        )}
+        <main className={bottomNav ? 'app-main has-bottom-nav' : 'app-main'} style={bottomNav ? { marginLeft: 0 } : {}}>
+          <Suspense fallback={<LoadingSpinner />}>
+            {children}
+          </Suspense>
+        </main>
       </div>
       {bottomNav && (
         <Suspense fallback={<LoadingSpinner />}>
