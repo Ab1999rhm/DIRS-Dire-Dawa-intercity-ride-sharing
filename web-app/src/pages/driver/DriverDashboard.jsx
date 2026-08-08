@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, paymentsAPI } from '../../services/api';
+import { ridesAPI, paymentsAPI, vehiclesAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import L from 'leaflet';
@@ -68,6 +68,7 @@ const DriverDashboard = () => {
   const [watchId, setWatchId] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
+  const [vehicleType, setVehicleType] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -110,10 +111,15 @@ const DriverDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [tripsRes, earningsRes] = await Promise.all([
+      const [tripsRes, earningsRes, vehicleRes] = await Promise.all([
         ridesAPI.driverTrips({ status: 'ongoing' }).catch(() => ({ data: {} })),
-        paymentsAPI.earnings().catch(() => ({ data: {} }))
+        paymentsAPI.earnings().catch(() => ({ data: {} })),
+        vehiclesAPI.getMy().catch(() => ({ data: {} }))
       ]);
+
+      if (vehicleRes.data?.vehicle) {
+        setVehicleType(vehicleRes.data.vehicle.type);
+      }
 
       const backendTrip = tripsRes.data?.trip;
       const backendRides = tripsRes.data?.availableRides || [];
@@ -286,16 +292,23 @@ const DriverDashboard = () => {
         />
       </div>
 
-      <h2 className="driver-section-title">All Services</h2>
+      <h2 className="driver-section-title">My Vehicle</h2>
       <div className="driver-services-grid">
         {SERVICES.map(s => {
           const Icon = s.icon;
+          const isActive = vehicleType === s.id;
           return (
-            <div key={s.id} className="driver-service-card">
-              <div className="service-card-icon" style={{ color: s.color }}>
+            <div
+              key={s.id}
+              className={`driver-service-card ${isActive ? 'active' : ''}`}
+              onClick={() => navigate('/driver/vehicle')}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="service-card-icon" style={{ color: isActive ? '#fff' : s.color, background: isActive ? s.color : undefined }}>
                 <Icon />
               </div>
               <span className="service-card-label">{s.label}</span>
+              {isActive && <span className="service-card-badge">Registered</span>}
             </div>
           );
         })}
