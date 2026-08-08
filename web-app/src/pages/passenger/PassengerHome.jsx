@@ -1281,7 +1281,7 @@ const PassengerHome = () => {
       )}
 
       <div className="passenger-logo-bar">
-        <img src="/logo.svg" alt="DIRS - Dire Dawa Ride Sharing" className="passenger-logo" />
+        <img src="/logo.svg?v=2" alt="DIRS - Dire Dawa Ride Sharing" className="passenger-logo" />
       </div>
 
       <div className="passenger-header-row">
