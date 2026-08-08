@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -10,8 +10,10 @@ import {
 import './PublicLanding.css';
 
 const PublicLanding = () => {
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language, setLanguage, availableLanguages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const langDropdownRef = useRef(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
 
@@ -23,6 +25,16 @@ const PublicLanding = () => {
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setShowLangDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleInstall = async () => {
@@ -108,9 +120,25 @@ const PublicLanding = () => {
             <span>DIRS</span>
           </Link>
           <div className="public-nav-actions">
-            <button className="public-nav-icon" onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}>
-              <FaGlobe /> <span>{language === 'en' ? 'EN' : 'አማ'}</span>
-            </button>
+            <div className="lang-dropdown-wrapper" ref={langDropdownRef}>
+              <button className="public-nav-icon lang-dropdown-trigger" onClick={() => setShowLangDropdown(!showLangDropdown)}>
+                <FaGlobe /> <span>{availableLanguages.find(l => l.code === language)?.name || language}</span>
+              </button>
+              {showLangDropdown && (
+                <div className="lang-dropdown">
+                  {availableLanguages.map(lang => (
+                    <button
+                      key={lang.code}
+                      className={`lang-dropdown-item ${language === lang.code ? 'active' : ''}`}
+                      onClick={() => { setLanguage(lang.code); setShowLangDropdown(false); }}
+                    >
+                      <span className="lang-flag">{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="public-nav-icon" onClick={toggleTheme}>
               {theme === 'light' ? <FaMoon /> : <FaSun />}
             </button>

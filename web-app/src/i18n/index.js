@@ -32,6 +32,8 @@ export const t = (key, params = {}) => {
 };
 
 export const getAvailableLanguages = () => [
-  { code: 'en', name: 'English' },
-  { code: 'am', name: 'አማርኛ' }
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'am', name: 'አማርኛ', flag: '🇪🇹' },
+  { code: 'om', name: 'Afaan Oromoo', flag: '🇪🇹' },
+  { code: 'so', name: 'Af Soomaali', flag: '🇸🇴' }
 ];
