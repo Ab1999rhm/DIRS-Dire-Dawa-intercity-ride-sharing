@@ -7,7 +7,8 @@ import {
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, referralAPI } from '../../services/api';
+import { authAPI, referralAPI, documentsAPI } from '../../services/api';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, ToggleButton, ConfirmModal } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import WalletTopupModal from '../../components/passenger/WalletTopupModal';
@@ -134,15 +135,13 @@ const PassengerProfile = () => {
     }
     setPhotoUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('photo', file);
-      const res = await authAPI.uploadProfilePhoto(formData);
-      const photoUrl = res.data.photoUrl || res.data.profilePhoto;
+      const photoUrl = await uploadToCloudinary(file, 'dirs-profile-photos');
+      await documentsAPI.uploadProfilePhoto(photoUrl);
       setProfilePhoto(photoUrl);
       setUser({ ...user, profilePhoto: photoUrl });
       toast.success('Profile photo updated!');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to upload photo');
+      toast.error(err.response?.data?.error || err.message || 'Failed to upload photo');
     } finally {
       setPhotoUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -1,17 +1,14 @@
-const path = require('path');
 const User = require('../../models/User');
 const Driver = require('../../models/Driver');
 const Vehicle = require('../../models/Vehicle');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
 exports.uploadProfilePhoto = asyncHandler(async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+  const { photoUrl } = req.body;
+  if (!photoUrl) {
+    return res.status(400).json({ error: 'photoUrl is required' });
   }
-
-  const photoUrl = `/uploads/${req.file.filename}`;
   await User.findByIdAndUpdate(req.user._id, { profilePhoto: photoUrl });
-
   res.json({ message: 'Profile photo uploaded', profilePhoto: photoUrl });
 });
 
@@ -21,28 +18,13 @@ exports.uploadDocuments = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Driver profile not found' });
   }
 
-  const updates = {};
+  const { licensePhotoUrl, nationalIdPhotoUrl, licenseNumber, licenseExpiry, nationalId } = req.body;
 
-  if (req.files?.licensePhoto) {
-    driver.licensePhoto = `/uploads/${req.files.licensePhoto[0].filename}`;
-    updates.licensePhoto = driver.licensePhoto;
-  }
-  if (req.files?.nationalIdPhoto) {
-    driver.nationalIdPhoto = `/uploads/${req.files.nationalIdPhoto[0].filename}`;
-    updates.nationalIdPhoto = driver.nationalIdPhoto;
-  }
-  if (req.body.licenseNumber) {
-    driver.licenseNumber = req.body.licenseNumber;
-    updates.licenseNumber = driver.licenseNumber;
-  }
-  if (req.body.licenseExpiry) {
-    driver.licenseExpiry = req.body.licenseExpiry;
-    updates.licenseExpiry = driver.licenseExpiry;
-  }
-  if (req.body.nationalId) {
-    driver.nationalId = req.body.nationalId;
-    updates.nationalId = driver.nationalId;
-  }
+  if (licensePhotoUrl) driver.licensePhoto = licensePhotoUrl;
+  if (nationalIdPhotoUrl) driver.nationalIdPhoto = nationalIdPhotoUrl;
+  if (licenseNumber) driver.licenseNumber = licenseNumber;
+  if (licenseExpiry) driver.licenseExpiry = licenseExpiry;
+  if (nationalId) driver.nationalId = nationalId;
 
   if (driver.verificationStatus === 'rejected') {
     driver.verificationStatus = 'pending';
@@ -65,21 +47,13 @@ exports.uploadVehicleDocuments = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'No active vehicle found' });
   }
 
-  if (req.files?.vehiclePhoto) {
-    vehicle.vehiclePhoto = `/uploads/${req.files.vehiclePhoto[0].filename}`;
-  }
-  if (req.files?.registrationPhoto) {
-    vehicle.registrationPhoto = `/uploads/${req.files.registrationPhoto[0].filename}`;
-  }
-  if (req.files?.insurancePhoto) {
-    vehicle.insurancePhoto = `/uploads/${req.files.insurancePhoto[0].filename}`;
-  }
-  if (req.body.insuranceExpiry) {
-    vehicle.insuranceExpiry = req.body.insuranceExpiry;
-  }
-  if (req.body.registrationExpiry) {
-    vehicle.registrationExpiry = req.body.registrationExpiry;
-  }
+  const { vehiclePhotoUrl, registrationPhotoUrl, insurancePhotoUrl, insuranceExpiry, registrationExpiry } = req.body;
+
+  if (vehiclePhotoUrl) vehicle.vehiclePhoto = vehiclePhotoUrl;
+  if (registrationPhotoUrl) vehicle.registrationPhoto = registrationPhotoUrl;
+  if (insurancePhotoUrl) vehicle.insurancePhoto = insurancePhotoUrl;
+  if (insuranceExpiry) vehicle.insuranceExpiry = insuranceExpiry;
+  if (registrationExpiry) vehicle.registrationExpiry = registrationExpiry;
 
   await vehicle.save();
 

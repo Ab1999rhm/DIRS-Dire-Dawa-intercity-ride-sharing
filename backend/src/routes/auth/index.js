@@ -324,18 +324,11 @@ router.get('/documents', protect, documentController.getDocuments);
 router.post('/send-phone-otp', authController.sendPhoneOTP);
 router.post('/verify-phone-otp', authController.verifyPhoneOTP);
 
-router.post('/profile-photo', protect, upload.single('photo'), authController.uploadProfilePhoto);
+router.post('/profile-photo', protect, authController.uploadProfilePhoto);
 
-router.post('/documents', protect, upload.fields([
-  { name: 'licensePhoto', maxCount: 1 },
-  { name: 'nationalIdPhoto', maxCount: 1 }
-]), documentController.uploadDocuments);
+router.post('/documents', protect, documentController.uploadDocuments);
 
-router.post('/vehicle-documents', protect, upload.fields([
-  { name: 'vehiclePhoto', maxCount: 1 },
-  { name: 'registrationPhoto', maxCount: 1 },
-  { name: 'insurancePhoto', maxCount: 1 }
-]), documentController.uploadVehicleDocuments);
+router.post('/vehicle-documents', protect, documentController.uploadVehicleDocuments);
 
 router.delete('/account', protect, authController.deleteAccount);
 

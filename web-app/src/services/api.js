@@ -205,12 +205,9 @@ export const vehiclesAPI = {
 
 export const documentsAPI = {
   get: () => api.get('/auth/documents'),
-  uploadDriver: (formData) => api.post('/auth/documents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  uploadVehicle: (formData) => api.post('/auth/vehicle-documents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
+  uploadDriver: (data) => api.post('/auth/documents', data),
+  uploadVehicle: (data) => api.post('/auth/vehicle-documents', data),
+  uploadProfilePhoto: (photoUrl) => api.post('/auth/profile-photo', { photoUrl }),
 };
 
 export const adminAPI = {

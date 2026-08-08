@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, documentsAPI } from '../../services/api';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, Modal } from '../../components/common';
 import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
@@ -73,7 +74,7 @@ const DriverProfile = () => {
     }).catch(() => {});
   }, []);
 
-  const handleDocUpload = async (docKey, isDriverDoc, extraFields) => {
+  const handleDocUpload = async (docKey, isDriverDoc) => {
     const file = fileInputRef[docKey]?.current?.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -82,18 +83,17 @@ const DriverProfile = () => {
     }
     try {
       setUploadingDoc(docKey);
-      const fd = new FormData();
-      fd.append(docKey, file);
-      if (extraFields) Object.entries(extraFields).forEach(([k, v]) => fd.append(k, v));
+      const url = await uploadToCloudinary(file, 'dirs-documents');
+      const urlField = docKey + 'Url';
       if (isDriverDoc) {
-        await documentsAPI.uploadDriver(fd);
+        await documentsAPI.uploadDriver({ [urlField]: url });
       } else {
-        await documentsAPI.uploadVehicle(fd);
+        await documentsAPI.uploadVehicle({ [urlField]: url });
       }
-      setDocuments(prev => ({ ...prev, [docKey]: URL.createObjectURL(file) }));
+      setDocuments(prev => ({ ...prev, [docKey]: url }));
       toast.success('Document uploaded');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Upload failed');
+      toast.error(err.response?.data?.error || err.message || 'Upload failed');
     } finally {
       setUploadingDoc(null);
     }
@@ -102,9 +102,7 @@ const DriverProfile = () => {
   const handleDocTextUpdate = async (fields) => {
     try {
       setLoading(true);
-      const fd = new FormData();
-      Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
-      await documentsAPI.uploadDriver(fd);
+      await documentsAPI.uploadDriver(fields);
       setDocuments(prev => ({ ...prev, ...fields }));
       setSuccess('Document info updated');
       setTimeout(() => setSuccess(null), 3000);

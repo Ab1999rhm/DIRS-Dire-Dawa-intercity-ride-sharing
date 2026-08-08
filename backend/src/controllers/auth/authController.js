@@ -478,11 +478,11 @@ exports.verifyPhoneOTP = asyncHandler(async (req, res) => {
 });
 
 exports.uploadProfilePhoto = asyncHandler(async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+  const { photoUrl } = req.body;
+  if (!photoUrl) {
+    return res.status(400).json({ error: 'photoUrl is required' });
   }
 
-  const photoUrl = `/uploads/${req.file.filename}`;
   await User.findByIdAndUpdate(req.user._id, { profilePhoto: photoUrl });
 
   res.json({ message: 'Profile photo uploaded', profilePhoto: photoUrl });

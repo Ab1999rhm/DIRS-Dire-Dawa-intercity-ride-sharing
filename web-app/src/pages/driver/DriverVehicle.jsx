@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { vehiclesAPI, documentsAPI } from '../../services/api';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, Select } from '../../components/common';
 import { FaCar, FaEdit, FaCheck, FaTimes, FaFileUpload, FaFileImage, FaShieldAlt } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
@@ -98,13 +99,13 @@ const DriverVehicle = () => {
 
     try {
       setUploading(docKey);
-      const fd = new FormData();
-      fd.append(docKey, file);
-      await documentsAPI.uploadVehicle(fd);
-      setDocuments(prev => ({ ...prev, [docKey]: URL.createObjectURL(file) }));
+      const url = await uploadToCloudinary(file, 'dirs-documents');
+      const urlField = docKey + 'Url';
+      await documentsAPI.uploadVehicle({ [urlField]: url });
+      setDocuments(prev => ({ ...prev, [docKey]: url }));
       toast.success('Document uploaded successfully');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Upload failed');
+      toast.error(err.response?.data?.error || err.message || 'Upload failed');
     } finally {
       setUploading(null);
     }
