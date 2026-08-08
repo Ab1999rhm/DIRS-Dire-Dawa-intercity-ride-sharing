@@ -1,41 +1,91 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" width="320" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563eb"/>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af"/>
+      <stop offset="50%" style="stop-color:#2563eb"/>
       <stop offset="100%" style="stop-color:#059669"/>
     </linearGradient>
-    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#3b82f6"/>
+    <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
       <stop offset="100%" style="stop-color:#10b981"/>
     </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1e40af" flood-opacity="0.25"/>
+    </filter>
+    <clipPath id="circleClip">
+      <circle cx="55" cy="60" r="48"/>
+    </clipPath>
   </defs>
   
-  <!-- Car Icon Circle -->
-  <circle cx="50" cy="50" r="46" fill="url(#grad1)"/>
-  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <!-- Background Card -->
+  <rect width="400" height="120" rx="16" fill="url(#bgGrad)" filter="url(#shadow)"/>
   
-  <!-- Car Body -->
-  <g transform="translate(18, 30)">
-    <path d="M8 20 Q8 12 16 10 L24 6 Q30 4 36 4 L52 4 Q58 4 62 8 L68 14 Q70 17 70 22 L70 30 Q70 34 66 34 L12 34 Q8 34 8 30 Z" fill="white"/>
+  <!-- Decorative Elements -->
+  <circle cx="360" cy="20" r="50" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="380" cy="100" r="30" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="30" cy="110" r="25" fill="rgba(255,255,255,0.04)"/>
+  <path d="M0 90 Q100 70 200 90 Q300 110 400 90 L400 120 L0 120 Z" fill="rgba(255,255,255,0.03)"/>
+  
+  <!-- Car Circle Background -->
+  <circle cx="55" cy="60" r="48" fill="rgba(255,255,255,0.12)"/>
+  <circle cx="55" cy="60" r="44" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="55" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4,3"/>
+  
+  <!-- Car Icon -->
+  <g transform="translate(20, 35)">
+    <!-- Car Body -->
+    <path d="M10 30 Q10 20 20 18 L32 12 Q38 10 46 10 L64 10 Q72 10 78 14 L86 22 Q90 26 90 32 L90 42 Q90 48 84 48 L16 48 Q10 48 10 42 Z" fill="url(#carGrad)" filter="url(#glow)"/>
+    
     <!-- Windows -->
-    <path d="M18 12 L26 7 Q30 5 36 5 L50 5 Q54 5 58 8 L62 12 Z" fill="rgba(37,99,235,0.3)"/>
-    <rect x="18" y="12" width="48" height="14" rx="2" fill="rgba(255,255,255,0.15)"/>
+    <path d="M24 14 L34 10 Q40 8 48 8 L62 8 Q68 8 74 12 L80 18 Z" fill="rgba(37,99,235,0.25)"/>
+    <rect x="24" y="14" width="58" height="18" rx="2" fill="rgba(255,255,255,0.1)"/>
+    <line x1="50" y1="14" x2="50" y2="32" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    
     <!-- Wheels -->
-    <circle cx="22" cy="34" r="6" fill="#1e293b"/>
-    <circle cx="22" cy="34" r="3" fill="#64748b"/>
-    <circle cx="56" cy="34" r="6" fill="#1e293b"/>
-    <circle cx="56" cy="34" r="3" fill="#64748b"/>
+    <circle cx="28" cy="48" r="8" fill="#1e293b"/>
+    <circle cx="28" cy="48" r="5" fill="#475569"/>
+    <circle cx="28" cy="48" r="2" fill="#94a3b8"/>
+    <circle cx="72" cy="48" r="8" fill="#1e293b"/>
+    <circle cx="72" cy="48" r="5" fill="#475569"/>
+    <circle cx="72" cy="48" r="2" fill="#94a3b8"/>
+    
     <!-- Headlights -->
-    <rect x="66" y="16" width="4" height="6" rx="2" fill="#fbbf24"/>
-    <rect x="4" y="16" width="3" height="5" rx="1.5" fill="#ef4444" opacity="0.8"/>
+    <ellipse cx="88" cy="30" rx="3" ry="5" fill="#fbbf24" opacity="0.9"/>
+    <ellipse cx="12" cy="30" rx="2.5" ry="4" fill="#ef4444" opacity="0.7"/>
+    
+    <!-- Shine Effect -->
+    <path d="M20 16 Q30 12 50 12" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Location Pin -->
+  <g transform="translate(82, 18)" filter="url(#glow)">
+    <path d="M10 0 C4.5 0 0 4.5 0 10 C0 18 10 28 10 28 C10 28 20 18 20 10 C20 4.5 15.5 0 10 0 Z" fill="#ffffff" opacity="0.95"/>
+    <circle cx="10" cy="10" r="4" fill="#2563eb"/>
   </g>
   
   <!-- DIRS Text -->
-  <text x="115" y="48" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="900" fill="#0f172a" letter-spacing="1">DIRS</text>
+  <text x="130" y="55" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="900" fill="#ffffff" letter-spacing="2" filter="url(#glow)">DIRS</text>
   
-  <!-- Divider Line -->
-  <rect x="115" y="56" width="180" height="2" rx="1" fill="url(#grad2)"/>
+  <!-- Accent Line -->
+  <rect x="130" y="65" width="200" height="2.5" rx="1" fill="url(#lineGrad)" opacity="0.8"/>
   
   <!-- Subtitle -->
-  <text x="115" y="76" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="600" fill="#64748b" letter-spacing="0.5">Dire Dawa Intercity &amp; Ride Sharing</text>
+  <text x="130" y="85" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600" fill="rgba(255,255,255,0.85)" letter-spacing="0.8">Dire Dawa Intercity &amp; Ride Sharing</text>
+  
+  <!-- Tagline -->
+  <text x="130" y="105" font-family="Inter, Arial, sans-serif" font-size="9.5" font-weight="500" fill="rgba(255,255,255,0.5)" letter-spacing="3">SAFE  ·  FAST  ·  RELIABLE</text>
+  
+  <!-- Bottom Road -->
+  <line x1="20" y1="115" x2="380" y2="115" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="8,6"/>
 </svg>

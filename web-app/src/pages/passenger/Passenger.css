@@ -8,12 +8,13 @@
 .passenger-logo-bar {
   display: flex;
   justify-content: center;
-  padding: 16px 0 12px;
-  margin-bottom: 12px;
+  padding: 12px 0 8px;
+  margin-bottom: 8px;
 }
 .passenger-logo {
-  width: 260px;
+  width: 300px;
   height: auto;
+  filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));
 }
 
 /* Header */
