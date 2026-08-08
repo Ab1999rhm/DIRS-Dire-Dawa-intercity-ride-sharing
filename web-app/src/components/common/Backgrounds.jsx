@@ -368,7 +368,7 @@ export const MapPlaceholder = () => (
 );
 
 export const DireDawaLogo = () => (
-  <img src="/logo.png" alt="DIRS - Dire Dawa Ride Sharing" style={{ width: 200, height: 'auto', maxHeight: 60 }} />
+  <img src="/logo.png" alt="DIRS - Dire Dawa Ride Sharing" style={{ width: '100%', maxWidth: 400, height: 'auto', display: 'block', margin: '0 auto' }} />
 );
 
 export const WaveDecoration = () => (
