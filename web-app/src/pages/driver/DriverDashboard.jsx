@@ -63,7 +63,7 @@ const getGreeting = () => {
 
 const DriverDashboard = () => {
   const { t } = useLanguage();
-  const { user, emitLocationUpdate, newRideRequest, clearNewRideRequest, rideAccepted, clearRideAccepted, tripStatusUpdate } = useAuth();
+  const { user, setUser, emitLocationUpdate, newRideRequest, clearNewRideRequest, rideAccepted, clearRideAccepted, tripStatusUpdate } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -180,6 +180,7 @@ const DriverDashboard = () => {
       return;
     }
     setIsOnline(newStatus);
+    setUser(prev => prev ? { ...prev, isOnline: newStatus } : prev);
     const coords = mapCenter;
     authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]]).catch(() => {});
     if (newStatus) {
@@ -198,7 +199,7 @@ const DriverDashboard = () => {
       toast.info('You are now OFFLINE');
       if (watchId) { navigator.geolocation.clearWatch(watchId); setWatchId(null); }
     }
-  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, vehicleType, intendedDestination]);
+  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, vehicleType, intendedDestination, setUser]);
 
   const handleAcceptRide = async (rideId) => {
     try {
