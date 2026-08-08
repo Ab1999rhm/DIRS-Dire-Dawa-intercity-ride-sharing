@@ -131,8 +131,14 @@ const FlexibleMap = ({
 
         {markers.map((m, idx) => {
           if (!m || !m.position) return null;
+          const defaultIcon = L.divIcon({
+            className: 'default-marker',
+            html: '<div style="background:#2563eb;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">M</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
           return (
-            <Marker key={idx} position={m.position} icon={m.icon}>
+            <Marker key={idx} position={m.position} icon={m.icon || defaultIcon}>
               {m.popup && <Popup>{m.popup}</Popup>}
             </Marker>
           );

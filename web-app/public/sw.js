@@ -1,7 +1,7 @@
-const CACHE_NAME = 'dirs-v5';
-const STATIC_CACHE = 'dirs-static-v5';
-const API_CACHE = 'dirs-api-v5';
-const IMAGE_CACHE = 'dirs-images-v5';
+const CACHE_NAME = 'dirs-v6';
+const STATIC_CACHE = 'dirs-static-v6';
+const API_CACHE = 'dirs-api-v6';
+const IMAGE_CACHE = 'dirs-images-v6';
 
 const STATIC_ASSETS = [
   '/leaflet.css',
@@ -83,7 +83,7 @@ async function cacheFirst(request, cacheName) {
 async function networkFirstWithCache(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && request.method === 'GET') {
       const cache = await caches.open(API_CACHE);
       cache.put(request, response.clone());
     }
