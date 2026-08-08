@@ -15,8 +15,9 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1000
         query: {
           role: 'driver',
           isActive: true,
+          isOnline: true,
           'currentLocation.updatedAt': {
-            $gte: new Date(Date.now() - 30 * 60 * 1000)
+            $gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
           }
         }
       }

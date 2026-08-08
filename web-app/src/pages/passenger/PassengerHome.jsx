@@ -584,6 +584,18 @@ const PassengerHome = () => {
             return currentState;
           });
         }, 3500);
+      } else {
+        // Real mode: timeout after 30 seconds if no driver found
+        setTimeout(() => {
+          setRideState((currentState) => {
+            if (currentState === 'searching') {
+              clearInterval(searchingIntervalRef.current);
+              setRideState('no_driver');
+              return 'no_driver';
+            }
+            return currentState;
+          });
+        }, 30000);
       }
 
     } catch (err) {
