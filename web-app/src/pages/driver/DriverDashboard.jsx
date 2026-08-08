@@ -239,6 +239,8 @@ const DriverDashboard = () => {
     );
   }
 
+  const selectedRequest = rideRequests.length > 0 ? rideRequests[0] : null;
+
   return (
     <div className="driver-page">
       <div className="driver-logo-bar">
@@ -282,15 +284,27 @@ const DriverDashboard = () => {
 
       <div className="driver-map-container">
         <FlexibleMap
-          center={activeTrip?.pickup?.coordinates || mapCenter}
-          zoom={activeTrip ? 15 : 14}
+          center={
+            activeTrip?.pickup?.coordinates ||
+            selectedRequest?.pickup?.coordinates ||
+            mapCenter
+          }
+          zoom={(activeTrip || selectedRequest) ? 15 : 14}
           defaultHeight="280px"
           markers={[
             { position: mapCenter, icon: driverIcon, popup: 'My Position' },
             ...(activeTrip?.pickup?.coordinates ? [{ position: activeTrip.pickup.coordinates, icon: pickupIcon, popup: 'Pickup' }] : []),
-            ...(activeTrip?.dropoff?.coordinates ? [{ position: activeTrip.dropoff.coordinates, icon: dropoffIcon, popup: 'Dropoff' }] : [])
+            ...(activeTrip?.dropoff?.coordinates ? [{ position: activeTrip.dropoff.coordinates, icon: dropoffIcon, popup: 'Dropoff' }] : []),
+            ...(!activeTrip && selectedRequest?.pickup?.coordinates ? [{ position: selectedRequest.pickup.coordinates, icon: pickupIcon, popup: 'Pickup' }] : []),
+            ...(!activeTrip && selectedRequest?.dropoff?.coordinates ? [{ position: selectedRequest.dropoff.coordinates, icon: dropoffIcon, popup: 'Dropoff' }] : []),
           ]}
-          polylinePoints={activeTrip?.pickup?.coordinates && activeTrip?.dropoff?.coordinates ? [activeTrip.pickup.coordinates, activeTrip.dropoff.coordinates] : null}
+          polylinePoints={
+            activeTrip?.pickup?.coordinates && activeTrip?.dropoff?.coordinates
+              ? [activeTrip.pickup.coordinates, activeTrip.dropoff.coordinates]
+              : !activeTrip && selectedRequest?.pickup?.coordinates && selectedRequest?.dropoff?.coordinates
+                ? [selectedRequest.pickup.coordinates, selectedRequest.dropoff.coordinates]
+                : null
+          }
           showControls={true}
         />
       </div>

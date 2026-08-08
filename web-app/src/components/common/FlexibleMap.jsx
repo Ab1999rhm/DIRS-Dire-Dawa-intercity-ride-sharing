@@ -146,13 +146,50 @@ const FlexibleMap = ({
         })}
 
         {polylinePoints && polylinePoints.length >= 2 && (
-          <Polyline
-            positions={polylinePoints}
-            color="#2563eb"
-            weight={5}
-            opacity={0.8}
-            dashArray="8 8"
-          />
+          <>
+            {/* Glow effect behind the line */}
+            <Polyline
+              positions={polylinePoints}
+              color="#93c5fd"
+              weight={10}
+              opacity={0.3}
+            />
+            {/* Main route line */}
+            <Polyline
+              positions={polylinePoints}
+              color="#2563eb"
+              weight={5}
+              opacity={0.9}
+              dashArray="10 6"
+              lineCap="round"
+              lineJoin="round"
+            />
+            {/* Directional arrow at midpoint */}
+            {polylinePoints.length === 2 && (
+              <Marker
+                position={[
+                  (polylinePoints[0][0] + polylinePoints[1][0]) / 2,
+                  (polylinePoints[0][1] + polylinePoints[1][1]) / 2
+                ]}
+                icon={L.divIcon({
+                  className: 'route-arrow',
+                  html: `<div style="
+                    width:28px;height:28px;border-radius:50%;
+                    background:#2563eb;color:#fff;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:14px;font-weight:bold;
+                    border:2px solid #fff;box-shadow:0 2px 8px rgba(37,99,235,0.4);
+                    transform:rotate(${Math.atan2(
+                      polylinePoints[1][1] - polylinePoints[0][1],
+                      polylinePoints[1][0] - polylinePoints[0][0]
+                    ) * 180 / Math.PI + 90}deg);
+                  ">▶</div>`,
+                  iconSize: [28, 28],
+                  iconAnchor: [14, 14],
+                })}
+              />
+            )}
+          </>
         )}
       </MapContainer>
 

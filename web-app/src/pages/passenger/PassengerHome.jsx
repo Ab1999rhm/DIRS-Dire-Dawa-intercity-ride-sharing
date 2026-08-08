@@ -1272,6 +1272,7 @@ const PassengerHome = () => {
             ...(pickupCoords ? [{ position: pickupCoords, icon: pickupIcon, popup: pickup || 'Pickup' }] : []),
             ...(dropoffCoords ? [{ position: dropoffCoords, icon: dropoffIcon, popup: dropoff || 'Dropoff' }] : []),
           ]}
+          polylinePoints={pickupCoords && dropoffCoords ? [pickupCoords, dropoffCoords] : null}
           showRecenter={true}
           showFullscreen={true}
           showZoomButtons={true}
