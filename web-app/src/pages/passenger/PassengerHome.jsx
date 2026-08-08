@@ -1540,7 +1540,7 @@ const PassengerHome = () => {
         {bookingStep >= 5 && (
           <div className="booking-step">
             <div className="booking-step-header">
-              <span className="booking-step-number">{rideType === 'intercity' ? '5' : '4'}</span>
+              <span className="booking-step-number">5</span>
               <span className="booking-step-label">Promo Code</span>
               {promoCode && <span className="booking-step-done">✓ {promoCode}</span>}
             </div>
@@ -1553,8 +1553,8 @@ const PassengerHome = () => {
                 onChange={(e) => setPromoCode(e.target.value)}
               />
             </div>
-            {bookingStep === (rideType === 'intercity' ? 5 : 4) && (
-              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 6 : 5)}>
+            {bookingStep === 5 && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(6)}>
                 {promoCode ? 'Apply & Continue' : 'Skip'} <FaArrowRight />
               </button>
             )}
@@ -1565,7 +1565,7 @@ const PassengerHome = () => {
         {bookingStep >= 6 && (
           <div className="booking-step">
             <div className="booking-step-header">
-              <span className="booking-step-number">{rideType === 'intercity' ? '6' : '5'}</span>
+              <span className="booking-step-number">6</span>
               <span className="booking-step-label">Schedule Ride</span>
               {scheduleEnabled && scheduledTime && (
                 <span className="booking-step-done">✓ {new Date(scheduledTime).toLocaleString()}</span>
@@ -1589,8 +1589,8 @@ const PassengerHome = () => {
                 style={{ marginTop: 8 }}
               />
             )}
-            {bookingStep === (rideType === 'intercity' ? 6 : 5) && (
-              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 7 : 6)}>
+            {bookingStep === 6 && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(7)}>
                 Continue <FaArrowRight />
               </button>
             )}
@@ -1601,7 +1601,7 @@ const PassengerHome = () => {
         {bookingStep >= 7 && (
           <div className="booking-step">
             <div className="booking-step-header">
-              <span className="booking-step-number">{rideType === 'intercity' ? '7' : '6'}</span>
+              <span className="booking-step-number">7</span>
               <span className="booking-step-label">Payment Method</span>
             </div>
             <div className="passenger-payment-grid">
@@ -1620,19 +1620,19 @@ const PassengerHome = () => {
                 </div>
               ))}
             </div>
-            {bookingStep === (rideType === 'intercity' ? 7 : 6) && (
-              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 8 : 7)}>
+            {bookingStep === 7 && (
+              <button className="booking-continue-btn" onClick={() => setBookingStep(8)}>
                 Continue <FaArrowRight />
               </button>
             )}
           </div>
         )}
 
-        {/* STEP 8/7: Book Now */}
-        {bookingStep >= (rideType === 'intercity' ? 8 : 7) && (
+        {/* STEP 8: Book Now */}
+        {bookingStep >= 8 && (
           <div className="booking-step">
             <div className="booking-step-header">
-              <span className="booking-step-number">{rideType === 'intercity' ? '8' : '7'}</span>
+              <span className="booking-step-number">8</span>
               <span className="booking-step-label">Confirm & Book</span>
             </div>
             <div className="booking-summary">
