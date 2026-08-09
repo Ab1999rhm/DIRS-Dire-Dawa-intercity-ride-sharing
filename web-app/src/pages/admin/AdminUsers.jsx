@@ -67,6 +67,9 @@ const AdminUsers = () => {
   if (loading) {
     return (
       <div className="admin-page">
+        <div className="admin-logo-bar">
+          <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+        </div>
         <div className="admin-header"><h1>{t('admin.users')}</h1></div>
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>{t('common.loading')}</div>
       </div>
@@ -76,6 +79,9 @@ const AdminUsers = () => {
   if (error) {
     return (
       <div className="admin-page">
+        <div className="admin-logo-bar">
+          <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+        </div>
         <div className="admin-header"><h1>{t('admin.users')}</h1></div>
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--danger)' }}>{error}</div>
       </div>
@@ -84,16 +90,20 @@ const AdminUsers = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+      </div>
+
+      <div className="admin-header admin-animate-in">
         <h1>{t('admin.users')}</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="admin-animate-in-delay-1" style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
           <FaSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder={t('admin.searchUsers') || 'Search users...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 14 }}
@@ -102,22 +112,22 @@ const AdminUsers = () => {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          style={{ padding: '10px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 14, background: '#fff' }}
+          style={{ padding: '10px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 14, background: 'var(--card)' }}
         >
-          <option value="all">All Roles</option>
-          <option value="passenger">Passenger</option>
-          <option value="driver">Driver</option>
+          <option value="all">{t('admin.allRoles') || 'All Roles'}</option>
+          <option value="passenger">{t('admin.passenger') || 'Passenger'}</option>
+          <option value="driver">{t('admin.driver') || 'Driver'}</option>
         </select>
       </div>
 
       {filteredUsers.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <EmptyStateIllustration type="users" />
-          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>No users found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>No users match your search criteria</p>
+          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>{t('admin.noUsers') || 'No users found'}</h3>
+          <p style={{ color: 'var(--text-muted)' }}>{t('admin.noUsersMatch') || 'No users match your search criteria'}</p>
         </div>
       ) : (
-        <div className="admin-table">
+        <div className="admin-table admin-animate-in-delay-2">
           <div className="admin-table-header">
             <div style={{ gridColumn: 'span 2' }}>User</div>
             <div>Phone</div>
@@ -133,7 +143,7 @@ const AdminUsers = () => {
                 </div>
                 <div className="row-info">
                   <h4>{u.firstName} {u.lastName}</h4>
-                  <p>Joined {new Date(u.createdAt).toLocaleDateString()}</p>
+                  <p>{t('admin.joined') || 'Joined'} {new Date(u.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
               <div>{u.phoneNumber}</div>
@@ -141,7 +151,7 @@ const AdminUsers = () => {
               <div><StatusBadge status={u.status || 'active'} /></div>
               <div className="row-actions">
                 <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedUser(u); setShowModal(true); }}>
-                  <FaEye /> View
+                  <FaEye /> {t('common.view') || 'View'}
                 </button>
                 {u.status !== 'suspended' ? (
                   <button className="btn btn-danger btn-sm" onClick={() => handleSuspend(u._id)}>
@@ -149,7 +159,7 @@ const AdminUsers = () => {
                   </button>
                 ) : (
                   <button className="btn btn-success btn-sm" onClick={() => handleReactivate(u._id)}>
-                    Reactivate
+                    {t('admin.reactivate') || 'Reactivate'}
                   </button>
                 )}
               </div>
@@ -158,16 +168,16 @@ const AdminUsers = () => {
         </div>
       )}
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="User Details">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('admin.userDetails') || 'User Details'}>
         {selectedUser && (
           <div className="detail-modal-content">
-            <div className="detail-row"><span className="detail-key">Name</span><span className="detail-val">{selectedUser.firstName} {selectedUser.lastName}</span></div>
-            <div className="detail-row"><span className="detail-key">Phone</span><span className="detail-val">{selectedUser.phoneNumber}</span></div>
-            <div className="detail-row"><span className="detail-key">Role</span><span className="detail-val">{selectedUser.role}</span></div>
-            <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val">{selectedUser.status || 'active'}</span></div>
-            <div className="detail-row"><span className="detail-key">Email</span><span className="detail-val">{selectedUser.email || 'N/A'}</span></div>
-            <div className="detail-row"><span className="detail-key">Joined</span><span className="detail-val">{new Date(selectedUser.createdAt).toLocaleDateString()}</span></div>
-            <div className="detail-row"><span className="detail-key">ID</span><span className="detail-val" style={{ fontSize: 11 }}>{selectedUser._id}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.name') || 'Name'}</span><span className="detail-val">{selectedUser.firstName} {selectedUser.lastName}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.phone') || 'Phone'}</span><span className="detail-val">{selectedUser.phoneNumber}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.role') || 'Role'}</span><span className="detail-val">{selectedUser.role}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val">{selectedUser.status || 'active'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.email') || 'Email'}</span><span className="detail-val">{selectedUser.email || 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.joined') || 'Joined'}</span><span className="detail-val">{new Date(selectedUser.createdAt).toLocaleDateString()}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.id') || 'ID'}</span><span className="detail-val" style={{ fontSize: 11 }}>{selectedUser._id}</span></div>
           </div>
         )}
       </Modal>

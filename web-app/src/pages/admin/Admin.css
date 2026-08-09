@@ -512,7 +512,7 @@
   max-width: 480px;
   max-height: 80vh;
   overflow-y: auto;
-  animation: slideUp 0.3s ease;
+  animation: scaleIn 0.3s ease;
 }
 .modal-header {
   display: flex;
@@ -541,8 +541,45 @@
   to { opacity: 1; }
 }
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+}
+@keyframes ring {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-12deg); }
+  20%, 40%, 60%, 80% { transform: rotate(12deg); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ===== ENTRANCE ANIMATIONS ===== */
+.admin-animate-in { animation: slideUp 0.3s ease both; }
+.admin-animate-in-delay-1 { animation: slideUp 0.3s ease 0.05s both; }
+.admin-animate-in-delay-2 { animation: slideUp 0.3s ease 0.1s both; }
+.admin-animate-in-delay-3 { animation: slideUp 0.3s ease 0.15s both; }
+.admin-animate-in-delay-4 { animation: slideUp 0.3s ease 0.2s both; }
+
+/* ===== INTERACTIVE HOVER/TAP EFFECTS ===== */
+.admin-stat-card, .admin-action-card, .admin-role-card, .admin-activity-item {
+  transition: all 0.2s ease;
+}
+.admin-stat-card:hover, .admin-action-card:hover, .admin-role-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.admin-stat-card:active, .admin-action-card:active, .admin-role-card:active {
+  transform: scale(0.97);
 }
 
 /* ===== TABLE (for larger screens) ===== */
@@ -741,6 +778,11 @@
 [data-theme="dark"] .admin-page {
   background: #1a1a2e;
 }
+[data-theme="dark"] .admin-header-actions .admin-icon-btn {
+  background: #16213e;
+  border-color: #2a2a4a;
+  color: #e2e8f0;
+}
 [data-theme="dark"] .admin-stat-card,
 [data-theme="dark"] .admin-action-card,
 [data-theme="dark"] .admin-role-card,
@@ -750,4 +792,121 @@
 [data-theme="dark"] .modal-content {
   background: #16213e;
   border-color: #2a2a4a;
+}
+[data-theme="dark"] .admin-search {
+  background: #16213e;
+  border-color: #2a2a4a;
+}
+[data-theme="dark"] .admin-search input {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .admin-search svg {
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-filter-tab {
+  background: #1e293b;
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-filter-tab.active {
+  background: var(--primary);
+  color: white;
+}
+[data-theme="dark"] .admin-greeting {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .admin-role-badge {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.2));
+  border-color: rgba(37, 99, 235, 0.3);
+}
+[data-theme="dark"] .admin-empty h3 {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .admin-empty p {
+  color: #94a3b8;
+}
+[data-theme="dark"] .status-badge.active,
+[data-theme="dark"] .status-badge.completed,
+[data-theme="dark"] .status-badge.approved {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+[data-theme="dark"] .status-badge.pending {
+  background: #78350f;
+  color: #fcd34d;
+}
+[data-theme="dark"] .status-badge.suspended,
+[data-theme="dark"] .status-badge.cancelled,
+[data-theme="dark"] .status-badge.rejected {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+[data-theme="dark"] .status-badge.in_progress {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+[data-theme="dark"] .btn-outline {
+  background: #16213e;
+  border-color: #2a2a4a;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .admin-lang-picker {
+  background: #16213e;
+  border-color: #2a2a4a;
+}
+[data-theme="dark"] .admin-lang-option {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .admin-lang-option:hover {
+  background: #1e293b;
+}
+[data-theme="dark"] .admin-stat-label {
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-section-title {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .admin-activity-text {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .admin-activity-time {
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-role-name {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .admin-role-count {
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-action-label {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .row-info h4 {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .row-info p {
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-bottom-nav {
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .admin-skeleton {
+  background: #1e293b;
+}
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .admin-activity-item:active {
+  background: #0f3460;
+}
+[data-theme="dark"] .admin-table-header {
+  background: #0f3460;
+}
+[data-theme="dark"] .admin-nav-item {
+  color: #94a3b8;
+}
+[data-theme="dark"] .admin-nav-item.active {
+  color: var(--primary);
+}
+[data-theme="dark"] .admin-icon-btn:active {
+  background: #0f3460;
 }

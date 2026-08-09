@@ -59,10 +59,10 @@ const AdminTrips = () => {
   };
 
   const statusTabs = [
-    { key: 'all', label: 'All' },
-    { key: 'active', label: 'Active' },
-    { key: 'completed', label: 'Completed' },
-    { key: 'cancelled', label: 'Cancelled' },
+    { key: 'all', label: t('common.all') || 'All' },
+    { key: 'active', label: t('admin.active') || 'Active' },
+    { key: 'completed', label: t('admin.completed') || 'Completed' },
+    { key: 'cancelled', label: t('admin.cancelled') || 'Cancelled' },
   ];
 
   if (loading) {
@@ -85,11 +85,15 @@ const AdminTrips = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+      </div>
+
+      <div className="admin-header admin-animate-in">
         <h1>{t('admin.trips')}</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="admin-animate-in-delay-1" style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
         {statusTabs.map((tab) => (
           <button
             key={tab.key}
@@ -104,18 +108,18 @@ const AdminTrips = () => {
       {trips.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <EmptyStateIllustration type="rides" />
-          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>No trips found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>No trips match the current filter</p>
+          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>{t('admin.noTrips') || 'No trips found'}</h3>
+          <p style={{ color: 'var(--text-muted)' }}>{t('admin.noTripsFilter') || 'No trips match the current filter'}</p>
         </div>
       ) : (
-        <div className="admin-table">
+        <div className="admin-table admin-animate-in-delay-2">
           <div className="admin-table-header">
-            <div>Route</div>
-            <div>Passenger</div>
-            <div>Driver</div>
-            <div>Fare</div>
-            <div>Status</div>
-            <div style={{ textAlign: 'right' }}>Actions</div>
+            <div>{t('admin.route') || 'Route'}</div>
+            <div>{t('admin.passenger') || 'Passenger'}</div>
+            <div>{t('admin.driver') || 'Driver'}</div>
+            <div>{t('admin.fare') || 'Fare'}</div>
+            <div>{t('admin.status') || 'Status'}</div>
+            <div style={{ textAlign: 'right' }}>{t('common.actions') || 'Actions'}</div>
           </div>
           {trips.map((trip) => (
             <div key={trip._id} className="admin-table-row">
@@ -127,7 +131,7 @@ const AdminTrips = () => {
                 <div style={{ fontSize: 13 }}>{trip.passenger?.firstName} {trip.passenger?.lastName}</div>
               </div>
               <div>
-                <div style={{ fontSize: 13 }}>{trip.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName}` : 'Unassigned'}</div>
+                <div style={{ fontSize: 13 }}>{trip.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName}` : (t('admin.unassigned') || 'Unassigned')}</div>
               </div>
               <div>
                 <Badge variant="success">ETB {(trip.fare?.totalFare || trip.fare?.total || trip.estimatedFare || 0).toLocaleString()}</Badge>
@@ -135,7 +139,7 @@ const AdminTrips = () => {
               <div><StatusBadge status={trip.status} /></div>
               <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
                 <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedTrip(trip); setShowModal(true); }}>
-                  <FaEye /> View
+                  <FaEye /> {t('common.view') || 'View'}
                 </button>
               </div>
             </div>
@@ -143,19 +147,19 @@ const AdminTrips = () => {
         </div>
       )}
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Trip Details">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('admin.tripDetails') || 'Trip Details'}>
         {selectedTrip && (
           <div className="detail-modal-content">
-            <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val"><StatusBadge status={selectedTrip.status} /></span></div>
-            <div className="detail-row"><span className="detail-key">Pickup</span><span className="detail-val">{selectedTrip.pickupLocation?.address || 'N/A'}</span></div>
-            <div className="detail-row"><span className="detail-key">Dropoff</span><span className="detail-val">{selectedTrip.dropoffLocation?.address || 'N/A'}</span></div>
-            <div className="detail-row"><span className="detail-key">Passenger</span><span className="detail-val">{selectedTrip.passenger?.firstName} {selectedTrip.passenger?.lastName}</span></div>
-            <div className="detail-row"><span className="detail-key">Driver</span><span className="detail-val">{selectedTrip.driver?.firstName ? `${selectedTrip.driver.firstName} ${selectedTrip.driver.lastName}` : 'Unassigned'}</span></div>
-            <div className="detail-row"><span className="detail-key">Fare</span><span className="detail-val">ETB {(selectedTrip.fare?.totalFare || selectedTrip.fare?.total || selectedTrip.estimatedFare || 0).toLocaleString()}</span></div>
-            <div className="detail-row"><span className="detail-key">Distance</span><span className="detail-val">{selectedTrip.distance ? `${selectedTrip.distance.toFixed(1)} km` : 'N/A'}</span></div>
-            <div className="detail-row"><span className="detail-key">Duration</span><span className="detail-val">{selectedTrip.duration ? `${selectedTrip.duration} min` : 'N/A'}</span></div>
-            <div className="detail-row"><span className="detail-key">Payment</span><span className="detail-val">{selectedTrip.paymentMethod || 'Cash'}</span></div>
-            <div className="detail-row"><span className="detail-key">Created</span><span className="detail-val">{new Date(selectedTrip.createdAt).toLocaleString()}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val"><StatusBadge status={selectedTrip.status} /></span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.pickup') || 'Pickup'}</span><span className="detail-val">{selectedTrip.pickupLocation?.address || 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.dropoff') || 'Dropoff'}</span><span className="detail-val">{selectedTrip.dropoffLocation?.address || 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.passenger') || 'Passenger'}</span><span className="detail-val">{selectedTrip.passenger?.firstName} {selectedTrip.passenger?.lastName}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.driver') || 'Driver'}</span><span className="detail-val">{selectedTrip.driver?.firstName ? `${selectedTrip.driver.firstName} ${selectedTrip.driver.lastName}` : (t('admin.unassigned') || 'Unassigned')}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.fare') || 'Fare'}</span><span className="detail-val">ETB {(selectedTrip.fare?.totalFare || selectedTrip.fare?.total || selectedTrip.estimatedFare || 0).toLocaleString()}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.distance') || 'Distance'}</span><span className="detail-val">{selectedTrip.distance ? `${selectedTrip.distance.toFixed(1)} km` : 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.duration') || 'Duration'}</span><span className="detail-val">{selectedTrip.duration ? `${selectedTrip.duration} min` : 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.payment') || 'Payment'}</span><span className="detail-val">{selectedTrip.paymentMethod || 'Cash'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.created') || 'Created'}</span><span className="detail-val">{new Date(selectedTrip.createdAt).toLocaleString()}</span></div>
           </div>
         )}
       </Modal>

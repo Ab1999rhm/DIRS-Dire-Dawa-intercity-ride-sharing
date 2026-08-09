@@ -38,9 +38,9 @@ const AdminPayments = () => {
   };
 
   const overviewCards = [
-    { key: 'totalRevenue', label: 'Total Revenue', value: overview.totalRevenue, color: '#2563eb' },
-    { key: 'commission', label: 'Commission', value: overview.commission, color: '#059669' },
-    { key: 'pendingPayouts', label: 'Pending Payouts', value: overview.pendingPayouts, color: '#d97706' },
+    { key: 'totalRevenue', label: t('admin.totalRevenue') || 'Total Revenue', value: overview.totalRevenue, color: '#2563eb' },
+    { key: 'commission', label: t('admin.commission') || 'Commission', value: overview.commission, color: '#059669' },
+    { key: 'pendingPayouts', label: t('admin.pendingPayouts') || 'Pending Payouts', value: overview.pendingPayouts, color: '#d97706' },
   ];
 
   if (loading) {
@@ -63,13 +63,16 @@ const AdminPayments = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+      </div>
+      <div className="admin-header admin-animate-in">
         <h1>{t('admin.payments')}</h1>
       </div>
 
-      <div className="payment-overview-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div className="payment-overview-cards admin-animate-in-delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
         {overviewCards.map((card) => (
-          <div key={card.key} className="overview-card" style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <div key={card.key} className="overview-card" style={{ background: 'var(--card)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: `${card.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color }}>
                 <FaMoneyBillWave />
@@ -85,38 +88,38 @@ const AdminPayments = () => {
         <select
           value={methodFilter}
           onChange={(e) => setMethodFilter(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13, background: '#fff' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13, background: 'var(--card)' }}
         >
-          <option value="all">All Methods</option>
-          <option value="cash">Cash</option>
-          <option value="telebirr">Telebirr</option>
-          <option value="chapa">Chapa</option>
+          <option value="all">{t('admin.allMethods') || 'All Methods'}</option>
+          <option value="cash">{t('admin.cash') || 'Cash'}</option>
+          <option value="telebirr">{t('admin.telebirr') || 'Telebirr'}</option>
+          <option value="chapa">{t('admin.chapa') || 'Chapa'}</option>
         </select>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13, background: '#fff' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13, background: 'var(--card)' }}
         >
-          <option value="all">All Status</option>
-          <option value="completed">Completed</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
+          <option value="all">{t('admin.allStatus') || 'All Status'}</option>
+          <option value="completed">{t('admin.completed') || 'Completed'}</option>
+          <option value="pending">{t('admin.pending') || 'Pending'}</option>
+          <option value="failed">{t('admin.failed') || 'Failed'}</option>
         </select>
       </div>
 
       {payments.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <EmptyStateIllustration type="earnings" />
-          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>No payments found</h3>
+          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>{t('admin.noPayments') || 'No payments found'}</h3>
         </div>
       ) : (
-        <div className="admin-table">
+        <div className="admin-table admin-animate-in-delay-2">
           <div className="admin-table-header">
-            <div style={{ gridColumn: 'span 2' }}>User</div>
-            <div>Amount</div>
-            <div>Method</div>
-            <div>Status</div>
-            <div style={{ gridColumn: 'span 2', textAlign: 'right' }}>Date</div>
+            <div style={{ gridColumn: 'span 2' }}>{t('admin.user') || 'User'}</div>
+            <div>{t('admin.amount') || 'Amount'}</div>
+            <div>{t('admin.method') || 'Method'}</div>
+            <div>{t('admin.status') || 'Status'}</div>
+            <div style={{ gridColumn: 'span 2', textAlign: 'right' }}>{t('admin.date') || 'Date'}</div>
           </div>
           {payments.map((payment) => (
             <div key={payment._id} className="admin-table-row">

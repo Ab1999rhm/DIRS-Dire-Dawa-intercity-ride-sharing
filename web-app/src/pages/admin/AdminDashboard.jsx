@@ -56,12 +56,12 @@ const AdminDashboard = () => {
   ];
 
   const roles = [
-    { icon: <FaUserShield />, name: 'Super Admin', count: '1 ' + (t('admin.active') || 'active'), path: '/admin/users', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
-    { icon: <FaUserCheck />, name: 'Admin', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-    { icon: <FaCar />, name: 'Drivers', count: (stats?.activeDrivers || 0) + ' ' + (t('admin.active') || 'active'), path: '/admin/drivers', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-    { icon: <FaUsers />, name: 'Passengers', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
-    { icon: <FaChartBar />, name: 'Reports', count: t('admin.viewReports') || 'View all', path: '/admin/reports', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
-    { icon: <FaTag />, name: 'Promos', count: t('admin.manage') || 'Manage', path: '/admin/promos', color: '#0891b2', bg: 'rgba(8,145,178,0.08)' },
+    { icon: <FaUserShield />, name: t('admin.superAdmin') || 'Super Admin', count: '1 ' + (t('admin.active') || 'active'), path: '/admin/users', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
+    { icon: <FaUserCheck />, name: t('admin.admin') || 'Admin', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
+    { icon: <FaCar />, name: t('admin.drivers') || 'Drivers', count: (stats?.activeDrivers || 0) + ' ' + (t('admin.active') || 'active'), path: '/admin/drivers', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+    { icon: <FaUsers />, name: t('admin.passengers') || 'Passengers', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
+    { icon: <FaChartBar />, name: t('admin.reports') || 'Reports', count: t('admin.viewReports') || 'View all', path: '/admin/reports', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
+    { icon: <FaTag />, name: t('admin.promos') || 'Promos', count: t('admin.manage') || 'Manage', path: '/admin/promos', color: '#0891b2', bg: 'rgba(8,145,178,0.08)' },
   ];
 
   if (loading) {
@@ -108,13 +108,13 @@ const AdminDashboard = () => {
       </div>
 
       {/* Header */}
-      <div className="admin-header">
+      <div className="admin-header admin-animate-in">
         <div className="admin-header-left">
           <div className="admin-greeting">
             {t('admin.dashboard') || 'Dashboard'}
           </div>
           <div className="admin-role-badge">
-            <FaShieldAlt /> Admin Panel
+            <FaShieldAlt /> {t('admin.adminPanel') || 'Admin Panel'}
           </div>
         </div>
         <div className="admin-header-actions">
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats */}
-      <div className="admin-stats-grid">
+      <div className="admin-stats-grid admin-animate-in-delay-1">
         {statCards.map((card) => (
           <div key={card.key} className="admin-stat-card">
             <div className="admin-stat-icon" style={{ background: card.bg, color: card.color }}>
@@ -171,10 +171,10 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="admin-section-title">
+      <div className="admin-section-title admin-animate-in-delay-2">
         <FaSearch /> {t('admin.quickActions') || 'Quick Actions'}
       </div>
-      <div className="admin-actions-grid">
+      <div className="admin-actions-grid admin-animate-in-delay-2">
         {quickActions.map((action, i) => (
           <button key={i} className="admin-action-card" onClick={() => navigate(action.path)}>
             <div className="admin-action-icon" style={{ background: action.bg, color: action.color }}>
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* All Admin Roles */}
-      <div className="admin-roles-section">
+      <div className="admin-roles-section admin-animate-in-delay-3">
         <div className="admin-section-title">
           <FaUserShield /> {t('admin.allRoles') || 'All Roles'}
         </div>
@@ -207,7 +207,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="admin-activity-section">
+      <div className="admin-activity-section admin-animate-in-delay-4">
         <div className="admin-section-title">
           <FaClock /> {t('admin.recentActivity') || 'Recent Activity'}
         </div>

@@ -16,11 +16,11 @@ const AdminReports = () => {
   const [dateTo, setDateTo] = useState('');
 
   const reportTypes = [
-    { key: 'revenue', label: 'Revenue', icon: <FaMoneyBillWave />, color: '#2563eb', description: 'Detailed revenue breakdown' },
-    { key: 'trips', label: 'Trips', icon: <FaCar />, color: '#059669', description: 'Trip statistics and analytics' },
-    { key: 'users', label: 'Users', icon: <FaUsers />, color: '#7c3aed', description: 'User growth and activity' },
-    { key: 'drivers', label: 'Drivers', icon: <FaCar />, color: '#d97706', description: 'Driver performance metrics' },
-    { key: 'payments', label: 'Payments', icon: <FaMoneyBillWave />, color: '#ec4899', description: 'Payment method analytics' },
+    { key: 'revenue', label: t('admin.revenue') || 'Revenue', icon: <FaMoneyBillWave />, color: '#2563eb', description: t('admin.revenueDesc') || 'Detailed revenue breakdown' },
+    { key: 'trips', label: t('admin.trips') || 'Trips', icon: <FaCar />, color: '#059669', description: t('admin.tripsDesc') || 'Trip statistics and analytics' },
+    { key: 'users', label: t('admin.users') || 'Users', icon: <FaUsers />, color: '#7c3aed', description: t('admin.usersDesc') || 'User growth and activity' },
+    { key: 'drivers', label: t('admin.drivers') || 'Drivers', icon: <FaCar />, color: '#d97706', description: t('admin.driversDesc') || 'Driver performance metrics' },
+    { key: 'payments', label: t('admin.payments') || 'Payments', icon: <FaMoneyBillWave />, color: '#ec4899', description: t('admin.paymentsDesc') || 'Payment method analytics' },
   ];
 
   const generateReport = async (type) => {
@@ -48,9 +48,9 @@ const AdminReports = () => {
     const fields = Object.entries(data).filter(([key]) => !['_id', '__v', 'createdAt', 'updatedAt'].includes(key));
 
     return (
-      <div style={{ background: '#fff', borderRadius: 12, padding: 20 }}>
+      <div style={{ background: 'var(--card)', borderRadius: 12, padding: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, textTransform: 'capitalize' }}>{selectedReport} Report</h3>
+          <h3 style={{ margin: 0, textTransform: 'capitalize' }}>{selectedReport} {t('admin.report') || 'Report'}</h3>
           <button className="btn btn-ghost btn-sm" onClick={() => {
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -60,7 +60,7 @@ const AdminReports = () => {
             a.click();
             URL.revokeObjectURL(url);
           }}>
-            <FaDownload /> Export
+            <FaDownload /> {t('common.export') || 'Export'}
           </button>
         </div>
         <div className="detail-modal-content">
@@ -79,11 +79,15 @@ const AdminReports = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+      </div>
+
+      <div className="admin-header admin-animate-in">
         <h1>{t('admin.reports')}</h1>
       </div>
 
-      <div className="reports-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div className="reports-grid admin-animate-in-delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
         {reportTypes.map((report) => (
           <button
             key={report.key}
@@ -108,10 +112,10 @@ const AdminReports = () => {
         ))}
       </div>
 
-      <div className="date-range-row" style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="date-range-row admin-animate-in-delay-2" style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
         <FaFilter style={{ color: 'var(--text-muted)' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <label style={{ fontSize: 13, color: 'var(--text-muted)' }}>From</label>
+          <label style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('common.from') || 'From'}</label>
           <input
             type="date"
             value={dateFrom}
@@ -120,7 +124,7 @@ const AdminReports = () => {
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <label style={{ fontSize: 13, color: 'var(--text-muted)' }}>To</label>
+          <label style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('common.to') || 'To'}</label>
           <input
             type="date"
             value={dateTo}
@@ -143,8 +147,8 @@ const AdminReports = () => {
       {!loading && !error && !reportData && (
         <div style={{ textAlign: 'center', padding: 60 }}>
           <FaChartBar style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
-          <h3 style={{ color: 'var(--text-secondary)' }}>Select a report type above</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Choose a report type and date range to generate insights</p>
+          <h3 style={{ color: 'var(--text-secondary)' }}>{t('admin.selectReport') || 'Select a report type above'}</h3>
+          <p style={{ color: 'var(--text-muted)' }}>{t('admin.chooseReport') || 'Choose a report type and date range to generate insights'}</p>
         </div>
       )}
     </div>

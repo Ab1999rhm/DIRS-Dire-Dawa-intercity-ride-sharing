@@ -56,7 +56,7 @@ const AdminSOS = () => {
         setAlerts(prev => prev.filter(a => a._id !== alertId));
         if (selectedAlert?._id === alertId) setSelectedAlert(null);
       }
-      toast.success('Alert resolved');
+      toast.success(t('admin.alertResolved') || 'Alert resolved');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to resolve alert');
     }
@@ -64,9 +64,9 @@ const AdminSOS = () => {
 
   const handleEmergencyDispatch = (type, alert) => {
     const numbers = { police: '991', ambulance: '907', fireService: '939' };
-    const labels = { police: '🚔 Police 991', ambulance: '🚑 Ambulance 907', fireService: '🚒 Fire Service 939' };
+    const labels = { police: t('admin.police991') || '🚔 Police 991', ambulance: t('admin.ambulance907') || '🚑 Ambulance 907', fireService: '🚒 Fire Service 939' };
     const num = numbers[type];
-    toast.success(`Dispatching ${labels[type]} to ${alert?.location?.address || 'incident location'}!`);
+    toast.success(`${t('admin.dispatching') || 'Dispatching'} ${labels[type]} ${t('admin.to') || 'to'} ${alert?.location?.address || t('admin.incidentLocation') || 'incident location'}!`);
     window.location.href = `tel:${num}`;
   };
 
@@ -83,9 +83,12 @@ const AdminSOS = () => {
 
   return (
     <div className="admin-page">
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+      </div>
       {/* Real-World Emergency SOS Command Center Header */}
       {alerts.length > 0 && (
-        <div style={{
+        <div className="admin-animate-in" style={{
           background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
           color: 'white',
           padding: '14px 20px',
@@ -100,8 +103,8 @@ const AdminSOS = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <FaBell style={{ fontSize: 20, animation: 'ring 0.8s infinite' }} />
             <div>
-              <strong style={{ fontSize: 16 }}>🚨 EMERGENCY COMMAND CENTER — {alerts.length} Active Alert{alerts.length > 1 ? 's' : ''}</strong>
-              <div style={{ fontSize: 12, opacity: 0.9 }}>Immediate response required — All dispatch officers notified</div>
+              <strong style={{ fontSize: 16 }}>{t('admin.sos') || '🚨 EMERGENCY COMMAND CENTER'} — {alerts.length} {t('admin.activeAlerts') || 'Active Alert'}{alerts.length > 1 ? 's' : ''}</strong>
+              <div style={{ fontSize: 12, opacity: 0.9 }}>{t('admin.immediateResponse') || 'Immediate response required'} — All dispatch officers notified</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -110,44 +113,44 @@ const AdminSOS = () => {
               onClick={() => handleEmergencyDispatch('police', alerts[0])}
               style={{ background: '#1e3a8a', color: 'white', border: 'none', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 'bold', cursor: 'pointer' }}
             >
-              🚔 Police 991
+              {t('admin.police991') || '🚔 Police 991'}
             </button>
             <button
               type="button"
               onClick={() => handleEmergencyDispatch('ambulance', alerts[0])}
               style={{ background: '#065f46', color: 'white', border: 'none', padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 'bold', cursor: 'pointer' }}
             >
-              🚑 Ambulance 907
+              {t('admin.ambulance907') || '🚑 Ambulance 907'}
             </button>
           </div>
         </div>
       )}
 
-      <div className="admin-header">
+      <div className="admin-header admin-animate-in-delay-1">
         <h1>
           {t('admin.sos')}
           {alerts.length > 0 && <span className="alert-badge" style={{ marginLeft: 8, background: '#dc2626' }}>{alerts.length}</span>}
         </h1>
-        <button className="btn btn-primary" onClick={fetchAlerts} style={{ fontSize: 13 }}>🔄 Refresh</button>
+        <button className="btn btn-primary" onClick={fetchAlerts} style={{ fontSize: 13 }}>{t('admin.refresh') || '🔄 Refresh'}</button>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         <button className={`btn btn-sm ${activeTab === 'active' ? 'btn-danger' : 'btn-ghost'}`} onClick={() => setActiveTab('active')}>
-          🔴 Active ({alerts.length})
+          🔴 {t('admin.active') || 'Active'} ({alerts.length})
         </button>
         <button className={`btn btn-sm ${activeTab === 'resolved' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setActiveTab('resolved')}>
-          ✅ Resolved ({resolvedAlerts.length})
+          ✅ {t('admin.resolved') || 'Resolved'} ({resolvedAlerts.length})
         </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: selectedAlert ? '1fr 1fr' : '1fr', gap: 20 }}>
         {/* Alerts List */}
-        <div>
+        <div className="admin-animate-in-delay-2">
           {displayedAlerts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
               <EmptyStateIllustration type="sos" />
               <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>
-                {activeTab === 'active' ? '✅ All Clear — No Active Emergencies' : 'No resolved alerts'}
+                {activeTab === 'active' ? (t('admin.allClear') || '✅ All Clear — No Active Emergencies') : (t('admin.noResolved') || 'No resolved alerts')}
               </h3>
             </div>
           ) : (
@@ -157,7 +160,7 @@ const AdminSOS = () => {
                   key={alert._id}
                   className="sos-alert-card"
                   style={{
-                    background: activeTab === 'active' ? '#fff5f5' : '#f0fdf4',
+                    background: activeTab === 'active' ? 'var(--danger-bg, rgba(220,38,38,0.05))' : 'var(--success-bg, rgba(22,163,74,0.05))',
                     borderRadius: 12,
                     padding: 20,
                     marginBottom: 12,
@@ -170,16 +173,16 @@ const AdminSOS = () => {
                   <div className="sos-alert-header">
                     <FaExclamationTriangle style={{ color: activeTab === 'active' ? '#dc2626' : '#16a34a', fontSize: 18, flexShrink: 0 }} />
                     <div className="sos-alert-info">
-                      <h4>{alert.user?.firstName || 'Unknown'} {alert.user?.lastName || ''}</h4>
-                      <p>{alert.user?.phoneNumber || 'No phone'}</p>
+                      <h4>{alert.user?.firstName || t('admin.unknown') || 'Unknown'} {alert.user?.lastName || ''}</h4>
+                      <p>{alert.user?.phoneNumber || t('admin.noPhone') || 'No phone'}</p>
                     </div>
                     <Badge variant={activeTab === 'active' ? 'danger' : 'success'} style={{ marginLeft: 'auto' }}>
-                      {alert.urgency || (activeTab === 'active' ? 'HIGH' : 'resolved')}
+                      {alert.urgency || (activeTab === 'active' ? (t('admin.high') || 'HIGH') : (t('admin.resolved') || 'resolved'))}
                     </Badge>
                   </div>
 
                   {alert.location && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#64748b', margin: '10px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', margin: '10px 0' }}>
                       <FaMapMarkerAlt style={{ color: '#dc2626' }} />
                       {alert.location.address || `${alert.location.coordinates?.[1]?.toFixed(4)}, ${alert.location.coordinates?.[0]?.toFixed(4)}`}
                     </div>
@@ -198,10 +201,10 @@ const AdminSOS = () => {
                       <button
                         className="btn btn-danger btn-sm"
                         onClick={(e) => { e.stopPropagation(); handleResolve(alert._id); }}
-                      >✅ Mark Resolved</button>
+                      >✅ {t('admin.markResolved') || 'Mark Resolved'}</button>
                       {alert.user?.phoneNumber && (
                         <a href={`tel:${alert.user.phoneNumber}`} className="btn btn-ghost btn-sm" onClick={e => e.stopPropagation()}>
-                          <FaPhone /> Call Passenger
+                          <FaPhone /> {t('admin.callPassenger') || 'Call Passenger'}
                         </a>
                       )}
                       <button
@@ -210,7 +213,7 @@ const AdminSOS = () => {
                         style={{ background: '#1e3a8a', color: 'white' }}
                         onClick={(e) => { e.stopPropagation(); handleEmergencyDispatch('police', alert); }}
                       >
-                        🚔 Police 991
+                        {t('admin.police991') || '🚔 Police 991'}
                       </button>
                       <button
                         type="button"
@@ -218,7 +221,7 @@ const AdminSOS = () => {
                         style={{ background: '#065f46', color: 'white' }}
                         onClick={(e) => { e.stopPropagation(); handleEmergencyDispatch('ambulance', alert); }}
                       >
-                        🚑 Ambulance 907
+                        {t('admin.ambulance907') || '🚑 Ambulance 907'}
                       </button>
                     </div>
                   )}
@@ -232,7 +235,7 @@ const AdminSOS = () => {
         {selectedAlert && (
           <div>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 10, color: '#dc2626' }}>
-              📍 Live Incident Location — {selectedAlert.user?.firstName} {selectedAlert.user?.lastName}
+              {t('admin.liveIncident') || '📍 Live Incident Location'} — {selectedAlert.user?.firstName} {selectedAlert.user?.lastName}
             </h3>
             <FlexibleMap
               center={selectedAlert.location?.coordinates
@@ -248,15 +251,15 @@ const AdminSOS = () => {
               }]}
               showControls={true}
             />
-            <div style={{ background: '#fee2e2', borderRadius: 10, padding: 12, marginTop: 10 }}>
-              <strong style={{ fontSize: 13, color: '#991b1b' }}>Emergency Dispatch Options</strong>
+            <div style={{ background: 'var(--danger-bg, rgba(220,38,38,0.15))', borderRadius: 10, padding: 12, marginTop: 10 }}>
+              <strong style={{ fontSize: 13, color: '#991b1b' }}>{t('admin.emergencyDispatch') || 'Emergency Dispatch Options'}</strong>
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 <button type="button" style={{ flex: 1, padding: '8px', background: '#1e3a8a', color: 'white', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer', fontSize: 12 }}
-                  onClick={() => handleEmergencyDispatch('police', selectedAlert)}>🚔 Police 991</button>
+                  onClick={() => handleEmergencyDispatch('police', selectedAlert)}>{t('admin.police991') || '🚔 Police 991'}</button>
                 <button type="button" style={{ flex: 1, padding: '8px', background: '#065f46', color: 'white', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer', fontSize: 12 }}
-                  onClick={() => handleEmergencyDispatch('ambulance', selectedAlert)}>🚑 Ambulance 907</button>
+                  onClick={() => handleEmergencyDispatch('ambulance', selectedAlert)}>{t('admin.ambulance907') || '🚑 Ambulance 907'}</button>
                 <button type="button" style={{ flex: 1, padding: '8px', background: '#7c2d12', color: 'white', border: 'none', borderRadius: 8, fontWeight: 'bold', cursor: 'pointer', fontSize: 12 }}
-                  onClick={() => toast.info('Emergency contacts notified via SMS!')}>📱 SMS Contacts</button>
+                  onClick={() => toast.info(t('admin.smsNotified') || 'Emergency contacts notified via SMS!')}>{t('admin.smsContacts') || '📱 SMS Contacts'}</button>
               </div>
             </div>
           </div>

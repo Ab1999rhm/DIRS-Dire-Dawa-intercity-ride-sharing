@@ -132,20 +132,20 @@ const AdminDrivers = () => {
       <div className="admin-logo-bar">
         <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
       </div>
-      <div className="admin-header">
+      <div className="admin-header admin-animate-in">
         <h1>{t('admin.drivers')}</h1>
-        <button className="btn btn-primary" onClick={() => fetchDrivers(filterStatus)} style={{ fontSize: 13 }}>🔄 Refresh</button>
+        <button className="btn btn-primary" onClick={() => fetchDrivers(filterStatus)} style={{ fontSize: 13 }}>{t('common.refresh') || '🔄 Refresh'}</button>
       </div>
 
       {error && <div className="error-banner" onClick={() => setError(null)}>{error}</div>}
 
       {/* Search & Filter Bar */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px' }}>
-          <FaSearch style={{ color: '#94a3b8' }} />
+      <div className="admin-animate-in-delay-1" style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', gap: 8, background: 'var(--card)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '8px 12px' }}>
+          <FaSearch style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
-            placeholder="Search by name, phone, or plate..."
+            placeholder={t('admin.searchDrivers') || 'Search by name, phone, or plate...'}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{ border: 'none', outline: 'none', fontSize: 13, width: '100%' }}
@@ -160,7 +160,7 @@ const AdminDrivers = () => {
               onClick={() => handleFilterChange(s)}
               style={{ textTransform: 'capitalize' }}
             >
-              {s} ({s === 'all' ? driverStats.total : driverStats[s] || 0})
+              {t(`admin.${s}`) || s} ({s === 'all' ? driverStats.total : driverStats[s] || 0})
             </button>
           ))}
         </div>
@@ -169,36 +169,36 @@ const AdminDrivers = () => {
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 40 }}>
           <EmptyStateIllustration type="users" />
-          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>No drivers found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search or filter</p>
+          <h3 style={{ marginTop: 16, color: 'var(--text-secondary)' }}>{t('admin.noDrivers') || 'No drivers found'}</h3>
+          <p style={{ color: 'var(--text-muted)' }}>{t('admin.adjustSearch') || 'Try adjusting your search or filter'}</p>
         </div>
       ) : (
-        <div className="drivers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        <div className="drivers-grid admin-animate-in-delay-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
           {filtered.map((driver) => {
             const docs = MOCK_DOCS[driver._id] || MOCK_DOCS.default;
             const pendingDocs = docs.filter(d => d.status === 'pending').length;
             return (
-              <div key={driver._id} className="driver-verification-card" style={{ background: '#fff', borderRadius: 14, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid #f1f5f9' }}>
+              <div key={driver._id} className="driver-verification-card" style={{ background: 'var(--card)', borderRadius: 14, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid var(--border-light)' }}>
                 {/* Driver Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
                     {driver.firstName?.[0]}{driver.lastName?.[0]}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{driver.firstName} {driver.lastName}</h4>
-                    <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>{driver.phoneNumber}</p>
+                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{driver.firstName} {driver.lastName}</h4>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>{driver.phoneNumber}</p>
                   </div>
                   <StatusBadge status={driver.verificationStatus || 'pending'} />
                 </div>
 
                 {/* Vehicle Info */}
                 {driver.vehicle && (
-                  <div style={{ marginBottom: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8 }}>
+                  <div style={{ marginBottom: 12, padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <FaCar style={{ color: '#2563eb', fontSize: 12 }} />
-                      <strong style={{ fontSize: 12, color: '#1e293b' }}>{driver.vehicle.make} {driver.vehicle.model} — {driver.vehicle.plateNumber}</strong>
+                      <FaCar style={{ color: 'var(--primary)', fontSize: 12 }} />
+                      <strong style={{ fontSize: 12, color: 'var(--text-primary)' }}>{driver.vehicle.make} {driver.vehicle.model} — {driver.vehicle.plateNumber}</strong>
                     </div>
-                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#64748b' }}>
+                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--text-muted)' }}>
                       <span>Year: {driver.vehicle.year}</span>
                       <span>Color: {driver.vehicle.color}</span>
                       <span>Type: {driver.vehicle.type}</span>
@@ -209,10 +209,10 @@ const AdminDrivers = () => {
                 {/* Document Status Mini-Badges */}
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>Documents</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{t('admin.documents') || 'Documents'}</span>
                     {pendingDocs > 0 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, background: '#fef3c7', color: '#92400e', padding: '1px 6px', borderRadius: 10 }}>
-                        {pendingDocs} Pending Review
+                      <span style={{ fontSize: 10, fontWeight: 700, background: 'var(--warning-bg, #fef3c7)', color: 'var(--warning-text, #92400e)', padding: '1px 6px', borderRadius: 10 }}>
+                        {pendingDocs} {t('admin.pendingReview') || 'Pending Review'}
                       </span>
                     )}
                   </div>
@@ -220,8 +220,8 @@ const AdminDrivers = () => {
                     {docs.map((doc, idx) => (
                       <span key={idx} style={{
                         fontSize: 10, padding: '2px 7px', borderRadius: 20, fontWeight: 600,
-                        background: doc.status === 'verified' ? '#dcfce7' : '#fef3c7',
-                        color: doc.status === 'verified' ? '#15803d' : '#b45309'
+                        background: doc.status === 'verified' ? 'var(--success-bg, #dcfce7)' : 'var(--warning-bg, #fef3c7)',
+                        color: doc.status === 'verified' ? 'var(--success-text, #15803d)' : 'var(--warning-text, #b45309)'
                       }}>
                         {doc.fileIcon} {doc.title}
                       </span>
@@ -230,8 +230,8 @@ const AdminDrivers = () => {
                 </div>
 
                 {/* Rating & Trips */}
-                <div style={{ display: 'flex', gap: 16, marginBottom: 14, fontSize: 12, color: '#64748b' }}>
-                  <span><FaStar style={{ color: '#f59e0b' }} /> {driver.rating?.average?.toFixed(1) || '0.0'}</span>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 14, fontSize: 12, color: 'var(--text-muted)' }}>
+                  <span><FaStar style={{ color: 'var(--warning, #f59e0b)' }} /> {driver.rating?.average?.toFixed(1) || '0.0'}</span>
                   <span>🚗 {driver.totalTrips || 0} trips</span>
                 </div>
 
@@ -239,10 +239,10 @@ const AdminDrivers = () => {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     type="button"
-                    style={{ flex: 1, padding: '8px', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                    style={{ flex: 1, padding: '8px', background: 'var(--bg-info, #eff6ff)', color: 'var(--primary)', border: '1px solid var(--border-info, #bfdbfe)', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                     onClick={() => { setInspectDriver(driver); setRejectionReason(''); setCustomReason(''); }}
                   >
-                    <FaFileImage /> Inspect Docs
+                    <FaFileImage /> {t('admin.inspectDocs') || 'Inspect Docs'}
                   </button>
                   {(driver.verificationStatus === 'pending' || !driver.verificationStatus) && (
                     <>
@@ -252,7 +252,7 @@ const AdminDrivers = () => {
                         style={{ flex: 1 }}
                         onClick={() => handleVerify(driver._id, 'approve', '')}
                       >
-                        <FaCheck /> Approve
+                        <FaCheck /> {t('admin.approve') || 'Approve'}
                       </button>
                       <button
                         type="button"
@@ -260,7 +260,7 @@ const AdminDrivers = () => {
                         style={{ flex: 1 }}
                         onClick={() => { setInspectDriver(driver); setRejectionReason('License is expired'); }}
                       >
-                        <FaTimes /> Reject
+                        <FaTimes /> {t('admin.reject') || 'Reject'}
                       </button>
                     </>
                   )}
@@ -273,18 +273,18 @@ const AdminDrivers = () => {
 
       {/* Document Inspection Drawer / Modal */}
       {inspectDriver && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setInspectDriver(null)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 9999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }} onClick={() => setInspectDriver(null)}>
           <div
-            style={{ background: '#fff', width: '100%', maxWidth: 600, borderRadius: '20px 20px 0 0', padding: 24, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}
+            style={{ background: 'var(--card)', width: '100%', maxWidth: 600, borderRadius: '20px 20px 0 0', padding: 24, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 -8px 40px rgba(0,0,0,0.2)', animation: 'slideUp 0.3s ease' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Drawer Handle */}
-            <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 20px' }} />
+            <div style={{ width: 40, height: 4, background: 'var(--border-light)', borderRadius: 2, margin: '0 auto 20px' }} />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>📋 Document Inspection</h3>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>{inspectDriver.firstName} {inspectDriver.lastName} · {inspectDriver.phoneNumber}</p>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{t('admin.documentInspection') || '📋 Document Inspection'}</h3>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>{inspectDriver.firstName} {inspectDriver.lastName} · {inspectDriver.phoneNumber}</p>
               </div>
               <StatusBadge status={inspectDriver.verificationStatus || 'pending'} />
             </div>
@@ -308,31 +308,31 @@ const AdminDrivers = () => {
 
                     return (
                       <div key={item.key} style={{
-                        border: `2px solid ${status === 'verified' ? '#86efac' : hasImage ? '#93c5fd' : '#fde68a'}`,
+                        border: `2px solid ${status === 'verified' ? 'var(--success, #86efac)' : hasImage ? 'var(--primary, #93c5fd)' : 'var(--warning, #fde68a)'}`,
                         borderRadius: 12,
                         padding: 14,
-                        background: status === 'verified' ? '#f0fdf4' : hasImage ? '#eff6ff' : '#fffbeb'
+                        background: status === 'verified' ? 'var(--success-bg, #f0fdf4)' : hasImage ? 'var(--bg-info, #eff6ff)' : 'var(--warning-bg, #fffbeb)'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                           <span style={{ fontSize: 22 }}>{item.fileIcon}</span>
                           <span style={{
                             fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                            background: status === 'verified' ? '#dcfce7' : '#fef3c7',
-                            color: status === 'verified' ? '#15803d' : '#b45309'
+                            background: status === 'verified' ? 'var(--success-bg, #dcfce7)' : 'var(--warning-bg, #fef3c7)',
+                            color: status === 'verified' ? 'var(--success-text, #15803d)' : 'var(--warning-text, #b45309)'
                           }}>
-                            {status === 'verified' ? '✅ VERIFIED' : hasImage ? '⏳ UPLOADED — REVIEW' : '⚠️ NOT UPLOADED'}
+                            {status === 'verified' ? (t('admin.verified') || '✅ VERIFIED') : hasImage ? (t('admin.uploadedReview') || '⏳ UPLOADED — REVIEW') : (t('admin.notUploaded') || '⚠️ NOT UPLOADED')}
                           </span>
                         </div>
 
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>{item.title}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{item.title}</div>
 
                         {/* Real Uploaded Photo Thumbnail */}
                         {hasImage ? (
-                          <div style={{ borderRadius: 8, overflow: 'hidden', height: 120, background: '#e2e8f0', margin: '8px 0', border: '1px solid #cbd5e1' }}>
+                          <div style={{ borderRadius: 8, overflow: 'hidden', height: 120, background: 'var(--border-light)', margin: '8px 0', border: '1px solid var(--border-light)' }}>
                             <img src={docObj.data} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                         ) : (
-                          <div style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic', margin: '8px 0' }}>No image file attached</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', margin: '8px 0' }}>{t('admin.noImage') || 'No image file attached'}</div>
                         )}
                       </div>
                     );
@@ -343,8 +343,8 @@ const AdminDrivers = () => {
 
             {/* Rejection Reason Selector */}
             {(inspectDriver.verificationStatus === 'pending' || !inspectDriver.verificationStatus) && (
-              <div style={{ background: '#fef9f0', border: '1px solid #fde68a', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-                <h4 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: '#92400e' }}>⚠️ Rejection Reason (required if rejecting)</h4>
+              <div style={{ background: 'var(--warning-bg, #fef9f0)', border: '1px solid var(--warning, #fde68a)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                <h4 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: 'var(--warning-text, #92400e)' }}>{t('admin.rejectionReason') || '⚠️ Rejection Reason (required if rejecting)'}</h4>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: rejectionReason === 'Other (custom)' ? 10 : 0 }}>
                   {REJECTION_REASONS.map(reason => (
                     <button
@@ -353,9 +353,9 @@ const AdminDrivers = () => {
                       onClick={() => setRejectionReason(reason)}
                       style={{
                         padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                        background: rejectionReason === reason ? '#dc2626' : '#fff',
-                        color: rejectionReason === reason ? 'white' : '#1e293b',
-                        border: `1px solid ${rejectionReason === reason ? '#dc2626' : '#e2e8f0'}`
+                        background: rejectionReason === reason ? 'var(--danger)' : 'var(--card)',
+                        color: rejectionReason === reason ? 'white' : 'var(--text-primary)',
+                        border: `1px solid ${rejectionReason === reason ? 'var(--danger)' : 'var(--border-light)'}`
                       }}
                     >
                       {reason}
@@ -365,10 +365,10 @@ const AdminDrivers = () => {
                 {rejectionReason === 'Other (custom)' && (
                   <input
                     type="text"
-                    placeholder="Type custom rejection reason..."
+                    placeholder={t('admin.customReason') || 'Type custom rejection reason...'}
                     value={customReason}
                     onChange={e => setCustomReason(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, marginTop: 8 }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-light)', fontSize: 13, marginTop: 8 }}
                   />
                 )}
               </div>
@@ -381,17 +381,17 @@ const AdminDrivers = () => {
                   type="button"
                   disabled={submitting}
                   onClick={handleApproveFromDrawer}
-                  style={{ flex: 1, padding: '12px', background: '#16a34a', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '12px', background: 'var(--success, #16a34a)', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
                 >
-                  ✅ {submitting ? 'Approving...' : 'Approve Driver'}
+                  ✅ {submitting ? (t('admin.approving') || 'Approving...') : (t('admin.approveDriver') || 'Approve Driver')}
                 </button>
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={handleRejectFromDrawer}
-                  style={{ flex: 1, padding: '12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '12px', background: 'var(--danger, #dc2626)', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
                 >
-                  ❌ {submitting ? 'Rejecting...' : 'Reject with Reason'}
+                  ❌ {submitting ? (t('admin.rejecting') || 'Rejecting...') : (t('admin.rejectWithReason') || 'Reject with Reason')}
                 </button>
               </div>
             )}
