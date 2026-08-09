@@ -2,9 +2,10 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  FaTachometerAlt, FaUsers, FaCar, FaMoneyBillWave, FaExclamationTriangle,
-  FaFileAlt, FaCog, FaSignOutAlt, FaHistory, FaWallet, FaStar, FaUser,
-  FaTag, FaBolt, FaMapMarkerAlt, FaRoute, FaShieldAlt, FaHeadset, FaChartLine, FaBell
+  FaTachometerAlt, FaUsers, FaCar, FaMoneyBillWave,
+  FaExclamationTriangle, FaFileAlt, FaCog, FaSignOutAlt, FaTimes,
+  FaMapMarkerAlt, FaRoute, FaShieldAlt, FaHeadset, FaChartLine, FaBell,
+  FaBolt, FaTag, FaHome, FaUser
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import './Sidebar.css';
@@ -14,24 +15,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const { t } = useLanguage();
   const location = useLocation();
 
-  const passengerLinks = [
-    { path: '/passenger', icon: <FaCar />, label: 'Book Ride', end: true },
-    { path: '/passenger/trips', icon: <FaHistory />, label: 'My Trips' },
-    { path: '/passenger/history', icon: <FaHistory />, label: 'History' },
-    { path: '/passenger/favorites', icon: <FaStar />, label: 'Favorites' },
-    { path: '/passenger/profile', icon: <FaUser />, label: 'Profile' },
-  ];
-
-  const driverLinks = [
-    { path: '/driver', icon: <FaTachometerAlt />, label: 'Dashboard', end: true },
-    { path: '/driver/trips', icon: <FaHistory />, label: 'My Trips' },
-    { path: '/driver/earnings', icon: <FaWallet />, label: 'Earnings' },
-    { path: '/driver/vehicle', icon: <FaCar />, label: 'Vehicle' },
-    { path: '/driver/profile', icon: <FaUser />, label: 'Profile' },
-  ];
-
   const adminLinks = [
-    { path: '/admin', icon: <FaTachometerAlt />, label: t('admin.dashboard'), end: true },
+    { path: '/admin', icon: <FaHome />, label: t('admin.dashboard'), end: true },
     { path: '/admin/monitoring', icon: <FaMapMarkerAlt />, label: t('admin.realTimeMonitoring') },
     { path: '/admin/driver-management', icon: <FaCar />, label: t('admin.driverManagement') },
     { path: '/admin/passenger-management', icon: <FaUsers />, label: t('admin.passengerManagement') },
@@ -44,23 +29,40 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     { path: '/admin/configuration', icon: <FaCog />, label: t('admin.systemConfiguration') },
   ];
 
-  const links = user?.role === 'admin' ? adminLinks : user?.role === 'driver' ? driverLinks : passengerLinks;
+  const links = adminLinks;
 
   return (
     <>
-      <div className={`sidebar-backdrop ${mobileOpen ? 'open' : ''}`} onClick={onClose}></div>
-      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-user">
+      <div
+        className={`sidebar-overlay ${mobileOpen ? 'open' : ''}`}
+        onClick={onClose}
+      />
+      <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <img src="/logo.svg?v=2" alt="DIRS" className="sidebar-logo" />
+            <div className="sidebar-brand-text">
+              <span className="sidebar-brand-name">DIRS Admin</span>
+              <span className="sidebar-brand-role">{t('admin.adminPanel')}</span>
+            </div>
+          </div>
+          <button className="sidebar-close" onClick={onClose} aria-label="Close menu">
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="sidebar-user-section">
           <div className="sidebar-avatar">
             {user?.firstName?.[0]}{user?.lastName?.[0]}
           </div>
           <div className="sidebar-user-info">
-            <h4>{user?.firstName} {user?.lastName}</h4>
-            <span className="sidebar-role">{user?.role}</span>
+            <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
+            <div className="sidebar-user-role">{t('admin.superAdmin')}</div>
           </div>
         </div>
 
         <nav className="sidebar-nav">
+          <div className="sidebar-nav-label">Navigation</div>
           {links.map((link) => (
             <NavLink
               key={link.path}
@@ -69,16 +71,18 @@ const Sidebar = ({ mobileOpen, onClose }) => {
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
               onClick={onClose}
             >
-              {link.icon}
-              <span>{link.label}</span>
+              <span className="sidebar-link-icon">{link.icon}</span>
+              <span className="sidebar-link-text">{link.label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <button className="sidebar-logout" onClick={logout}>
-          <FaSignOutAlt />
-          <span>Logout</span>
-        </button>
+        <div className="sidebar-footer">
+          <button className="sidebar-logout" onClick={logout}>
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
     </>
   );
