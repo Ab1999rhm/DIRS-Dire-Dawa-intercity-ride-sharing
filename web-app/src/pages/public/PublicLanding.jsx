@@ -140,6 +140,33 @@ const PublicLanding = () => {
 
   return (
     <div className="public-page">
+      {/* Cultural Border Decoration */}
+      <div className="cultural-border"></div>
+      
+      {/* Blinking Lights Border */}
+      <div className="border-lights">
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+        <div className="border-light"></div>
+      </div>
+
       {/* Navbar */}
       <nav className={`public-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="public-nav-container">
@@ -187,22 +214,17 @@ const PublicLanding = () => {
 
       {/* Hero */}
       <section className="public-hero" ref={heroRef}>
-        <img src="/images/hero-bg.jpg" alt="Dire Dawa Transport" className="public-hero-bg" />
+        <img src="/images/phone-car.jpg" alt="Dire Dawa Mobile App" className="public-hero-bg" onError={(e) => { e.target.style.display = 'none'; }} />
         <div className="public-hero-overlay"></div>
 
-        {/* Animated gradient blobs */}
+        {/* Animated cultural gradient blobs */}
         <div className="hero-blob hero-blob-1"></div>
         <div className="hero-blob hero-blob-2"></div>
         <div className="hero-blob hero-blob-3"></div>
+        <div className="hero-blob hero-blob-4"></div>
 
-        {/* Floating vehicles */}
-        <div className="hero-float-vehicles">
-          <div className="hero-float-item">🛺</div>
-          <div className="hero-float-item">🚗</div>
-          <div className="hero-float-item">🚐</div>
-          <div className="hero-float-item">🚌</div>
-          <div className="hero-float-item">📍</div>
-        </div>
+        {/* Cultural pattern overlay */}
+        <div className="hero-cultural-pattern"></div>
 
         <div className="public-hero-content">
           <div className="public-hero-badge">
@@ -210,7 +232,7 @@ const PublicLanding = () => {
           </div>
           <h1>
             {t('landing.hero.title')}{' '}
-            <span className="public-gradient-text">{typedText}<span style={{ borderRight: '2px solid var(--primary)', animation: 'blink 0.8s infinite', marginLeft: '2px' }}></span></span>
+            <span className="public-gradient-text">{typedText}<span style={{ borderRight: '2px solid var(--secondary)', animation: 'blink 0.8s infinite', marginLeft: '2px' }}></span></span>
           </h1>
           <p className="public-hero-desc">
             {t('landing.hero.desc')}
@@ -237,43 +259,70 @@ const PublicLanding = () => {
             ))}
           </div>
         </div>
+
+        {/* Real vehicle images */}
+        <div className="hero-vehicles">
+          <div className="hero-vehicle">
+            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="20" width="80" height="30" rx="5" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
+              <rect x="15" y="25" width="25" height="15" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
+              <circle cx="25" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="75" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="25" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="75" cy="55" r="4" fill="#FAF8F5"/>
+              <text x="50" y="38" textAnchor="middle" fill="#2D5A3D" fontSize="10" fontWeight="bold">BAJAJ</text>
+            </svg>
+          </div>
+          <div className="hero-vehicle">
+            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="15" width="90" height="35" rx="8" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
+              <rect x="10" y="20" width="35" height="20" rx="4" fill="rgba(45, 90, 61, 0.3)"/>
+              <rect x="50" y="20" width="40" height="20" rx="4" fill="rgba(45, 90, 61, 0.3)"/>
+              <circle cx="20" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="80" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="20" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="80" cy="55" r="4" fill="#FAF8F5"/>
+              <text x="50" y="33" textAnchor="middle" fill="#2D5A3D" fontSize="9" fontWeight="bold">SEDAN</text>
+            </svg>
+          </div>
+          <div className="hero-vehicle">
+            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="10" width="90" height="40" rx="6" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
+              <rect x="8" y="15" width="25" height="18" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
+              <rect x="35" y="15" width="25" height="18" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
+              <rect x="62" y="15" width="28" height="18" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
+              <circle cx="20" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="50" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="80" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="20" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="50" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="80" cy="55" r="4" fill="#FAF8F5"/>
+              <text x="50" y="28" textAnchor="middle" fill="#2D5A3D" fontSize="8" fontWeight="bold">MINIVAN</text>
+            </svg>
+          </div>
+          <div className="hero-vehicle">
+            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="8" width="94" height="42" rx="5" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
+              <rect x="6" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
+              <rect x="28" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
+              <rect x="50" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
+              <rect x="72" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
+              <circle cx="15" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="35" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="65" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="85" cy="55" r="8" fill="#1A1A1A"/>
+              <circle cx="15" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="35" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="65" cy="55" r="4" fill="#FAF8F5"/>
+              <circle cx="85" cy="55" r="4" fill="#FAF8F5"/>
+              <text x="50" y="24" textAnchor="middle" fill="#2D5A3D" fontSize="8" fontWeight="bold">BUS</text>
+            </svg>
+          </div>
+        </div>
       </section>
 
       {/* Gradient Divider */}
       <div className="public-divider"></div>
-
-      {/* Quick Actions */}
-      <section className="public-quick-actions">
-        <div className="public-quick-actions-scroll">
-          <Link to="/register" className="public-quick-action reveal">
-            <div className="public-quick-action-icon" style={{ background: 'rgba(37, 99, 235, 0.08)', color: 'var(--primary)' }}>
-              <FaCar />
-            </div>
-            <div>
-              <div className="public-quick-action-text">{t('landing.hero.bookRide')}</div>
-              <div className="public-quick-action-sub">{t('landing.features.fastService')}</div>
-            </div>
-          </Link>
-          <Link to="/register" className="public-quick-action reveal reveal-delay-1">
-            <div className="public-quick-action-icon" style={{ background: 'rgba(5, 150, 105, 0.08)', color: '#059669' }}>
-              <FaUsers />
-            </div>
-            <div>
-              <div className="public-quick-action-text">{t('landing.footer.becomeDriver')}</div>
-              <div className="public-quick-action-sub">{t('landing.features.affordable')}</div>
-            </div>
-          </Link>
-          <Link to="/login" className="public-quick-action reveal reveal-delay-2">
-            <div className="public-quick-action-icon" style={{ background: 'rgba(217, 119, 6, 0.08)', color: '#d97706' }}>
-              <FaMobileAlt />
-            </div>
-            <div>
-              <div className="public-quick-action-text">{t('landing.login')}</div>
-              <div className="public-quick-action-sub">{t('landing.features.mobileFirst')}</div>
-            </div>
-          </Link>
-        </div>
-      </section>
 
       {/* Features */}
       <section className="public-features">
@@ -338,88 +387,23 @@ const PublicLanding = () => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="public-cta">
-        <div className="public-section-container">
-          <div className="public-cta-card reveal">
-            <img src="/images/phone-car.jpg" alt="" className="public-cta-bg" />
-            <div className="public-cta-content">
-              <h2>{t('landing.cta.title')}</h2>
-              <p>{t('landing.cta.desc')}</p>
-              <div className="public-cta-btns">
-                <Link to="/register" className="public-btn-hero">
-                  {t('landing.cta.getStarted')} <FaArrowRight />
-                </Link>
-                {showInstall && (
-                  <button className="public-btn-hero-outline" onClick={handleInstall}>
-                    <FaDownload /> {t('landing.cta.installApp')}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Install Banner */}
-      <section className="public-install">
-        <div className="public-section-container">
-          <div className="public-install-card reveal">
-            <div className="public-install-icon"><FaDownload /></div>
-            <div className="public-install-text">
-              <h3>{t('landing.install.title')}</h3>
-              <p>{t('landing.install.desc')}</p>
-            </div>
-            {showInstall ? (
-              <button className="public-btn-primary public-install-btn" onClick={handleInstall}>
-                <FaDownload /> {t('landing.install.installNow')}
-              </button>
-            ) : (
-              <div className="public-install-hint">
-                <p>📱 {t('landing.install.chromeHint')}</p>
-                <p>🍎 {t('landing.install.safariHint')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="public-footer">
         <div className="public-section-container">
-          <div className="public-footer-grid">
-            <div className="public-footer-brand">
-              <div className="public-nav-logo" style={{ marginBottom: 12 }}>
-                <div className="public-logo-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <span>DIRS</span>
+          <div className="public-footer-brand">
+            <div className="public-nav-logo" style={{ marginBottom: 12 }}>
+              <div className="public-logo-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-              <p>{t('landing.footer.tagline')}</p>
-              <div className="public-footer-social">
-                <a href="#fb"><FaFacebook /></a>
-                <a href="#tw"><FaTwitter /></a>
-                <a href="#ig"><FaInstagram /></a>
-              </div>
+              <span>DIRS</span>
             </div>
-            <div className="public-footer-links">
-              <h4>{t('landing.footer.service')}</h4>
-              <Link to="/register">{t('landing.footer.bookRide')}</Link>
-              <Link to="/register">{t('landing.footer.becomeDriver')}</Link>
-              <Link to="/login">{t('landing.footer.login')}</Link>
-            </div>
-            <div className="public-footer-links">
-              <h4>{t('landing.footer.company')}</h4>
-              <a href="#about">{t('landing.footer.aboutUs')}</a>
-              <a href="#contact">{t('landing.footer.contact')}</a>
-              <a href="#terms">{t('landing.footer.terms')}</a>
-            </div>
-            <div className="public-footer-links">
-              <h4>{t('landing.footer.contact')}</h4>
-              <a href="tel:+251911111111"><FaPhone /> +251 91 111 1111</a>
-              <a href="mailto:info@dirs.et"><FaEnvelope /> info@dirs.et</a>
+            <p>{t('landing.footer.tagline')}</p>
+            <div className="public-footer-social">
+              <a href="#fb"><FaFacebook /></a>
+              <a href="#tw"><FaTwitter /></a>
+              <a href="#ig"><FaInstagram /></a>
             </div>
           </div>
           <div className="public-footer-bottom">

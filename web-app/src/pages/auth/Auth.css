@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  background: linear-gradient(135deg, rgba(37,99,235,0.92) 0%, rgba(30,58,95,0.95) 50%, rgba(29,78,216,0.92) 100%);
+  background: linear-gradient(135deg, rgba(45, 90, 61, 0.92) 0%, rgba(139, 115, 85, 0.95) 50%, rgba(45, 90, 61, 0.92) 100%);
   padding: 40px 20px;
 }
 .auth-bg-image {
@@ -15,6 +15,8 @@
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  opacity: 0.8;
+  filter: brightness(0.9) contrast(1.05);
 }
 .auth-page > *:not(.auth-bg-image) {
   position: relative;
@@ -22,26 +24,48 @@
 }
 
 /* Background decorations */
-.auth-page::before {
-  content: '';
+.auth-page .auth-bg-overlay {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image:
+  inset: 0;
+  z-index: 0;
+  background:
     radial-gradient(circle at 15% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
     radial-gradient(circle at 85% 20%, rgba(255,255,255,0.06) 0%, transparent 40%),
     radial-gradient(circle at 50% 80%, rgba(255,255,255,0.04) 0%, transparent 50%);
   pointer-events: none;
 }
-.auth-page::after {
+
+/* Cultural border decoration */
+.auth-page::before {
   content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 400' fill='none'%3E%3Crect width='600' height='400' fill='none'/%3E%3Cg opacity='0.06'%3E%3Crect x='30' y='100' width='30' height='90' rx='3' fill='white'/%3E%3Crect x='65' y='60' width='25' height='130' rx='3' fill='white'/%3E%3Crect x='95' y='80' width='35' height='110' rx='3' fill='white'/%3E%3Crect x='135' y='45' width='22' height='145' rx='3' fill='white'/%3E%3Crect x='162' y='90' width='30' height='100' rx='3' fill='white'/%3E%3Crect x='350' y='70' width='28' height='120' rx='3' fill='white'/%3E%3Crect x='383' y='95' width='35' height='95' rx='3' fill='white'/%3E%3Crect x='423' y='55' width='25' height='135' rx='3' fill='white'/%3E%3Crect x='453' y='80' width='35' height='110' rx='3' fill='white'/%3E%3Crect x='493' y='65' width='28' height='125' rx='3' fill='white'/%3E%3Crect x='526' y='90' width='35' height='100' rx='3' fill='white'/%3E%3C/g%3E%3Cpath d='M0 260 Q150 245 300 260 Q450 275 600 260' stroke='white' stroke-width='3' opacity='0.07'/%3E%3Cpath d='M0 270 Q150 255 300 270 Q450 285 600 270' stroke='white' stroke-width='1.5' stroke-dasharray='12,8' opacity='0.05'/%3E%3Cpath d='M0 280 Q150 265 300 280 Q450 295 600 280' stroke='white' stroke-width='3' opacity='0.07'/%3E%3Cline x1='150' y1='180' x2='150' y2='320' stroke='white' stroke-width='1.5' stroke-dasharray='8,6' opacity='0.05'/%3E%3Cline x1='300' y1='170' x2='300' y2='330' stroke='white' stroke-width='1.5' stroke-dasharray='8,6' opacity='0.05'/%3E%3Cline x1='450' y1='190' x2='450' y2='320' stroke='white' stroke-width='1.5' stroke-dasharray='8,6' opacity='0.05'/%3E%3Cg transform='translate(265, 245)' opacity='0.1'%3E%3Crect x='0' y='0' width='60' height='20' rx='6' fill='white'/%3E%3Crect x='-6' y='6' width='72' height='14' rx='4' fill='white'/%3E%3Ccircle cx='12' cy='20' r='5' fill='white'/%3E%3Ccircle cx='48' cy='20' r='5' fill='white'/%3E%3C/g%3E%3Cg transform='translate(120, 210)' opacity='0.08'%3E%3Cpath d='M14 0C7.82 0 2 5.82 2 13c0 10 12 22 12 22s12-12 12-22C26 5.82 20.18 0 14 0z' fill='%2322c55e'/%3E%3Ccircle cx='14' cy='10' r='4' fill='white'/%3E%3C/g%3E%3Cg transform='translate(460, 200)' opacity='0.08'%3E%3Cpath d='M14 0C7.82 0 2 5.82 2 13c0 10 12 22 12 22s12-12 12-22C26 5.82 20.18 0 14 0z' fill='%23ef4444'/%3E%3Ccircle cx='14' cy='10' r='4' fill='white'/%3E%3C/g%3E%3Cpath d='M134 222 Q300 190 474 210' stroke='white' stroke-width='2' stroke-dasharray='8,6' opacity='0.06'/%3E%3Ccircle cx='500' cy='80' r='120' fill='rgba(255,255,255,0.03)'/%3E%3Ccircle cx='100' cy='350' r='100' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
-  background-size: 600px 400px;
-  background-repeat: repeat;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
+  z-index: 9999;
+  border: 14px solid #2D5A3D;
+  border-image: linear-gradient(135deg, #2D5A3D, #8B7355, #2D5A3D, #8B7355) 1;
 }
 
+/* Ethiopian pattern border decoration */
+.auth-page::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9998;
+  border: 18px solid transparent;
+  background: repeating-linear-gradient(45deg, #2D5A3D 0px, #2D5A3D 8px, #8B7355 8px, #8B7355 16px, #C4A265 16px, #C4A265 24px);
+  opacity: 0.12;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
 .auth-left { display: none; }
 
 .auth-right {

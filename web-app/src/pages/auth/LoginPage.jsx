@@ -55,7 +55,8 @@ const LoginPage = () => {
 
   return (
     <div className="auth-page">
-      <img src="/images/ride-sharing.jpg" alt="" className="auth-bg-image" />
+      <img src="/images/phone-car.jpg" alt="Dire Dawa Mobile App" className="auth-bg-image" />
+      <div className="auth-bg-overlay"></div>
       <div className="auth-right">
         <div className="auth-card">
           <div className="auth-header">
