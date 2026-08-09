@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   FaTachometerAlt, FaUsers, FaCar, FaMoneyBillWave,
   FaExclamationTriangle, FaFileAlt, FaCog, FaSignOutAlt, FaTimes,
   FaMapMarkerAlt, FaRoute, FaShieldAlt, FaHeadset, FaChartLine, FaBell,
-  FaBolt, FaTag, FaHome, FaUser
+  FaBolt, FaTag, FaHome, FaUser, FaChevronLeft, FaChevronRight
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import './Sidebar.css';
@@ -14,6 +14,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const adminLinks = [
     { path: '/admin', icon: <FaHome />, label: t('admin.dashboard'), end: true },
@@ -31,21 +32,34 @@ const Sidebar = ({ mobileOpen, onClose }) => {
 
   const links = adminLinks;
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
     <>
       <div
         className={`sidebar-overlay ${mobileOpen ? 'open' : ''}`}
         onClick={onClose}
       />
-      <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${mobileOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <img src="/logo.svg?v=2" alt="DIRS" className="sidebar-logo" />
-            <div className="sidebar-brand-text">
-              <span className="sidebar-brand-name">DIRS Admin</span>
-              <span className="sidebar-brand-role">{t('admin.adminPanel')}</span>
-            </div>
+            {!isCollapsed && (
+              <div className="sidebar-brand-text">
+                <span className="sidebar-brand-name">DIRS Admin</span>
+                <span className="sidebar-brand-role">{t('admin.adminPanel')}</span>
+              </div>
+            )}
           </div>
+          <button 
+            className="sidebar-collapse-btn" 
+            onClick={toggleCollapse} 
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+          </button>
           <button className="sidebar-close" onClick={onClose} aria-label="Close menu">
             <FaTimes />
           </button>
@@ -55,32 +69,39 @@ const Sidebar = ({ mobileOpen, onClose }) => {
           <div className="sidebar-avatar">
             {user?.firstName?.[0]}{user?.lastName?.[0]}
           </div>
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
-            <div className="sidebar-user-role">{t('admin.superAdmin')}</div>
-          </div>
+          {!isCollapsed && (
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
+              <div className="sidebar-user-role">{t('admin.superAdmin')}</div>
+            </div>
+          )}
         </div>
 
         <nav className="sidebar-nav">
-          <div className="sidebar-nav-label">Navigation</div>
+          {!isCollapsed && <div className="sidebar-nav-label">Navigation</div>}
           {links.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
               end={link.end}
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-              onClick={onClose}
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  onClose();
+                }
+              }}
+              title={isCollapsed ? link.label : undefined}
             >
               <span className="sidebar-link-icon">{link.icon}</span>
-              <span className="sidebar-link-text">{link.label}</span>
+              {!isCollapsed && <span className="sidebar-link-text">{link.label}</span>}
             </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-footer">
-          <button className="sidebar-logout" onClick={logout}>
+          <button className="sidebar-logout" onClick={logout} title={isCollapsed ? "Logout" : undefined}>
             <FaSignOutAlt />
-            <span>Logout</span>
+            {!isCollapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>

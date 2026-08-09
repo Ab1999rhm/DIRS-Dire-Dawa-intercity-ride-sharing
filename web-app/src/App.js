@@ -14,6 +14,7 @@ const PassengerBottomNav = React.lazy(() => import('./components/layout/Passenge
 const DriverBottomNav = React.lazy(() => import('./components/layout/DriverBottomNav'));
 const AdminBottomNav = React.lazy(() => import('./components/layout/AdminBottomNav'));
 const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
+const AdminMobileHeader = React.lazy(() => import('./components/layout/AdminMobileHeader'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
@@ -133,6 +134,7 @@ const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
       {adminNav && (
         <Suspense fallback={null}>
           <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          <AdminMobileHeader onMenuClick={() => setSidebarOpen(true)} />
         </Suspense>
       )}
       <div className="app-body">
@@ -145,11 +147,6 @@ const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
       {bottomNav && (
         <Suspense fallback={<LoadingSpinner />}>
           <PassengerBottomNav />
-        </Suspense>
-      )}
-      {adminNav && (
-        <Suspense fallback={<LoadingSpinner />}>
-          <AdminBottomNav onMenuClick={() => setSidebarOpen(true)} />
         </Suspense>
       )}
     </div>
