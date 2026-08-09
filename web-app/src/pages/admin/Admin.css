@@ -3,6 +3,7 @@
   max-width: 480px;
   margin: 0 auto;
   padding: 16px 16px 100px;
+  padding: 18px 18px 100px;
   overflow-x: hidden;
   box-sizing: border-box;
   min-height: 100vh;
@@ -375,9 +376,9 @@
 /* ===== BOTTOM NAV ===== */
 .admin-bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
   display: flex;
   align-items: center;
   justify-content: space-around;

@@ -1,10 +1,10 @@
 /* ===== SIDEBAR BASE ===== */
 .sidebar {
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 260px;
+  top: 18px;
+  left: 18px;
+  bottom: 18px;
+  width: 224px;
   background: var(--card, #fff);
   border-right: 1px solid var(--border-light, #e5e7eb);
   display: flex;
