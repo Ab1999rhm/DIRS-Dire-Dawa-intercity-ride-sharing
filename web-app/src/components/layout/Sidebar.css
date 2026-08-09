@@ -9,7 +9,7 @@
   border-right: 1px solid var(--border-light, #e5e7eb);
   display: flex;
   flex-direction: column;
-  z-index: 100;
+  z-index: 45;
   overflow-y: auto;
   overflow-x: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -212,7 +212,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 99;
+  z-index: 44;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -237,7 +237,7 @@
 @media (max-width: 767px) {
   .sidebar {
     transform: translateX(-100%);
-    z-index: 101;
+    z-index: 45;
     box-shadow: none;
     width: 280px;
   }
