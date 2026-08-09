@@ -34,6 +34,7 @@ const AdminDrivers = () => {
   const { user } = useAuth();
   const toast = useToast();
   const [drivers, setDrivers] = useState([]);
+  const [driverStats, setDriverStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -46,14 +47,31 @@ const AdminDrivers = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchDrivers();
+    fetchDrivers('all');
   }, []);
 
-  const fetchDrivers = async () => {
+  const handleFilterChange = (status) => {
+    setFilterStatus(status);
+    fetchDrivers(status);
+  };
+
+  const fetchDrivers = async (statusFilter) => {
     try {
       setLoading(true);
-      const res = await adminAPI.pendingDrivers();
-      setDrivers(res.data.drivers || res.data || []);
+      const params = {};
+      if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+      const res = await adminAPI.drivers(params);
+      const list = (res.data.drivers || res.data || []).map(d => ({
+        ...d,
+        firstName: d.firstName || d.user?.firstName || '',
+        lastName: d.lastName || d.user?.lastName || '',
+        phoneNumber: d.phoneNumber || d.user?.phoneNumber || '',
+        email: d.email || d.user?.email || '',
+        profilePhoto: d.profilePhoto || d.user?.profilePhoto || '',
+        isOnline: d.isOnline || d.user?.isOnline || false,
+      }));
+      setDrivers(list);
+      if (res.data.stats) setDriverStats(res.data.stats);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load drivers');
     } finally {
@@ -100,6 +118,9 @@ const AdminDrivers = () => {
   if (loading) {
     return (
       <div className="admin-page">
+        <div className="admin-logo-bar">
+          <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+        </div>
         <div className="admin-header"><h1>{t('admin.drivers')}</h1></div>
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>{t('common.loading')}</div>
       </div>
@@ -108,9 +129,12 @@ const AdminDrivers = () => {
 
   return (
     <div className="admin-page">
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS" className="admin-logo" />
+      </div>
       <div className="admin-header">
         <h1>{t('admin.drivers')}</h1>
-        <button className="btn btn-primary" onClick={fetchDrivers} style={{ fontSize: 13 }}>🔄 Refresh</button>
+        <button className="btn btn-primary" onClick={() => fetchDrivers(filterStatus)} style={{ fontSize: 13 }}>🔄 Refresh</button>
       </div>
 
       {error && <div className="error-banner" onClick={() => setError(null)}>{error}</div>}
@@ -133,10 +157,10 @@ const AdminDrivers = () => {
               key={s}
               type="button"
               className={`btn btn-sm ${filterStatus === s ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setFilterStatus(s)}
+              onClick={() => handleFilterChange(s)}
               style={{ textTransform: 'capitalize' }}
             >
-              {s} ({s === 'all' ? drivers.length : drivers.filter(d => (d.verificationStatus || 'pending') === s).length})
+              {s} ({s === 'all' ? driverStats.total : driverStats[s] || 0})
             </button>
           ))}
         </div>

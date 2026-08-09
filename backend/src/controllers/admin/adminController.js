@@ -149,6 +149,32 @@ exports.getPendingDriverVerifications = asyncHandler(async (req, res) => {
   res.json({ drivers, total, page: parseInt(page), pages: Math.ceil(total / limit) });
 });
 
+exports.getAllDrivers = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 50, status } = req.query;
+
+  const filter = {};
+  if (status && status !== 'all') {
+    filter.verificationStatus = status;
+  }
+
+  const drivers = await Driver.find(filter)
+    .populate('user', 'firstName lastName phoneNumber email profilePhoto isOnline')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Driver.countDocuments(filter);
+
+  const stats = {
+    total: await Driver.countDocuments(),
+    pending: await Driver.countDocuments({ verificationStatus: 'pending' }),
+    approved: await Driver.countDocuments({ verificationStatus: 'approved' }),
+    rejected: await Driver.countDocuments({ verificationStatus: 'rejected' }),
+  };
+
+  res.json({ drivers, total, page: parseInt(page), pages: Math.ceil(total / limit), stats });
+});
+
 exports.verifyDriver = asyncHandler(async (req, res) => {
   const { driverId } = req.params;
   const { action, reason } = req.body;

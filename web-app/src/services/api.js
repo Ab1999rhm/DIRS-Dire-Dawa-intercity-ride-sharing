@@ -216,6 +216,7 @@ export const adminAPI = {
   users: (params) => api.get('/admin/users', { params }),
   suspendUser: (id, reason) => api.put(`/admin/users/${id}/suspend`, { reason }),
   reactivateUser: (id) => api.put(`/admin/users/${id}/reactivate`),
+  drivers: (params) => api.get('/admin/drivers', { params }),
   pendingDrivers: (params) => api.get('/admin/drivers/pending', { params }),
   verifyDriver: (id, action, reason) => api.post(`/admin/drivers/${id}/verify`, { action, reason }),
   trips: (params) => api.get('/admin/trips', { params }),

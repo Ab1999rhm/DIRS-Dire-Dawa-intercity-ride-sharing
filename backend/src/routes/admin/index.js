@@ -7,6 +7,7 @@ router.get('/dashboard', protect, authorize('admin'), adminController.getDashboa
 router.get('/users', protect, authorize('admin'), adminController.getAllUsers);
 router.put('/users/:userId/suspend', protect, authorize('admin'), adminController.suspendUser);
 router.put('/users/:userId/reactivate', protect, authorize('admin'), adminController.reactivateUser);
+router.get('/drivers', protect, authorize('admin'), adminController.getAllDrivers);
 router.get('/drivers/pending', protect, authorize('admin'), adminController.getPendingDriverVerifications);
 router.post('/drivers/:driverId/verify', protect, authorize('admin'), adminController.verifyDriver);
 router.get('/trips', protect, authorize('admin'), adminController.getAllTrips);
