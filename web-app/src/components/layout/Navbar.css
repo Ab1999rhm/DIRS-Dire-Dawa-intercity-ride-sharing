@@ -61,6 +61,37 @@
   color: white; border-radius: 50%; font-size: 10px;
   display: flex; align-items: center; justify-content: center; font-weight: 600;
 }
+
+/* Language Dropdown */
+.nav-lang-wrapper { position: relative; }
+.nav-lang-wrapper .nav-icon-btn {
+  width: auto; padding: 6px 12px; gap: 4px;
+}
+.nav-lang-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--card); border: 1px solid var(--border-light);
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 1000; min-width: 160px; overflow: hidden;
+  animation: navLangIn 0.2s ease;
+}
+@keyframes navLangIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nav-lang-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 14px;
+  background: none; border: none;
+  color: var(--text); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: background 0.15s; text-align: left;
+}
+.nav-lang-item:hover { background: var(--primary-50); }
+.nav-lang-item.active {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary); font-weight: 700;
+}
+.nav-lang-flag { font-size: 16px; }
+
 .nav-user {
   display: flex; align-items: center; gap: 8px;
   padding: 4px 12px 4px 4px;
@@ -82,4 +113,6 @@
   .nav-user-name { display: none; }
   .nav-user { padding: 4px; }
   .logo-text { display: none; }
+  .lang-label { display: none; }
+  .nav-lang-wrapper .nav-icon-btn { width: 40px; padding: 0; }
 }

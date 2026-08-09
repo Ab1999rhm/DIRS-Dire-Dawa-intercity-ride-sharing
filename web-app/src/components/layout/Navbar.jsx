@@ -8,17 +8,20 @@ import './Navbar.css';
 
 const Navbar = ({ onMenuToggle }) => {
   const { user, logout, unreadCount } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, availableLanguages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
   const notifRef = useRef(null);
+  const langRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+      if (langRef.current && !langRef.current.contains(e.target)) setShowLangDropdown(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -34,10 +37,6 @@ const Navbar = ({ onMenuToggle }) => {
     if (role === 'driver') navigate('/driver/profile');
     else if (role === 'admin') navigate('/admin/users');
     else navigate('/passenger/profile');
-  };
-
-  const handleLanguageToggle = () => {
-    setLanguage(language === 'en' ? 'am' : 'en');
   };
 
   const getNavItems = () => {
@@ -92,10 +91,26 @@ const Navbar = ({ onMenuToggle }) => {
         </div>
 
         <div className="navbar-actions">
-          <button className="nav-icon-btn" onClick={handleLanguageToggle} title={language === 'en' ? 'Switch to Amharic' : 'Switch to English'}>
-            <FaGlobe />
-            <span className="lang-label">{language === 'en' ? 'EN' : 'አማ'}</span>
-          </button>
+          <div className="nav-lang-wrapper" ref={langRef}>
+            <button className="nav-icon-btn" onClick={() => setShowLangDropdown(!showLangDropdown)}>
+              <FaGlobe />
+              <span className="lang-label">{availableLanguages.find(l => l.code === language)?.name || language}</span>
+            </button>
+            {showLangDropdown && (
+              <div className="nav-lang-dropdown">
+                {availableLanguages.map(lang => (
+                  <button
+                    key={lang.code}
+                    className={`nav-lang-item ${language === lang.code ? 'active' : ''}`}
+                    onClick={() => { setLanguage(lang.code); setShowLangDropdown(false); }}
+                  >
+                    <span className="nav-lang-flag">{lang.flag}</span>
+                    <span>{lang.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button className="nav-icon-btn" onClick={toggleTheme} title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}>
             {theme === 'light' ? <FaMoon /> : <FaSun />}
           </button>
