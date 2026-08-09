@@ -223,6 +223,47 @@ export const adminAPI = {
   payments: (params) => api.get('/admin/payments', { params }),
   report: (params) => api.get('/admin/reports', { params }),
   sosAlerts: (params) => api.get('/admin/sos', { params }),
+  // Real-time monitoring endpoints
+  getActiveDrivers: () => api.get('/admin/monitoring/active-drivers'),
+  getActiveTrips: () => api.get('/admin/monitoring/active-trips'),
+  getSOSAlerts: () => api.get('/admin/monitoring/sos-alerts'),
+  getSystemHealth: () => api.get('/admin/monitoring/system-health'),
+  respondToSOS: (sosId) => api.post(`/admin/monitoring/sos/${sosId}/respond`),
+  // Driver management endpoints
+  getDriverDocuments: (driverId) => api.get(`/admin/drivers/${driverId}/documents`),
+  approveDriver: (driverId) => api.put(`/admin/drivers/${driverId}/approve`),
+  rejectDriver: (driverId, reason) => api.put(`/admin/drivers/${driverId}/reject`, { reason }),
+  suspendDriver: (driverId, reason) => api.put(`/admin/drivers/${driverId}/suspend`, { reason }),
+  getDriverEarnings: (driverId, params) => api.get(`/admin/drivers/${driverId}/earnings`, { params }),
+  // Passenger management endpoints
+  getPassengerWallet: (passengerId) => api.get(`/admin/passengers/${passengerId}/wallet`),
+  processRefund: (passengerId, amount, reason) => api.post(`/admin/passengers/${passengerId}/refund`, { amount, reason }),
+  // Trip management endpoints
+  getTripDetails: (tripId) => api.get(`/admin/trips/${tripId}`),
+  adjustFare: (tripId, newFare, reason) => api.put(`/admin/trips/${tripId}/adjust-fare`, { newFare, reason }),
+  resolveDispute: (tripId, resolution) => api.post(`/admin/trips/${tripId}/resolve-dispute`, { resolution }),
+  // Financial management endpoints
+  getRevenueBreakdown: (params) => api.get('/admin/financials/revenue', { params }),
+  getPaymentTransactions: (params) => api.get('/admin/financials/transactions', { params }),
+  processCommission: (data) => api.post('/admin/financials/commission', data),
+  // Safety endpoints
+  getFraudAlerts: () => api.get('/admin/safety/fraud-alerts'),
+  getSuspiciousActivity: () => api.get('/admin/safety/suspicious-activity'),
+  reportIncident: (data) => api.post('/admin/safety/incidents', data),
+  // Support endpoints
+  getSupportTickets: (params) => api.get('/admin/support/tickets', { params }),
+  updateTicket: (ticketId, status, response) => api.put(`/admin/support/tickets/${ticketId}`, { status, response }),
+  // Analytics endpoints
+  getDemandHeatmap: (params) => api.get('/admin/analytics/demand-heatmap', { params }),
+  getPeakHours: (params) => api.get('/admin/analytics/peak-hours', { params }),
+  getRetentionMetrics: (params) => api.get('/admin/analytics/retention', { params }),
+  // Content endpoints
+  sendPushNotification: (data) => api.post('/admin/content/push-notification', data),
+  createAnnouncement: (data) => api.post('/admin/content/announcements', data),
+  // Configuration endpoints
+  updateTariff: (data) => api.put('/admin/config/tariff', data),
+  getServiceAreas: () => api.get('/admin/config/service-areas'),
+  updateServiceAreas: (data) => api.put('/admin/config/service-areas', data),
 };
 
 // Network status helper
