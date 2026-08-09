@@ -292,15 +292,15 @@ const PassengerManagement = () => {
               </div>
               <div className="detail-row">
                 <span className="detail-key">{t('admin.currentBalance')}</span>
-                <span className="detail-val">ETB {selectedPassenger.walletBalance?.toLocaleString() || 0}</div>
+                <span className="detail-val">ETB {selectedPassenger.walletBalance?.toLocaleString() || 0}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-key">{t('admin.totalSpent')}</span>
-                <span className="detail-val">ETB {selectedPassenger.totalSpent?.toLocaleString() || 0}</div>
+                <span className="detail-val">ETB {selectedPassenger.totalSpent?.toLocaleString() || 0}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-key">{t('admin.totalTrips')}</span>
-                <span className="detail-val">{selectedPassenger.totalTrips || 0}</div>
+                <span className="detail-val">{selectedPassenger.totalTrips || 0}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-key">{t('admin.rating')}</span>
@@ -338,7 +338,7 @@ const PassengerManagement = () => {
               </div>
               <div className="detail-row">
                 <span className="detail-key">{t('admin.currentBalance')}</span>
-                <span className="detail-val">ETB {selectedPassenger.walletBalance?.toLocaleString() || 0}</div>
+                <span className="detail-val">ETB {selectedPassenger.walletBalance?.toLocaleString() || 0}</span>
               </div>
               <div style={{ marginTop: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'block' }}>

@@ -112,55 +112,39 @@ const AdminTrips = () => {
           <p style={{ color: 'var(--text-muted)' }}>{t('admin.noTripsFilter') || 'No trips match the current filter'}</p>
         </div>
       ) : (
-        <>
-          {/* Desktop Table Header (1024px+) */}
-          <div className="admin-trips-table-header admin-animate-in-delay-2">
+        <div className="admin-table admin-animate-in-delay-2">
+          <div className="admin-table-header">
             <div>{t('admin.route') || 'Route'}</div>
             <div>{t('admin.passenger') || 'Passenger'}</div>
             <div>{t('admin.driver') || 'Driver'}</div>
             <div>{t('admin.fare') || 'Fare'}</div>
             <div>{t('admin.status') || 'Status'}</div>
-            <div style={{ textAlign: 'right' }}>{t('common.view') || 'Actions'}</div>
+            <div style={{ textAlign: 'right' }}>{t('common.actions') || 'Actions'}</div>
           </div>
-
-          {/* Trip Cards / Rows */}
-          <div className="admin-trips-list admin-animate-in-delay-2">
-            {trips.map((trip) => (
-              <div key={trip._id} className="admin-trip-card">
-                {/* Mobile: Card Layout */}
-                <div className="admin-trip-card-top">
-                  <div className="admin-trip-route">
-                    <div className="admin-trip-pickup">{trip.pickupLocation?.address?.split(',')[0] || 'N/A'}</div>
-                    <div className="admin-trip-arrow">→</div>
-                    <div className="admin-trip-dropoff">{trip.dropoffLocation?.address?.split(',')[0] || 'N/A'}</div>
-                  </div>
-                  <StatusBadge status={trip.status} />
-                </div>
-
-                <div className="admin-trip-card-details">
-                  <div className="admin-trip-detail">
-                    <span className="admin-trip-detail-label">{t('admin.passenger') || 'Passenger'}</span>
-                    <span className="admin-trip-detail-value">{trip.passenger?.firstName} {trip.passenger?.lastName}</span>
-                  </div>
-                  <div className="admin-trip-detail">
-                    <span className="admin-trip-detail-label">{t('admin.driver') || 'Driver'}</span>
-                    <span className="admin-trip-detail-value">{trip.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName}` : (t('admin.unassigned') || 'Unassigned')}</span>
-                  </div>
-                  <div className="admin-trip-detail">
-                    <span className="admin-trip-detail-label">{t('admin.fare') || 'Fare'}</span>
-                    <span className="admin-trip-detail-value admin-trip-fare">ETB {(trip.fare?.totalFare || trip.fare?.total || trip.estimatedFare || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="admin-trip-card-actions">
-                  <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedTrip(trip); setShowModal(true); }}>
-                    <FaEye /> {t('common.view') || 'View'}
-                  </button>
-                </div>
+          {trips.map((trip) => (
+            <div key={trip._id} className="admin-table-row">
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{trip.pickupLocation?.address?.split(',')[0] || 'N/A'}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>→ {trip.dropoffLocation?.address?.split(',')[0] || 'N/A'}</div>
               </div>
-            ))}
-          </div>
-        </>
+              <div>
+                <div style={{ fontSize: 13 }}>{trip.passenger?.firstName} {trip.passenger?.lastName}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 13 }}>{trip.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName}` : (t('admin.unassigned') || 'Unassigned')}</div>
+              </div>
+              <div>
+                <Badge variant="success">ETB {(trip.fare?.totalFare || trip.fare?.total || trip.estimatedFare || 0).toLocaleString()}</Badge>
+              </div>
+              <div><StatusBadge status={trip.status} /></div>
+              <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedTrip(trip); setShowModal(true); }}>
+                  <FaEye /> {t('common.view') || 'View'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('admin.tripDetails') || 'Trip Details'}>
