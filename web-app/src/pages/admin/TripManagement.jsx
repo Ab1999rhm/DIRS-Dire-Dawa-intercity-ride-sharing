@@ -220,7 +220,7 @@ const TripManagement = () => {
           </div>
           <div>
             <div className="admin-stat-value">
-              ETB {trips.reduce((acc, t) => acc + (t.fare || 0), 0).toLocaleString()}
+              ETB {trips.reduce((acc, t) => acc + (t.fare?.totalFare || t.fare || 0), 0).toLocaleString()}
             </div>
             <div className="admin-stat-label">{t('admin.totalRevenue') || 'Total Revenue'}</div>
           </div>
@@ -248,7 +248,7 @@ const TripManagement = () => {
                 <FaMapPin /> {trip.from} <FaArrowRight /> {trip.to}
               </div>
               <div className="admin-activity-time">
-                <FaClock /> {trip.duration} • ETB {trip.fare}
+                <FaClock /> {trip.duration} • ETB {trip.fare?.totalFare || trip.fare || 0}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

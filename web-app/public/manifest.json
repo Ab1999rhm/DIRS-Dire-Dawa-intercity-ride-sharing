@@ -4,17 +4,17 @@
   "description": "Dire Dawa's Intercity and Ride Sharing System. Book rides, track drivers, and travel safely.",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/logo-full.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/logo.png",
+      "src": "/logo-full.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "/logo.png",
+      "src": "/logo-full.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
