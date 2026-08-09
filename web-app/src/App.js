@@ -130,7 +130,7 @@ const PublicRoute = React.memo(({ children }) => {
 const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${sidebarOpen ? 'sidebar-open' : ''}`}>
       {adminNav && (
         <Suspense fallback={null}>
           <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />

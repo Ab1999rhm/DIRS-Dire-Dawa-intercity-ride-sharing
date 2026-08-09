@@ -345,6 +345,9 @@
   .admin-mobile-header {
     display: flex;
   }
+  .sidebar-open .admin-mobile-header {
+    display: none;
+  }
 }
 
 [data-theme="dark"] .admin-mobile-header {
