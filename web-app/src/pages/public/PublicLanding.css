@@ -323,6 +323,7 @@
 .public-hero-overlay {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background:
     radial-gradient(ellipse at 20% 80%, rgba(37, 99, 235, 0.3) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(124, 58, 237, 0.25) 0%, transparent 50%),
@@ -370,18 +371,20 @@
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  z-index: 1;
 }
 .hero-float-item {
   position: absolute;
-  font-size: 28px;
-  opacity: 0.15;
+  font-size: 32px;
+  opacity: 0.35;
   animation: vehicleFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
 }
 .hero-float-item:nth-child(1) { top: 18%; left: 10%; animation-delay: 0s; }
-.hero-float-item:nth-child(2) { top: 25%; right: 12%; animation-delay: -1s; font-size: 24px; }
-.hero-float-item:nth-child(3) { top: 40%; left: 5%; animation-delay: -2s; font-size: 20px; }
-.hero-float-item:nth-child(4) { bottom: 35%; right: 8%; animation-delay: -0.5s; }
-.hero-float-item:nth-child(5) { bottom: 20%; left: 15%; animation-delay: -1.5s; font-size: 22px; }
+.hero-float-item:nth-child(2) { top: 28%; right: 10%; animation-delay: -1s; font-size: 28px; }
+.hero-float-item:nth-child(3) { top: 42%; left: 6%; animation-delay: -2s; font-size: 24px; }
+.hero-float-item:nth-child(4) { bottom: 38%; right: 6%; animation-delay: -0.5s; }
+.hero-float-item:nth-child(5) { bottom: 22%; left: 18%; animation-delay: -1.5s; font-size: 26px; }
 
 .public-hero-content {
   position: relative;
