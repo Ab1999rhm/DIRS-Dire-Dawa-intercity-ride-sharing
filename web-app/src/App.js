@@ -13,6 +13,7 @@ import './styles/pages.css';
 const PassengerBottomNav = React.lazy(() => import('./components/layout/PassengerBottomNav'));
 const DriverBottomNav = React.lazy(() => import('./components/layout/DriverBottomNav'));
 const AdminBottomNav = React.lazy(() => import('./components/layout/AdminBottomNav'));
+const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
@@ -126,8 +127,14 @@ const PublicRoute = React.memo(({ children }) => {
 });
 
 const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   return (
     <div className="app-layout">
+      {adminNav && (
+        <Suspense fallback={null}>
+          <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        </Suspense>
+      )}
       <div className="app-body">
         <main className={(bottomNav || adminNav) ? 'app-main has-bottom-nav' : 'app-main'} style={(bottomNav || adminNav) ? { marginLeft: 0 } : {}}>
           <Suspense fallback={<LoadingSpinner />}>
@@ -142,7 +149,7 @@ const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
       )}
       {adminNav && (
         <Suspense fallback={<LoadingSpinner />}>
-          <AdminBottomNav />
+          <AdminBottomNav onMenuClick={() => setSidebarOpen(true)} />
         </Suspense>
       )}
     </div>

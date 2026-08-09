@@ -1,8 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
-  FaTachometerAlt, FaUsers, FaCar, FaEllipsisH, FaMapMarkerAlt, 
-  FaShieldAlt, FaHeadset, FaChartLine, FaBell, FaCog 
+  FaTachometerAlt, FaUsers, FaCar, FaEllipsisH, FaMapMarkerAlt, FaBars
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -11,10 +10,9 @@ const tabs = [
   { labelKey: 'admin.monitoring', path: '/admin/monitoring', icon: FaMapMarkerAlt, matchExact: false },
   { labelKey: 'admin.drivers', path: '/admin/driver-management', icon: FaCar, matchExact: false },
   { labelKey: 'admin.users', path: '/admin/passenger-management', icon: FaUsers, matchExact: false },
-  { labelKey: 'admin.moreActions', path: '/admin/trip-management', icon: FaEllipsisH, matchExact: false },
 ];
 
-const AdminBottomNav = () => {
+const AdminBottomNav = ({ onMenuClick }) => {
   const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,6 +41,14 @@ const AdminBottomNav = () => {
           </button>
         );
       })}
+      <button
+        className="admin-nav-item"
+        onClick={onMenuClick}
+        aria-label="Menu"
+      >
+        <FaBars />
+        <span>{t('admin.moreActions')}</span>
+      </button>
     </nav>
   );
 };

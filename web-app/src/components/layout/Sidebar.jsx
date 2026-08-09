@@ -4,12 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import {
   FaTachometerAlt, FaUsers, FaCar, FaMoneyBillWave, FaExclamationTriangle,
   FaFileAlt, FaCog, FaSignOutAlt, FaHistory, FaWallet, FaStar, FaUser,
-  FaTag, FaBolt
+  FaTag, FaBolt, FaMapMarkerAlt, FaRoute, FaShieldAlt, FaHeadset, FaChartLine, FaBell
 } from 'react-icons/fa';
+import { useLanguage } from '../../context/LanguageContext';
 import './Sidebar.css';
 
 const Sidebar = ({ mobileOpen, onClose }) => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
 
   const passengerLinks = [
@@ -29,15 +31,17 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   ];
 
   const adminLinks = [
-    { path: '/admin', icon: <FaTachometerAlt />, label: 'Dashboard', end: true },
-    { path: '/admin/users', icon: <FaUsers />, label: 'Users' },
-    { path: '/admin/drivers', icon: <FaCar />, label: 'Drivers' },
-    { path: '/admin/trips', icon: <FaHistory />, label: 'Trips' },
-    { path: '/admin/payments', icon: <FaMoneyBillWave />, label: 'Payments' },
-    { path: '/admin/sos', icon: <FaExclamationTriangle />, label: 'SOS Alerts' },
-    { path: '/admin/tariffs', icon: <FaBolt />, label: 'Tariff Manager' },
-    { path: '/admin/promos', icon: <FaTag />, label: 'Promo Codes' },
-    { path: '/admin/reports', icon: <FaFileAlt />, label: 'Reports' },
+    { path: '/admin', icon: <FaTachometerAlt />, label: t('admin.dashboard'), end: true },
+    { path: '/admin/monitoring', icon: <FaMapMarkerAlt />, label: t('admin.realTimeMonitoring') },
+    { path: '/admin/driver-management', icon: <FaCar />, label: t('admin.driverManagement') },
+    { path: '/admin/passenger-management', icon: <FaUsers />, label: t('admin.passengerManagement') },
+    { path: '/admin/trip-management', icon: <FaRoute />, label: t('admin.tripManagement') },
+    { path: '/admin/financials', icon: <FaMoneyBillWave />, label: t('admin.financialManagement') },
+    { path: '/admin/safety', icon: <FaShieldAlt />, label: t('admin.safetySecurity') },
+    { path: '/admin/support', icon: <FaHeadset />, label: t('admin.supportSystem') },
+    { path: '/admin/analytics', icon: <FaChartLine />, label: t('admin.analyticsReporting') },
+    { path: '/admin/content', icon: <FaBell />, label: t('admin.contentNotifications') },
+    { path: '/admin/configuration', icon: <FaCog />, label: t('admin.systemConfiguration') },
   ];
 
   const links = user?.role === 'admin' ? adminLinks : user?.role === 'driver' ? driverLinks : passengerLinks;
