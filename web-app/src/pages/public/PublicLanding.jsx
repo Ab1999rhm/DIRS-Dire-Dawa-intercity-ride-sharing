@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import {
   FaCar, FaMapMarkerAlt, FaShieldAlt, FaMobileAlt, FaStar, FaClock,
   FaMoneyBillWave, FaUsers, FaArrowRight, FaCheckCircle, FaGlobe, FaMoon, FaSun,
-  FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload, FaChevronRight
+  FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload, FaChevronUp
 } from 'react-icons/fa';
 import './PublicLanding.css';
 
@@ -16,6 +16,67 @@ const PublicLanding = () => {
   const langDropdownRef = useRef(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [typedText, setTypedText] = useState('');
+  const [statsVisible, setStatsVisible] = useState(false);
+  const heroRef = useRef(null);
+  const statsRef = useRef(null);
+
+  // Typing effect for hero
+  const fullText = t('landing.hero.titleHighlight');
+  useEffect(() => {
+    setTypedText('');
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i <= fullText.length) {
+        setTypedText(fullText.slice(0, i));
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 80);
+    return () => clearInterval(timer);
+  }, [language, fullText]);
+
+  // Scroll effects
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Intersection Observer for scroll reveals
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  // Stats counter animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setStatsVisible(true);
+      },
+      { threshold: 0.5 }
+    );
+    if (statsRef.current) observer.observe(statsRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -45,71 +106,42 @@ const PublicLanding = () => {
     setDeferredPrompt(null);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const features = [
-    {
-      icon: <FaCar />,
-      title: t('landing.features.multipleVehicles'),
-      desc: t('landing.features.multipleVehiclesDesc'),
-    },
-    {
-      icon: <FaMapMarkerAlt />,
-      title: t('landing.features.intraIntercity'),
-      desc: t('landing.features.intraIntercityDesc'),
-    },
-    {
-      icon: <FaShieldAlt />,
-      title: t('landing.features.safeSecure'),
-      desc: t('landing.features.safeSecureDesc'),
-    },
-    {
-      icon: <FaMoneyBillWave />,
-      title: t('landing.features.affordable'),
-      desc: t('landing.features.affordableDesc'),
-    },
-    {
-      icon: <FaMobileAlt />,
-      title: t('landing.features.mobileFirst'),
-      desc: t('landing.features.mobileFirstDesc'),
-    },
-    {
-      icon: <FaClock />,
-      title: t('landing.features.fastService'),
-      desc: t('landing.features.fastServiceDesc'),
-    },
+    { icon: <FaCar />, title: t('landing.features.multipleVehicles'), desc: t('landing.features.multipleVehiclesDesc') },
+    { icon: <FaMapMarkerAlt />, title: t('landing.features.intraIntercity'), desc: t('landing.features.intraIntercityDesc') },
+    { icon: <FaShieldAlt />, title: t('landing.features.safeSecure'), desc: t('landing.features.safeSecureDesc') },
+    { icon: <FaMoneyBillWave />, title: t('landing.features.affordable'), desc: t('landing.features.affordableDesc') },
+    { icon: <FaMobileAlt />, title: t('landing.features.mobileFirst'), desc: t('landing.features.mobileFirstDesc') },
+    { icon: <FaClock />, title: t('landing.features.fastService'), desc: t('landing.features.fastServiceDesc') },
   ];
 
   const steps = [
-    {
-      num: '01',
-      icon: <FaMapMarkerAlt />,
-      title: t('landing.steps.setLocation'),
-      desc: t('landing.steps.setLocationDesc'),
-    },
-    {
-      num: '02',
-      icon: <FaCar />,
-      title: t('landing.steps.chooseRide'),
-      desc: t('landing.steps.chooseRideDesc'),
-    },
-    {
-      num: '03',
-      icon: <FaCheckCircle />,
-      title: t('landing.steps.startRiding'),
-      desc: t('landing.steps.startRidingDesc'),
-    },
+    { num: '01', icon: <FaMapMarkerAlt />, title: t('landing.steps.setLocation'), desc: t('landing.steps.setLocationDesc') },
+    { num: '02', icon: <FaCar />, title: t('landing.steps.chooseRide'), desc: t('landing.steps.chooseRideDesc') },
+    { num: '03', icon: <FaCheckCircle />, title: t('landing.steps.startRiding'), desc: t('landing.steps.startRidingDesc') },
   ];
 
   const vehicles = [
-    { icon: '🛺', name: 'Bajaj', capacity: 3, price: '25 ETB', color: '#059669' },
-    { icon: '🚗', name: 'Sedan', capacity: 4, price: '60 ETB', color: '#2563eb' },
-    { icon: '🚐', name: 'Minivan', capacity: 7, price: '50 ETB', color: '#7c3aed' },
-    { icon: '🚌', name: 'Bus', capacity: 14, price: '40 ETB', color: '#d97706' },
+    { icon: '🛺', name: 'Bajaj', capacity: 3, price: '25', color: '#059669' },
+    { icon: '🚗', name: 'Sedan', capacity: 4, price: '60', color: '#2563eb' },
+    { icon: '🚐', name: 'Minivan', capacity: 7, price: '50', color: '#7c3aed' },
+    { icon: '🚌', name: 'Bus', capacity: 14, price: '40', color: '#d97706' },
+  ];
+
+  const stats = [
+    { value: 500, suffix: '+', label: t('landing.hero.dailyRides') },
+    { value: 200, suffix: '+', label: t('landing.hero.verifiedDrivers') },
+    { value: 4.8, suffix: '', label: t('landing.hero.appRating'), isDecimal: true },
   ];
 
   return (
     <div className="public-page">
       {/* Navbar */}
-      <nav className="public-nav">
+      <nav className={`public-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="public-nav-container">
           <Link to="/" className="public-nav-logo">
             <div className="public-logo-icon">
@@ -154,18 +186,31 @@ const PublicLanding = () => {
       </nav>
 
       {/* Hero */}
-      <section className="public-hero">
+      <section className="public-hero" ref={heroRef}>
         <img src="/images/hero-bg.jpg" alt="Dire Dawa Transport" className="public-hero-bg" />
         <div className="public-hero-overlay"></div>
+
+        {/* Animated gradient blobs */}
+        <div className="hero-blob hero-blob-1"></div>
+        <div className="hero-blob hero-blob-2"></div>
+        <div className="hero-blob hero-blob-3"></div>
+
+        {/* Floating vehicles */}
+        <div className="hero-float-vehicles">
+          <div className="hero-float-item">🛺</div>
+          <div className="hero-float-item">🚗</div>
+          <div className="hero-float-item">🚐</div>
+          <div className="hero-float-item">🚌</div>
+          <div className="hero-float-item">📍</div>
+        </div>
+
         <div className="public-hero-content">
           <div className="public-hero-badge">
             <FaStar /> {t('landing.hero.badge')}
           </div>
           <h1>
             {t('landing.hero.title')}{' '}
-            <span className="public-gradient-text">
-              {t('landing.hero.titleHighlight')}
-            </span>
+            <span className="public-gradient-text">{typedText}<span style={{ borderRight: '2px solid var(--primary)', animation: 'blink 0.8s infinite', marginLeft: '2px' }}></span></span>
           </h1>
           <p className="public-hero-desc">
             {t('landing.hero.desc')}
@@ -178,30 +223,30 @@ const PublicLanding = () => {
               {t('landing.hero.learnMore')}
             </Link>
           </div>
-          <div className="public-hero-stats">
-            <div className="public-stat">
-              <strong>500+</strong>
-              <span>{t('landing.hero.dailyRides')}</span>
-            </div>
-            <div className="public-stat-divider"></div>
-            <div className="public-stat">
-              <strong>200+</strong>
-              <span>{t('landing.hero.verifiedDrivers')}</span>
-            </div>
-            <div className="public-stat-divider"></div>
-            <div className="public-stat">
-              <strong>4.8</strong>
-              <span>{t('landing.hero.appRating')}</span>
-            </div>
+          <div className="public-hero-stats" ref={statsRef}>
+            {stats.map((s, i) => (
+              <div className="public-stat" key={i}>
+                <strong>
+                  {statsVisible ? (
+                    <CountUp target={s.value} decimals={s.isDecimal ? 1 : 0} />
+                  ) : '0'}
+                  {s.suffix}
+                </strong>
+                <span>{s.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* Gradient Divider */}
+      <div className="public-divider"></div>
+
       {/* Quick Actions */}
       <section className="public-quick-actions">
         <div className="public-quick-actions-scroll">
-          <Link to="/register" className="public-quick-action">
-            <div className="public-quick-action-icon" style={{ background: 'var(--primary-50)', color: 'var(--primary)' }}>
+          <Link to="/register" className="public-quick-action reveal">
+            <div className="public-quick-action-icon" style={{ background: 'rgba(37, 99, 235, 0.08)', color: 'var(--primary)' }}>
               <FaCar />
             </div>
             <div>
@@ -209,8 +254,8 @@ const PublicLanding = () => {
               <div className="public-quick-action-sub">{t('landing.features.fastService')}</div>
             </div>
           </Link>
-          <Link to="/register" className="public-quick-action">
-            <div className="public-quick-action-icon" style={{ background: '#f0fdf4', color: '#059669' }}>
+          <Link to="/register" className="public-quick-action reveal reveal-delay-1">
+            <div className="public-quick-action-icon" style={{ background: 'rgba(5, 150, 105, 0.08)', color: '#059669' }}>
               <FaUsers />
             </div>
             <div>
@@ -218,8 +263,8 @@ const PublicLanding = () => {
               <div className="public-quick-action-sub">{t('landing.features.affordable')}</div>
             </div>
           </Link>
-          <Link to="/login" className="public-quick-action">
-            <div className="public-quick-action-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
+          <Link to="/login" className="public-quick-action reveal reveal-delay-2">
+            <div className="public-quick-action-icon" style={{ background: 'rgba(217, 119, 6, 0.08)', color: '#d97706' }}>
               <FaMobileAlt />
             </div>
             <div>
@@ -233,7 +278,7 @@ const PublicLanding = () => {
       {/* Features */}
       <section className="public-features">
         <div className="public-section-container">
-          <div className="public-section-header">
+          <div className="public-section-header reveal">
             <span className="public-section-tag">{t('landing.whyDirs.tag')}</span>
             <h2>{t('landing.whyDirs.title')}</h2>
             <p>{t('landing.whyDirs.desc')}</p>
@@ -241,7 +286,7 @@ const PublicLanding = () => {
         </div>
         <div className="public-features-scroll">
           {features.map((f, i) => (
-            <div className="public-feature-card" key={i}>
+            <div className={`public-feature-card reveal reveal-delay-${i % 3 + 1}`} key={i}>
               <div className="public-feature-icon">{f.icon}</div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
@@ -253,13 +298,13 @@ const PublicLanding = () => {
       {/* How It Works */}
       <section className="public-how">
         <div className="public-section-container">
-          <div className="public-section-header">
+          <div className="public-section-header reveal">
             <span className="public-section-tag">{t('landing.howItWorks.tag')}</span>
             <h2>{t('landing.howItWorks.title')}</h2>
           </div>
           <div className="public-steps-list">
             {steps.map((s, i) => (
-              <div className="public-step-card" key={i}>
+              <div className={`public-step-card reveal reveal-delay-${i + 1}`} key={i}>
                 <div className="public-step-num">{s.num}</div>
                 <div className="public-step-body">
                   <h3>{s.title}</h3>
@@ -274,20 +319,20 @@ const PublicLanding = () => {
       {/* Vehicles */}
       <section className="public-vehicles">
         <div className="public-section-container">
-          <div className="public-section-header">
+          <div className="public-section-header reveal">
             <span className="public-section-tag">{t('landing.vehicles.tag')}</span>
             <h2>{t('landing.vehicles.title')}</h2>
           </div>
         </div>
         <div className="public-vehicles-scroll">
           {vehicles.map((v, i) => (
-            <div className="public-vehicle-card" key={i} style={{ '--v-color': v.color }}>
+            <div className={`public-vehicle-card reveal reveal-delay-${i + 1}`} key={i} style={{ '--v-color': v.color }}>
               <div className="public-vehicle-icon">{v.icon}</div>
               <h3>{v.name}</h3>
               <div className="public-vehicle-capacity">
                 <FaUsers /> {v.capacity} {t('landing.vehicles.seats')}
               </div>
-              <div className="public-vehicle-price">from {v.price}</div>
+              <div className="public-vehicle-price">{v.price} ETB</div>
             </div>
           ))}
         </div>
@@ -296,7 +341,7 @@ const PublicLanding = () => {
       {/* CTA */}
       <section className="public-cta">
         <div className="public-section-container">
-          <div className="public-cta-card">
+          <div className="public-cta-card reveal">
             <img src="/images/phone-car.jpg" alt="" className="public-cta-bg" />
             <div className="public-cta-content">
               <h2>{t('landing.cta.title')}</h2>
@@ -319,7 +364,7 @@ const PublicLanding = () => {
       {/* Install Banner */}
       <section className="public-install">
         <div className="public-section-container">
-          <div className="public-install-card">
+          <div className="public-install-card reveal">
             <div className="public-install-icon"><FaDownload /></div>
             <div className="public-install-text">
               <h3>{t('landing.install.title')}</h3>
@@ -390,8 +435,44 @@ const PublicLanding = () => {
           {t('landing.hero.bookRide')} <FaArrowRight />
         </Link>
       </div>
+
+      {/* Scroll to Top */}
+      {showScrollTop && (
+        <button className="public-scroll-top" onClick={scrollToTop}>
+          <FaChevronUp />
+        </button>
+      )}
     </div>
   );
+};
+
+// Animated counter component
+const CountUp = ({ target, decimals = 0 }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+
+    const duration = 1500;
+    const steps = 60;
+    const increment = target / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(decimals > 0 ? parseFloat(current.toFixed(decimals)) : Math.floor(current));
+      }
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [target, decimals]);
+
+  return <span ref={ref}>{decimals > 0 ? count.toFixed(decimals) : count}</span>;
 };
 
 export default PublicLanding;
