@@ -58,6 +58,10 @@
       "dest": "/icons/$1"
     },
     {
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
+    },
+    {
       "src": "/icon-(192|512)\\.png",
       "dest": "/icon-$1.png"
     },
@@ -85,6 +89,12 @@
       "source": "/logo\\.(svg|png)",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     },
     {
