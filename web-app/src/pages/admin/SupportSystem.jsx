@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FaHeadset, FaTicketAlt, FaComments, FaQuestionCircle, FaSearch, FaFilter,
   FaEye, FaCheckCircle, FaTimesCircle, FaClock, FaUser, FaReply,
-  FaPaperPlane, FaRobot, FaBook, FaPlus, FaEdit, FaTrash, FaArchive
+  FaPaperPlane, FaRobot, FaBook, FaPlus, FaEdit, FaTrash, FaArchive, FaExclamationTriangle
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';

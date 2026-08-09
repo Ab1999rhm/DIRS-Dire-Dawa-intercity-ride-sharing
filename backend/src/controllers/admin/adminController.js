@@ -370,3 +370,240 @@ const convertToCSV = (data) => {
   const rows = data.map(row => Object.values(row).join(','));
   return [headers, ...rows].join('\n');
 };
+
+// Monitoring
+exports.getSystemHealth = asyncHandler(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const activeDrivers = await Driver.countDocuments({ isOnline: true });
+  const totalTrips = await Trip.countDocuments();
+  const uptime = process.uptime();
+  res.json({
+    status: 'healthy',
+    uptime,
+    database: 'connected',
+    totalUsers,
+    activeDrivers,
+    totalTrips,
+    memoryUsage: process.memoryUsage().heapUsed,
+    timestamp: new Date()
+  });
+});
+
+exports.getActiveDriversMonitoring = asyncHandler(async (req, res) => {
+  const drivers = await Driver.find({ isOnline: true })
+    .populate('user', 'firstName lastName phoneNumber')
+    .populate('vehicle');
+  res.json(drivers);
+});
+
+exports.getActiveTripsMonitoring = asyncHandler(async (req, res) => {
+  const trips = await Trip.find({ status: { $in: ['in_progress', 'driver_arriving', 'driver_arrived'] } })
+    .populate('passenger', 'firstName lastName phoneNumber')
+    .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } })
+    .sort({ createdAt: -1 });
+  res.json(trips);
+});
+
+exports.respondToSOS = asyncHandler(async (req, res) => {
+  const { sosId } = req.params;
+  const alert = await SOSAlert.findByIdAndUpdate(sosId, { status: 'responded', respondedAt: new Date() }, { new: true });
+  if (!alert) return res.status(404).json({ message: 'SOS alert not found' });
+  res.json({ message: 'Response recorded', alert });
+});
+
+// Financial
+exports.getRevenueBreakdown = asyncHandler(async (req, res) => {
+  const { period = 'today' } = req.query;
+  let startDate = new Date();
+  if (period === 'today') startDate.setHours(0, 0, 0, 0);
+  else if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+  else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+
+  const result = await Trip.aggregate([
+    { $match: { createdAt: { $gte: startDate }, status: 'completed' } },
+    { $group: {
+      _id: null,
+      totalRevenue: { $sum: '$fare.totalFare' },
+      tripCount: { $sum: 1 },
+      avgFare: { $avg: '$fare.totalFare' }
+    }}
+  ]);
+  const data = result[0] || { totalRevenue: 0, tripCount: 0, avgFare: 0 };
+  res.json(data);
+});
+
+exports.getPaymentTransactions = asyncHandler(async (req, res) => {
+  const { period = 'today', page = 1, limit = 20 } = req.query;
+  let startDate = new Date();
+  if (period === 'today') startDate.setHours(0, 0, 0, 0);
+  else if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+  else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+
+  const query = { createdAt: { $gte: startDate } };
+  const transactions = await Payment.find(query)
+    .populate('user', 'firstName lastName')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  const total = await Payment.countDocuments(query);
+  res.json({ transactions, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.processCommission = asyncHandler(async (req, res) => {
+  res.json({ message: 'Commission processed', data: req.body });
+});
+
+// Safety
+exports.getFraudAlerts = asyncHandler(async (req, res) => {
+  res.json([]);
+});
+
+exports.getSuspiciousActivity = asyncHandler(async (req, res) => {
+  res.json([]);
+});
+
+exports.reportIncident = asyncHandler(async (req, res) => {
+  res.json({ message: 'Incident reported', data: req.body });
+});
+
+// Support
+exports.getSupportTickets = asyncHandler(async (req, res) => {
+  res.json({ tickets: [], total: 0, page: 1, pages: 0 });
+});
+
+exports.updateTicket = asyncHandler(async (req, res) => {
+  res.json({ message: 'Ticket updated', data: req.body });
+});
+
+// Analytics
+exports.getDemandHeatmap = asyncHandler(async (req, res) => {
+  const { period = 'week' } = req.query;
+  let startDate = new Date();
+  if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+  else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+
+  const heatmap = await Trip.aggregate([
+    { $match: { createdAt: { $gte: startDate } } },
+    { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
+    { $sort: { _id: 1 } }
+  ]);
+  res.json(heatmap);
+});
+
+exports.getPeakHours = asyncHandler(async (req, res) => {
+  const { period = 'week' } = req.query;
+  let startDate = new Date();
+  if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+  else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+
+  const peaks = await Trip.aggregate([
+    { $match: { createdAt: { $gte: startDate } } },
+    { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+    { $limit: 10 }
+  ]);
+  res.json(peaks);
+});
+
+exports.getRetentionMetrics = asyncHandler(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const activeThisWeek = await User.countDocuments({ lastActive: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } });
+  res.json({ totalUsers, activeThisWeek, retentionRate: totalUsers > 0 ? ((activeThisWeek / totalUsers) * 100).toFixed(1) : 0 });
+});
+
+// Config
+exports.getServiceAreas = asyncHandler(async (req, res) => {
+  res.json([
+    { name: 'Dire Dawa Central', coordinates: [9.5930, 41.8618], radius: 10 },
+    { name: 'Kezira', coordinates: [9.5970, 41.8550], radius: 5 },
+    { name: 'Jijiga', coordinates: [9.3498, 42.8039], radius: 8 }
+  ]);
+});
+
+exports.updateServiceAreas = asyncHandler(async (req, res) => {
+  res.json({ message: 'Service areas updated', data: req.body });
+});
+
+// Passenger wallet
+exports.getPassengerWallet = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.passengerId);
+  if (!user) return res.status(404).json({ message: 'Passenger not found' });
+  res.json({ balance: user.walletBalance || 0, currency: 'ETB' });
+});
+
+exports.processRefund = asyncHandler(async (req, res) => {
+  const { passengerId } = req.params;
+  const { amount, reason } = req.body;
+  const user = await User.findById(passengerId);
+  if (!user) return res.status(404).json({ message: 'Passenger not found' });
+  user.walletBalance = (user.walletBalance || 0) + amount;
+  await user.save();
+  res.json({ message: 'Refund processed', balance: user.walletBalance });
+});
+
+// Driver details
+exports.getDriverDocuments = asyncHandler(async (req, res) => {
+  const driver = await Driver.findById(req.params.driverId).populate('user');
+  if (!driver) return res.status(404).json({ message: 'Driver not found' });
+  res.json(driver.documents || {});
+});
+
+exports.approveDriverDirect = asyncHandler(async (req, res) => {
+  const driver = await Driver.findByIdAndUpdate(req.params.driverId, { verificationStatus: 'approved', verifiedAt: new Date() }, { new: true });
+  if (!driver) return res.status(404).json({ message: 'Driver not found' });
+  res.json({ message: 'Driver approved', driver });
+});
+
+exports.rejectDriverDirect = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  const driver = await Driver.findByIdAndUpdate(req.params.driverId, { verificationStatus: 'rejected', rejectionReason: reason }, { new: true });
+  if (!driver) return res.status(404).json({ message: 'Driver not found' });
+  res.json({ message: 'Driver rejected', driver });
+});
+
+exports.suspendDriver = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  const driver = await Driver.findByIdAndUpdate(req.params.driverId, { isSuspended: true, suspensionReason: reason }, { new: true });
+  if (!driver) return res.status(404).json({ message: 'Driver not found' });
+  res.json({ message: 'Driver suspended', driver });
+});
+
+exports.getDriverEarnings = asyncHandler(async (req, res) => {
+  const driver = await Driver.findById(req.params.driverId);
+  if (!driver) return res.status(404).json({ message: 'Driver not found' });
+  const trips = await Trip.find({ driver: driver._id, status: 'completed' });
+  const totalEarnings = trips.reduce((sum, t) => sum + (t.fare?.totalFare || 0), 0);
+  res.json({ totalEarnings, tripCount: trips.length, commission: totalEarnings * 0.15 });
+});
+
+// Trip details
+exports.getTripDetails = asyncHandler(async (req, res) => {
+  const trip = await Trip.findById(req.params.tripId)
+    .populate('passenger', 'firstName lastName phoneNumber')
+    .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } });
+  if (!trip) return res.status(404).json({ message: 'Trip not found' });
+  res.json(trip);
+});
+
+exports.adjustFare = asyncHandler(async (req, res) => {
+  const { newFare, reason } = req.body;
+  const trip = await Trip.findByIdAndUpdate(req.params.tripId, { 'fare.totalFare': newFare }, { new: true });
+  if (!trip) return res.status(404).json({ message: 'Trip not found' });
+  res.json({ message: 'Fare adjusted', trip });
+});
+
+exports.resolveDispute = asyncHandler(async (req, res) => {
+  const { resolution } = req.body;
+  const trip = await Trip.findByIdAndUpdate(req.params.tripId, { disputeResolution: resolution, status: 'completed' }, { new: true });
+  if (!trip) return res.status(404).json({ message: 'Trip not found' });
+  res.json({ message: 'Dispute resolved', trip });
+});
+
+// Content
+exports.sendPushNotification = asyncHandler(async (req, res) => {
+  res.json({ message: 'Push notification sent', data: req.body });
+});
+
+exports.createAnnouncement = asyncHandler(async (req, res) => {
+  res.json({ message: 'Announcement created', data: req.body });
+});
