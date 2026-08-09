@@ -10,6 +10,19 @@
   position: relative;
 }
 
+/* Logo Bar */
+.admin-logo-bar {
+  width: 100%;
+  margin-bottom: 8px;
+  line-height: 0;
+}
+.admin-logo {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));
+}
+
 /* Cultural border decoration */
 .admin-page::before {
   content: '';
@@ -312,6 +325,51 @@
 .admin-activity-time {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* ===== LANGUAGE PICKER ===== */
+.admin-lang-picker-wrapper {
+  position: relative;
+}
+.admin-lang-picker {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  z-index: 200;
+  min-width: 160px;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease;
+}
+.admin-lang-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+.admin-lang-option:hover {
+  background: var(--bg);
+}
+.admin-lang-option.active {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-50, rgba(37,99,235,0.05));
+}
+.admin-lang-option span {
+  flex: 1;
 }
 
 /* ===== BOTTOM NAV ===== */

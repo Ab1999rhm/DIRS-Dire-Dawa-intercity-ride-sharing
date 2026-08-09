@@ -4,21 +4,25 @@ import {
   FaUsers, FaCar, FaMoneyBillWave, FaExclamationTriangle, FaShieldAlt,
   FaCreditCard, FaTag, FaChartBar, FaBell, FaSync, FaSearch,
   FaUserShield, FaUserClock, FaUserCheck, FaUserSlash,
-  FaArrowRight, FaMapMarkerAlt, FaClock, FaEllipsisH
+  FaArrowRight, FaMapMarkerAlt, FaClock, FaEllipsisH, FaMoon, FaSun, FaGlobe,
+  FaCheck
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import './Admin.css';
 
 const AdminDashboard = () => {
-  const { t } = useLanguage();
+  const { t, language, setLanguage, availableLanguages } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showLangPicker, setShowLangPicker] = useState(false);
 
   useEffect(() => {
     fetchDashboard();
@@ -41,7 +45,7 @@ const AdminDashboard = () => {
     { key: 'users', icon: <FaUsers />, value: stats?.totalUsers || 0, color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
     { key: 'drivers', icon: <FaCar />, value: stats?.activeDrivers || 0, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
     { key: 'trips', icon: <FaExclamationTriangle />, value: stats?.totalTrips || 0, color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
-    { key: 'revenue', icon: <FaMoneyBillWave />, value: stats?.revenue || 0, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', isCurrency: true },
+    { key: 'revenue', label: t('admin.revenue'), icon: <FaMoneyBillWave />, value: stats?.revenue || 0, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', isCurrency: true },
   ];
 
   const quickActions = [
@@ -63,6 +67,9 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="admin-page">
+        <div className="admin-logo-bar">
+          <div className="admin-skeleton" style={{ height: 60 }}></div>
+        </div>
         <div className="admin-header">
           <div className="admin-header-left">
             <div className="admin-skeleton" style={{ width: 120, height: 24, marginBottom: 8 }}></div>
@@ -95,6 +102,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-page">
+      {/* Logo Bar */}
+      <div className="admin-logo-bar">
+        <img src="/logo.svg?v=2" alt="DIRS - Dire Dawa Ride Sharing" className="admin-logo" />
+      </div>
+
       {/* Header */}
       <div className="admin-header">
         <div className="admin-header-left">
@@ -106,6 +118,29 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="admin-header-actions">
+          <button className="admin-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
+            {theme === 'dark' ? <FaSun /> : <FaMoon />}
+          </button>
+          <div className="admin-lang-picker-wrapper">
+            <button className="admin-icon-btn" onClick={() => setShowLangPicker(!showLangPicker)} aria-label="Change language">
+              <FaGlobe />
+            </button>
+            {showLangPicker && (
+              <div className="admin-lang-picker">
+                {availableLanguages.map(lang => (
+                  <button
+                    key={lang.code}
+                    className={`admin-lang-option ${language === lang.code ? 'active' : ''}`}
+                    onClick={() => { setLanguage(lang.code); setShowLangPicker(false); }}
+                  >
+                    <FaGlobe />
+                    <span>{lang.name}</span>
+                    {language === lang.code && <FaCheck />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button className="admin-icon-btn" onClick={fetchDashboard}>
             <FaSync />
           </button>
@@ -129,7 +164,7 @@ const AdminDashboard = () => {
               <div className="admin-stat-value">
                 {card.isCurrency ? `ETB ${(card.value || 0).toLocaleString()}` : (card.value || 0).toLocaleString()}
               </div>
-              <div className="admin-stat-label">{t(`admin.${card.key}`) || card.key}</div>
+              <div className="admin-stat-label">{card.label || t(`admin.${card.key}`) || card.key}</div>
             </div>
           </div>
         ))}
