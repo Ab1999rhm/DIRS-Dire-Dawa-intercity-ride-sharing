@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   FaCar, FaMapMarkerAlt, FaShieldAlt, FaMobileAlt, FaStar, FaClock,
   FaMoneyBillWave, FaUsers, FaArrowRight, FaCheckCircle, FaGlobe, FaMoon, FaSun,
-  FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload
+  FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload, FaChevronRight
 } from 'react-icons/fa';
 import './PublicLanding.css';
 
@@ -113,7 +113,7 @@ const PublicLanding = () => {
         <div className="public-nav-container">
           <Link to="/" className="public-nav-logo">
             <div className="public-logo-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
@@ -197,6 +197,39 @@ const PublicLanding = () => {
         </div>
       </section>
 
+      {/* Quick Actions */}
+      <section className="public-quick-actions">
+        <div className="public-quick-actions-scroll">
+          <Link to="/register" className="public-quick-action">
+            <div className="public-quick-action-icon" style={{ background: 'var(--primary-50)', color: 'var(--primary)' }}>
+              <FaCar />
+            </div>
+            <div>
+              <div className="public-quick-action-text">{t('landing.hero.bookRide')}</div>
+              <div className="public-quick-action-sub">{t('landing.features.fastService')}</div>
+            </div>
+          </Link>
+          <Link to="/register" className="public-quick-action">
+            <div className="public-quick-action-icon" style={{ background: '#f0fdf4', color: '#059669' }}>
+              <FaUsers />
+            </div>
+            <div>
+              <div className="public-quick-action-text">{t('landing.footer.becomeDriver')}</div>
+              <div className="public-quick-action-sub">{t('landing.features.affordable')}</div>
+            </div>
+          </Link>
+          <Link to="/login" className="public-quick-action">
+            <div className="public-quick-action-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
+              <FaMobileAlt />
+            </div>
+            <div>
+              <div className="public-quick-action-text">{t('landing.login')}</div>
+              <div className="public-quick-action-sub">{t('landing.features.mobileFirst')}</div>
+            </div>
+          </Link>
+        </div>
+      </section>
+
       {/* Features */}
       <section className="public-features">
         <div className="public-section-container">
@@ -205,15 +238,15 @@ const PublicLanding = () => {
             <h2>{t('landing.whyDirs.title')}</h2>
             <p>{t('landing.whyDirs.desc')}</p>
           </div>
-          <div className="public-features-grid">
-            {features.map((f, i) => (
-              <div className="public-feature-card" key={i}>
-                <div className="public-feature-icon">{f.icon}</div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
-              </div>
-            ))}
-          </div>
+        </div>
+        <div className="public-features-scroll">
+          {features.map((f, i) => (
+            <div className="public-feature-card" key={i}>
+              <div className="public-feature-icon">{f.icon}</div>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -224,13 +257,14 @@ const PublicLanding = () => {
             <span className="public-section-tag">{t('landing.howItWorks.tag')}</span>
             <h2>{t('landing.howItWorks.title')}</h2>
           </div>
-          <div className="public-steps-grid">
+          <div className="public-steps-list">
             {steps.map((s, i) => (
               <div className="public-step-card" key={i}>
                 <div className="public-step-num">{s.num}</div>
-                <div className="public-step-icon">{s.icon}</div>
-                <h3>{s.title}</h3>
-                <p>{s.desc}</p>
+                <div className="public-step-body">
+                  <h3>{s.title}</h3>
+                  <p>{s.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -244,18 +278,18 @@ const PublicLanding = () => {
             <span className="public-section-tag">{t('landing.vehicles.tag')}</span>
             <h2>{t('landing.vehicles.title')}</h2>
           </div>
-          <div className="public-vehicles-grid">
-            {vehicles.map((v, i) => (
-              <div className="public-vehicle-card" key={i} style={{ '--v-color': v.color }}>
-                <div className="public-vehicle-icon">{v.icon}</div>
-                <h3>{v.name}</h3>
-                <div className="public-vehicle-capacity">
-                  <FaUsers /> {v.capacity} {t('landing.vehicles.seats')}
-                </div>
-                <div className="public-vehicle-price">from {v.price}</div>
+        </div>
+        <div className="public-vehicles-scroll">
+          {vehicles.map((v, i) => (
+            <div className="public-vehicle-card" key={i} style={{ '--v-color': v.color }}>
+              <div className="public-vehicle-icon">{v.icon}</div>
+              <h3>{v.name}</h3>
+              <div className="public-vehicle-capacity">
+                <FaUsers /> {v.capacity} {t('landing.vehicles.seats')}
               </div>
-            ))}
-          </div>
+              <div className="public-vehicle-price">from {v.price}</div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -310,9 +344,9 @@ const PublicLanding = () => {
         <div className="public-section-container">
           <div className="public-footer-grid">
             <div className="public-footer-brand">
-              <div className="public-nav-logo" style={{ marginBottom: 16 }}>
+              <div className="public-nav-logo" style={{ marginBottom: 12 }}>
                 <div className="public-logo-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
@@ -344,11 +378,18 @@ const PublicLanding = () => {
             </div>
           </div>
           <div className="public-footer-bottom">
-            <p>© 2026 DIRS — {t('landing.footer.project')}</p>
+            <p>&copy; 2026 DIRS — {t('landing.footer.project')}</p>
             <p>{t('landing.footer.team')}</p>
           </div>
         </div>
       </footer>
+
+      {/* Sticky Bottom CTA (Mobile) */}
+      <div className="public-sticky-cta">
+        <Link to="/register" className="public-btn-hero">
+          {t('landing.hero.bookRide')} <FaArrowRight />
+        </Link>
+      </div>
     </div>
   );
 };
