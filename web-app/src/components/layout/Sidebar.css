@@ -301,30 +301,31 @@
 .admin-mobile-header {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  height: 48px;
   background: var(--card, #fff);
   border-bottom: 1px solid var(--border-light, #e5e7eb);
   align-items: center;
-  padding: 0 16px;
-  z-index: 99;
+  padding: 0 12px;
+  z-index: 51;
   gap: 12px;
 }
 .admin-mobile-menu-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: none;
-  background: var(--bg-secondary, #f3f4f6);
-  border-radius: 8px;
-  color: var(--text, #111827);
-  font-size: 18px;
+  background: var(--primary, #2563eb);
+  border-radius: 50%;
+  color: white;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .admin-mobile-menu-btn:hover {
   background: var(--primary-50, #eff6ff);
@@ -351,8 +352,8 @@
   border-color: #2a2a4a;
 }
 [data-theme="dark"] .admin-mobile-menu-btn {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: #2563eb;
+  color: white;
 }
 [data-theme="dark"] .admin-mobile-menu-btn:hover {
   background: rgba(59, 130, 246, 0.1);

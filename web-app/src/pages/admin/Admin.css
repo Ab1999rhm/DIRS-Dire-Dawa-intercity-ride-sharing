@@ -394,6 +394,9 @@
   .admin-bottom-nav {
     display: none;
   }
+  .admin-page {
+    padding-top: 72px;
+  }
 }
 .admin-nav-item {
   display: flex;
