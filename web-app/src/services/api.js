@@ -6,7 +6,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'https://dirs-dire-dawa-interci
 const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000, // 15 second timeout — prevents infinite loading on mobile (Render cold start)
+  timeout: 30000, // 30 second timeout — Render cold start can take 20-25s
 });
 
 // Request interceptor - add token
