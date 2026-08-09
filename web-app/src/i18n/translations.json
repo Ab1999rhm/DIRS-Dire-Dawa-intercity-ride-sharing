@@ -450,6 +450,84 @@
       "bajaj": "Bajaj",
       "bus": "Bus",
       "statistics": "Statistics"
+    },
+    "landing": {
+      "installApp": "Install App",
+      "login": "Login",
+      "signUp": "Sign Up",
+      "features": {
+        "multipleVehicles": "Multiple Vehicles",
+        "multipleVehiclesDesc": "Choose from Bajaj, Sedan, Minivan, and Bus for any trip",
+        "intraIntercity": "Intra & Intercity",
+        "intraIntercityDesc": "Ride within Dire Dawa or travel between cities",
+        "safeSecure": "Safe & Secure",
+        "safeSecureDesc": "SOS alerts, driver verification, and real-time tracking",
+        "affordable": "Affordable",
+        "affordableDesc": "Transparent fare calculation and multiple payment options",
+        "mobileFirst": "Mobile First",
+        "mobileFirstDesc": "Book and manage rides right from your phone",
+        "fastService": "Fast Service",
+        "fastServiceDesc": "Find a driver within 3-5 minutes"
+      },
+      "steps": {
+        "setLocation": "Set Location",
+        "setLocationDesc": "Enter your pickup and drop-off locations",
+        "chooseRide": "Choose Ride",
+        "chooseRideDesc": "Select the vehicle type that suits you",
+        "startRiding": "Start Riding",
+        "startRidingDesc": "Watch your driver arrive and enjoy the ride"
+      },
+      "hero": {
+        "badge": "Dire Dawa's Ride Sharing",
+        "title": "Ride Easy, Ride Smart",
+        "titleHighlight": "in Dire Dawa",
+        "desc": "From Bajaj to Bus, ride within Dire Dawa or travel to other cities. Fast, affordable, and safe.",
+        "bookRide": "Book a Ride",
+        "learnMore": "Learn More",
+        "dailyRides": "Daily Rides",
+        "verifiedDrivers": "Verified Drivers",
+        "appRating": "App Rating"
+      },
+      "whyDirs": {
+        "tag": "Why DIRS?",
+        "title": "Why Choose DIRS?",
+        "desc": "Built for the needs of Dire Dawa residents"
+      },
+      "howItWorks": {
+        "tag": "How It Works",
+        "title": "3 Simple Steps"
+      },
+      "vehicles": {
+        "tag": "Vehicle Types",
+        "title": "Choose Your Ride",
+        "seats": "seats"
+      },
+      "cta": {
+        "title": "Ready to Ride?",
+        "desc": "Sign up today and your first ride is free!",
+        "getStarted": "Get Started",
+        "installApp": "Install App"
+      },
+      "install": {
+        "title": "Get the DIRS App",
+        "desc": "Install DIRS on your phone for faster booking. Works offline too!",
+        "installNow": "Install Now",
+        "chromeHint": "On Chrome: Tap ⋮ → \"Add to Home Screen\"",
+        "safariHint": "On Safari: Tap Share → \"Add to Home Screen\""
+      },
+      "footer": {
+        "tagline": "Dire Dawa's Intercity and Ride Sharing System",
+        "service": "Service",
+        "bookRide": "Book Ride",
+        "becomeDriver": "Become a Driver",
+        "login": "Login",
+        "company": "Company",
+        "aboutUs": "About Us",
+        "contact": "Contact",
+        "terms": "Terms",
+        "project": "Dire Dawa University Project",
+        "team": "Team: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
+      }
     }
   },
   "am": {
@@ -903,6 +981,84 @@
       "bajaj": "ባጃጅ",
       "bus": "በስ",
       "statistics": "ስታትስቲክስ"
+    },
+    "landing": {
+      "installApp": "ያግዙ",
+      "login": "ግባ",
+      "signUp": "ይመዝገቡ",
+      "features": {
+        "multipleVehicles": "የተለያዩ ተORYS",
+        "multipleVehiclesDesc": "በجاج ሰዳን ሚኒβאן እና በስ መምረጥ ይችላሉ",
+        "intraIntercity": "ከropolis እና በ city ውስጥ",
+        "intraIntercityDesc": "ንዑስ ከropolis እና በ city ውስጥ ጉዞ ያድርጉ",
+        "safeSecure": "ደህንነት እና ጥበብ",
+        "safeSecureDesc": "የSOS አደረጃጋት እና የDriver verification",
+        "affordable": "ተመጣጣኝ ዋጋ",
+        "affordableDesc": "ግልጽ የዋጋ ማስላት እና ተመጣጣኝ ክፍያ ዘዴዎች",
+        "mobileFirst": "በ ስልክ ላይ",
+        "mobileFirstDesc": "በ ስልክ ላይ ብቻ ማስያዣ እና ማስተናገድ",
+        "fastService": "ፈጣን አገልግሎት",
+        "fastServiceDesc": "3-5 ደቂቃ ውስጥ driver ያግኙ"
+      },
+      "steps": {
+        "setLocation": "መawni ያስይዙ",
+        "setLocationDesc": "የመነሻ እና የመድረሻ ቦታ ያስይዙ",
+        "chooseRide": "ተORYS ይምረጡ",
+        "chooseRideDesc": "ለእርስዎ ተስማሚ ተORYS ይምረጡ",
+        "startRiding": "ጉዞ ይጀምሩ",
+        "startRidingDesc": "Driver እንደ ደረሰ ተመልከት እና ጉዞ ይጀምሩ"
+      },
+      "hero": {
+        "badge": "የደሃዋ ብቻ የጋራ ጉዞ ስистем",
+        "title": "በ ደሃዋ ውስጥ ቀላል እና ፈጣን ጉዞ",
+        "titleHighlight": "በ ደሃዋ",
+        "desc": "ከ ባጃጅ እስከ በስ፣ በ ደሃዋ ውስጥ እና ከ ደሃዋ ወደ ሌሎች ከropolis ተORYS ያስይዙ። ፈጣን፣ ተመጣጣኝ፣ ደህንነቱ የተጠበቀ።",
+        "bookRide": "ያስይዙ",
+        "learnMore": "መረጃ ይመልከቱ",
+        "dailyRides": "ተORYS",
+        "verifiedDrivers": "Drivers",
+        "appRating": "ምብረት"
+      },
+      "whyDirs": {
+        "tag": "ልዩ ነገር",
+        "title": "ለምን DIRS?",
+        "desc": "ለ ደሃዋ ምዕራፎች የተዘረዘረ"
+      },
+      "howItWorks": {
+        "tag": "እንዴት ይሠራል",
+        "title": "3 ደረጃዎች"
+      },
+      "vehicles": {
+        "tag": "ተORYS",
+        "title": "ምረጥ ይምረጡ",
+        "seats": "ቦታ"
+      },
+      "cta": {
+        "title": "ያስይዙ ዛሬ!",
+        "desc": "መዝግበኛል እና የመጀመሪያ ጉዞዎ ነፃ ነው!",
+        "getStarted": "ያስይዙ",
+        "installApp": "App ያግዙ"
+      },
+      "install": {
+        "title": "DIRS አፕ ያግዙ",
+        "desc": "በ ስልክ ላይ በቀላሉ ይጠቀሙ። ለ ኢኖርነት አይችሉም።",
+        "installNow": "ያግዙ",
+        "chromeHint": "Chrome ላይ: ⋮ ምልክት → \"Screen ላይ ያስይዙ\"",
+        "safariHint": "Safari ላይ: Share ቁልፍ → \"Add to Home Screen\""
+      },
+      "footer": {
+        "tagline": "የደሃዋ ብቻ የጋራ ጉዞ ስистем",
+        "service": "አገልግሎት",
+        "bookRide": "ያስይዙ",
+        "becomeDriver": "Driver ይሁኑ",
+        "login": "ግባ",
+        "company": "መረጃ",
+        "aboutUs": "ስለ እኛ",
+        "contact": "ያግኙን",
+        "terms": "ውሎች",
+        "project": "የመንግስት ፕሮጀክት",
+        "team": "ጥበብ: አብርሃም ፊካዱ፣ ዖብሳ ቁመራ፣ እልዳና አሽናፊ"
+      }
     }
   },
   "om": {
@@ -1203,6 +1359,83 @@
       "bajaj": "Baajaaj",
       "bus": "Baasii",
       "statistics": "Isstaatistiksi"
+    },
+    "landing": {
+      "installApp": "App kaa'i",
+      "login": "Seenu",
+      "signUp": "Galmaa'i",
+      "features": {
+        "multipleVehicles": "Baajaj, Haatii, Minivaan fi Baasii",
+        "multipleVehiclesDesc": "Baajaj, Haatii, Minivaan fi Baasii keessatti filadhu",
+        "intraIntercity": "Keellattii fi Keewataalaa",
+        "intraIntercityDesc": "Dire Dawa keessatti yookiyyuu magaalota birootti deemsu",
+        "safeSecure": "Nageenya fi Eegama",
+        "safeSecureDesc": "Naannoo SOS, kufaamii daajitaa fi sochi-iyyaa yeroo dhugaa",
+        "affordable": "Gatii gahaa",
+        "affordableDesc": "Herrega gatii ifaa fi karaa hafee laga gatuuf",
+        "mobileFirst": "Hagaa jalaa",
+        "mobileFirstDesc": "Haga kee irraa haalataa fi to'annoo qabduu",
+        "fastService": "Tajaajila eeyyee"
+      },
+      "steps": {
+        "setLocation": "Naannoo qabi",
+        "setLocationDesc": "Naannoo eegaltuu fi naannoo dhorgituu galchaa",
+        "chooseRide": "Haata filadhu",
+        "chooseRideDesc": "Akaakuu gaarii sinagaatu filadhu",
+        "startRiding": "Deema jalqabi",
+        "startRidingDesc": "Daajittaa baha eegi fi deema jalqabi"
+      },
+      "hero": {
+        "badge": "Dire Dawa Haalata Qabduu",
+        "title": "Dire Dawa keessatti Eeyyee fi Gahaa Haalataa",
+        "titleHighlight": "Dire Dawa keessatti",
+        "desc": "Baajaj irraa Baasii, Dire Dawa keessatti haalataa yookiyyuu magaalota birootti deemsu. Eeyyee, gahaa fi nageenya.",
+        "bookRide": "Qabduu Eegaa",
+        "learnMore": "Osoo Baasi",
+        "dailyRides": "Qabduu Guyyaa",
+        "verifiedDrivers": "Daajittoota Mirkanaa'e",
+        "appRating": "Kabaja Appii"
+      },
+      "whyDirs": {
+        "tag": "Maaliif DIRS?",
+        "title": "Maaliif DIRS Filadhu?",
+        "desc": "Dire Dawa quunnamtii keessatti qophaa'e"
+      },
+      "howItWorks": {
+        "tag": "Akkamtti Hojjeta",
+        "title": "Saddeen Sadii"
+      },
+      "vehicles": {
+        "tag": "Akaakuu Gaarii",
+        "title": "Haata Filadhu",
+        "seats": "Iddoolee"
+      },
+      "cta": {
+        "title": "Haalataa Jirta?",
+        "desc": "Har'a galmaa'i fi haalatan duraa bilaachaadha!",
+        "getStarted": "Jalqabi",
+        "installApp": "App Kaa'i"
+      },
+      "install": {
+        "title": "App DIRS Kaa'i",
+        "desc": "Hagaa kee irraa DIRS kaa'i haalataa argattu kee eeyyee. Offline ta'eeddu hojjetta!",
+        "installNow": "Ammaa Kaa'i",
+        "chromeHint": "Chrome keessatti: ⋮ duubaa qabduu → \"Add to Home Screen\"",
+        "safariHint": "Safari keessatti: Duubaa qabduu → \"Add to Home Screen\""
+      },
+      "footer": {
+        "tagline": "Dire Dawa Keewataalaa fi Haalata Qabduu",
+        "service": "Tajaajila",
+        "bookRide": "Qabduu Eegaa",
+        "becomeDriver": "Daajittaa Ta'i",
+        "login": "Seenu",
+        "company": "Kumpanii",
+        "aboutUs": "Waaqa Keenyaa",
+        "contact": "Nu quundaa",
+        "terms": "Haala",
+        "project": "PROJEKTII Yaa'aa Dire Dawa",
+        "team": "Garee: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
+      }
     }
   },
   "so": {
@@ -1503,6 +1736,83 @@
       "bajaj": "Bajaj",
       "bus": "Bas",
       "statistics": "Xogta"
+    },
+    "landing": {
+      "installApp": "Ku rakib App-ka",
+      "login": "Gali",
+      "signUp": "Is diiwaan geli",
+      "features": {
+        "multipleVehicles": "Gaadiid Badan",
+        "multipleVehiclesDesc": "Dooro Bajaj, Baabuur, Minivan iyo Bas",
+        "intraIntercity": "Gudaha & Dhexdeed Magaalo",
+        "intraIntercityDesc": "Ku soco Dire Dawa ama aad ku safartid magaalooyin kale",
+        "safeSecure": "Amaan & La'aan",
+        "safeSecureDesc": "SOS, xaqiijinta darawalka iyo ra'iididda tooska ah",
+        "affordable": "Qiimo jaban",
+        "affordableDesc": "Qiimaha daahfuran iyo habab kala duwan oo lacag bixinta ah",
+        "mobileFirst": "Taleefanka Mobaylka",
+        "mobileFirstDesc": "Ka dalbo oo maamul gaarigaaga taleefankaaga",
+        "fastService": "Adeeg Degdeg ah"
+      },
+      "steps": {
+        "setLocation": "Deji Goobta",
+        "setLocationDesc": "Geli meesha aad ka qaadanayso iyo meesha aad aadayso",
+        "chooseRide": "Dooro Gaariga",
+        "chooseRideDesc": "Dooro nooca gaariga ku habboon",
+        "startRiding": "Bilow Safarka",
+        "startRidingDesc": "Eeg darawalka oo ku raaxayso socodka"
+      },
+      "hero": {
+        "badge": "Wadaagga Gaariga Dire Dawa",
+        "title": "Soo Fuul Hagaagsan, Soo Fuul Macquul ah",
+        "titleHighlight": "Dire Dawa",
+        "desc": "Bajaj ilaa Bas, ku soco Dire Dawa ama aad ku safartid magaalooyin kale. Degdeg, jaban, oo amaan ah.",
+        "bookRide": "Dalbo Gaari",
+        "learnMore": "Wax badan baro",
+        "dailyRides": "Gaariga Maalinlaha ah",
+        "verifiedDrivers": "Darawallo Xaqiijisan",
+        "appRating": "Qiimaynta App-ka"
+      },
+      "whyDirs": {
+        "tag": "Sababta DIRS",
+        "title": "Sababta aad u Doorto DIRS?",
+        "desc": "Waa loogu talagalay baahiyaha dadka Dire Dawa"
+      },
+      "howItWorks": {
+        "tag": "Sida u Shaqeeyo",
+        "title": "3 Talaabo Oo Fudud"
+      },
+      "vehicles": {
+        "tag": "Nooca Gaadiidka",
+        "title": "Dooro Gaarigaaga",
+        "seats": "Kursiga"
+      },
+      "cta": {
+        "title": "Diyaar ma u tahay inaad fuusho?",
+        "desc": "Is diiwaan geli maanta safarkaaga koowaad waa bilaash!",
+        "getStarted": "Bilow",
+        "installApp": "Ku rakib App-ka"
+      },
+      "install": {
+        "title": "Ku rakib App-ka DIRS",
+        "desc": "Ku rakib taleefankaaga DIRS si aad u dalbato si degdeg ah. Waxay u shaqeysaa offline!",
+        "installNow": "Hadda ku rakib",
+        "chromeHint": "Chrome: Taabo ⋮ → \"Ku dar Shabakada Guriga\"",
+        "safariHint": "Safari: Taabo La wadaag → \"Ku dar Shabakada Guriga\""
+      },
+      "footer": {
+        "tagline": "Nidaamka Wadaagga Gaariga & Dhexdeed Magaalo ee Dire Dawa",
+        "service": "Adeegga",
+        "bookRide": "Dalbo Gaari",
+        "becomeDriver": "Noqo Darawal",
+        "login": "Gali",
+        "company": "Shirkadda",
+        "aboutUs": "Nagu saabsan",
+        "contact": "Nala soo xiriir",
+        "terms": "Shuruudaha",
+        "project": "Mashruuca Jaamacadda Dire Dawa",
+        "team": "Kooxda: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
+      }
     }
   }
 }
