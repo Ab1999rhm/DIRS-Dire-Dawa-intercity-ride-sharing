@@ -563,7 +563,18 @@
       "nightMultiplier": "Night Rate Multiplier",
       "maxPassengers": "Max Passengers",
       "saveNow": "Save Now",
-      "changesPreviewed": "Changes are previewed live but take effect only after you click Save All Tariffs."
+      "changesPreviewed": "Changes are previewed live but take effect only after you click Save All Tariffs.",
+      "newFeatures": "Admin Tools",
+      "realTimeMonitoring": "Real-Time Monitoring",
+      "driverManagement": "Driver Management",
+      "passengerManagement": "Passenger Management",
+      "tripManagement": "Trip Management",
+      "financialManagement": "Financial Management",
+      "safetySecurity": "Safety & Security",
+      "supportSystem": "Support System",
+      "analyticsReporting": "Analytics & Reporting",
+      "contentNotifications": "Content & Notifications",
+      "systemConfiguration": "System Configuration"
     },
     "profile": {
       "title": "Profile",
@@ -1235,7 +1246,18 @@
       "nightMultiplier": "የምሽት ተጨማሪ",
       "maxPassengers": "ከፍተኛ ተሳፋሪዎች",
       "saveNow": "አሁን አስቀምጥ",
-      "changesPreviewed": "ለውጦች ቅድመ ተመልካች ናቸው ነገር ግን ለSave All Tariffs ከታረዱ በኋላ ብቻ ይሠራሉ።"
+      "changesPreviewed": "ለውጦች ቅድመ ተመልካች ናቸው ነገር ግን ለSave All Tariffs ከታረዱ በኋላ ብቻ ይሠራሉ።",
+      "newFeatures": "የአስተዳደር መሳሪያዎች",
+      "realTimeMonitoring": "በእውነተኛ ጊዜ ዝግጅት",
+      "driverManagement": "የ sürücü አያያዝ",
+      "passengerManagement": "የተጓዦች አያያዝ",
+      "tripManagement": "የጉዞ አያያዝ",
+      "financialManagement": "የፋይናንስ አያያዝ",
+      "safetySecurity": "ደህንነት እና ዋስትና",
+      "supportSystem": "የድጋፍ ስርዓት",
+      "analyticsReporting": "ትንታኔ እና ሪፖርት",
+      "contentNotifications": "ይዘት እና ማሳወቂያ",
+      "systemConfiguration": "የስርዓት ማስተካከያ"
     },
     "profile": {
       "title": "መለያ",
@@ -1625,7 +1647,18 @@
       "noActivity": "Seenaa haadhoo hin jiru",
       "moreActions": "Dabalataa",
       "viewReports": "Hundi daawwadhu",
-      "manage": "Taphachiisi"
+      "manage": "Taphachiisi",
+      "newFeatures": "Meeshalee Bulchiinsaa",
+      "realTimeMonitoring": "Waqtii-Dhangii Ilaalcha",
+      "driverManagement": "Bulchiinsaa Akkaawistaa",
+      "passengerManagement": "Bulchiinsaa Ergamaa",
+      "tripManagement": "Bulchiinsaa Naannaawii",
+      "financialManagement": "Bulchiinsaa Maallaawaa",
+      "safetySecurity": "Nageenya fi Eegumsa",
+      "supportSystem": "Meeshalee Deeggarsa",
+      "analyticsReporting": "Xiinxala fi Ripoortii",
+      "contentNotifications": "Qabiyyee fi Beeksisa",
+      "systemConfiguration": "Qindaa'ina Sirbaa"
     },
     "profile": {
       "title": "Herrega",
@@ -2014,7 +2047,18 @@
       "noActivity": "Dhaqdhaqaaq ma jiro",
       "moreActions": "Kale",
       "viewReports": "Dhammaan eeg",
-      "manage": "Maamul"
+      "manage": "Maamul",
+      "newFeatures": "Qalabka Maamulka",
+      "realTimeMonitoring": "La Socosho Waqtiga-dhabta ah",
+      "driverManagement": "Maamulida Darawalayaasha",
+      "passengerManagement": "Maamulida Rakaabayaasha",
+      "tripManagement": "Maamulida Rakaabyada",
+      "financialManagement": "Maamulida Maaliyadda",
+      "safetySecurity": "Amniga & Ilalinta",
+      "supportSystem": "Nidaamka Taageerada",
+      "analyticsReporting": "Falanqaynta & Warbixinta",
+      "contentNotifications": "Mawduuca & Ogeysiisyada",
+      "systemConfiguration": "Qaabdhismeedka Nidaamka"
     },
     "profile": {
       "title": "Profileka",
