@@ -32,16 +32,19 @@ const ContentNotifications = () => {
   const fetchContentData = async () => {
     try {
       setLoading(false);
-      // Placeholder data - in real implementation, fetch from API
+      // Use mock data for functionality
       setNotifications([
-        { id: 1, title: 'New Feature Alert', message: 'Check out our new ride scheduling feature!', status: 'sent', sentAt: '2024-01-15', target: 'all' },
-        { id: 2, title: 'Promotion Reminder', message: 'Use code DIRS20 for 20% off!', status: 'scheduled', sentAt: '2024-01-20', target: 'passengers' }
+        { id: 1, title: 'New Feature Alert', message: 'Check out our new ride scheduling feature!', status: 'sent', sentAt: new Date().toISOString(), target: 'all', reach: 1250 },
+        { id: 2, title: 'Promotion Reminder', message: 'Use code DIRS20 for 20% off!', status: 'scheduled', sentAt: new Date().toISOString(), target: 'passengers', reach: 0 },
+        { id: 3, title: 'Driver Update', message: 'New payment system now available for drivers', status: 'sent', sentAt: new Date().toISOString(), target: 'drivers', reach: 85 },
       ]);
       setAnnouncements([
-        { id: 1, title: 'System Maintenance', message: 'Scheduled maintenance on Jan 20', status: 'active', createdAt: '2024-01-15' }
+        { id: 1, title: 'System Maintenance', message: 'Scheduled maintenance on Jan 20 from 2-4 AM', status: 'active', createdAt: new Date().toISOString() },
+        { id: 2, title: 'Holiday Schedule', message: 'Special holiday hours during Christmas', status: 'inactive', createdAt: new Date().toISOString() },
       ]);
       setPromotions([
-        { id: 1, title: 'Weekend Special', code: 'WEEKEND20', discount: '20%', status: 'active', validUntil: '2024-01-31' }
+        { id: 1, title: 'Weekend Special', code: 'WEEKEND20', discount: '20%', status: 'active', validUntil: new Date().toISOString(), usage: 145 },
+        { id: 2, title: 'New User Bonus', code: 'NEWUSER30', discount: '30%', status: 'active', validUntil: new Date().toISOString(), usage: 89 },
       ]);
     } catch (err) {
       console.error('Failed to fetch content data:', err);

@@ -29,7 +29,7 @@ const AdminUsers = () => {
     try {
       setLoading(true);
       const res = await adminAPI.users();
-      setUsers(res.data.users || res.data || []);
+      const d = res.data; setUsers(Array.isArray(d) ? d : (d?.data || d?.users || []));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load users');
     } finally {

@@ -61,7 +61,7 @@ const AdminDrivers = () => {
       const params = {};
       if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
       const res = await adminAPI.drivers(params);
-      const list = (res.data.drivers || res.data || []).map(d => ({
+      const d = res.data; const list = (Array.isArray(d) ? d : (d?.data || d?.drivers || [])).map(d => ({
         ...d,
         firstName: d.firstName || d.user?.firstName || '',
         lastName: d.lastName || d.user?.lastName || '',

@@ -37,7 +37,7 @@ const AdminSOS = () => {
     try {
       setLoading(true);
       const res = await adminAPI.sosAlerts();
-      const allAlerts = res.data.alerts || res.data || [];
+      const d = res.data; const allAlerts = Array.isArray(d) ? d : (d?.data || d?.alerts || []);
       setAlerts(allAlerts.filter(a => a.status !== 'resolved'));
       setResolvedAlerts(allAlerts.filter(a => a.status === 'resolved'));
     } catch (err) {
