@@ -226,7 +226,7 @@ export const adminAPI = {
   // Real-time monitoring endpoints
   getActiveDrivers: () => api.get('/admin/monitoring/active-drivers'),
   getActiveTrips: () => api.get('/admin/monitoring/active-trips'),
-  getSOSAlerts: () => api.get('/admin/monitoring/sos-alerts'),
+  getSOSAlerts: () => api.get('/admin/sos'),
   getSystemHealth: () => api.get('/admin/monitoring/system-health'),
   respondToSOS: (sosId) => api.post(`/admin/monitoring/sos/${sosId}/respond`),
   // Driver management endpoints
