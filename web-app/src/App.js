@@ -12,6 +12,7 @@ import './styles/pages.css';
 
 const PassengerBottomNav = React.lazy(() => import('./components/layout/PassengerBottomNav'));
 const DriverBottomNav = React.lazy(() => import('./components/layout/DriverBottomNav'));
+const AdminBottomNav = React.lazy(() => import('./components/layout/AdminBottomNav'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
@@ -114,11 +115,11 @@ const PublicRoute = React.memo(({ children }) => {
   return children;
 });
 
-const AppLayout = React.memo(({ children, bottomNav }) => {
+const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
   return (
     <div className="app-layout">
       <div className="app-body">
-        <main className={bottomNav ? 'app-main has-bottom-nav' : 'app-main'} style={bottomNav ? { marginLeft: 0 } : {}}>
+        <main className={(bottomNav || adminNav) ? 'app-main has-bottom-nav' : 'app-main'} style={(bottomNav || adminNav) ? { marginLeft: 0 } : {}}>
           <Suspense fallback={<LoadingSpinner />}>
             {children}
           </Suspense>
@@ -127,6 +128,11 @@ const AppLayout = React.memo(({ children, bottomNav }) => {
       {bottomNav && (
         <Suspense fallback={<LoadingSpinner />}>
           <PassengerBottomNav />
+        </Suspense>
+      )}
+      {adminNav && (
+        <Suspense fallback={<LoadingSpinner />}>
+          <AdminBottomNav />
         </Suspense>
       )}
     </div>
@@ -208,7 +214,7 @@ function App() {
 
   const adminRoute = useMemo(() => (
     <RoleRoute allowedRole="admin">
-      <AppLayout>
+      <AppLayout adminNav>
         <AdminRoutes />
       </AppLayout>
     </RoleRoute>
