@@ -5,7 +5,7 @@ import {
   FaCreditCard, FaTag, FaChartBar, FaBell, FaSync, FaSearch,
   FaUserShield, FaUserClock, FaUserCheck, FaUserSlash,
   FaArrowRight, FaMapMarkerAlt, FaClock, FaEllipsisH, FaMoon, FaSun, FaGlobe,
-  FaCheck
+  FaCheck, FaRoute, FaHeadset, FaChartLine, FaCog, FaStar
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -263,6 +263,73 @@ const AdminDashboard = () => {
             <FaTag />
           </div>
           <div className="admin-action-label">{t('admin.promos') || 'Promos'}</div>
+        </button>
+      </div>
+
+      {/* New Admin Features */}
+      <div className="admin-section-title" style={{ marginTop: 24 }}>
+        <FaStar /> {t('admin.newFeatures') || 'Admin Features'}
+      </div>
+      <div className="admin-actions-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+        <button className="admin-action-card" onClick={() => navigate('/admin/monitoring')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444' }}>
+            <FaMapMarkerAlt />
+          </div>
+          <div className="admin-action-label">{t('admin.realTimeMonitoring') || 'Real-Time Monitoring'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/driver-management')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}>
+            <FaCar />
+          </div>
+          <div className="admin-action-label">{t('admin.driverManagement') || 'Driver Management'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/passenger-management')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}>
+            <FaUsers />
+          </div>
+          <div className="admin-action-label">{t('admin.passengerManagement') || 'Passenger Management'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/trip-management')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>
+            <FaRoute />
+          </div>
+          <div className="admin-action-label">{t('admin.tripManagement') || 'Trip Management'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/financials')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(124,58,237,0.08)', color: '#7c3aed' }}>
+            <FaMoneyBillWave />
+          </div>
+          <div className="admin-action-label">{t('admin.financialManagement') || 'Financial Management'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/safety')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626' }}>
+            <FaShieldAlt />
+          </div>
+          <div className="admin-action-label">{t('admin.safetySecurity') || 'Safety & Security'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/support')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(6,182,212,0.08)', color: '#06b6d4' }}>
+            <FaHeadset />
+          </div>
+          <div className="admin-action-label">{t('admin.supportSystem') || 'Support System'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/analytics')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1' }}>
+            <FaChartLine />
+          </div>
+          <div className="admin-action-label">{t('admin.analyticsReporting') || 'Analytics & Reporting'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/content')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(236,72,153,0.08)', color: '#ec4899' }}>
+            <FaBell />
+          </div>
+          <div className="admin-action-label">{t('admin.contentNotifications') || 'Content & Notifications'}</div>
+        </button>
+        <button className="admin-action-card" onClick={() => navigate('/admin/configuration')}>
+          <div className="admin-action-icon" style={{ background: 'rgba(107,114,128,0.08)', color: '#6b7280' }}>
+            <FaCog />
+          </div>
+          <div className="admin-action-label">{t('admin.systemConfiguration') || 'System Configuration'}</div>
         </button>
       </div>
     </div>

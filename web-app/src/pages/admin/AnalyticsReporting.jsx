@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FaChartLine, FaMap, FaClock, FaUsers, FaCar, FaMoneyBillWave,
   FaSearch, FaFilter, FaDownload, FaCalendar, FaArrowUp, FaArrowDown,
-  FaFire, FaTrendingUp, FaTrendingDown, FaEye, FaCalendarAlt
+  FaFire, FaEye, FaCalendarAlt
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -124,7 +124,7 @@ const AnalyticsReporting = () => {
       <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-            <FaTrendingUp />
+            <FaChartLine />
           </div>
           <div>
             <div className="admin-stat-value">{retentionMetrics?.growthRate || '+12%'}</div>
@@ -192,7 +192,7 @@ const AnalyticsReporting = () => {
             </div>
             <div className="admin-activity-item">
               <div className="admin-activity-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-                <FaTrendingUp />
+                <FaChartLine />
               </div>
               <div className="admin-activity-info">
                 <div className="admin-activity-text">{t('admin.growingArea') || 'Fastest Growing Area'}</div>
@@ -337,7 +337,7 @@ const AnalyticsReporting = () => {
             </div>
             <div className="admin-activity-item">
               <div className="admin-activity-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-                <FaTrendingUp />
+                <FaChartLine />
               </div>
               <div className="admin-activity-info">
                 <div className="admin-activity-text">{t('admin.newUsers') || 'New Users'}</div>
@@ -349,7 +349,7 @@ const AnalyticsReporting = () => {
             </div>
             <div className="admin-activity-item">
               <div className="admin-activity-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-                <FaTrendingDown />
+                <FaArrowDown />
               </div>
               <div className="admin-activity-info">
                 <div className="admin-activity-text">{t('admin.churnRate') || 'Churn Rate'}</div>

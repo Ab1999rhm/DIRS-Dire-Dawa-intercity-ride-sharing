@@ -38,6 +38,16 @@ const AdminSOS = React.lazy(() => import('./pages/admin/AdminSOS'));
 const AdminReports = React.lazy(() => import('./pages/admin/AdminReports'));
 const AdminTariffs = React.lazy(() => import('./pages/admin/AdminTariffs'));
 const AdminPromos = React.lazy(() => import('./pages/admin/AdminPromos'));
+const RealTimeMonitoring = React.lazy(() => import('./pages/admin/RealTimeMonitoring'));
+const DriverManagement = React.lazy(() => import('./pages/admin/DriverManagement'));
+const PassengerManagement = React.lazy(() => import('./pages/admin/PassengerManagement'));
+const TripManagement = React.lazy(() => import('./pages/admin/TripManagement'));
+const FinancialManagement = React.lazy(() => import('./pages/admin/FinancialManagement'));
+const SafetySecurity = React.lazy(() => import('./pages/admin/SafetySecurity'));
+const SupportSystem = React.lazy(() => import('./pages/admin/SupportSystem'));
+const AnalyticsReporting = React.lazy(() => import('./pages/admin/AnalyticsReporting'));
+const ContentNotifications = React.lazy(() => import('./pages/admin/ContentNotifications'));
+const SystemConfiguration = React.lazy(() => import('./pages/admin/SystemConfiguration'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = ({ waking }) => (
@@ -188,6 +198,16 @@ const AdminRoutes = React.memo(() => (
       <Route path="reports" element={<AdminReports />} />
       <Route path="tariffs" element={<AdminTariffs />} />
       <Route path="promos" element={<AdminPromos />} />
+      <Route path="monitoring" element={<RealTimeMonitoring />} />
+      <Route path="driver-management" element={<DriverManagement />} />
+      <Route path="passenger-management" element={<PassengerManagement />} />
+      <Route path="trip-management" element={<TripManagement />} />
+      <Route path="financials" element={<FinancialManagement />} />
+      <Route path="safety" element={<SafetySecurity />} />
+      <Route path="support" element={<SupportSystem />} />
+      <Route path="analytics" element={<AnalyticsReporting />} />
+      <Route path="content" element={<ContentNotifications />} />
+      <Route path="configuration" element={<SystemConfiguration />} />
       <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>
   </Suspense>

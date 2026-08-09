@@ -1,13 +1,17 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaTachometerAlt, FaUsers, FaCar, FaEllipsisH } from 'react-icons/fa';
+import { 
+  FaTachometerAlt, FaUsers, FaCar, FaEllipsisH, FaMapMarkerAlt, 
+  FaShieldAlt, FaHeadset, FaChartLine, FaBell, FaCog 
+} from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 
 const tabs = [
   { labelKey: 'admin.dashboard', path: '/admin', icon: FaTachometerAlt, matchExact: true },
-  { labelKey: 'admin.users', path: '/admin/users', icon: FaUsers, matchExact: false },
-  { labelKey: 'admin.drivers', path: '/admin/drivers', icon: FaCar, matchExact: false },
-  { labelKey: 'admin.moreActions', path: '/admin/payments', icon: FaEllipsisH, matchExact: false },
+  { labelKey: 'admin.monitoring', path: '/admin/monitoring', icon: FaMapMarkerAlt, matchExact: false },
+  { labelKey: 'admin.drivers', path: '/admin/driver-management', icon: FaCar, matchExact: false },
+  { labelKey: 'admin.users', path: '/admin/passenger-management', icon: FaUsers, matchExact: false },
+  { labelKey: 'admin.moreActions', path: '/admin/trip-management', icon: FaEllipsisH, matchExact: false },
 ];
 
 const AdminBottomNav = () => {
