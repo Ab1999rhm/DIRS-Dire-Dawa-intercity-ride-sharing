@@ -229,7 +229,7 @@ const RealTimeMonitoring = () => {
                 onClick={() => setSelectedDriver(driver)}
               >
                 <FaCar />
-                <span className="marker-label">{driver.name}</span>
+                <span className="marker-label">{`${driver.firstName || ''} ${driver.lastName || ''}`}</span>
               </div>
             ))}
             {activeTrips.map((trip) => (
@@ -312,7 +312,7 @@ const RealTimeMonitoring = () => {
               <FaCar />
             </div>
             <div className="admin-activity-info">
-              <div className="admin-activity-text">{driver.name}</div>
+              <div className="admin-activity-text">{`${driver.firstName || ''} ${driver.lastName || ''}`}</div>
               <div className="admin-activity-time">
                 {driver.vehicle} • {driver.location.address}
               </div>

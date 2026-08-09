@@ -114,8 +114,9 @@ const DriverManagement = () => {
 
   const filteredDrivers = drivers.filter(driver => {
     const matchesStatus = filterStatus === 'all' || driver.status === filterStatus;
-    const matchesSearch = driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         driver.phoneNumber.includes(searchQuery);
+    const driverName = `${driver.firstName || ''} ${driver.lastName || ''}`.trim();
+    const matchesSearch = driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (driver.phoneNumber || '').includes(searchQuery);
     return matchesStatus && matchesSearch;
   });
 
@@ -167,33 +168,33 @@ const DriverManagement = () => {
       {pendingDrivers.length > 0 && (
         <div className="admin-activity-list" style={{ marginBottom: 20, borderColor: '#f59e0b' }}>
           {pendingDrivers.map((driver) => (
-            <div key={driver.id} className="admin-activity-item" style={{ background: 'rgba(245, 158, 11, 0.05)' }}>
+            <div key={driver._id || driver.id} className="admin-activity-item" style={{ background: 'rgba(245, 158, 11, 0.05)' }}>
               <div className="admin-activity-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
                 <FaIdCard />
               </div>
               <div className="admin-activity-info">
-                <div className="admin-activity-text">{driver.name}</div>
+                <div className="admin-activity-text">{`${driver.firstName || ''} ${driver.lastName || ''}`}</div>
                 <div className="admin-activity-time">
-                  {driver.vehicle} • {driver.phoneNumber}
+                  {driver.vehicle || 'N/A'} • {driver.phoneNumber}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   className="btn btn-primary btn-sm"
-                  onClick={() => handleViewDocuments(driver.id)}
+                  onClick={() => handleViewDocuments(driver._id || driver.id)}
                 >
                   <FaEye />
                 </button>
                 <button
                   className="btn btn-primary btn-sm"
                   style={{ background: '#10b981' }}
-                  onClick={() => handleApproveDriver(driver.id)}
+                  onClick={() => handleApproveDriver(driver._id || driver.id)}
                 >
                   <FaCheckCircle />
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
-                  onClick={() => handleRejectDriver(driver.id, 'Incomplete documents')}
+                  onClick={() => handleRejectDriver(driver._id || driver.id, 'Incomplete documents')}
                 >
                   <FaTimesCircle />
                 </button>
@@ -287,7 +288,7 @@ const DriverManagement = () => {
       </div>
       <div className="admin-activity-list">
         {filteredDrivers.map((driver) => (
-          <div key={driver.id} className="admin-activity-item">
+          <div key={driver._id || driver.id} className="admin-activity-item">
             <div className="admin-activity-icon" style={{
               background: 'rgba(59, 130, 246, 0.08)',
               color: getDriverStatusColor(driver.status)
@@ -295,9 +296,9 @@ const DriverManagement = () => {
               <FaCarSide />
             </div>
             <div className="admin-activity-info">
-              <div className="admin-activity-text">{driver.name}</div>
+              <div className="admin-activity-text">{`${driver.firstName || ''} ${driver.lastName || ''}`}</div>
               <div className="admin-activity-time">
-                {driver.vehicle} • {driver.phoneNumber}
+                {driver.vehicle || 'N/A'} • {driver.phoneNumber}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -315,7 +316,7 @@ const DriverManagement = () => {
                 <button
                   className="admin-icon-btn"
                   style={{ width: 32, height: 32 }}
-                  onClick={() => handleViewEarnings(driver.id)}
+                  onClick={() => handleViewEarnings(driver._id || driver.id)}
                 >
                   <FaWallet />
                 </button>
@@ -323,7 +324,7 @@ const DriverManagement = () => {
                   <button
                     className="admin-icon-btn"
                     style={{ width: 32, height: 32 }}
-                    onClick={() => handleSuspendDriver(driver.id, 'Policy violation')}
+                    onClick={() => handleSuspendDriver(driver._id || driver.id, 'Policy violation')}
                   >
                     <FaBan />
                   </button>
