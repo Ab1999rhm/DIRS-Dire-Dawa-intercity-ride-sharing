@@ -49,19 +49,19 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { icon: <FaUsers />, label: t('admin.users') || 'Users', path: '/admin/users', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-    { icon: <FaCar />, label: t('admin.drivers') || 'Drivers', path: '/admin/drivers', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-    { icon: <FaExclamationTriangle />, label: t('admin.sos') || 'SOS', path: '/admin/sos', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
-    { icon: <FaCreditCard />, label: t('admin.payments') || 'Payments', path: '/admin/payments', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
+    { icon: <FaUsers />, label: t('admin.users') || 'Users', path: '/admin/passenger-management', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
+    { icon: <FaCar />, label: t('admin.drivers') || 'Drivers', path: '/admin/driver-management', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+    { icon: <FaExclamationTriangle />, label: t('admin.sos') || 'SOS', path: '/admin/safety', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
+    { icon: <FaCreditCard />, label: t('admin.payments') || 'Payments', path: '/admin/financials', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
   ];
 
   const roles = [
-    { icon: <FaUserShield />, name: t('admin.superAdmin') || 'Super Admin', count: '1 ' + (t('admin.active') || 'active'), path: '/admin/users', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
-    { icon: <FaUserCheck />, name: t('admin.admin') || 'Admin', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-    { icon: <FaCar />, name: t('admin.drivers') || 'Drivers', count: (stats?.activeDrivers || 0) + ' ' + (t('admin.active') || 'active'), path: '/admin/drivers', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-    { icon: <FaUsers />, name: t('admin.passengers') || 'Passengers', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
-    { icon: <FaChartBar />, name: t('admin.reports') || 'Reports', count: t('admin.viewReports') || 'View all', path: '/admin/reports', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
-    { icon: <FaTag />, name: t('admin.promos') || 'Promos', count: t('admin.manage') || 'Manage', path: '/admin/promos', color: '#0891b2', bg: 'rgba(8,145,178,0.08)' },
+    { icon: <FaUserShield />, name: t('admin.superAdmin') || 'Super Admin', count: '1 ' + (t('admin.active') || 'active'), path: '/admin/passenger-management', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
+    { icon: <FaUserCheck />, name: t('admin.admin') || 'Admin', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/passenger-management', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
+    { icon: <FaCar />, name: t('admin.drivers') || 'Drivers', count: (stats?.activeDrivers || 0) + ' ' + (t('admin.active') || 'active'), path: '/admin/driver-management', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+    { icon: <FaUsers />, name: t('admin.passengers') || 'Passengers', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/passenger-management', color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
+    { icon: <FaChartBar />, name: t('admin.reports') || 'Reports', count: t('admin.viewReports') || 'View all', path: '/admin/analytics', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
+    { icon: <FaTag />, name: t('admin.promos') || 'Promos', count: t('admin.manage') || 'Manage', path: '/admin/content', color: '#0891b2', bg: 'rgba(8,145,178,0.08)' },
   ];
 
   if (loading) {
