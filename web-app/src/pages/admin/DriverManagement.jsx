@@ -708,7 +708,7 @@ const DriverManagement = () => {
           </div>
           <div className="admin-section-title" style={{ marginTop: 20 }}><FaClock /> Peak Hours Performance</div>
           <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
-            {peakHours?.hours?.slice(0, 6).map((hour, idx) => (
+            {(peakHours?.hours || []).slice(0, 6).map((hour, idx) => (
               <div key={idx} className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}><FaClock /></div>
                 <div><div className="admin-stat-value">{hour.hour}:00</div><div className="admin-stat-label">{hour.trips || 0} trips</div></div>

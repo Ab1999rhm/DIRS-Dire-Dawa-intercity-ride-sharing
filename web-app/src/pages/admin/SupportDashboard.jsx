@@ -88,11 +88,16 @@ const SupportDashboard = () => {
       ]);
 
       setAnalytics(analyticsRes.data);
-      setTickets(ticketsRes.data.tickets || []);
-      setChats(chatsRes.data.chats || []);
-      setFaqs(faqsRes.data.faqs || []);
-      setCannedResponses(cannedRes.data.responses || []);
-      setAutoReplyRules(rulesRes.data.rules || []);
+      const ticketsData = ticketsRes.data;
+      setTickets(Array.isArray(ticketsData) ? ticketsData : (ticketsData?.tickets || ticketsData?.data || []));
+      const chatsData = chatsRes.data;
+      setChats(Array.isArray(chatsData) ? chatsData : (chatsData?.chats || chatsData?.data || []));
+      const faqsData = faqsRes.data;
+      setFaqs(Array.isArray(faqsData) ? faqsData : (faqsData?.faqs || faqsData?.data || []));
+      const cannedData = cannedRes.data;
+      setCannedResponses(Array.isArray(cannedData) ? cannedData : (cannedData?.responses || cannedData?.data || []));
+      const rulesData = rulesRes.data;
+      setAutoReplyRules(Array.isArray(rulesData) ? rulesData : (rulesData?.rules || rulesData?.data || []));
       setLoading(false);
     } catch (err) {
       console.error('Error fetching support data:', err);
@@ -417,7 +422,7 @@ const SupportDashboard = () => {
           <div className="admin-section">
             <h3><FaBook /> {t('admin.popularFAQs') || 'Popular FAQs'}</h3>
             <div className="admin-list">
-              {analytics.faqs?.popular?.slice(0, 5).map((faq, idx) => (
+              {(analytics.faqs?.popular || []).slice(0, 5).map((faq, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{faq.title}</span>

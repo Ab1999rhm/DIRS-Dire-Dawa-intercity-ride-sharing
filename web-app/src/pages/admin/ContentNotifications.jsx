@@ -49,14 +49,22 @@ const ContentNotifications = () => {
         adminAPI.getAutomationRules({})
       ]);
       
-      setNotifications(pushRes.data.notifications || []);
-      setAnnouncements(announcementsRes.data.announcements || []);
-      setPromotions(promosRes.data.promoCodes || []);
-      setEmailCampaigns(emailRes.data.campaigns || []);
-      setSMSCampaigns(smsRes.data.campaigns || []);
-      setInAppContent(inAppRes.data.content || []);
-      setSegments(segmentsRes.data.segments || []);
-      setAutomationRules(automationRes.data.rules || []);
+      const pushData = pushRes.data;
+      setNotifications(Array.isArray(pushData) ? pushData : (pushData?.notifications || pushData?.data || []));
+      const announcementsData = announcementsRes.data;
+      setAnnouncements(Array.isArray(announcementsData) ? announcementsData : (announcementsData?.announcements || announcementsData?.data || []));
+      const promosData = promosRes.data;
+      setPromotions(Array.isArray(promosData) ? promosData : (promosData?.promoCodes || promosData?.data || []));
+      const emailData = emailRes.data;
+      setEmailCampaigns(Array.isArray(emailData) ? emailData : (emailData?.campaigns || emailData?.data || []));
+      const smsData = smsRes.data;
+      setSMSCampaigns(Array.isArray(smsData) ? smsData : (smsData?.campaigns || smsData?.data || []));
+      const inAppData = inAppRes.data;
+      setInAppContent(Array.isArray(inAppData) ? inAppData : (inAppData?.content || inAppData?.data || []));
+      const segmentsData = segmentsRes.data;
+      setSegments(Array.isArray(segmentsData) ? segmentsData : (segmentsData?.segments || segmentsData?.data || []));
+      const automationData = automationRes.data;
+      setAutomationRules(Array.isArray(automationData) ? automationData : (automationData?.rules || automationData?.data || []));
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch content data:', err);

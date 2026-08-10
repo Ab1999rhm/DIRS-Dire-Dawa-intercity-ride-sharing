@@ -55,18 +55,25 @@ const SystemConfiguration = () => {
         adminAPI.getWebhooks({})
       ]);
       
-      setTariffs(pricingRes.data.configs || []);
-      setServiceAreas(zonesRes.data.zones || []);
-      setVehicleCategories(vehiclesRes.data.categories || []);
+      const pricingData = pricingRes.data;
+      setTariffs(Array.isArray(pricingData) ? pricingData : (pricingData?.configs || pricingData?.data || []));
+      const zonesData = zonesRes.data;
+      setServiceAreas(Array.isArray(zonesData) ? zonesData : (zonesData?.zones || zonesData?.data || []));
+      const vehiclesData = vehiclesRes.data;
+      setVehicleCategories(Array.isArray(vehiclesData) ? vehiclesData : (vehiclesData?.categories || vehiclesData?.data || []));
       setPlatformSettings(platformRes.data.settings);
       setNotificationSettings(notificationRes.data.settings);
       setSecuritySettings(securityRes.data.settings);
-      setFeatureFlags(flagsRes.data.flags || []);
+      const flagsData = flagsRes.data;
+      setFeatureFlags(Array.isArray(flagsData) ? flagsData : (flagsData?.flags || flagsData?.data || []));
       setPerformanceConfig(performanceRes.data.config);
       setLocalizationConfig(localizationRes.data.config);
-      setAuditLogs(auditRes.data.logs || []);
-      setApiKeys(keysRes.data.keys || []);
-      setWebhooks(webhooksRes.data.webhooks || []);
+      const auditData = auditRes.data;
+      setAuditLogs(Array.isArray(auditData) ? auditData : (auditData?.logs || auditData?.data || []));
+      const keysData = keysRes.data;
+      setApiKeys(Array.isArray(keysData) ? keysData : (keysData?.keys || keysData?.data || []));
+      const webhooksData = webhooksRes.data;
+      setWebhooks(Array.isArray(webhooksData) ? webhooksData : (webhooksData?.webhooks || webhooksData?.data || []));
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch configuration data:', err);

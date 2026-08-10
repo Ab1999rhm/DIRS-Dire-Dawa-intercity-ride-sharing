@@ -58,12 +58,18 @@ const SafetyDashboard = () => {
       ]);
 
       setAnalytics(analyticsRes.data);
-      setSOSAlerts(sosRes.data.alerts || []);
-      setIncidents(incidentsRes.data.incidents || []);
-      setFraudAlerts(fraudRes.data.frauds || []);
-      setSuspiciousActivities(suspiciousRes.data.activities || []);
-      setBlockedUsers(blockedRes.data.users || []);
-      setPendingVerifications(verificationsRes.data.drivers || []);
+      const sosAlertsData = sosRes.data;
+      setSOSAlerts(Array.isArray(sosAlertsData) ? sosAlertsData : (sosAlertsData?.alerts || sosAlertsData?.data || []));
+      const incidentsData = incidentsRes.data;
+      setIncidents(Array.isArray(incidentsData) ? incidentsData : (incidentsData?.incidents || incidentsData?.data || []));
+      const fraudData = fraudRes.data;
+      setFraudAlerts(Array.isArray(fraudData) ? fraudData : (fraudData?.frauds || fraudData?.data || []));
+      const suspiciousData = suspiciousRes.data;
+      setSuspiciousActivities(Array.isArray(suspiciousData) ? suspiciousData : (suspiciousData?.activities || suspiciousData?.data || []));
+      const blockedData = blockedRes.data;
+      setBlockedUsers(Array.isArray(blockedData) ? blockedData : (blockedData?.users || blockedData?.data || []));
+      const verificationsData = verificationsRes.data;
+      setPendingVerifications(Array.isArray(verificationsData) ? verificationsData : (verificationsData?.drivers || verificationsData?.data || []));
       setLoading(false);
     } catch (err) {
       console.error('Error fetching safety data:', err);
@@ -346,7 +352,7 @@ const SafetyDashboard = () => {
           <div className="admin-section">
             <h3><FaMapPin /> {t('admin.hotspotLocations') || 'Hotspot Locations'}</h3>
             <div className="admin-list">
-              {analytics.hotspots?.slice(0, 5).map((hotspot, idx) => (
+              {(analytics.hotspots || []).slice(0, 5).map((hotspot, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{hotspot._id || 'Unknown Location'}</span>

@@ -383,7 +383,7 @@ const AnalyticsReporting = () => {
           <div className="admin-section">
             <h3><FaChartLine /> {t('admin.revenueByRoute') || 'Revenue by Route'}</h3>
             <div className="admin-list">
-              {revenueByRoute?.revenueByRoute?.slice(0, 10).map((item, idx) => (
+              {(revenueByRoute?.revenueByRoute || []).slice(0, 10).map((item, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{item.route}</span>
@@ -515,7 +515,7 @@ const AnalyticsReporting = () => {
           <div className="admin-section">
             <h3><FaDollarSign /> {t('admin.topLifetimeValue') || 'Top Lifetime Value Users'}</h3>
             <div className="admin-list">
-              {userLifetimeValue?.userLifetimeValues?.slice(0, 10).map((user, idx) => (
+              {(userLifetimeValue?.userLifetimeValues || []).slice(0, 10).map((user, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{user.userName}</span>
@@ -564,7 +564,7 @@ const AnalyticsReporting = () => {
           <div className="admin-section">
             <h3><FaDollarSign /> {t('admin.topEarningDrivers') || 'Top Earning Drivers'}</h3>
             <div className="admin-list">
-              {driverEarnings?.driverEarnings?.slice(0, 10).map((driver, idx) => (
+              {(driverEarnings?.driverEarnings || []).slice(0, 10).map((driver, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{driver.driverName}</span>
@@ -583,7 +583,7 @@ const AnalyticsReporting = () => {
           <div className="admin-section">
             <h3><FaRoute /> {t('admin.popularRoutes') || 'Popular Routes'}</h3>
             <div className="admin-list">
-              {routePopularity?.popularRoutes?.slice(0, 10).map((route, idx) => (
+              {(routePopularity?.popularRoutes || []).slice(0, 10).map((route, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{route.route}</span>
@@ -597,7 +597,7 @@ const AnalyticsReporting = () => {
           <div className="admin-section">
             <h3><FaMapMarkedAlt /> {t('admin.areaPerformance') || 'Area Performance'}</h3>
             <div className="admin-list">
-              {areaPerformance?.areaPerformance?.slice(0, 10).map((area, idx) => (
+              {(areaPerformance?.areaPerformance || []).slice(0, 10).map((area, idx) => (
                 <div key={idx} className="admin-list-item">
                   <div className="item-info">
                     <span className="item-name">{area.area}</span>

@@ -28,7 +28,8 @@ const AdminPayments = () => {
       if (methodFilter !== 'all') params.method = methodFilter;
       if (statusFilter !== 'all') params.status = statusFilter;
       const res = await adminAPI.payments(params);
-      setPayments(res.data.payments || res.data || []);
+      const paymentsData = res.data;
+      setPayments(Array.isArray(paymentsData) ? paymentsData : (paymentsData?.payments || paymentsData?.data || []));
       if (res.data.overview) setOverview(res.data.overview);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load payments');

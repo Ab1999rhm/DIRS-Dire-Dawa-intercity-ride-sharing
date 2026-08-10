@@ -1097,7 +1097,7 @@ const TripManagement = () => {
                 <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
                   {t('admin.topRoutes') || 'Top Routes by Revenue'}
                 </h4>
-                {analytics.revenueByRoute?.slice(0, 5).map((route, idx) => (
+                {(analytics.revenueByRoute || []).slice(0, 5).map((route, idx) => (
                   <div key={idx} style={{ padding: 8, borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{route._id.pickup} → {route._id.dropoff}</span>
                     <span style={{ fontWeight: 600 }}>ETB {route.totalRevenue?.toLocaleString()}</span>
@@ -1109,7 +1109,7 @@ const TripManagement = () => {
                   {t('admin.peakHours') || 'Peak Hours'}
                 </h4>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {analytics.peakHours?.slice(0, 6).map((hour, idx) => (
+                  {(analytics.peakHours || []).slice(0, 6).map((hour, idx) => (
                     <span key={idx} style={{ 
                       padding: '4px 12px', 
                       background: '#dbeafe', 

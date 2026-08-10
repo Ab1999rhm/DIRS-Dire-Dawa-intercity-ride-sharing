@@ -224,7 +224,7 @@ const AdminDashboard = () => {
             <div>
               {activeTrips.slice(0, 5).map((trip) => (
                 <div key={trip._id} style={{ padding: 8, borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{trip.driver?.name || 'Unknown'}</span>
+                  <span>{trip.driver?.firstName && trip.driver?.lastName ? `${trip.driver.firstName} ${trip.driver.lastName}` : 'Unknown'}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{trip.status}</span>
                 </div>
               ))}
@@ -246,7 +246,7 @@ const AdminDashboard = () => {
             <div>
               {onlineDrivers.slice(0, 5).map((driver) => (
                 <div key={driver._id} style={{ padding: 8, borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{driver.name}</span>
+                  <span>{driver.user?.firstName && driver.user?.lastName ? `${driver.user.firstName} ${driver.user.lastName}` : 'Unknown'}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{driver.vehicleType || 'N/A'}</span>
                 </div>
               ))}
@@ -268,7 +268,7 @@ const AdminDashboard = () => {
             <div>
               {recentSOS.slice(0, 5).map((sos) => (
                 <div key={sos._id} style={{ padding: 8, borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{sos.user?.name || 'Unknown'}</span>
+                  <span>{sos.user?.firstName && sos.user?.lastName ? `${sos.user.firstName} ${sos.user.lastName}` : 'Unknown'}</span>
                   <span style={{ fontSize: 12, color: sos.status === 'active' ? '#dc2626' : '#10b981' }}>{sos.status}</span>
                 </div>
               ))}
@@ -363,7 +363,10 @@ const AdminDashboard = () => {
                    activity.type === 'sos' ? <FaExclamationTriangle /> : <FaMoneyBillWave />}
                 </div>
                 <div className="admin-activity-info">
-                  <div className="admin-activity-text">{activity.description || activity.message}</div>
+                  <div className="admin-activity-text">
+                    {typeof activity.description === 'string' ? activity.description : 
+                     typeof activity.message === 'string' ? activity.message : 'Activity'}
+                  </div>
                   <div className="admin-activity-time">{activity.time || ''}</div>
                 </div>
               </div>

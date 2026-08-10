@@ -127,7 +127,8 @@ const RealTimeMonitoring = () => {
 
       setActiveDrivers(filteredDrivers);
       setActiveTrips(tripsRes.data?.trips || []);
-      setSosAlerts(sosRes.data?.alerts || sosRes.data || []);
+      const sosData = sosRes.data;
+      setSosAlerts(Array.isArray(sosData) ? sosData : (sosData?.alerts || sosData?.data || []));
       setSystemHealth(healthRes.data);
       setBookingQueue(queueRes.data);
       setLoading(false);
