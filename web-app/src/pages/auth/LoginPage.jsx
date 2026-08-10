@@ -12,7 +12,6 @@ const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [role, setRole] = useState('passenger');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +39,7 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const userData = await login(phoneNumber, password);
-      const userRole = userData?.role || role;
+      const userRole = userData?.role;
       if (userRole === 'driver') navigate('/driver');
       else if (userRole === 'admin') navigate('/admin');
       else navigate('/passenger');
@@ -65,21 +64,6 @@ const LoginPage = () => {
             </div>
             <h2>{t('auth.loginTitle') || 'Welcome back'}</h2>
             <p>{t('auth.loginSubtitle') || 'Sign in to your account'}</p>
-          </div>
-
-          <div className="role-tabs">
-            <button
-              className={`role-tab ${role === 'passenger' ? 'active' : ''}`}
-              onClick={() => setRole('passenger')}
-            >
-              {t('auth.passenger') || 'Passenger'}
-            </button>
-            <button
-              className={`role-tab ${role === 'driver' ? 'active' : ''}`}
-              onClick={() => setRole('driver')}
-            >
-              {t('auth.driver') || 'Driver'}
-            </button>
           </div>
 
           {error && <div className="error-message">{error}</div>}

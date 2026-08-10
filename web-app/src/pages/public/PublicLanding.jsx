@@ -263,60 +263,16 @@ const PublicLanding = () => {
         {/* Real vehicle images */}
         <div className="hero-vehicles">
           <div className="hero-vehicle">
-            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="10" y="20" width="80" height="30" rx="5" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
-              <rect x="15" y="25" width="25" height="15" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
-              <circle cx="25" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="75" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="25" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="75" cy="55" r="4" fill="#FAF8F5"/>
-              <text x="50" y="38" textAnchor="middle" fill="#2D5A3D" fontSize="10" fontWeight="bold">BAJAJ</text>
-            </svg>
+            <img src="/images/bajaj.jpg" alt="Bajaj" />
           </div>
           <div className="hero-vehicle">
-            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="15" width="90" height="35" rx="8" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
-              <rect x="10" y="20" width="35" height="20" rx="4" fill="rgba(45, 90, 61, 0.3)"/>
-              <rect x="50" y="20" width="40" height="20" rx="4" fill="rgba(45, 90, 61, 0.3)"/>
-              <circle cx="20" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="80" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="20" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="80" cy="55" r="4" fill="#FAF8F5"/>
-              <text x="50" y="33" textAnchor="middle" fill="#2D5A3D" fontSize="9" fontWeight="bold">SEDAN</text>
-            </svg>
+            <img src="/images/sedan.jpg" alt="Sedan" />
           </div>
           <div className="hero-vehicle">
-            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="10" width="90" height="40" rx="6" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
-              <rect x="8" y="15" width="25" height="18" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
-              <rect x="35" y="15" width="25" height="18" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
-              <rect x="62" y="15" width="28" height="18" rx="3" fill="rgba(45, 90, 61, 0.3)"/>
-              <circle cx="20" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="50" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="80" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="20" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="50" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="80" cy="55" r="4" fill="#FAF8F5"/>
-              <text x="50" y="28" textAnchor="middle" fill="#2D5A3D" fontSize="8" fontWeight="bold">MINIVAN</text>
-            </svg>
+            <img src="/images/minivan.jpg" alt="Minivan" />
           </div>
           <div className="hero-vehicle">
-            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="8" width="94" height="42" rx="5" fill="#8B7355" stroke="#2D5A3D" strokeWidth="2"/>
-              <rect x="6" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
-              <rect x="28" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
-              <rect x="50" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
-              <rect x="72" y="12" width="20" height="16" rx="2" fill="rgba(45, 90, 61, 0.3)"/>
-              <circle cx="15" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="35" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="65" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="85" cy="55" r="8" fill="#1A1A1A"/>
-              <circle cx="15" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="35" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="65" cy="55" r="4" fill="#FAF8F5"/>
-              <circle cx="85" cy="55" r="4" fill="#FAF8F5"/>
-              <text x="50" y="24" textAnchor="middle" fill="#2D5A3D" fontSize="8" fontWeight="bold">BUS</text>
-            </svg>
+            <img src="/images/bus.jpg" alt="Bus" />
           </div>
         </div>
       </section>
