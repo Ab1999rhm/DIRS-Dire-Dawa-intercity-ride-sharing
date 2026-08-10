@@ -409,6 +409,7 @@
     },
     "admin": {
       "dashboard": "Dashboard",
+      "overview": "Overview",
       "users": "Users",
       "drivers": "Drivers",
       "trips": "Trips",
@@ -423,6 +424,8 @@
       "suspend": "Suspend",
       "active": "active",
       "total": "total",
+      "blocked": "Blocked",
+      "verification": "Verification",
       "quickActions": "Quick Actions",
       "allRoles": "All Roles",
       "recentActivity": "Recent Activity",
