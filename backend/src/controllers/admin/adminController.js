@@ -4398,6 +4398,15 @@ exports.getAnnouncements = asyncHandler(async (req, res) => {
   res.json({ announcements, total, page: parseInt(page), pages: Math.ceil(total / limit) });
 });
 
+exports.getAnnouncement = asyncHandler(async (req, res) => {
+  const announcement = await Announcement.findById(req.params.id)
+    .populate('createdBy', 'firstName lastName');
+  if (!announcement) {
+    return res.status(404).json({ message: 'Announcement not found' });
+  }
+  res.json({ announcement });
+});
+
 exports.getActiveAnnouncements = asyncHandler(async (req, res) => {
   const { role, location } = req.query;
   const query = { 
