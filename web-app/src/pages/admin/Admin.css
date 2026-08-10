@@ -383,10 +383,13 @@
   align-items: center;
   justify-content: space-around;
   padding: 8px 0 env(safe-area-inset-bottom, 8px);
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-light);
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
   z-index: 46;
+  border-radius: 16px 16px 0 0;
 }
 
 /* Hide admin bottom nav on mobile - using sidebar instead */
@@ -410,17 +413,47 @@
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   min-width: 60px;
+  position: relative;
+  border-radius: 12px;
 }
 .admin-nav-item svg {
   font-size: 20px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.admin-nav-item:hover {
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.06);
+}
+.admin-nav-item:hover svg {
+  transform: scale(1.2) translateY(-2px);
 }
 .admin-nav-item.active {
   color: var(--primary);
 }
+.admin-nav-item.active svg {
+  transform: scale(1.15) translateY(-2px);
+  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.4));
+}
+.admin-nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 0 0 4px 4px;
+  animation: adminNavPill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes adminNavPill {
+  from { width: 0; opacity: 0; }
+  to { width: 20px; opacity: 1; }
+}
 .admin-nav-item:active {
-  color: var(--primary);
+  transform: scale(0.92);
 }
 
 /* ===== SKELETON ===== */
