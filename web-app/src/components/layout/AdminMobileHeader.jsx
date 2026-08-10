@@ -11,6 +11,9 @@ const AdminMobileHeader = ({ onMenuClick }) => {
       >
         <FaBars />
       </button>
+      <div className="admin-mobile-logo">
+        <img src="/logo.svg?v=2" alt="DIRS" />
+      </div>
     </header>
   );
 };
