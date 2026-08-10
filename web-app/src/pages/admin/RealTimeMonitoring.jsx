@@ -378,7 +378,7 @@ const RealTimeMonitoring = () => {
                   {t('admin.sosFrom') || 'SOS from'} {sos.driverName}
                 </div>
                 <div className="admin-activity-time">
-                  {sos.location} • {sos.time}
+                  {sos.location?.address || (sos.location?.coordinates ? `${sos.location.coordinates[1]?.toFixed(4)}, ${sos.location.coordinates[0]?.toFixed(4)}` : sos.location || 'N/A')} • {sos.time}
                 </div>
               </div>
               <button
