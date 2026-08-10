@@ -2194,7 +2194,8 @@
         "affordableDesc": "Herrega gatii ifaa fi karaa hafee laga gatuuf",
         "mobileFirst": "Hagaa jalaa",
         "mobileFirstDesc": "Haga kee irraa haalataa fi to'annoo qabduu",
-        "fastService": "Tajaajila eeyyee"
+        "fastService": "Tajaajila eeyyee",
+        "fastServiceDesc": "Tajaajila eeyyee fi sirrii yeroo hunda"
       },
       "steps": {
         "setLocation": "Naannoo qabi",
@@ -2692,7 +2693,8 @@
         "affordableDesc": "Qiimaha daahfuran iyo habab kala duwan oo lacag bixinta ah",
         "mobileFirst": "Taleefanka Mobaylka",
         "mobileFirstDesc": "Ka dalbo oo maamul gaarigaaga taleefankaaga",
-        "fastService": "Adeeg Degdeg ah"
+        "fastService": "Adeeg Degdeg ah",
+        "fastServiceDesc": "Adeeg degdeg ah oo kuu diyaar ah wakhti kasta"
       },
       "steps": {
         "setLocation": "Deji Goobta",

@@ -9,16 +9,30 @@ export const setLanguage = (lang) => {
 
 export const getLanguage = () => currentLanguage;
 
-export const t = (key, params = {}) => {
+const lookupKey = (lang, key) => {
   const keys = key.split('.');
-  let value = translations[currentLanguage];
+  let value = translations[lang];
 
   for (const k of keys) {
     if (value && value[k]) {
       value = value[k];
     } else {
-      return key;
+      return undefined;
     }
+  }
+
+  return value;
+};
+
+export const t = (key, params = {}) => {
+  let value = lookupKey(currentLanguage, key);
+
+  if (value === undefined && currentLanguage !== 'en') {
+    value = lookupKey('en', key);
+  }
+
+  if (value === undefined) {
+    return key;
   }
 
   if (typeof value === 'string') {
