@@ -1,7 +1,7 @@
-const CACHE_NAME = 'dirs-v6';
-const STATIC_CACHE = 'dirs-static-v6';
-const API_CACHE = 'dirs-api-v6';
-const IMAGE_CACHE = 'dirs-images-v6';
+const CACHE_NAME = 'dirs-v7';
+const STATIC_CACHE = 'dirs-static-v7';
+const API_CACHE = 'dirs-api-v7';
+const IMAGE_CACHE = 'dirs-images-v7';
 
 const STATIC_ASSETS = [
   '/leaflet.css',
@@ -48,7 +48,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.destination === 'image' || url.pathname.match(/\.(jpg|jpeg|png|gif|svg|webp)$/)) {
-    event.respondWith(cacheFirst(request, IMAGE_CACHE));
+    event.respondWith(networkFirst(request, IMAGE_CACHE));
     return;
   }
 
@@ -76,6 +76,21 @@ async function cacheFirst(request, cacheName) {
     }
     return response;
   } catch {
+    return new Response('', { status: 408 });
+  }
+}
+
+async function networkFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    if (cached) return cached;
     return new Response('', { status: 408 });
   }
 }
