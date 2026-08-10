@@ -45,8 +45,8 @@ const DriverManagement = React.lazy(() => import('./pages/admin/DriverManagement
 const PassengerManagement = React.lazy(() => import('./pages/admin/PassengerManagement'));
 const TripManagement = React.lazy(() => import('./pages/admin/TripManagement'));
 const FinancialManagement = React.lazy(() => import('./pages/admin/FinancialManagement'));
-const SafetySecurity = React.lazy(() => import('./pages/admin/SafetySecurity'));
-const SupportSystem = React.lazy(() => import('./pages/admin/SupportSystem'));
+const SafetySecurity = React.lazy(() => import('./pages/admin/SafetyDashboard'));
+const SupportSystem = React.lazy(() => import('./pages/admin/SupportDashboard'));
 const AnalyticsReporting = React.lazy(() => import('./pages/admin/AnalyticsReporting'));
 const ContentNotifications = React.lazy(() => import('./pages/admin/ContentNotifications'));
 const SystemConfiguration = React.lazy(() => import('./pages/admin/SystemConfiguration'));

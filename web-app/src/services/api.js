@@ -234,10 +234,41 @@ export const adminAPI = {
   approveDriver: (driverId) => api.put(`/admin/drivers/${driverId}/approve`),
   rejectDriver: (driverId, reason) => api.put(`/admin/drivers/${driverId}/reject`, { reason }),
   suspendDriver: (driverId, reason) => api.put(`/admin/drivers/${driverId}/suspend`, { reason }),
+  banDriver: (driverId, reason) => api.put(`/admin/drivers/${driverId}/ban`, { reason }),
+  reactivateDriver: (driverId) => api.put(`/admin/drivers/${driverId}/reactivate`),
   getDriverEarnings: (driverId, params) => api.get(`/admin/drivers/${driverId}/earnings`, { params }),
+  adjustCommissionRate: (driverId, rate) => api.put(`/admin/drivers/${driverId}/commission-rate`, { rate }),
+  processPayout: (driverId, amount) => api.post(`/admin/drivers/${driverId}/payout`, { amount }),
+  requestDocumentResubmit: (driverId, docType) => api.post(`/admin/drivers/${driverId}/request-resubmit`, { docType }),
+  sendDriverMessage: (driverId, message) => api.post(`/admin/drivers/${driverId}/message`, { message }),
+  issueDriverWarning: (driverId, reason) => api.post(`/admin/drivers/${driverId}/warning`, { reason }),
+  getDriverPerformance: (driverId, params) => api.get(`/admin/drivers/${driverId}/performance`, { params }),
+  getDriverResponseTime: (driverId, params) => api.get(`/admin/drivers/${driverId}/response-time`, { params }),
+  getDriverActivityHeatmap: (params) => api.get('/admin/drivers/activity-heatmap', { params }),
+  getDriverRetention: (params) => api.get('/admin/drivers/retention', { params }),
+  // Dispute management endpoints
+  getDisputes: (params) => api.get('/admin/disputes', { params }),
+  resolveDispute: (disputeId, resolution, fareAdjustment) => api.put(`/admin/disputes/${disputeId}/resolve`, { resolution, fareAdjustment }),
+  // Lost item endpoints
+  getLostItems: (params) => api.get('/admin/lost-items', { params }),
+  resolveLostItem: (itemId, status) => api.put(`/admin/lost-items/${itemId}`, { status }),
+  // Driver-reported issues endpoints
+  getDriverIssues: (params) => api.get('/admin/driver-issues', { params }),
+  resolveDriverIssue: (issueId, resolution) => api.put(`/admin/driver-issues/${issueId}/resolve`, { resolution }),
   // Passenger management endpoints
   getPassengerWallet: (passengerId) => api.get(`/admin/passengers/${passengerId}/wallet`),
   processRefund: (passengerId, amount, reason) => api.post(`/admin/passengers/${passengerId}/refund`, { amount, reason }),
+  addPassengerFunds: (passengerId, amount, reason) => api.post(`/admin/passengers/${passengerId}/add-funds`, { amount, reason }),
+  getPassengerTransactions: (passengerId, params) => api.get(`/admin/passengers/${passengerId}/transactions`, { params }),
+  banPassenger: (passengerId, reason) => api.put(`/admin/passengers/${passengerId}/ban`, { reason }),
+  sendPassengerMessage: (passengerId, message) => api.post(`/admin/passengers/${passengerId}/message`, { message }),
+  issuePassengerWarning: (passengerId, reason) => api.post(`/admin/passengers/${passengerId}/warning`, { reason }),
+  getPassengerTrips: (passengerId, params) => api.get(`/admin/passengers/${passengerId}/trips`, { params }),
+  getPassengerBehavior: (passengerId, params) => api.get(`/admin/passengers/${passengerId}/behavior`, { params }),
+  blockPassengerBooking: (passengerId, reason) => api.put(`/admin/passengers/${passengerId}/block-booking`, { reason }),
+  unblockPassengerBooking: (passengerId) => api.put(`/admin/passengers/${passengerId}/unblock-booking`),
+  getPassengerLoginHistory: (passengerId) => api.get(`/admin/passengers/${passengerId}/login-history`),
+  getPassengerAnalytics: (params) => api.get('/admin/passengers/analytics', { params }),
   // Trip management endpoints
   getTripDetails: (tripId) => api.get(`/admin/trips/${tripId}`),
   adjustFare: (tripId, newFare, reason) => api.put(`/admin/trips/${tripId}/adjust-fare`, { newFare, reason }),
@@ -260,10 +291,179 @@ export const adminAPI = {
   // Content endpoints
   sendPushNotification: (data) => api.post('/admin/content/push-notification', data),
   createAnnouncement: (data) => api.post('/admin/content/announcements', data),
+  sendDriverAnnouncement: (data) => api.post('/admin/content/driver-announcement', data),
   // Configuration endpoints
   updateTariff: (data) => api.put('/admin/config/tariff', data),
   getServiceAreas: () => api.get('/admin/config/service-areas'),
   updateServiceAreas: (data) => api.put('/admin/config/service-areas', data),
+  // Real-time monitoring endpoints
+  getSystemHealth: () => api.get('/admin/monitoring/system-health'),
+  getActiveDriversLocations: () => api.get('/admin/monitoring/drivers-locations'),
+  getActiveTripsRoutes: () => api.get('/admin/monitoring/trips-routes'),
+  getBookingQueue: () => api.get('/admin/monitoring/booking-queue'),
+  // Trip lifecycle management
+  completeTrip: (tripId, notes) => api.put(`/admin/trips/${tripId}/complete`, { notes }),
+  cancelTrip: (tripId, reason, cancelledBy) => api.put(`/admin/trips/${tripId}/cancel`, { reason, cancelledBy }),
+  reassignDriver: (tripId, newDriverId) => api.put(`/admin/trips/${tripId}/reassign-driver`, { newDriverId }),
+  markNoShow: (tripId, party, reason) => api.put(`/admin/trips/${tripId}/no-show`, { party, reason }),
+  // Fare & payment management
+  processRefund: (tripId, amount, reason) => api.post(`/admin/trips/${tripId}/refund`, { amount, reason }),
+  processDriverPayout: (tripId) => api.post(`/admin/trips/${tripId}/payout`),
+  applyPromoCode: (tripId, code, discountAmount) => api.post(`/admin/trips/${tripId}/promo-code`, { code, discountAmount }),
+  // Dispute handling
+  handleFareDispute: (tripId, resolution, compensationAmount) => api.post(`/admin/trips/${tripId}/dispute/fare`, { resolution, compensationAmount }),
+  handleRouteDispute: (tripId, resolution, action) => api.post(`/admin/trips/${tripId}/dispute/route`, { resolution, action }),
+  handleBehaviorComplaint: (tripId, resolution, party, action) => api.post(`/admin/trips/${tripId}/dispute/behavior`, { resolution, party, action }),
+  issueCompensation: (tripId, amount, reason, recipient) => api.post(`/admin/trips/${tripId}/compensation`, { amount, reason, recipient }),
+  // Trip analytics
+  getTripAnalytics: (params) => api.get('/admin/trips/analytics', { params }),
+  // Export
+  exportTripData: (params) => api.get('/admin/trips/export', { params }),
+  // ==================== SAFETY & SECURITY APIS ====================
+  // SOS/Emergency System
+  getSOSAlerts: (params) => api.get('/admin/safety/sos-alerts', { params }),
+  getSOSHistory: (userId) => api.get(`/admin/safety/sos-history/${userId}`),
+  resolveSOS: (alertId, notes, isFalseAlarm) => api.put(`/admin/safety/sos/${alertId}/resolve`, { notes, isFalseAlarm }),
+  // Fraud Detection
+  getFraudAlerts: (params) => api.get('/admin/safety/fraud-alerts', { params }),
+  investigateFraud: (fraudId, action, notes) => api.put(`/admin/safety/fraud/${fraudId}/investigate`, { action, notes }),
+  // Suspicious Activity
+  getSuspiciousActivities: (params) => api.get('/admin/safety/suspicious-activities', { params }),
+  resolveSuspiciousActivity: (activityId, action, notes) => api.put(`/admin/safety/suspicious/${activityId}/resolve`, { action, notes }),
+  // Incident Management
+  getIncidents: (params) => api.get('/admin/safety/incidents', { params }),
+  createIncident: (incidentData) => api.post('/admin/safety/incidents', incidentData),
+  assignIncident: (incidentId, assignedTo) => api.put(`/admin/safety/incidents/${incidentId}/assign`, { assignedTo }),
+  addInvestigationNote: (incidentId, note) => api.post(`/admin/safety/incidents/${incidentId}/notes`, { note }),
+  resolveIncident: (incidentId, resolution, policeNotified, ambulanceDispatched) => api.put(`/admin/safety/incidents/${incidentId}/resolve`, { resolution, policeNotified, ambulanceDispatched }),
+  // Banned/Blocked Users
+  getBlockedUsers: () => api.get('/admin/safety/blocked-users'),
+  blockUser: (userId, reason, duration) => api.put(`/admin/safety/users/${userId}/block`, { reason, duration }),
+  unblockUser: (userId) => api.put(`/admin/safety/users/${userId}/unblock`),
+  // Safety Verification
+  getPendingVerifications: () => api.get('/admin/safety/pending-verifications'),
+  approveDriverVerification: (driverId, notes) => api.put(`/admin/safety/drivers/${driverId}/approve`, { notes }),
+  rejectDriverVerification: (driverId, reason) => api.put(`/admin/safety/drivers/${driverId}/reject`, { reason }),
+  // Emergency Services Integration
+  notifyPolice: (incidentId, policeReportNumber) => api.put(`/admin/safety/incidents/${incidentId}/police`, { policeReportNumber }),
+  dispatchAmbulance: (incidentId, hospitalName, hospitalLocation) => api.put(`/admin/safety/incidents/${incidentId}/ambulance`, { hospitalName, hospitalLocation }),
+  getEmergencyContacts: (userId) => api.get(`/admin/safety/users/${userId}/emergency-contacts`),
+  // Safety Analytics & Reports
+  getSafetyAnalytics: (params) => api.get('/admin/safety/analytics', { params }),
+  // Driver Behavior Monitoring
+  getDriverBehaviorReport: (driverId) => api.get(`/admin/safety/drivers/${driverId}/behavior`),
+  // Passenger Behavior Monitoring
+  getPassengerBehaviorReport: (userId) => api.get(`/admin/safety/passengers/${userId}/behavior`),
+  // ==================== SUPPORT SYSTEM APIS ====================
+  // Ticket Management
+  getTickets: (params) => api.get('/admin/support/tickets', { params }),
+  getTicket: (ticketId) => api.get(`/admin/support/tickets/${ticketId}`),
+  createTicket: (ticketData) => api.post('/admin/support/tickets', ticketData),
+  updateTicket: (ticketId, ticketData) => api.put(`/admin/support/tickets/${ticketId}`, ticketData),
+  addTicketMessage: (ticketId, message, isInternal, attachments) => api.post(`/admin/support/tickets/${ticketId}/messages`, { message, isInternal, attachments }),
+  resolveTicket: (ticketId, resolutionNotes, satisfactionRating, satisfactionFeedback) => api.put(`/admin/support/tickets/${ticketId}/resolve`, { resolutionNotes, satisfactionRating, satisfactionFeedback }),
+  closeTicket: (ticketId) => api.put(`/admin/support/tickets/${ticketId}/close`),
+  escalateTicket: (ticketId, escalateTo, reason) => api.put(`/admin/support/tickets/${ticketId}/escalate`, { escalateTo, reason }),
+  bulkUpdateTickets: (ticketIds, action, value) => api.post('/admin/support/tickets/bulk', { ticketIds, action, value }),
+  // Live Chat
+  getSupportChats: (params) => api.get('/admin/support/chats', { params }),
+  getSupportChat: (chatId) => api.get(`/admin/support/chats/${chatId}`),
+  createSupportChat: (userId, ticketId) => api.post('/admin/support/chats', { userId, ticketId }),
+  sendChatMessage: (chatId, message, attachments, isCannedResponse, cannedResponseId) => api.post(`/admin/support/chats/${chatId}/messages`, { message, attachments, isCannedResponse, cannedResponseId }),
+  transferChat: (chatId, transferTo) => api.put(`/admin/support/chats/${chatId}/transfer`, { transferTo }),
+  rateChat: (chatId, score, feedback) => api.post(`/admin/support/chats/${chatId}/rate`, { score, feedback }),
+  endChat: (chatId) => api.put(`/admin/support/chats/${chatId}/end`),
+  // Knowledge Base
+  getFAQs: (params) => api.get('/admin/support/faqs', { params }),
+  getFAQ: (faqId) => api.get(`/admin/support/faqs/${faqId}`),
+  createFAQ: (faqData) => api.post('/admin/support/faqs', faqData),
+  updateFAQ: (faqId, faqData) => api.put(`/admin/support/faqs/${faqId}`, faqData),
+  deleteFAQ: (faqId) => api.delete(`/admin/support/faqs/${faqId}`),
+  markFAQHelpful: (faqId, helpful) => api.post(`/admin/support/faqs/${faqId}/helpful`, { helpful }),
+  // Canned Responses
+  getCannedResponses: (params) => api.get('/admin/support/canned-responses', { params }),
+  createCannedResponse: (responseData) => api.post('/admin/support/canned-responses', responseData),
+  updateCannedResponse: (responseId, responseData) => api.put(`/admin/support/canned-responses/${responseId}`, responseData),
+  deleteCannedResponse: (responseId) => api.delete(`/admin/support/canned-responses/${responseId}`),
+  // Auto Reply Rules
+  getAutoReplyRules: (params) => api.get('/admin/support/auto-reply-rules', { params }),
+  createAutoReplyRule: (ruleData) => api.post('/admin/support/auto-reply-rules', ruleData),
+  updateAutoReplyRule: (ruleId, ruleData) => api.put(`/admin/support/auto-reply-rules/${ruleId}`, ruleData),
+  deleteAutoReplyRule: (ruleId) => api.delete(`/admin/support/auto-reply-rules/${ruleId}`),
+  // Communication
+  sendBroadcastMessage: (message, targetAudience, title) => api.post('/admin/support/broadcast', { message, targetAudience, title }),
+  sendEmailNotification: (userId, subject, message) => api.post('/admin/support/email', { userId, subject, message }),
+  sendSMSNotification: (userId, message) => api.post('/admin/support/sms', { userId, message }),
+  // Support Analytics
+  getSupportAnalytics: (params) => api.get('/admin/support/analytics', { params }),
+  // User Support
+  getUserSupportHistory: (userId) => api.get(`/admin/support/users/${userId}/history`),
+  getUserSupportProfile: (userId) => api.get(`/admin/support/users/${userId}/profile`),
+  // Reports
+  generateSupportReport: (params) => api.get('/admin/support/reports', { params }),
+  getSLACompliance: (params) => api.get('/admin/support/sla-compliance', { params }),
+  // ==================== ANALYTICS & REPORTING APIS ====================
+  // Revenue Analytics
+  getRevenueTrends: (params) => api.get('/admin/analytics/revenue/trends', { params }),
+  getRevenueByRoute: (params) => api.get('/admin/analytics/revenue/by-route', { params }),
+  getRevenueByVehicleType: (params) => api.get('/admin/analytics/revenue/by-vehicle', { params }),
+  getRevenuePerDriver: (params) => api.get('/admin/analytics/revenue/per-driver', { params }),
+  getRevenuePerPassenger: (params) => api.get('/admin/analytics/revenue/per-passenger', { params }),
+  getSurgePricingImpact: (params) => api.get('/admin/analytics/revenue/surge-impact', { params }),
+  // Trip Analytics
+  getTripCompletionRate: (params) => api.get('/admin/analytics/trips/completion-rate', { params }),
+  getCancellationReasons: (params) => api.get('/admin/analytics/trips/cancellation-reasons', { params }),
+  getAverageTripDuration: (params) => api.get('/admin/analytics/trips/avg-duration', { params }),
+  getAverageTripDistance: (params) => api.get('/admin/analytics/trips/avg-distance', { params }),
+  getTripVolumeTrends: (params) => api.get('/admin/analytics/trips/volume-trends', { params }),
+  // User Analytics
+  getUserGrowth: (params) => api.get('/admin/analytics/users/growth', { params }),
+  getUserActivity: (params) => api.get('/admin/analytics/users/activity', { params }),
+  getUserDemographics: (params) => api.get('/admin/analytics/users/demographics', { params }),
+  getUserBehavior: (params) => api.get('/admin/analytics/users/behavior', { params }),
+  getUserLifetimeValue: (params) => api.get('/admin/analytics/users/lifetime-value', { params }),
+  // Driver Analytics
+  getDriverAvailability: (params) => api.get('/admin/analytics/drivers/availability', { params }),
+  getDriverUtilization: (params) => api.get('/admin/analytics/drivers/utilization', { params }),
+  getDriverPerformance: (params) => api.get('/admin/analytics/drivers/performance', { params }),
+  getDriverEarnings: (params) => api.get('/admin/analytics/drivers/earnings', { params }),
+  getDriverChurn: (params) => api.get('/admin/analytics/drivers/churn', { params }),
+  // Geographic Analytics
+  getDemandHeatmapNew: (params) => api.get('/admin/analytics/geo/demand-heatmap', { params }),
+  getSupplyHeatmapNew: (params) => api.get('/admin/analytics/geo/supply-heatmap', { params }),
+  getRoutePopularity: (params) => api.get('/admin/analytics/geo/route-popularity', { params }),
+  getAreaPerformance: (params) => api.get('/admin/analytics/geo/area-performance', { params }),
+  getCoverageGaps: (params) => api.get('/admin/analytics/geo/coverage-gaps', { params }),
+  // Time Analytics
+  getPeakHoursNew: (params) => api.get('/admin/analytics/time/peak-hours', { params }),
+  getPeakDays: (params) => api.get('/admin/analytics/time/peak-days', { params }),
+  getSeasonalTrends: (params) => api.get('/admin/analytics/time/seasonal-trends', { params }),
+  getHolidayImpact: (params) => api.get('/admin/analytics/time/holiday-impact', { params }),
+  // Financial Analytics
+  getCommissionCollectionRate: (params) => api.get('/admin/analytics/financial/commission-rate', { params }),
+  getRefundRate: (params) => api.get('/admin/analytics/financial/refund-rate', { params }),
+  getAverageFare: (params) => api.get('/admin/analytics/financial/avg-fare', { params }),
+  getPaymentMethodDistribution: (params) => api.get('/admin/analytics/financial/payment-distribution', { params }),
+  // Performance Metrics
+  getDriverResponseTime: (params) => api.get('/admin/analytics/performance/driver-response-time', { params }),
+  getAverageWaitTime: (params) => api.get('/admin/analytics/performance/avg-wait-time', { params }),
+  getAppCrashRate: (params) => api.get('/admin/analytics/performance/app-crash-rate', { params }),
+  getAPIResponseTime: (params) => api.get('/admin/analytics/performance/api-response-time', { params }),
+  // Reports
+  generateDailyReport: (params) => api.get('/admin/reports/daily', { params }),
+  generateWeeklyReport: (params) => api.get('/admin/reports/weekly', { params }),
+  generateMonthlyReport: (params) => api.get('/admin/reports/monthly', { params }),
+  generateCustomReport: (params) => api.get('/admin/reports/custom', { params }),
+  exportReport: (params) => api.get('/admin/reports/export', { params }),
+  scheduleReport: (data) => api.post('/admin/reports/schedule', data),
+  // Forecasting
+  getDemandPrediction: (params) => api.get('/admin/forecast/demand', { params }),
+  getDriverSupplyForecast: (params) => api.get('/admin/forecast/driver-supply', { params }),
+  getRevenueProjection: (params) => api.get('/admin/forecast/revenue', { params }),
+  // Comparative Analytics
+  getPeriodComparison: (params) => api.get('/admin/analytics/compare/periods', { params }),
+  getYearOverYear: (params) => api.get('/admin/analytics/compare/year-over-year', { params }),
+  getCompetitorAnalysis: (params) => api.get('/admin/analytics/compare/competitors', { params }),
 };
 
 // Network status helper

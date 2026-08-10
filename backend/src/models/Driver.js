@@ -33,6 +33,10 @@ const driverSchema = new mongoose.Schema({
     enum: ['pending', 'under_review', 'approved', 'rejected'],
     default: 'pending'
   },
+  verificationNotes: {
+    type: String,
+    default: null
+  },
   rejectionReason: {
     type: String,
     default: null
@@ -42,6 +46,17 @@ const driverSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  backgroundCheckStatus: {
+    type: String,
+    enum: ['pending', 'cleared', 'failed', 'not_required'],
+    default: 'pending'
+  },
+  backgroundCheckDate: Date,
+  safetyTrainingCompleted: {
+    type: Boolean,
+    default: false
+  },
+  safetyTrainingDate: Date,
   documents: {
     licensePhoto: { data: String, status: { type: String, default: 'pending' }, updatedAt: Date },
     librePhoto: { data: String, status: { type: String, default: 'pending' }, updatedAt: Date },
@@ -52,6 +67,34 @@ const driverSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  isSuspended: {
+    type: Boolean,
+    default: false
+  },
+  isBanned: {
+    type: Boolean,
+    default: false
+  },
+  suspensionReason: {
+    type: String,
+    default: null
+  },
+  banReason: {
+    type: String,
+    default: null
+  },
+  commissionRate: {
+    type: Number,
+    default: 10
+  },
+  warnings: {
+    type: Number,
+    default: 0
+  },
   currentTrip: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Trip',
@@ -61,7 +104,43 @@ const driverSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  completedTrips: {
+    type: Number,
+    default: 0
+  },
+  cancelledTrips: {
+    type: Number,
+    default: 0
+  },
   totalEarnings: {
+    type: Number,
+    default: 0
+  },
+  commissionPaid: {
+    type: Number,
+    default: 0
+  },
+  netEarnings: {
+    type: Number,
+    default: 0
+  },
+  monthlyEarnings: {
+    type: Number,
+    default: 0
+  },
+  avgResponseTime: {
+    type: Number,
+    default: 0
+  },
+  complaints: {
+    type: Number,
+    default: 0
+  },
+  warnings: {
+    type: Number,
+    default: 0
+  },
+  lostItemReports: {
     type: Number,
     default: 0
   },

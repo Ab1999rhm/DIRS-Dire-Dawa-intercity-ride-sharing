@@ -49,9 +49,101 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isBanned: {
+    type: Boolean,
+    default: false
+  },
+  banReason: {
+    type: String,
+    default: null
+  },
   isOnline: {
     type: Boolean,
     default: false
+  },
+  isBookingBlocked: {
+    type: Boolean,
+    default: false
+  },
+  bookingBlockReason: {
+    type: String,
+    default: null
+  },
+  warnings: {
+    type: Number,
+    default: 0
+  },
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
+  fraudFlags: {
+    type: Number,
+    default: 0
+  },
+  complaints: {
+    type: Number,
+    default: 0
+  },
+  warnings: {
+    type: Number,
+    default: 0
+  },
+  cancellations: {
+    type: Number,
+    default: 0
+  },
+  noShows: {
+    type: Number,
+    default: 0
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  blockReason: {
+    type: String,
+    default: null
+  },
+  blockedAt: {
+    type: Date,
+    default: null
+  },
+  blockUntil: {
+    type: Date,
+    default: null
+  },
+  totalSpent: {
+    type: Number,
+    default: 0
+  },
+  totalTrips: {
+    type: Number,
+    default: 0
+  },
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
+  lastSeen: {
+    type: Date,
+    default: null
+  },
+  loginHistory: [{
+    timestamp: Date,
+    device: String,
+    ip: String,
+    location: String
+  }],
+  deviceInfo: {
+    deviceType: String,
+    os: String,
+    browser: String,
+    appVersion: String
   },
   intendedDestination: {
     city: { type: String, default: null },

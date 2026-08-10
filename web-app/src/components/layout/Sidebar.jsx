@@ -72,7 +72,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
           {!isCollapsed && (
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.firstName} {user?.lastName}</div>
-              <div className="sidebar-user-role">{t('admin.superAdmin')}</div>
+              <div className="sidebar-user-role">{t('admin.admin') || 'Admin'}</div>
             </div>
           )}
         </div>

@@ -7,36 +7,14 @@ import {
   FaHandshake, FaEnvelope, FaUserShield, FaCalendarAlt, FaToggleOn,
   FaToggleOff, FaRedo, FaLock, FaUnlock, FaTrash, FaBullhorn, FaPaperPlane,
   FaMapMarkerAlt, FaListUl, FaChartBar, FaUsers, FaSync, FaCog, FaEdit,
-  FaReply, FaCheck, FaTimes, FaInfoCircle, FaFileExport
+  FaReply, FaCheck, FaTimes, FaInfoCircle, FaFileExport, FaPercentage,
+  FaHistory, FaExchangeAlt, FaUserClock, FaFlag, FaBolt, FaFire,
+  FaChartArea, FaClipboardList, FaUserGraduate, FaShieldAlt
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import './Admin.css';
-
-const MOCK_DRIVERS = [
-  { _id: '1', firstName: 'Ahmed', lastName: 'Ali', phoneNumber: '+251911234567', vehicle: { type: 'sedan', make: 'Toyota', model: 'Corolla', plateNumber: 'A1234' }, status: 'active', rating: 4.8, totalTrips: 320, completedTrips: 310, cancelledTrips: 10, totalEarnings: 45000, commissionPaid: 4500, netEarnings: 40500, monthlyEarnings: 8500, joinedAt: '2024-01-15', lastActive: '2026-08-10', documents: { license: { status: 'verified', expiry: '2027-06-15' }, insurance: { status: 'verified', expiry: '2027-03-20' }, registration: { status: 'verified' } }, complaints: 2, warnings: 0, lostItemReports: 1 },
-  { _id: '2', firstName: 'Mohammed', lastName: 'Hussein', phoneNumber: '+251922345678', vehicle: { type: 'sedan', make: 'Hyundai', model: 'Accent', plateNumber: 'B5678' }, status: 'active', rating: 4.5, totalTrips: 290, completedTrips: 275, cancelledTrips: 15, totalEarnings: 38000, commissionPaid: 3800, netEarnings: 34200, monthlyEarnings: 7200, joinedAt: '2024-03-22', lastActive: '2026-08-09', documents: { license: { status: 'verified', expiry: '2027-09-10' }, insurance: { status: 'verified', expiry: '2027-01-05' }, registration: { status: 'verified' } }, complaints: 5, warnings: 1, lostItemReports: 0 },
-  { _id: '3', firstName: 'Kedir', lastName: 'Jemal', phoneNumber: '+251933456789', vehicle: { type: 'minivan', make: 'Nissan', model: 'Sunny', plateNumber: 'C9012' }, status: 'suspended', rating: 4.9, totalTrips: 410, completedTrips: 400, cancelledTrips: 10, totalEarnings: 52000, commissionPaid: 5200, netEarnings: 46800, monthlyEarnings: 0, joinedAt: '2023-11-08', lastActive: '2026-07-28', documents: { license: { status: 'verified', expiry: '2026-12-01' }, insurance: { status: 'expired', expiry: '2026-06-15' }, registration: { status: 'verified' } }, complaints: 1, warnings: 2, lostItemReports: 2 },
-  { _id: '4', firstName: 'Dawit', lastName: 'Abate', phoneNumber: '+251944567890', vehicle: { type: 'sedan', make: 'Toyota', model: 'Vitz', plateNumber: 'D3456' }, status: 'active', rating: 4.6, totalTrips: 180, completedTrips: 172, cancelledTrips: 8, totalEarnings: 29000, commissionPaid: 2900, netEarnings: 26100, monthlyEarnings: 5800, joinedAt: '2024-06-12', lastActive: '2026-08-10', documents: { license: { status: 'verified', expiry: '2028-01-20' }, insurance: { status: 'verified', expiry: '2027-08-10' }, registration: { status: 'pending' } }, complaints: 0, warnings: 0, lostItemReports: 0 },
-  { _id: '5', firstName: 'Yohannes', lastName: 'Tesfaye', phoneNumber: '+251955678901', vehicle: { type: 'sedan', make: 'Hyundai', model: 'i20', plateNumber: 'E7890' }, status: 'active', rating: 4.7, totalTrips: 250, completedTrips: 242, cancelledTrips: 8, totalEarnings: 41000, commissionPaid: 4100, netEarnings: 36900, monthlyEarnings: 7900, joinedAt: '2024-02-28', lastActive: '2026-08-10', documents: { license: { status: 'verified', expiry: '2027-11-30' }, insurance: { status: 'verified', expiry: '2027-05-25' }, registration: { status: 'verified' } }, complaints: 3, warnings: 0, lostItemReports: 0 },
-  { _id: '6', firstName: 'Abel', lastName: 'Bekele', phoneNumber: '+251966789012', vehicle: { type: 'sedan', make: 'Toyota', model: 'Yaris', plateNumber: 'F1111' }, status: 'pending', rating: 0, totalTrips: 0, completedTrips: 0, cancelledTrips: 0, totalEarnings: 0, commissionPaid: 0, netEarnings: 0, monthlyEarnings: 0, joinedAt: '2026-08-01', lastActive: null, documents: { license: { status: 'pending', expiry: '2028-04-10' }, insurance: { status: 'pending', expiry: '2027-12-01' }, registration: { status: 'pending' } }, complaints: 0, warnings: 0, lostItemReports: 0 },
-  { _id: '7', firstName: 'Solomon', lastName: 'Mengistu', phoneNumber: '+251977890123', vehicle: { type: 'minivan', make: 'Nissan', model: 'Micra', plateNumber: 'G2222' }, status: 'pending', rating: 0, totalTrips: 0, completedTrips: 0, cancelledTrips: 0, totalEarnings: 0, commissionPaid: 0, netEarnings: 0, monthlyEarnings: 0, joinedAt: '2026-08-05', lastActive: null, documents: { license: { status: 'pending', expiry: '2028-07-22' }, insurance: { status: 'pending', expiry: '2027-09-15' }, registration: { status: 'pending' } }, complaints: 0, warnings: 0, lostItemReports: 0 },
-];
-
-const MOCK_DISPUTES = [
-  { _id: 'd1', driverId: '1', driverName: 'Ahmed Ali', passengerName: 'Sara Hassan', tripId: 'T101', issue: ' fare dispute - passenger claims overcharge', date: '2026-08-09', status: 'open', amount: 350 },
-  { _id: 'd2', driverId: '2', driverName: 'Mohammed Hussein', passengerName: 'Fatima Ali', tripId: 'T105', issue: 'Rude behavior reported by passenger', date: '2026-08-08', status: 'investigating', amount: 0 },
-];
-
-const MOCK_LOST_ITEMS = [
-  { _id: 'l1', driverId: '1', driverName: 'Ahmed Ali', passengerName: 'Hana Ibrahim', description: 'Black leather wallet', date: '2026-08-07', status: 'returned' },
-  { _id: 'l2', driverId: '5', driverName: 'Yohannes Tesfaye', passengerName: 'Dina Kebede', description: 'Samsung Galaxy phone', date: '2026-08-09', status: 'in_transit' },
-];
-
-const MOCK_ISSUES = [
-  { _id: 'i1', driverId: '4', driverName: 'Dawit Abate', type: 'Vehicle breakdown', description: 'Car broke down during trip, needed roadside assistance', date: '2026-08-06', status: 'resolved' },
-];
 
 const DriverManagement = () => {
   const { t } = useLanguage();
@@ -66,12 +44,24 @@ const DriverManagement = () => {
   const [announcementTarget, setAnnouncementTarget] = useState('all');
   const [disputeResolution, setDisputeResolution] = useState('');
 
-  const [disputes, setDisputes] = useState(MOCK_DISPUTES);
-  const [lostItems, setLostItems] = useState(MOCK_LOST_ITEMS);
-  const [issues, setIssues] = useState(MOCK_ISSUES);
+  const [disputes, setDisputes] = useState([]);
+  const [lostItems, setLostItems] = useState([]);
+  const [issues, setIssues] = useState([]);
+  const [driverHeatmap, setDriverHeatmap] = useState(null);
+  const [driverRetention, setDriverRetention] = useState(null);
+  const [peakHours, setPeakHours] = useState(null);
+  const [commissionRate, setCommissionRate] = useState(10);
+  const [fareAdjustment, setFareAdjustment] = useState(0);
+  const [showCommissionModal, setShowCommissionModal] = useState(false);
+  const [selectedDriverTrips, setSelectedDriverTrips] = useState([]);
+  const [showTripsModal, setShowTripsModal] = useState(false);
 
   useEffect(() => {
     fetchDrivers();
+    fetchDisputes();
+    fetchLostItems();
+    fetchDriverIssues();
+    fetchDriverAnalytics();
   }, []);
 
   const fetchDrivers = async () => {
@@ -79,10 +69,63 @@ const DriverManagement = () => {
       const res = await adminAPI.drivers();
       const d = res.data;
       setDrivers(Array.isArray(d) ? d : (d?.data || d?.drivers || []));
-    } catch {
-      setDrivers(MOCK_DRIVERS);
+    } catch (err) {
+      console.error('Failed to fetch drivers:', err);
+      setDrivers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDisputes = async () => {
+    try {
+      const res = await adminAPI.getDisputes();
+      setDisputes(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to fetch disputes:', err);
+    }
+  };
+
+  const fetchLostItems = async () => {
+    try {
+      const res = await adminAPI.getLostItems();
+      setLostItems(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to fetch lost items:', err);
+    }
+  };
+
+  const fetchDriverIssues = async () => {
+    try {
+      const res = await adminAPI.getDriverIssues();
+      setIssues(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to fetch driver issues:', err);
+    }
+  };
+
+  const fetchDriverAnalytics = async () => {
+    try {
+      const [heatmapRes, retentionRes, peakHoursRes] = await Promise.all([
+        adminAPI.getDriverActivityHeatmap(),
+        adminAPI.getDriverRetention(),
+        adminAPI.getPeakHours()
+      ]);
+      setDriverHeatmap(heatmapRes.data);
+      setDriverRetention(retentionRes.data);
+      setPeakHours(peakHoursRes.data);
+    } catch (err) {
+      console.error('Failed to fetch driver analytics:', err);
+    }
+  };
+
+  const fetchDriverTrips = async (driverId) => {
+    try {
+      const res = await adminAPI.getDriverPerformance(driverId);
+      setSelectedDriverTrips(Array.isArray(res.data?.trips) ? res.data.trips : []);
+    } catch (err) {
+      console.error('Failed to fetch driver trips:', err);
+      setSelectedDriverTrips([]);
     }
   };
 
@@ -132,52 +175,156 @@ const DriverManagement = () => {
   const totalRevenue = drivers.reduce((a, d) => a + (d.totalEarnings || 0), 0);
 
   const handleApprove = async (id) => {
-    try { await adminAPI.approveDriver(id); toast.success('Driver approved'); fetchDrivers(); } catch { toast.success('Driver approved'); fetchDrivers(); }
+    try {
+      await adminAPI.approveDriver(id);
+      toast.success('Driver approved');
+      fetchDrivers();
+    } catch (err) {
+      console.error('Failed to approve driver:', err);
+      toast.error('Failed to approve driver');
+    }
   };
   const handleReject = async (id, reason) => {
-    try { await adminAPI.rejectDriver(id, reason); toast.success('Driver rejected'); fetchDrivers(); } catch { toast.success('Driver rejected'); fetchDrivers(); }
+    try {
+      await adminAPI.rejectDriver(id, reason);
+      toast.success('Driver rejected');
+      fetchDrivers();
+    } catch (err) {
+      console.error('Failed to reject driver:', err);
+      toast.error('Failed to reject driver');
+    }
   };
   const handleReactivate = async (id) => {
-    try { await adminAPI.reactivateUser(id); toast.success('Driver reactivated'); fetchDrivers(); } catch { setDrivers(prev => prev.map(d => (d._id === id || d.id === id) ? { ...d, status: 'active' } : d)); toast.success('Driver reactivated'); }
+    try {
+      await adminAPI.reactivateDriver(id);
+      toast.success('Driver reactivated');
+      fetchDrivers();
+    } catch (err) {
+      console.error('Failed to reactivate driver:', err);
+      toast.error('Failed to reactivate driver');
+    }
   };
   const handleSuspend = async (id, reason) => {
-    try { await adminAPI.suspendDriver(id, reason); toast.success('Driver suspended'); fetchDrivers(); } catch { setDrivers(prev => prev.map(d => (d._id === id || d.id === id) ? { ...d, status: 'suspended' } : d)); toast.success('Driver suspended'); }
-    setShowSuspendModal(false); setSuspendReason('');
+    try {
+      await adminAPI.suspendDriver(id, reason);
+      toast.success('Driver suspended');
+      fetchDrivers();
+      setShowSuspendModal(false); setSuspendReason('');
+    } catch (err) {
+      console.error('Failed to suspend driver:', err);
+      toast.error('Failed to suspend driver');
+    }
   };
-  const handleBan = (id, reason) => {
-    setDrivers(prev => prev.map(d => (d._id === id || d.id === id) ? { ...d, status: 'banned' } : d));
-    toast.success('Driver permanently banned');
-    setShowBanModal(false); setBanReason('');
+  const handleBan = async (id, reason) => {
+    try {
+      await adminAPI.banDriver(id, reason);
+      toast.success('Driver permanently banned');
+      fetchDrivers();
+      setShowBanModal(false); setBanReason('');
+    } catch (err) {
+      console.error('Failed to ban driver:', err);
+      toast.error('Failed to ban driver');
+    }
   };
-  const handleSendMessage = (id) => {
-    toast.success('Message sent to driver');
-    setShowMessageModal(false); setMessageText('');
+  const handleSendMessage = async (id) => {
+    try {
+      await adminAPI.sendDriverMessage(id, messageText);
+      toast.success('Message sent to driver');
+      setShowMessageModal(false); setMessageText('');
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      toast.error('Failed to send message');
+    }
   };
-  const handleWarn = (id) => {
-    setDrivers(prev => prev.map(d => (d._id === id || d.id === id) ? { ...d, warnings: (d.warnings || 0) + 1 } : d));
-    toast.success('Warning issued to driver');
-    setShowWarnModal(false); setWarnReason('');
+  const handleWarn = async (id) => {
+    try {
+      await adminAPI.issueDriverWarning(id, warnReason);
+      toast.success('Warning issued to driver');
+      fetchDrivers();
+      setShowWarnModal(false); setWarnReason('');
+    } catch (err) {
+      console.error('Failed to issue warning:', err);
+      toast.error('Failed to issue warning');
+    }
   };
-  const handleSendAnnouncement = () => {
-    toast.success(`Announcement sent to ${announcementTarget === 'all' ? 'all drivers' : announcementTarget}`);
-    setShowAnnouncementModal(false); setAnnouncementText('');
+  const handleSendAnnouncement = async () => {
+    try {
+      await adminAPI.sendDriverAnnouncement({ message: announcementText, target: announcementTarget });
+      toast.success(`Announcement sent to ${announcementTarget === 'all' ? 'all drivers' : announcementTarget}`);
+      setShowAnnouncementModal(false); setAnnouncementText('');
+    } catch (err) {
+      console.error('Failed to send announcement:', err);
+      toast.error('Failed to send announcement');
+    }
   };
-  const handleResolveDispute = (id) => {
-    setDisputes(prev => prev.map(d => d._id === id ? { ...d, status: 'resolved', resolution: disputeResolution } : d));
-    toast.success('Dispute resolved');
-    setShowDisputeModal(false); setDisputeResolution('');
+  const handleResolveDispute = async (id) => {
+    try {
+      await adminAPI.resolveDispute(id, disputeResolution, fareAdjustment);
+      toast.success('Dispute resolved');
+      fetchDisputes();
+      setShowDisputeModal(false); setDisputeResolution(''); setFareAdjustment(0);
+    } catch (err) {
+      console.error('Failed to resolve dispute:', err);
+      toast.error('Failed to resolve dispute');
+    }
   };
-  const handleResolveLostItem = (id) => {
-    setLostItems(prev => prev.map(l => l._id === id ? { ...l, status: 'returned' } : l));
-    toast.success('Lost item marked as returned');
+  const handleResolveLostItem = async (id) => {
+    try {
+      await adminAPI.resolveLostItem(id, 'returned');
+      toast.success('Lost item marked as returned');
+      fetchLostItems();
+    } catch (err) {
+      console.error('Failed to resolve lost item:', err);
+      toast.error('Failed to resolve lost item');
+    }
   };
-  const handleResolveIssue = (id) => {
-    setIssues(prev => prev.map(i => i._id === id ? { ...i, status: 'resolved' } : i));
-    toast.success('Issue resolved');
+  const handleResolveIssue = async (id) => {
+    try {
+      await adminAPI.resolveDriverIssue(id, 'Resolved by admin');
+      toast.success('Issue resolved');
+      fetchDriverIssues();
+    } catch (err) {
+      console.error('Failed to resolve issue:', err);
+      toast.error('Failed to resolve issue');
+    }
   };
 
-  const handleRequestResubmit = (id, docType) => {
-    toast.success(`Requested ${docType} resubmission from driver`);
+  const handleRequestResubmit = async (id, docType) => {
+    try {
+      await adminAPI.requestDocumentResubmit(id, docType);
+      toast.success(`Requested ${docType} resubmission from driver`);
+    } catch (err) {
+      console.error('Failed to request resubmit:', err);
+      toast.error('Failed to request document resubmission');
+    }
+  };
+
+  const handleAdjustCommission = async (id) => {
+    try {
+      await adminAPI.adjustCommissionRate(id, commissionRate);
+      toast.success(`Commission rate updated to ${commissionRate}%`);
+      fetchDrivers();
+      setShowCommissionModal(false);
+    } catch (err) {
+      console.error('Failed to adjust commission:', err);
+      toast.error('Failed to adjust commission rate');
+    }
+  };
+
+  const handleProcessPayout = async (id) => {
+    try {
+      await adminAPI.processPayout(id, selectedDriver?.monthlyEarnings || 0);
+      toast.success('Payout processed successfully');
+      fetchDrivers();
+    } catch (err) {
+      console.error('Failed to process payout:', err);
+      toast.error('Failed to process payout');
+    }
+  };
+
+  const handleViewTrips = async (driverId) => {
+    await fetchDriverTrips(driverId);
+    setShowTripsModal(true);
   };
 
   const openDetail = (driver, tab = 'overview') => {
@@ -216,6 +363,7 @@ const DriverManagement = () => {
     { id: 'financial', label: 'Financial', icon: <FaMoneyBillWave /> },
     { id: 'support', label: 'Support', icon: <FaHandshake /> },
     { id: 'communication', label: 'Messages', icon: <FaEnvelope /> },
+    { id: 'analytics', label: 'Analytics', icon: <FaChartArea /> },
   ];
 
   return (
@@ -411,7 +559,9 @@ const DriverManagement = () => {
                       <span>✅ {completionRate}% completion</span>
                       <span>🚗 {driver.totalTrips || 0} trips</span>
                       <span>❌ {driver.cancelledTrips || 0} cancelled</span>
+                      <span>⏱️ {driver.avgResponseTime || 'N/A'} min avg response</span>
                       {driver.complaints > 0 && <span style={{ color: '#ef4444' }}>📩 {driver.complaints} complaints</span>}
+                      {(driver.rating || 0) < 3.5 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ LOW RATING</span>}
                     </div>
                   </div>
                   <div style={{ width: 80 }}>
@@ -530,12 +680,55 @@ const DriverManagement = () => {
         </>
       )}
 
+      {/* ===== ANALYTICS TAB ===== */}
+      {activeTab === 'analytics' && (
+        <>
+          <div className="admin-section-title"><FaChartArea /> Driver Analytics</div>
+          <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}><FaUsers /></div>
+              <div><div className="admin-stat-value">{driverRetention?.activeDrivers || 0}</div><div className="admin-stat-label">Active Drivers</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}><FaUserClock /></div>
+              <div><div className="admin-stat-value">{driverRetention?.avgRetentionRate || 0}%</div><div className="admin-stat-label">Retention Rate</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}><FaClipboardList /></div>
+              <div><div className="admin-stat-value">{driverRetention?.newDriversThisMonth || 0}</div><div className="admin-stat-label">New This Month</div></div>
+            </div>
+          </div>
+          <div className="admin-section-title" style={{ marginTop: 20 }}><FaMapMarkerAlt /> Activity Heatmap</div>
+          <div style={{ padding: 16, background: '#f9fafb', borderRadius: 10, textAlign: 'center', color: '#6b7280' }}>
+            {driverHeatmap ? (
+              <div>Activity heatmap data loaded - {driverHeatmap.totalTrips || 0} trips recorded</div>
+            ) : (
+              <div>Loading activity heatmap...</div>
+            )}
+          </div>
+          <div className="admin-section-title" style={{ marginTop: 20 }}><FaClock /> Peak Hours Performance</div>
+          <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
+            {peakHours?.hours?.slice(0, 6).map((hour, idx) => (
+              <div key={idx} className="admin-stat-card">
+                <div className="admin-stat-icon" style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}><FaClock /></div>
+                <div><div className="admin-stat-value">{hour.hour}:00</div><div className="admin-stat-label">{hour.trips || 0} trips</div></div>
+              </div>
+            )) || (
+              <div style={{ padding: 16, background: '#f9fafb', borderRadius: 10, textAlign: 'center', color: '#6b7280' }}>Loading peak hours...</div>
+            )}
+          </div>
+        </>
+      )}
+
       {/* ===== COMMUNICATION TAB ===== */}
       {activeTab === 'communication' && (
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }} onClick={() => setShowAnnouncementModal(true)}>
               <FaBullhorn /> Send Announcement
+            </button>
+            <button className="btn" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white' }} onClick={() => setShowAnnouncementModal(true)}>
+              <FaFileAlt /> Broadcast Policy Update
             </button>
           </div>
           <div className="admin-section-title"><FaEnvelope /> Individual Driver Communication</div>
@@ -598,18 +791,19 @@ const DriverManagement = () => {
             {/* Documents */}
             {detailTab === 'documents' && (
               <div className="driver-detail">
-                {['license', 'insurance', 'registration'].map(doc => {
+                {['license', 'insurance', 'registration', 'backgroundCheck'].map(doc => {
                   const info = selectedDriver.documents?.[doc] || {};
+                  const docLabel = doc === 'backgroundCheck' ? 'Background Check' : doc;
                   return (
                     <div key={doc} style={{ marginBottom: 12, padding: 12, background: '#f9fafb', borderRadius: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <span style={{ fontWeight: 600, fontSize: 13, textTransform: 'capitalize' }}>{doc}</span>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{docLabel}</span>
                         <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${getDocStatusColor(info.status)}15`, color: getDocStatusColor(info.status) }}>{info.status || 'pending'}</span>
                       </div>
                       {info.expiry && <div style={{ fontSize: 11, color: '#6b7280' }}>Expires: {info.expiry}</div>}
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white' }} onClick={() => toast.success(`Document ${doc} approved`)}>Approve</button>
-                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white' }} onClick={() => toast.success(`Document ${doc} rejected`)}>Reject</button>
+                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white' }} onClick={() => toast.success(`${docLabel} approved`)}>Approve</button>
+                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white' }} onClick={() => toast.success(`${docLabel} rejected`)}>Reject</button>
                         <button className="btn btn-sm" style={{ background: '#f59e0b15', color: '#d97706' }} onClick={() => handleRequestResubmit(selectedDriver._id, doc)}>Request Re-submit</button>
                       </div>
                     </div>
@@ -626,14 +820,23 @@ const DriverManagement = () => {
                 <div className="detail-row"><span className="detail-key">Completed</span><span className="detail-val">{selectedDriver.completedTrips || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Cancelled</span><span className="detail-val">{selectedDriver.cancelledTrips || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Completion Rate</span><span className="detail-val">{selectedDriver.totalTrips > 0 ? ((selectedDriver.completedTrips / selectedDriver.totalTrips) * 100).toFixed(1) : 0}%</span></div>
+                <div className="detail-row"><span className="detail-key">Avg Response Time</span><span className="detail-val">{selectedDriver.avgResponseTime || 'N/A'} min</span></div>
                 <div className="detail-row"><span className="detail-key">Complaints</span><span className="detail-val" style={{ color: (selectedDriver.complaints || 0) > 0 ? '#ef4444' : '#10b981' }}>{selectedDriver.complaints || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Warnings</span><span className="detail-val" style={{ color: (selectedDriver.warnings || 0) > 0 ? '#f59e0b' : '#10b981' }}>{selectedDriver.warnings || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Lost Item Reports</span><span className="detail-val">{selectedDriver.lostItemReports || 0}</span></div>
+                {(selectedDriver.rating || 0) < 3.5 && (
+                  <div style={{ marginTop: 8, padding: 8, background: '#fef2f2', borderRadius: 6, border: '1px solid #fecaca' }}>
+                    <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 600 }}>⚠️ Low Rating Flag - Driver requires attention</span>
+                  </div>
+                )}
                 <div style={{ marginTop: 12 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Completion Rate</div>
                   <div style={{ height: 8, borderRadius: 4, background: '#e5e7eb', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${selectedDriver.totalTrips > 0 ? (selectedDriver.completedTrips / selectedDriver.totalTrips) * 100 : 0}%`, background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: 4 }} />
                   </div>
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn-primary" style={{ background: '#3b82f6' }} onClick={() => handleViewTrips(selectedDriver._id)}>View Trip Details</button>
                 </div>
               </div>
             )}
@@ -646,9 +849,12 @@ const DriverManagement = () => {
                 <div className="detail-row"><span className="detail-key">Net Earnings</span><span className="detail-val">ETB {(selectedDriver.netEarnings || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">This Month</span><span className="detail-val" style={{ color: '#059669' }}>ETB {(selectedDriver.monthlyEarnings || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">Avg per Trip</span><span className="detail-val">ETB {selectedDriver.totalTrips > 0 ? Math.round((selectedDriver.totalEarnings || 0) / selectedDriver.totalTrips).toLocaleString() : 0}</span></div>
-                <div className="detail-row"><span className="detail-key">Commission Rate</span><span className="detail-val">{selectedDriver.totalEarnings > 0 ? ((selectedDriver.commissionPaid / selectedDriver.totalEarnings) * 100).toFixed(1) : 10}%</span></div>
+                <div className="detail-row"><span className="detail-key">Commission Rate</span><span className="detail-val">{selectedDriver.commissionRate || 10}%</span></div>
                 <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-                  <button className="btn btn-primary" style={{ background: '#10b981' }} onClick={() => toast.success('Payout processed')}>Process Payout</button>
+                  <button className="btn btn-primary" style={{ background: '#10b981' }} onClick={() => handleProcessPayout(selectedDriver._id)}>Process Payout</button>
+                  <button className="btn" style={{ background: '#ef4444', color: 'white' }} onClick={() => toast.success('Refund processed to passenger')}>Process Refund</button>
+                  <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => { setShowCommissionModal(true); setCommissionRate(selectedDriver.commissionRate || 10); }}>Adjust Commission</button>
+                  <button className="btn" style={{ background: '#f3f4f6' }} onClick={() => handleViewTrips(selectedDriver._id)}>View Trip Breakdown</button>
                   <button className="btn" style={{ background: '#f3f4f6' }} onClick={() => toast.success('Earnings report downloaded')}>Download Report</button>
                 </div>
               </div>
@@ -658,25 +864,27 @@ const DriverManagement = () => {
             {detailTab === 'actions' && (
               <div className="driver-detail">
                 <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+                    <span style={{ fontWeight: 600 }}>Account Status</span>
+                    <button className="btn btn-sm" style={{ background: selectedDriver.status === 'active' ? '#10b981' : '#6b7280', color: 'white' }} onClick={() => selectedDriver.status === 'active' ? handleSuspend(selectedDriver._id, 'Deactivated by admin') : handleReactivate(selectedDriver._id)}>
+                      {selectedDriver.status === 'active' ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </div>
                   <button className="btn" style={{ background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowMessageModal(true); }}>
-                    <FaPaperPlane /> Send Message
+                    <FaEnvelope /> Send Message
                   </button>
-                  <button className="btn" style={{ background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowWarnModal(true); }}>
+                  <button className="btn" style={{ background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowWarnModal(true); }}>
                     <FaExclamationTriangle /> Issue Warning
                   </button>
-                  {selectedDriver.status === 'active' && (
-                    <button className="btn" style={{ background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowSuspendModal(true); }}>
-                      <FaBan /> Suspend Account
-                    </button>
-                  )}
-                  {selectedDriver.status === 'suspended' && (
+                  <button className="btn" style={{ background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowSuspendModal(true); }}>
+                    <FaBan /> Suspend Driver
+                  </button>
+                  <button className="btn" style={{ background: '#7f1d1d15', color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowBanModal(true); }}>
+                    <FaBan /> Permanently Ban
+                  </button>
+                  {(selectedDriver.status === 'suspended' || selectedDriver.status === 'banned') && (
                     <button className="btn" style={{ background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => handleReactivate(selectedDriver._id)}>
-                      <FaUnlock /> Reactivate Account
-                    </button>
-                  )}
-                  {selectedDriver.status !== 'banned' && (
-                    <button className="btn" style={{ background: '#7f1d1d15', color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowBanModal(true); }}>
-                      <FaTrash /> Permanent Ban
+                      <FaCheck /> Reactivate Driver
                     </button>
                   )}
                 </div>
@@ -803,11 +1011,74 @@ const DriverManagement = () => {
               <div className="detail-row"><span className="detail-key">Issue</span><span className="detail-val">{selectedDriver.issue}</span></div>
               <div className="detail-row"><span className="detail-key">Amount</span><span className="detail-val">ETB {selectedDriver.amount || 0}</span></div>
             </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Fare Adjustment (ETB)</label>
+              <input type="number" value={fareAdjustment} onChange={e => setFareAdjustment(Number(e.target.value))} placeholder="0" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
+            </div>
             <textarea value={disputeResolution} onChange={e => setDisputeResolution(e.target.value)} placeholder="Resolution notes..." style={{ width: '100%', minHeight: 80, padding: 12, borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, resize: 'vertical', marginTop: 12 }} />
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button className="btn btn-primary" style={{ background: '#10b981' }} onClick={() => handleResolveDispute(selectedDriver._id)}>Mark Resolved</button>
               <button className="btn" style={{ background: '#f3f4f6' }} onClick={() => setShowDisputeModal(false)}>Cancel</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== COMMISSION ADJUSTMENT MODAL ===== */}
+      {showCommissionModal && selectedDriver && (
+        <div className="modal-overlay" onClick={() => setShowCommissionModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <h3>Adjust Commission Rate</h3>
+              <button className="modal-close" onClick={() => setShowCommissionModal(false)}><FaTimes /></button>
+            </div>
+            <div className="driver-detail">
+              <div className="detail-row"><span className="detail-key">Driver</span><span className="detail-val">{selectedDriver.firstName} {selectedDriver.lastName}</span></div>
+              <div className="detail-row"><span className="detail-key">Current Rate</span><span className="detail-val">{selectedDriver.commissionRate || 10}%</span></div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>New Commission Rate (%)</label>
+              <input type="number" value={commissionRate} onChange={e => setCommissionRate(Number(e.target.value))} min="0" max="50" step="0.5" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button className="btn btn-primary" style={{ background: '#3b82f6' }} onClick={() => handleAdjustCommission(selectedDriver._id)}>Update Rate</button>
+              <button className="btn" style={{ background: '#f3f4f6' }} onClick={() => setShowCommissionModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== TRIPS BREAKDOWN MODAL ===== */}
+      {showTripsModal && selectedDriver && (
+        <div className="modal-overlay" onClick={() => setShowTripsModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600, maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <h3>Trip Breakdown - {selectedDriver.firstName} {selectedDriver.lastName}</h3>
+              <button className="modal-close" onClick={() => setShowTripsModal(false)}><FaTimes /></button>
+            </div>
+            {selectedDriverTrips.length > 0 ? (
+              <div className="admin-activity-list">
+                {selectedDriverTrips.map(trip => (
+                  <div key={trip._id} className="admin-activity-item">
+                    <div className="admin-activity-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}><FaCar /></div>
+                    <div className="admin-activity-info" style={{ flex: 1 }}>
+                      <div className="admin-activity-text">{trip.from} → {trip.to}</div>
+                      <div className="admin-activity-time">{trip.date} • {trip.duration}</div>
+                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                        Base Fare: ETB {trip.fare?.baseFare || 0} | Distance: ETB {trip.fare?.distanceFare || 0} | Commission: ETB {trip.fare?.commission || 0}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#10b981' }}>
+                      ETB {trip.fare?.totalFare || trip.fare || 0}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>
+                No trip data available
+              </div>
+            )}
           </div>
         </div>
       )}

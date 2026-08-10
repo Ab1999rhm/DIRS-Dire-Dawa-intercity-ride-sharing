@@ -75,9 +75,41 @@ const initializeSocket = (server) => {
           }
         });
 
+        // Speed monitoring alert (exceeds 80 km/h)
+        if (speed && speed > 80) {
+          io.to('admins').emit('speed_alert', {
+            driverId: socket.userId,
+            speed,
+            coordinates,
+            timestamp: new Date()
+          });
+        }
+
+        // Geofencing check (Dire Dawa service area bounds)
+        const [lon, lat] = coordinates;
+        const direDawaBounds = { minLat: 9.55, maxLat: 9.66, minLon: 41.80, maxLon: 41.92 };
+        if (lat < direDawaBounds.minLat || lat > direDawaBounds.maxLat || 
+            lon < direDawaBounds.minLon || lon > direDawaBounds.maxLon) {
+          io.to('admins').emit('geofence_alert', {
+            driverId: socket.userId,
+            coordinates,
+            message: 'Driver left service area',
+            timestamp: new Date()
+          });
+        }
+
         if (tripId) {
           io.to(`trip_${tripId}`).emit('driver_location', {
             driverId: socket.userId,
+            coordinates,
+            speed,
+            heading,
+            timestamp: new Date()
+          });
+          // Also emit to admins for live tracking
+          io.to('admins').emit('driver_location_update', {
+            driverId: socket.userId,
+            tripId,
             coordinates,
             speed,
             heading,

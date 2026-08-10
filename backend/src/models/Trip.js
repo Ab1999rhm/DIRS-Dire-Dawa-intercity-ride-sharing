@@ -77,6 +77,61 @@ const tripSchema = new mongoose.Schema({
     ref: 'Rating',
     default: null
   },
+  responseTime: {
+    type: Number,
+    default: 0
+  },
+  hasDispute: {
+    type: Boolean,
+    default: false
+  },
+  disputeIssue: {
+    type: String,
+    default: null
+  },
+  disputeStatus: {
+    type: String,
+    enum: ['open', 'investigating', 'resolved'],
+    default: 'open'
+  },
+  disputeResolution: {
+    type: String,
+    default: null
+  },
+  hasLostItem: {
+    type: Boolean,
+    default: false
+  },
+  lostItemDescription: {
+    type: String,
+    default: null
+  },
+  lostItemStatus: {
+    type: String,
+    enum: ['pending', 'in_transit', 'returned'],
+    default: 'pending'
+  },
+  hasDriverIssue: {
+    type: Boolean,
+    default: false
+  },
+  driverIssueType: {
+    type: String,
+    default: null
+  },
+  driverIssueDescription: {
+    type: String,
+    default: null
+  },
+  driverIssueStatus: {
+    type: String,
+    enum: ['open', 'resolved'],
+    default: 'open'
+  },
+  driverIssueResolution: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now
