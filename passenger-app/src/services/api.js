@@ -103,4 +103,15 @@ export const promosAPI = {
   validateCode: (code, fare) => api.post('/promos/validate', { code, fare })
 };
 
+export const contentAPI = {
+  getActiveAnnouncements: (params) => api.get('/content/announcements/active', { params }),
+  trackAnnouncementView: (id) => api.post(`/content/announcements/${id}/track-view`),
+  trackAnnouncementClick: (id) => api.post(`/content/announcements/${id}/track-click`),
+  getActiveInAppContent: (params) => api.get('/content/in-app/active', { params }),
+  trackContentView: (id) => api.post(`/content/in-app/${id}/track-view`),
+  trackContentClick: (id) => api.post(`/content/in-app/${id}/track-click`),
+  trackNotificationOpen: (id) => api.post(`/content/push-notifications/${id}/track-open`),
+  trackNotificationClick: (id) => api.post(`/content/push-notifications/${id}/track-click`)
+};
+
 export default api;

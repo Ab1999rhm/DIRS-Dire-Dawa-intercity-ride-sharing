@@ -464,6 +464,144 @@ export const adminAPI = {
   getPeriodComparison: (params) => api.get('/admin/analytics/compare/periods', { params }),
   getYearOverYear: (params) => api.get('/admin/analytics/compare/year-over-year', { params }),
   getCompetitorAnalysis: (params) => api.get('/admin/analytics/compare/competitors', { params }),
+  // ==================== CONTENT & NOTIFICATIONS ====================
+  // Push Notifications
+  createPushNotification: (data) => api.post('/admin/content/push-notifications', data),
+  getPushNotifications: (params) => api.get('/admin/content/push-notifications', { params }),
+  getPushNotification: (id) => api.get(`/admin/content/push-notifications/${id}`),
+  updatePushNotification: (id, data) => api.put(`/admin/content/push-notifications/${id}`, data),
+  deletePushNotification: (id) => api.delete(`/admin/content/push-notifications/${id}`),
+  cancelPushNotification: (id) => api.put(`/admin/content/push-notifications/${id}/cancel`),
+  trackNotificationOpen: (id) => api.post(`/admin/content/push-notifications/${id}/track-open`),
+  trackNotificationClick: (id) => api.post(`/admin/content/push-notifications/${id}/track-click`),
+  // Notification Templates
+  createNotificationTemplate: (data) => api.post('/admin/content/notification-templates', data),
+  getNotificationTemplates: (params) => api.get('/admin/content/notification-templates', { params }),
+  updateNotificationTemplate: (id, data) => api.put(`/admin/content/notification-templates/${id}`, data),
+  deleteNotificationTemplate: (id) => api.delete(`/admin/content/notification-templates/${id}`),
+  // Announcements
+  createAnnouncement: (data) => api.post('/admin/content/announcements', data),
+  getAnnouncements: (params) => api.get('/admin/content/announcements', { params }),
+  getActiveAnnouncements: (params) => api.get('/admin/content/announcements/active', { params }),
+  updateAnnouncement: (id, data) => api.put(`/admin/content/announcements/${id}`, data),
+  deleteAnnouncement: (id) => api.delete(`/admin/content/announcements/${id}`),
+  pinAnnouncement: (id, data) => api.put(`/admin/content/announcements/${id}/pin`, data),
+  trackAnnouncementView: (id) => api.post(`/admin/content/announcements/${id}/track-view`),
+  trackAnnouncementClick: (id) => api.post(`/admin/content/announcements/${id}/track-click`),
+  // Promo Codes
+  createPromoCode: (data) => api.post('/admin/content/promo-codes', data),
+  getPromoCodes: (params) => api.get('/admin/content/promo-codes', { params }),
+  getPromoCode: (code) => api.get(`/admin/content/promo-codes/${code}`),
+  validatePromoCode: (data) => api.post('/admin/content/promo-codes/validate', data),
+  updatePromoCode: (id, data) => api.put(`/admin/content/promo-codes/${id}`, data),
+  deletePromoCode: (id) => api.delete(`/admin/content/promo-codes/${id}`),
+  getPromoCodeAnalytics: (id) => api.get(`/admin/content/promo-codes/${id}/analytics`),
+  // Email Campaigns
+  createEmailCampaign: (data) => api.post('/admin/content/email-campaigns', data),
+  getEmailCampaigns: (params) => api.get('/admin/content/email-campaigns', { params }),
+  getEmailCampaign: (id) => api.get(`/admin/content/email-campaigns/${id}`),
+  updateEmailCampaign: (id, data) => api.put(`/admin/content/email-campaigns/${id}`, data),
+  deleteEmailCampaign: (id) => api.delete(`/admin/content/email-campaigns/${id}`),
+  cancelEmailCampaign: (id) => api.put(`/admin/content/email-campaigns/${id}/cancel`),
+  // Email Templates
+  createEmailTemplate: (data) => api.post('/admin/content/email-templates', data),
+  getEmailTemplates: (params) => api.get('/admin/content/email-templates', { params }),
+  updateEmailTemplate: (id, data) => api.put(`/admin/content/email-templates/${id}`, data),
+  deleteEmailTemplate: (id) => api.delete(`/admin/content/email-templates/${id}`),
+  // SMS Campaigns
+  createSMSCampaign: (data) => api.post('/admin/content/sms-campaigns', data),
+  getSMSCampaigns: (params) => api.get('/admin/content/sms-campaigns', { params }),
+  getSMSCampaign: (id) => api.get(`/admin/content/sms-campaigns/${id}`),
+  updateSMSCampaign: (id, data) => api.put(`/admin/content/sms-campaigns/${id}`, data),
+  deleteSMSCampaign: (id) => api.delete(`/admin/content/sms-campaigns/${id}`),
+  // SMS Templates
+  createSMSTemplate: (data) => api.post('/admin/content/sms-templates', data),
+  getSMSTemplates: (params) => api.get('/admin/content/sms-templates', { params }),
+  updateSMSTemplate: (id, data) => api.put(`/admin/content/sms-templates/${id}`, data),
+  deleteSMSTemplate: (id) => api.delete(`/admin/content/sms-templates/${id}`),
+  // In-App Content
+  createInAppContent: (data) => api.post('/admin/content/in-app', data),
+  getInAppContent: (params) => api.get('/admin/content/in-app', { params }),
+  getActiveInAppContent: (params) => api.get('/admin/content/in-app/active', { params }),
+  updateInAppContent: (id, data) => api.put(`/admin/content/in-app/${id}`, data),
+  deleteInAppContent: (id) => api.delete(`/admin/content/in-app/${id}`),
+  trackContentView: (id) => api.post(`/admin/content/in-app/${id}/track-view`),
+  trackContentClick: (id) => api.post(`/admin/content/in-app/${id}/track-click`),
+  // User Segments
+  createUserSegment: (data) => api.post('/admin/content/segments', data),
+  getUserSegments: (params) => api.get('/admin/content/segments', { params }),
+  getUserSegment: (id) => api.get(`/admin/content/segments/${id}`),
+  updateUserSegment: (id, data) => api.put(`/admin/content/segments/${id}`, data),
+  deleteUserSegment: (id) => api.delete(`/admin/content/segments/${id}`),
+  recalculateSegmentSize: (id) => api.post(`/admin/content/segments/${id}/recalculate`),
+  // Campaign Analytics
+  getCampaignAnalytics: (campaignType, campaignId) => api.get(`/admin/content/analytics/${campaignType}/${campaignId}`),
+  getOverallAnalytics: (params) => api.get('/admin/content/analytics', { params }),
+  calculateCampaignROI: (campaignType, campaignId) => api.get(`/admin/content/analytics/${campaignType}/${campaignId}/roi`),
+  // Automation Rules
+  createAutomationRule: (data) => api.post('/admin/content/automation', data),
+  getAutomationRules: (params) => api.get('/admin/content/automation', { params }),
+  getAutomationRule: (id) => api.get(`/admin/content/automation/${id}`),
+  updateAutomationRule: (id, data) => api.put(`/admin/content/automation/${id}`, data),
+  deleteAutomationRule: (id) => api.delete(`/admin/content/automation/${id}`),
+  toggleAutomationRule: (id, data) => api.put(`/admin/content/automation/${id}/toggle`, data),
+  executeAutomationRule: (id) => api.post(`/admin/content/automation/${id}/execute`),
+  getAutomationHistory: (id) => api.get(`/admin/content/automation/${id}/history`),
+  // ==================== SYSTEM CONFIGURATION ====================
+  // Pricing & Tariffs
+  createPricingConfig: (data) => api.post('/admin/config/pricing', data),
+  getPricingConfigs: (params) => api.get('/admin/config/pricing', { params }),
+  updatePricingConfig: (id, data) => api.put(`/admin/config/pricing/${id}`, data),
+  deletePricingConfig: (id) => api.delete(`/admin/config/pricing/${id}`),
+  // Service Areas
+  createServiceZone: (data) => api.post('/admin/config/zones', data),
+  getServiceZones: (params) => api.get('/admin/config/zones', { params }),
+  updateServiceZone: (id, data) => api.put(`/admin/config/zones/${id}`, data),
+  deleteServiceZone: (id) => api.delete(`/admin/config/zones/${id}`),
+  // Vehicle Categories
+  createVehicleCategory: (data) => api.post('/admin/config/vehicles/categories', data),
+  getVehicleCategories: (params) => api.get('/admin/config/vehicles/categories', { params }),
+  updateVehicleCategory: (id, data) => api.put(`/admin/config/vehicles/categories/${id}`, data),
+  deleteVehicleCategory: (id) => api.delete(`/admin/config/vehicles/categories/${id}`),
+  // Platform Settings
+  getPlatformSettings: () => api.get('/admin/config/platform'),
+  updatePlatformSettings: (data) => api.put('/admin/config/platform', data),
+  // Notification Settings
+  getNotificationSettings: () => api.get('/admin/config/notifications'),
+  updateNotificationSettings: (data) => api.put('/admin/config/notifications', data),
+  // Security Settings
+  getSecuritySettings: () => api.get('/admin/config/security'),
+  updateSecuritySettings: (data) => api.put('/admin/config/security', data),
+  // Feature Flags
+  createFeatureFlag: (data) => api.post('/admin/config/features', data),
+  getFeatureFlags: (params) => api.get('/admin/config/features', { params }),
+  updateFeatureFlag: (id, data) => api.put(`/admin/config/features/${id}`, data),
+  deleteFeatureFlag: (id) => api.delete(`/admin/config/features/${id}`),
+  toggleFeatureFlag: (id, data) => api.put(`/admin/config/features/${id}/toggle`, data),
+  // Deployment Settings
+  createDeploymentConfig: (data) => api.post('/admin/config/deployment', data),
+  getDeploymentConfigs: (params) => api.get('/admin/config/deployment', { params }),
+  updateDeploymentConfig: (id, data) => api.put(`/admin/config/deployment/${id}`, data),
+  toggleMaintenanceMode: (data) => api.put('/admin/config/deployment/maintenance', data),
+  // Performance Settings
+  getPerformanceConfig: () => api.get('/admin/config/performance'),
+  updatePerformanceConfig: (data) => api.put('/admin/config/performance', data),
+  // Localization Settings
+  getLocalizationConfig: () => api.get('/admin/config/localization'),
+  updateLocalizationConfig: (data) => api.put('/admin/config/localization', data),
+  // Audit Logs
+  getAuditLogs: (params) => api.get('/admin/config/audit-logs', { params }),
+  getAuditLog: (id) => api.get(`/admin/config/audit-logs/${id}`),
+  // API Keys
+  createAPIKey: (data) => api.post('/admin/config/api-keys', data),
+  getAPIKeys: (params) => api.get('/admin/config/api-keys', { params }),
+  revokeAPIKey: (id) => api.put(`/admin/config/api-keys/${id}/revoke`),
+  // Webhooks
+  createWebhook: (data) => api.post('/admin/config/webhooks', data),
+  getWebhooks: (params) => api.get('/admin/config/webhooks', { params }),
+  updateWebhook: (id, data) => api.put(`/admin/config/webhooks/${id}`, data),
+  deleteWebhook: (id) => api.delete(`/admin/config/webhooks/${id}`),
+  testWebhook: (id) => api.post(`/admin/config/webhooks/${id}/test`),
 };
 
 // Network status helper

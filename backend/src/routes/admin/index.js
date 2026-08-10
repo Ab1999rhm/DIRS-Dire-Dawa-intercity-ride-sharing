@@ -286,4 +286,170 @@ router.post('/content/push-notification', protect, authorize('admin'), adminCont
 router.post('/content/announcements', protect, authorize('admin'), adminController.createAnnouncement);
 router.post('/content/driver-announcement', protect, authorize('admin'), adminController.sendDriverAnnouncement);
 
+// ==================== CONTENT & NOTIFICATIONS ROUTES ====================
+
+// Push Notifications
+router.post('/content/push-notifications', protect, authorize('admin'), adminController.createPushNotification);
+router.get('/content/push-notifications', protect, authorize('admin'), adminController.getPushNotifications);
+router.get('/content/push-notifications/:id', protect, authorize('admin'), adminController.getPushNotification);
+router.put('/content/push-notifications/:id', protect, authorize('admin'), adminController.updatePushNotification);
+router.delete('/content/push-notifications/:id', protect, authorize('admin'), adminController.deletePushNotification);
+router.put('/content/push-notifications/:id/cancel', protect, authorize('admin'), adminController.cancelPushNotification);
+router.post('/content/push-notifications/:id/track-open', protect, authorize('admin'), adminController.trackNotificationOpen);
+router.post('/content/push-notifications/:id/track-click', protect, authorize('admin'), adminController.trackNotificationClick);
+
+// Notification Templates
+router.post('/content/notification-templates', protect, authorize('admin'), adminController.createNotificationTemplate);
+router.get('/content/notification-templates', protect, authorize('admin'), adminController.getNotificationTemplates);
+router.put('/content/notification-templates/:id', protect, authorize('admin'), adminController.updateNotificationTemplate);
+router.delete('/content/notification-templates/:id', protect, authorize('admin'), adminController.deleteNotificationTemplate);
+
+// Announcements
+router.post('/content/announcements', protect, authorize('admin'), adminController.createAnnouncement);
+router.get('/content/announcements', protect, authorize('admin'), adminController.getAnnouncements);
+router.get('/content/announcements/active', protect, authorize('admin'), adminController.getActiveAnnouncements);
+router.get('/content/announcements/:id', protect, authorize('admin'), adminController.getAnnouncement);
+router.put('/content/announcements/:id', protect, authorize('admin'), adminController.updateAnnouncement);
+router.delete('/content/announcements/:id', protect, authorize('admin'), adminController.deleteAnnouncement);
+router.put('/content/announcements/:id/pin', protect, authorize('admin'), adminController.pinAnnouncement);
+router.post('/content/announcements/:id/track-view', protect, authorize('admin'), adminController.trackAnnouncementView);
+router.post('/content/announcements/:id/track-click', protect, authorize('admin'), adminController.trackAnnouncementClick);
+
+// Promo Codes
+router.post('/content/promo-codes', protect, authorize('admin'), adminController.createPromoCode);
+router.get('/content/promo-codes', protect, authorize('admin'), adminController.getPromoCodes);
+router.get('/content/promo-codes/:code', protect, authorize('admin'), adminController.getPromoCode);
+router.post('/content/promo-codes/validate', protect, authorize('admin'), adminController.validatePromoCode);
+router.put('/content/promo-codes/:id', protect, authorize('admin'), adminController.updatePromoCode);
+router.delete('/content/promo-codes/:id', protect, authorize('admin'), adminController.deletePromoCode);
+router.get('/content/promo-codes/:id/analytics', protect, authorize('admin'), adminController.getPromoCodeAnalytics);
+
+// Email Campaigns
+router.post('/content/email-campaigns', protect, authorize('admin'), adminController.createEmailCampaign);
+router.get('/content/email-campaigns', protect, authorize('admin'), adminController.getEmailCampaigns);
+router.get('/content/email-campaigns/:id', protect, authorize('admin'), adminController.getEmailCampaign);
+router.put('/content/email-campaigns/:id', protect, authorize('admin'), adminController.updateEmailCampaign);
+router.delete('/content/email-campaigns/:id', protect, authorize('admin'), adminController.deleteEmailCampaign);
+router.put('/content/email-campaigns/:id/cancel', protect, authorize('admin'), adminController.cancelEmailCampaign);
+
+// Email Templates
+router.post('/content/email-templates', protect, authorize('admin'), adminController.createEmailTemplate);
+router.get('/content/email-templates', protect, authorize('admin'), adminController.getEmailTemplates);
+router.put('/content/email-templates/:id', protect, authorize('admin'), adminController.updateEmailTemplate);
+router.delete('/content/email-templates/:id', protect, authorize('admin'), adminController.deleteEmailTemplate);
+
+// SMS Campaigns
+router.post('/content/sms-campaigns', protect, authorize('admin'), adminController.createSMSCampaign);
+router.get('/content/sms-campaigns', protect, authorize('admin'), adminController.getSMSCampaigns);
+router.get('/content/sms-campaigns/:id', protect, authorize('admin'), adminController.getSMSCampaign);
+router.put('/content/sms-campaigns/:id', protect, authorize('admin'), adminController.updateSMSCampaign);
+router.delete('/content/sms-campaigns/:id', protect, authorize('admin'), adminController.deleteSMSCampaign);
+
+// SMS Templates
+router.post('/content/sms-templates', protect, authorize('admin'), adminController.createSMSTemplate);
+router.get('/content/sms-templates', protect, authorize('admin'), adminController.getSMSTemplates);
+router.put('/content/sms-templates/:id', protect, authorize('admin'), adminController.updateSMSTemplate);
+router.delete('/content/sms-templates/:id', protect, authorize('admin'), adminController.deleteSMSTemplate);
+
+// In-App Content
+router.post('/content/in-app', protect, authorize('admin'), adminController.createInAppContent);
+router.get('/content/in-app', protect, authorize('admin'), adminController.getInAppContent);
+router.get('/content/in-app/active', protect, authorize('admin'), adminController.getActiveInAppContent);
+router.put('/content/in-app/:id', protect, authorize('admin'), adminController.updateInAppContent);
+router.delete('/content/in-app/:id', protect, authorize('admin'), adminController.deleteInAppContent);
+router.post('/content/in-app/:id/track-view', protect, authorize('admin'), adminController.trackContentView);
+router.post('/content/in-app/:id/track-click', protect, authorize('admin'), adminController.trackContentClick);
+
+// User Segments
+router.post('/content/segments', protect, authorize('admin'), adminController.createUserSegment);
+router.get('/content/segments', protect, authorize('admin'), adminController.getUserSegments);
+router.get('/content/segments/:id', protect, authorize('admin'), adminController.getUserSegment);
+router.put('/content/segments/:id', protect, authorize('admin'), adminController.updateUserSegment);
+router.delete('/content/segments/:id', protect, authorize('admin'), adminController.deleteUserSegment);
+router.post('/content/segments/:id/recalculate', protect, authorize('admin'), adminController.recalculateSegmentSize);
+
+// Campaign Analytics
+router.get('/content/analytics/:campaignType/:campaignId', protect, authorize('admin'), adminController.getCampaignAnalytics);
+router.get('/content/analytics', protect, authorize('admin'), adminController.getOverallAnalytics);
+router.get('/content/analytics/:campaignType/:campaignId/roi', protect, authorize('admin'), adminController.calculateCampaignROI);
+
+// Automation Rules
+router.post('/content/automation', protect, authorize('admin'), adminController.createAutomationRule);
+router.get('/content/automation', protect, authorize('admin'), adminController.getAutomationRules);
+router.get('/content/automation/:id', protect, authorize('admin'), adminController.getAutomationRule);
+router.put('/content/automation/:id', protect, authorize('admin'), adminController.updateAutomationRule);
+router.delete('/content/automation/:id', protect, authorize('admin'), adminController.deleteAutomationRule);
+router.put('/content/automation/:id/toggle', protect, authorize('admin'), adminController.toggleAutomationRule);
+router.post('/content/automation/:id/execute', protect, authorize('admin'), adminController.executeAutomationRule);
+router.get('/content/automation/:id/history', protect, authorize('admin'), adminController.getAutomationHistory);
+
+// ==================== SYSTEM CONFIGURATION ROUTES ====================
+
+// Pricing & Tariffs
+router.post('/config/pricing', protect, authorize('admin'), adminController.createPricingConfig);
+router.get('/config/pricing', protect, authorize('admin'), adminController.getPricingConfigs);
+router.put('/config/pricing/:id', protect, authorize('admin'), adminController.updatePricingConfig);
+router.delete('/config/pricing/:id', protect, authorize('admin'), adminController.deletePricingConfig);
+
+// Service Areas
+router.post('/config/zones', protect, authorize('admin'), adminController.createServiceZone);
+router.get('/config/zones', protect, authorize('admin'), adminController.getServiceZones);
+router.put('/config/zones/:id', protect, authorize('admin'), adminController.updateServiceZone);
+router.delete('/config/zones/:id', protect, authorize('admin'), adminController.deleteServiceZone);
+
+// Vehicle Categories
+router.post('/config/vehicles/categories', protect, authorize('admin'), adminController.createVehicleCategory);
+router.get('/config/vehicles/categories', protect, authorize('admin'), adminController.getVehicleCategories);
+router.put('/config/vehicles/categories/:id', protect, authorize('admin'), adminController.updateVehicleCategory);
+router.delete('/config/vehicles/categories/:id', protect, authorize('admin'), adminController.deleteVehicleCategory);
+
+// Platform Settings
+router.get('/config/platform', protect, authorize('admin'), adminController.getPlatformSettings);
+router.put('/config/platform', protect, authorize('admin'), adminController.updatePlatformSettings);
+
+// Notification Settings
+router.get('/config/notifications', protect, authorize('admin'), adminController.getNotificationSettings);
+router.put('/config/notifications', protect, authorize('admin'), adminController.updateNotificationSettings);
+
+// Security Settings
+router.get('/config/security', protect, authorize('admin'), adminController.getSecuritySettings);
+router.put('/config/security', protect, authorize('admin'), adminController.updateSecuritySettings);
+
+// Feature Flags
+router.post('/config/features', protect, authorize('admin'), adminController.createFeatureFlag);
+router.get('/config/features', protect, authorize('admin'), adminController.getFeatureFlags);
+router.put('/config/features/:id', protect, authorize('admin'), adminController.updateFeatureFlag);
+router.delete('/config/features/:id', protect, authorize('admin'), adminController.deleteFeatureFlag);
+router.put('/config/features/:id/toggle', protect, authorize('admin'), adminController.toggleFeatureFlag);
+
+// Deployment Settings
+router.post('/config/deployment', protect, authorize('admin'), adminController.createDeploymentConfig);
+router.get('/config/deployment', protect, authorize('admin'), adminController.getDeploymentConfigs);
+router.put('/config/deployment/:id', protect, authorize('admin'), adminController.updateDeploymentConfig);
+router.put('/config/deployment/maintenance', protect, authorize('admin'), adminController.toggleMaintenanceMode);
+
+// Performance Settings
+router.get('/config/performance', protect, authorize('admin'), adminController.getPerformanceConfig);
+router.put('/config/performance', protect, authorize('admin'), adminController.updatePerformanceConfig);
+
+// Localization Settings
+router.get('/config/localization', protect, authorize('admin'), adminController.getLocalizationConfig);
+router.put('/config/localization', protect, authorize('admin'), adminController.updateLocalizationConfig);
+
+// Audit Logs
+router.get('/config/audit-logs', protect, authorize('admin'), adminController.getAuditLogs);
+router.get('/config/audit-logs/:id', protect, authorize('admin'), adminController.getAuditLog);
+
+// API Keys
+router.post('/config/api-keys', protect, authorize('admin'), adminController.createAPIKey);
+router.get('/config/api-keys', protect, authorize('admin'), adminController.getAPIKeys);
+router.put('/config/api-keys/:id/revoke', protect, authorize('admin'), adminController.revokeAPIKey);
+
+// Webhooks
+router.post('/config/webhooks', protect, authorize('admin'), adminController.createWebhook);
+router.get('/config/webhooks', protect, authorize('admin'), adminController.getWebhooks);
+router.put('/config/webhooks/:id', protect, authorize('admin'), adminController.updateWebhook);
+router.delete('/config/webhooks/:id', protect, authorize('admin'), adminController.deleteWebhook);
+router.post('/config/webhooks/:id/test', protect, authorize('admin'), adminController.testWebhook);
+
 module.exports = router;

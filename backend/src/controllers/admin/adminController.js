@@ -25,6 +25,19 @@ const InAppContent = require('../../models/InAppContent');
 const UserSegment = require('../../models/UserSegment');
 const CampaignAnalytics = require('../../models/CampaignAnalytics');
 const AutomationRule = require('../../models/AutomationRule');
+const PricingConfig = require('../../models/PricingConfig');
+const ServiceZone = require('../../models/ServiceZone');
+const VehicleCategory = require('../../models/VehicleCategory');
+const PlatformSettings = require('../../models/PlatformSettings');
+const NotificationSettings = require('../../models/NotificationSettings');
+const SecuritySettings = require('../../models/SecuritySettings');
+const FeatureFlag = require('../../models/FeatureFlag');
+const DeploymentConfig = require('../../models/DeploymentConfig');
+const PerformanceConfig = require('../../models/PerformanceConfig');
+const LocalizationConfig = require('../../models/LocalizationConfig');
+const AuditLog = require('../../models/AuditLog');
+const APIKey = require('../../models/APIKey');
+const WebhookConfig = require('../../models/WebhookConfig');
 const { createNotification } = require('../../services/notificationService');
 const { getIO } = require('../../sockets/socketManager');
 const logger = require('../../config/logger');
@@ -5417,3 +5430,491 @@ async function executeAutomation(rule) {
     return { success: false, error: error.message };
   }
 }
+
+// ==================== SYSTEM CONFIGURATION APIs ====================
+
+// Pricing & Tariffs
+exports.createPricingConfig = asyncHandler(async (req, res) => {
+  const config = await PricingConfig.create({
+    ...req.body,
+    createdBy: req.user._id
+  });
+  await createAuditLog('pricing', config._id, 'create', req.user._id, null, config);
+  res.json({ message: 'Pricing config created', config });
+});
+
+exports.getPricingConfigs = asyncHandler(async (req, res) => {
+  const { zoneId, vehicleType, isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (zoneId) query.zoneId = zoneId;
+  if (vehicleType) query.vehicleType = vehicleType;
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const configs = await PricingConfig.find(query)
+    .populate('zoneId')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await PricingConfig.countDocuments(query);
+  res.json({ configs, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.updatePricingConfig = asyncHandler(async (req, res) => {
+  const oldConfig = await PricingConfig.findById(req.params.id);
+  const config = await PricingConfig.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  await createAuditLog('pricing', config._id, 'update', req.user._id, oldConfig, config);
+  res.json({ message: 'Pricing config updated', config });
+});
+
+exports.deletePricingConfig = asyncHandler(async (req, res) => {
+  const config = await PricingConfig.findByIdAndDelete(req.params.id);
+  await createAuditLog('pricing', config._id, 'delete', req.user._id, config, null);
+  res.json({ message: 'Pricing config deleted' });
+});
+
+// Service Areas
+exports.createServiceZone = asyncHandler(async (req, res) => {
+  const zone = await ServiceZone.create({
+    ...req.body,
+    createdBy: req.user._id
+  });
+  await createAuditLog('service_zone', zone._id, 'create', req.user._id, null, zone);
+  res.json({ message: 'Service zone created', zone });
+});
+
+exports.getServiceZones = asyncHandler(async (req, res) => {
+  const { zoneType, isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (zoneType) query.zoneType = zoneType;
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const zones = await ServiceZone.find(query)
+    .populate('adjacentZones')
+    .sort({ priority: -1, createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await ServiceZone.countDocuments(query);
+  res.json({ zones, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.updateServiceZone = asyncHandler(async (req, res) => {
+  const oldZone = await ServiceZone.findById(req.params.id);
+  const zone = await ServiceZone.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  await createAuditLog('service_zone', zone._id, 'update', req.user._id, oldZone, zone);
+  res.json({ message: 'Service zone updated', zone });
+});
+
+exports.deleteServiceZone = asyncHandler(async (req, res) => {
+  const zone = await ServiceZone.findByIdAndDelete(req.params.id);
+  await createAuditLog('service_zone', zone._id, 'delete', req.user._id, zone, null);
+  res.json({ message: 'Service zone deleted' });
+});
+
+// Vehicle Categories
+exports.createVehicleCategory = asyncHandler(async (req, res) => {
+  const category = await VehicleCategory.create({
+    ...req.body,
+    createdBy: req.user._id
+  });
+  await createAuditLog('vehicle_category', category._id, 'create', req.user._id, null, category);
+  res.json({ message: 'Vehicle category created', category });
+});
+
+exports.getVehicleCategories = asyncHandler(async (req, res) => {
+  const { isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const categories = await VehicleCategory.find(query)
+    .sort({ sortOrder: 1, createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await VehicleCategory.countDocuments(query);
+  res.json({ categories, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.updateVehicleCategory = asyncHandler(async (req, res) => {
+  const oldCategory = await VehicleCategory.findById(req.params.id);
+  const category = await VehicleCategory.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  await createAuditLog('vehicle_category', category._id, 'update', req.user._id, oldCategory, category);
+  res.json({ message: 'Vehicle category updated', category });
+});
+
+exports.deleteVehicleCategory = asyncHandler(async (req, res) => {
+  const category = await VehicleCategory.findByIdAndDelete(req.params.id);
+  await createAuditLog('vehicle_category', category._id, 'delete', req.user._id, category, null);
+  res.json({ message: 'Vehicle category deleted' });
+});
+
+// Platform Settings
+exports.getPlatformSettings = asyncHandler(async (req, res) => {
+  const settings = await PlatformSettings.findOne({ isActive: true });
+  res.json({ settings });
+});
+
+exports.updatePlatformSettings = asyncHandler(async (req, res) => {
+  const oldSettings = await PlatformSettings.findOne({ isActive: true });
+  const settings = await PlatformSettings.findOneAndUpdate(
+    { isActive: true },
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date(), version: mongoose.Types.ObjectId() },
+    { new: true, upsert: true }
+  );
+  await createAuditLog('platform_settings', settings._id, 'update', req.user._id, oldSettings, settings);
+  res.json({ message: 'Platform settings updated', settings });
+});
+
+// Notification Settings
+exports.getNotificationSettings = asyncHandler(async (req, res) => {
+  const settings = await NotificationSettings.findOne({ isActive: true });
+  res.json({ settings });
+});
+
+exports.updateNotificationSettings = asyncHandler(async (req, res) => {
+  const oldSettings = await NotificationSettings.findOne({ isActive: true });
+  const settings = await NotificationSettings.findOneAndUpdate(
+    { isActive: true },
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date(), version: mongoose.Types.ObjectId() },
+    { new: true, upsert: true }
+  );
+  await createAuditLog('notification_settings', settings._id, 'update', req.user._id, oldSettings, settings);
+  res.json({ message: 'Notification settings updated', settings });
+});
+
+// Security Settings
+exports.getSecuritySettings = asyncHandler(async (req, res) => {
+  const settings = await SecuritySettings.findOne({ isActive: true });
+  res.json({ settings });
+});
+
+exports.updateSecuritySettings = asyncHandler(async (req, res) => {
+  const oldSettings = await SecuritySettings.findOne({ isActive: true });
+  const settings = await SecuritySettings.findOneAndUpdate(
+    { isActive: true },
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date(), version: mongoose.Types.ObjectId() },
+    { new: true, upsert: true }
+  );
+  await createAuditLog('security_settings', settings._id, 'update', req.user._id, oldSettings, settings);
+  res.json({ message: 'Security settings updated', settings });
+});
+
+// Feature Flags
+exports.createFeatureFlag = asyncHandler(async (req, res) => {
+  const flag = await FeatureFlag.create({
+    ...req.body,
+    createdBy: req.user._id
+  });
+  await createAuditLog('feature_flag', flag._id, 'create', req.user._id, null, flag);
+  res.json({ message: 'Feature flag created', flag });
+});
+
+exports.getFeatureFlags = asyncHandler(async (req, res) => {
+  const { category, enabled, isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (category) query.category = category;
+  if (enabled !== undefined) query.enabled = enabled === 'true';
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const flags = await FeatureFlag.find(query)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await FeatureFlag.countDocuments(query);
+  res.json({ flags, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.updateFeatureFlag = asyncHandler(async (req, res) => {
+  const oldFlag = await FeatureFlag.findById(req.params.id);
+  const flag = await FeatureFlag.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  await createAuditLog('feature_flag', flag._id, 'update', req.user._id, oldFlag, flag);
+  res.json({ message: 'Feature flag updated', flag });
+});
+
+exports.deleteFeatureFlag = asyncHandler(async (req, res) => {
+  const flag = await FeatureFlag.findByIdAndDelete(req.params.id);
+  await createAuditLog('feature_flag', flag._id, 'delete', req.user._id, flag, null);
+  res.json({ message: 'Feature flag deleted' });
+});
+
+exports.toggleFeatureFlag = asyncHandler(async (req, res) => {
+  const flag = await FeatureFlag.findByIdAndUpdate(
+    req.params.id,
+    { enabled: req.body.enabled, updatedBy: req.user._id, updatedAt: new Date() },
+    { new: true }
+  );
+  await createAuditLog('feature_flag', flag._id, flag.enabled ? 'enable' : 'disable', req.user._id, null, flag);
+  res.json({ message: 'Feature flag toggled', flag });
+});
+
+// Deployment Settings
+exports.createDeploymentConfig = asyncHandler(async (req, res) => {
+  const config = await DeploymentConfig.create({
+    ...req.body,
+    deployedBy: req.user._id
+  });
+  await createAuditLog('deployment', config._id, 'create', req.user._id, null, config);
+  res.json({ message: 'Deployment config created', config });
+});
+
+exports.getDeploymentConfigs = asyncHandler(async (req, res) => {
+  const { environment, isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (environment) query.environment = environment;
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const configs = await DeploymentConfig.find(query)
+    .populate('deployedBy')
+    .sort({ deployedAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await DeploymentConfig.countDocuments(query);
+  res.json({ configs, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.updateDeploymentConfig = asyncHandler(async (req, res) => {
+  const oldConfig = await DeploymentConfig.findById(req.params.id);
+  const config = await DeploymentConfig.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  await createAuditLog('deployment', config._id, 'update', req.user._id, oldConfig, config);
+  res.json({ message: 'Deployment config updated', config });
+});
+
+exports.toggleMaintenanceMode = asyncHandler(async (req, res) => {
+  const { enabled, message, scheduledStart, scheduledEnd } = req.body;
+  const config = await DeploymentConfig.findOne({ environment: 'production', isActive: true });
+  
+  if (config) {
+    config.maintenanceMode = { enabled, message, scheduledStart, scheduledEnd };
+    await config.save();
+  } else {
+    await DeploymentConfig.create({
+      environment: 'production',
+      maintenanceMode: { enabled, message, scheduledStart, scheduledEnd },
+      deployedBy: req.user._id
+    });
+  }
+  
+  await createAuditLog('deployment', config?._id, 'update', req.user._id, null, config);
+  res.json({ message: 'Maintenance mode updated', config });
+});
+
+// Performance Settings
+exports.getPerformanceConfig = asyncHandler(async (req, res) => {
+  const config = await PerformanceConfig.findOne({ isActive: true });
+  res.json({ config });
+});
+
+exports.updatePerformanceConfig = asyncHandler(async (req, res) => {
+  const oldConfig = await PerformanceConfig.findOne({ isActive: true });
+  const config = await PerformanceConfig.findOneAndUpdate(
+    { isActive: true },
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date(), version: mongoose.Types.ObjectId() },
+    { new: true, upsert: true }
+  );
+  await createAuditLog('performance', config._id, 'update', req.user._id, oldConfig, config);
+  res.json({ message: 'Performance config updated', config });
+});
+
+// Localization Settings
+exports.getLocalizationConfig = asyncHandler(async (req, res) => {
+  const config = await LocalizationConfig.findOne({ isActive: true });
+  res.json({ config });
+});
+
+exports.updateLocalizationConfig = asyncHandler(async (req, res) => {
+  const oldConfig = await LocalizationConfig.findOne({ isActive: true });
+  const config = await LocalizationConfig.findOneAndUpdate(
+    { isActive: true },
+    { ...req.body, updatedBy: req.user._id, updatedAt: new Date(), version: mongoose.Types.ObjectId() },
+    { new: true, upsert: true }
+  );
+  await createAuditLog('localization', config._id, 'update', req.user._id, oldConfig, config);
+  res.json({ message: 'Localization config updated', config });
+});
+
+// Audit Logs
+exports.getAuditLogs = asyncHandler(async (req, res) => {
+  const { entityType, action, performedBy, page = 1, limit = 50 } = req.query;
+  const query = {};
+  if (entityType) query.entityType = entityType;
+  if (action) query.action = action;
+  if (performedBy) query.performedBy = performedBy;
+  
+  const logs = await AuditLog.find(query)
+    .populate('performedBy', 'name email')
+    .sort({ timestamp: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await AuditLog.countDocuments(query);
+  res.json({ logs, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.getAuditLog = asyncHandler(async (req, res) => {
+  const log = await AuditLog.findById(req.params.id).populate('performedBy', 'name email');
+  if (!log) {
+    return res.status(404).json({ error: 'Audit log not found' });
+  }
+  res.json({ log });
+});
+
+// API Keys
+exports.createAPIKey = asyncHandler(async (req, res) => {
+  const crypto = require('crypto');
+  const key = 'sk_' + crypto.randomBytes(32).toString('hex');
+  const keyHash = crypto.createHash('sha256').update(key).digest('hex');
+  
+  const apiKey = await APIKey.create({
+    ...req.body,
+    key,
+    keyHash,
+    createdBy: req.user._id
+  });
+  await createAuditLog('api_key', apiKey._id, 'create', req.user._id, null, apiKey);
+  res.json({ message: 'API key created', apiKey, key });
+});
+
+exports.getAPIKeys = asyncHandler(async (req, res) => {
+  const { isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const keys = await APIKey.find(query)
+    .populate('createdBy', 'name email')
+    .select('-keyHash')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await APIKey.countDocuments(query);
+  res.json({ keys, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.revokeAPIKey = asyncHandler(async (req, res) => {
+  const key = await APIKey.findByIdAndUpdate(
+    req.params.id,
+    { isActive: false, updatedAt: new Date() },
+    { new: true }
+  );
+  await createAuditLog('api_key', key._id, 'disable', req.user._id, null, key);
+  res.json({ message: 'API key revoked', key });
+});
+
+// Webhooks
+exports.createWebhook = asyncHandler(async (req, res) => {
+  const webhook = await WebhookConfig.create({
+    ...req.body,
+    createdBy: req.user._id
+  });
+  await createAuditLog('webhook', webhook._id, 'create', req.user._id, null, webhook);
+  res.json({ message: 'Webhook created', webhook });
+});
+
+exports.getWebhooks = asyncHandler(async (req, res) => {
+  const { isActive, page = 1, limit = 20 } = req.query;
+  const query = {};
+  if (isActive !== undefined) query.isActive = isActive === 'true';
+  
+  const webhooks = await WebhookConfig.find(query)
+    .populate('createdBy', 'name email')
+    .select('-secret')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+  
+  const total = await WebhookConfig.countDocuments(query);
+  res.json({ webhooks, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.updateWebhook = asyncHandler(async (req, res) => {
+  const oldWebhook = await WebhookConfig.findById(req.params.id);
+  const webhook = await WebhookConfig.findByIdAndUpdate(
+    req.params.id,
+    { ...req.body, updatedAt: new Date() },
+    { new: true, runValidators: true }
+  );
+  await createAuditLog('webhook', webhook._id, 'update', req.user._id, oldWebhook, webhook);
+  res.json({ message: 'Webhook updated', webhook });
+});
+
+exports.deleteWebhook = asyncHandler(async (req, res) => {
+  const webhook = await WebhookConfig.findByIdAndDelete(req.params.id);
+  await createAuditLog('webhook', webhook._id, 'delete', req.user._id, webhook, null);
+  res.json({ message: 'Webhook deleted' });
+});
+
+exports.testWebhook = asyncHandler(async (req, res) => {
+  const webhook = await WebhookConfig.findById(req.params.id);
+  if (!webhook) {
+    return res.status(404).json({ error: 'Webhook not found' });
+  }
+  
+  // Test webhook with sample payload
+  const axios = require('axios');
+  try {
+    await axios.post(webhook.url, {
+      test: true,
+      timestamp: new Date(),
+      event: 'test'
+    }, {
+      headers: webhook.headers,
+      timeout: webhook.timeout
+    });
+    res.json({ message: 'Webhook test successful' });
+  } catch (error) {
+    res.status(400).json({ error: 'Webhook test failed', details: error.message });
+  }
+});
+
+// Helper function for audit logging
+async function createAuditLog(entityType, entityId, action, performedBy, previousValues, newValues) {
+  try {
+    const changedFields = [];
+    if (previousValues && newValues) {
+      for (const key in newValues) {
+        if (JSON.stringify(previousValues[key]) !== JSON.stringify(newValues[key])) {
+          changedFields.push(key);
+        }
+      }
+    }
+    
+    await AuditLog.create({
+      entityType,
+      entityId,
+      action,
+      performedBy,
+      previousValues,
+      newValues,
+      changedFields,
+      ipAddress: null, // Would be set from request
+      userAgent: null, // Would be set from request
+      timestamp: new Date()
+    });
+  } catch (error) {
+    logger.error('Audit log creation failed', { error: error.message });
+  }
+}
+

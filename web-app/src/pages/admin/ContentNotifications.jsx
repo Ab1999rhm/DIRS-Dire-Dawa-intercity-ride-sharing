@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   FaBell, FaBullhorn, FaTag, FaEnvelope, FaSearch, FaFilter,
   FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaClock,
-  FaUsers, FaPaperPlane, FaCalendarAlt, FaEye, FaChartBar
+  FaUsers, FaPaperPlane, FaCalendarAlt, FaEye, FaChartBar,
+  FaSms, FaMobileAlt, FaLayerGroup, FaRobot, FaMagic
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -16,6 +17,11 @@ const ContentNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [promotions, setPromotions] = useState([]);
+  const [emailCampaigns, setEmailCampaigns] = useState([]);
+  const [smsCampaigns, setSMSCampaigns] = useState([]);
+  const [inAppContent, setInAppContent] = useState([]);
+  const [segments, setSegments] = useState([]);
+  const [automationRules, setAutomationRules] = useState([]);
   const [activeTab, setActiveTab] = useState('push');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [notificationData, setNotificationData] = useState({
@@ -31,21 +37,27 @@ const ContentNotifications = () => {
 
   const fetchContentData = async () => {
     try {
+      setLoading(true);
+      const [pushRes, announcementsRes, promosRes, emailRes, smsRes, inAppRes, segmentsRes, automationRes] = await Promise.all([
+        adminAPI.getPushNotifications({}),
+        adminAPI.getAnnouncements({}),
+        adminAPI.getPromoCodes({}),
+        adminAPI.getEmailCampaigns({}),
+        adminAPI.getSMSCampaigns({}),
+        adminAPI.getInAppContent({}),
+        adminAPI.getUserSegments({}),
+        adminAPI.getAutomationRules({})
+      ]);
+      
+      setNotifications(pushRes.data.notifications || []);
+      setAnnouncements(announcementsRes.data.announcements || []);
+      setPromotions(promosRes.data.promoCodes || []);
+      setEmailCampaigns(emailRes.data.campaigns || []);
+      setSMSCampaigns(smsRes.data.campaigns || []);
+      setInAppContent(inAppRes.data.content || []);
+      setSegments(segmentsRes.data.segments || []);
+      setAutomationRules(automationRes.data.rules || []);
       setLoading(false);
-      // Use mock data for functionality
-      setNotifications([
-        { id: 1, title: 'New Feature Alert', message: 'Check out our new ride scheduling feature!', status: 'sent', sentAt: new Date().toISOString(), target: 'all', reach: 1250 },
-        { id: 2, title: 'Promotion Reminder', message: 'Use code DIRS20 for 20% off!', status: 'scheduled', sentAt: new Date().toISOString(), target: 'passengers', reach: 0 },
-        { id: 3, title: 'Driver Update', message: 'New payment system now available for drivers', status: 'sent', sentAt: new Date().toISOString(), target: 'drivers', reach: 85 },
-      ]);
-      setAnnouncements([
-        { id: 1, title: 'System Maintenance', message: 'Scheduled maintenance on Jan 20 from 2-4 AM', status: 'active', createdAt: new Date().toISOString() },
-        { id: 2, title: 'Holiday Schedule', message: 'Special holiday hours during Christmas', status: 'inactive', createdAt: new Date().toISOString() },
-      ]);
-      setPromotions([
-        { id: 1, title: 'Weekend Special', code: 'WEEKEND20', discount: '20%', status: 'active', validUntil: new Date().toISOString(), usage: 145 },
-        { id: 2, title: 'New User Bonus', code: 'NEWUSER30', discount: '30%', status: 'active', validUntil: new Date().toISOString(), usage: 89 },
-      ]);
     } catch (err) {
       console.error('Failed to fetch content data:', err);
       setLoading(false);
@@ -58,7 +70,7 @@ const ContentNotifications = () => {
       return;
     }
     try {
-      await adminAPI.sendPushNotification(notificationData);
+      await adminAPI.createPushNotification(notificationData);
       toast.success('Notification sent successfully');
       setShowCreateModal(false);
       setNotificationData({ title: '', message: '', targetAudience: 'all', scheduledFor: '' });
@@ -152,6 +164,30 @@ const ContentNotifications = () => {
         >
           <FaEnvelope /> {t('admin.emailCampaigns') || 'Email Campaigns'}
         </button>
+        <button
+          className={`admin-filter-tab ${activeTab === 'sms' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sms')}
+        >
+          <FaSms /> {t('admin.smsCampaigns') || 'SMS Campaigns'}
+        </button>
+        <button
+          className={`admin-filter-tab ${activeTab === 'inapp' ? 'active' : ''}`}
+          onClick={() => setActiveTab('inapp')}
+        >
+          <FaMobileAlt /> {t('admin.inAppContent') || 'In-App Content'}
+        </button>
+        <button
+          className={`admin-filter-tab ${activeTab === 'segments' ? 'active' : ''}`}
+          onClick={() => setActiveTab('segments')}
+        >
+          <FaLayerGroup /> {t('admin.segments') || 'Segments'}
+        </button>
+        <button
+          className={`admin-filter-tab ${activeTab === 'automation' ? 'active' : ''}`}
+          onClick={() => setActiveTab('automation')}
+        >
+          <FaRobot /> {t('admin.automation') || 'Automation'}
+        </button>
       </div>
 
       {/* Stats */}
@@ -185,11 +221,47 @@ const ContentNotifications = () => {
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ background: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed' }}>
-            <FaUsers />
+            <FaEnvelope />
           </div>
           <div>
-            <div className="admin-stat-value">12.5K</div>
-            <div className="admin-stat-label">{t('admin.totalReach') || 'Total Reach'}</div>
+            <div className="admin-stat-value">{emailCampaigns.length}</div>
+            <div className="admin-stat-label">{t('admin.emailCampaigns') || 'Email Campaigns'}</div>
+          </div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon" style={{ background: 'rgba(236, 72, 153, 0.08)', color: '#ec4899' }}>
+            <FaSms />
+          </div>
+          <div>
+            <div className="admin-stat-value">{smsCampaigns.length}</div>
+            <div className="admin-stat-label">{t('admin.smsCampaigns') || 'SMS Campaigns'}</div>
+          </div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon" style={{ background: 'rgba(14, 165, 233, 0.08)', color: '#0ea5e9' }}>
+            <FaMobileAlt />
+          </div>
+          <div>
+            <div className="admin-stat-value">{inAppContent.filter(c => c.status === 'active').length}</div>
+            <div className="admin-stat-label">{t('admin.activeInApp') || 'Active In-App'}</div>
+          </div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon" style={{ background: 'rgba(99, 102, 241, 0.08)', color: '#6366f1' }}>
+            <FaLayerGroup />
+          </div>
+          <div>
+            <div className="admin-stat-value">{segments.filter(s => s.isActive).length}</div>
+            <div className="admin-stat-label">{t('admin.activeSegments') || 'Active Segments'}</div>
+          </div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon" style={{ background: 'rgba(34, 197, 94, 0.08)', color: '#22c55e' }}>
+            <FaRobot />
+          </div>
+          <div>
+            <div className="admin-stat-value">{automationRules.filter(r => r.isActive).length}</div>
+            <div className="admin-stat-label">{t('admin.activeAutomation') || 'Active Automation'}</div>
           </div>
         </div>
       </div>
@@ -305,16 +377,207 @@ const ContentNotifications = () => {
       )}
 
       {activeTab === 'email' && (
-        <div className="admin-empty" style={{ padding: '60px 20px' }}>
-          <div className="admin-empty-icon">
-            <FaEnvelope />
+        <>
+          <div className="admin-section-title">
+            <FaEnvelope /> {t('admin.emailCampaigns') || 'Email Campaigns'}
           </div>
-          <h3>{t('admin.emailCampaigns') || 'Email Campaigns'}</h3>
-          <p>{t('admin.emailCampaignsDescription') || 'Create and manage email marketing campaigns'}</p>
-          <button className="btn btn-primary" style={{ marginTop: 16 }}>
-            <FaPlus /> {t('admin.createCampaign') || 'Create Campaign'}
-          </button>
-        </div>
+          <div className="admin-activity-list">
+            {emailCampaigns.length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px' }}>
+                <p>No email campaigns yet</p>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowCreateModal(true)}>
+                  <FaPlus /> Create Campaign
+                </button>
+              </div>
+            ) : (
+              emailCampaigns.map((campaign) => (
+                <div key={campaign._id} className="admin-activity-item">
+                  <div className="admin-activity-icon" style={{ background: 'rgba(124, 58, 237, 0.08)', color: getStatusColor(campaign.status) }}>
+                    <FaEnvelope />
+                  </div>
+                  <div className="admin-activity-info">
+                    <div className="admin-activity-text">{campaign.name}</div>
+                    <div className="admin-activity-time">
+                      {campaign.subject} • {campaign.sentCount || 0} sent
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="status-badge" style={{
+                      background: campaign.status === 'sent' ? '#dcfce7' :
+                               campaign.status === 'scheduled' ? '#fef3c7' : '#f3f4f6',
+                      color: campaign.status === 'sent' ? '#15803d' :
+                             campaign.status === 'scheduled' ? '#92400e' : '#6b7280'
+                    }}>
+                      {campaign.status}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      {activeTab === 'sms' && (
+        <>
+          <div className="admin-section-title">
+            <FaSms /> {t('admin.smsCampaigns') || 'SMS Campaigns'}
+          </div>
+          <div className="admin-activity-list">
+            {smsCampaigns.length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px' }}>
+                <p>No SMS campaigns yet</p>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowCreateModal(true)}>
+                  <FaPlus /> Create Campaign
+                </button>
+              </div>
+            ) : (
+              smsCampaigns.map((campaign) => (
+                <div key={campaign._id} className="admin-activity-item">
+                  <div className="admin-activity-icon" style={{ background: 'rgba(236, 72, 153, 0.08)', color: getStatusColor(campaign.status) }}>
+                    <FaSms />
+                  </div>
+                  <div className="admin-activity-info">
+                    <div className="admin-activity-text">{campaign.name}</div>
+                    <div className="admin-activity-time">
+                      {campaign.message?.substring(0, 50)}... • {campaign.sentCount || 0} sent
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="status-badge" style={{
+                      background: campaign.status === 'sent' ? '#dcfce7' :
+                               campaign.status === 'scheduled' ? '#fef3c7' : '#f3f4f6',
+                      color: campaign.status === 'sent' ? '#15803d' :
+                             campaign.status === 'scheduled' ? '#92400e' : '#6b7280'
+                    }}>
+                      {campaign.status}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      {activeTab === 'inapp' && (
+        <>
+          <div className="admin-section-title">
+            <FaMobileAlt /> {t('admin.inAppContent') || 'In-App Content'}
+          </div>
+          <div className="admin-activity-list">
+            {inAppContent.length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px' }}>
+                <p>No in-app content yet</p>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowCreateModal(true)}>
+                  <FaPlus /> Create Content
+                </button>
+              </div>
+            ) : (
+              inAppContent.map((content) => (
+                <div key={content._id} className="admin-activity-item">
+                  <div className="admin-activity-icon" style={{ background: 'rgba(14, 165, 233, 0.08)', color: getStatusColor(content.status) }}>
+                    <FaMobileAlt />
+                  </div>
+                  <div className="admin-activity-info">
+                    <div className="admin-activity-text">{content.title}</div>
+                    <div className="admin-activity-time">
+                      {content.type} • {content.displayLocation} • {content.viewCount || 0} views
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="status-badge" style={{
+                      background: content.status === 'active' ? '#dcfce7' : '#f3f4f6',
+                      color: content.status === 'active' ? '#15803d' : '#6b7280'
+                    }}>
+                      {content.status}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      {activeTab === 'segments' && (
+        <>
+          <div className="admin-section-title">
+            <FaLayerGroup /> {t('admin.segments') || 'User Segments'}
+          </div>
+          <div className="admin-activity-list">
+            {segments.length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px' }}>
+                <p>No user segments yet</p>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowCreateModal(true)}>
+                  <FaPlus /> Create Segment
+                </button>
+              </div>
+            ) : (
+              segments.map((segment) => (
+                <div key={segment._id} className="admin-activity-item">
+                  <div className="admin-activity-icon" style={{ background: 'rgba(99, 102, 241, 0.08)', color: segment.isActive ? '#6366f1' : '#9ca3af' }}>
+                    <FaLayerGroup />
+                  </div>
+                  <div className="admin-activity-info">
+                    <div className="admin-activity-text">{segment.name}</div>
+                    <div className="admin-activity-time">
+                      {segment.segmentType} • {segment.targetRole} • {segment.estimatedSize || 0} users
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="status-badge" style={{
+                      background: segment.isActive ? '#dcfce7' : '#f3f4f6',
+                      color: segment.isActive ? '#15803d' : '#6b7280'
+                    }}>
+                      {segment.isActive ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      {activeTab === 'automation' && (
+        <>
+          <div className="admin-section-title">
+            <FaRobot /> {t('admin.automation') || 'Automation Rules'}
+          </div>
+          <div className="admin-activity-list">
+            {automationRules.length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px' }}>
+                <p>No automation rules yet</p>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => setShowCreateModal(true)}>
+                  <FaPlus /> Create Rule
+                </button>
+              </div>
+            ) : (
+              automationRules.map((rule) => (
+                <div key={rule._id} className="admin-activity-item">
+                  <div className="admin-activity-icon" style={{ background: 'rgba(34, 197, 94, 0.08)', color: rule.isActive ? '#22c55e' : '#9ca3af' }}>
+                    <FaRobot />
+                  </div>
+                  <div className="admin-activity-info">
+                    <div className="admin-activity-text">{rule.name}</div>
+                    <div className="admin-activity-time">
+                      {rule.triggerType} → {rule.actionType} • {rule.executionCount || 0} runs
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div className="status-badge" style={{
+                      background: rule.isActive ? '#dcfce7' : '#f3f4f6',
+                      color: rule.isActive ? '#15803d' : '#6b7280'
+                    }}>
+                      {rule.isActive ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
       )}
 
       {/* Create Modal */}
@@ -325,7 +588,12 @@ const ContentNotifications = () => {
               <h3>
                 {activeTab === 'push' ? t('admin.sendNotification') || 'Send Notification' :
                  activeTab === 'announcements' ? t('admin.createAnnouncement') || 'Create Announcement' :
-                 t('admin.createPromotion') || 'Create Promotion'}
+                 activeTab === 'promotions' ? t('admin.createPromotion') || 'Create Promotion' :
+                 activeTab === 'email' ? t('admin.createEmailCampaign') || 'Create Email Campaign' :
+                 activeTab === 'sms' ? t('admin.createSMSCampaign') || 'Create SMS Campaign' :
+                 activeTab === 'inapp' ? t('admin.createInAppContent') || 'Create In-App Content' :
+                 activeTab === 'segments' ? t('admin.createSegment') || 'Create Segment' :
+                 t('admin.createAutomationRule') || 'Create Automation Rule'}
               </h3>
               <button className="modal-close" onClick={() => setShowCreateModal(false)}>
                 <FaTimesCircle />
