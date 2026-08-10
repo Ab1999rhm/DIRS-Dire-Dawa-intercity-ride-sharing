@@ -4,7 +4,8 @@ import {
   FaFilter, FaEye, FaCheckCircle, FaTimesCircle, FaClock, FaBan,
   FaMoneyBillWave, FaIdCard, FaCreditCard, FaHistory, FaExclamationTriangle,
   FaEnvelope, FaShieldAlt, FaMapMarkerAlt, FaChartBar, FaDownload,
-  FaBell, FaSms, FaFileAlt, FaCar, FaTimes, FaPlus, FaExclamationCircle
+  FaBell, FaSms, FaFileAlt, FaCar, FaTimes, FaPlus, FaExclamationCircle,
+  FaUserSlash, FaUserShield, FaToggleOn, FaToggleOff
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -169,14 +170,13 @@ const PassengerManagement = () => {
     setDetailTab(tab);
     setShowDetailModal(true);
     
-    // Fetch passenger trips and transactions
     try {
       const [tripsRes, transactionsRes] = await Promise.all([
-        adminAPI.getPassengerTrips(passenger.id),
-        adminAPI.getPassengerTransactions(passenger.id)
+        adminAPI.getPassengerTrips(passenger._id || passenger.id),
+        adminAPI.getPassengerTransactions(passenger._id || passenger.id)
       ]);
-      setPassengerTrips(tripsRes.data?.trips || []);
-      setPassengerTransactions(transactionsRes.data?.transactions || []);
+      setPassengerTrips(Array.isArray(tripsRes.data) ? tripsRes.data : (tripsRes.data?.trips || []));
+      setPassengerTransactions(Array.isArray(transactionsRes.data) ? transactionsRes.data : (transactionsRes.data?.transactions || []));
     } catch (err) {
       console.error('Failed to fetch passenger details:', err);
     }
@@ -215,6 +215,16 @@ const PassengerManagement = () => {
     }
   };
 
+  const getPassengerStatusBg = (status) => {
+    switch (status) {
+      case 'active': return 'rgba(16, 185, 129, 0.1)';
+      case 'suspended': return 'rgba(239, 68, 68, 0.1)';
+      case 'banned': return 'rgba(127, 29, 29, 0.1)';
+      case 'inactive': return 'rgba(107, 114, 128, 0.1)';
+      default: return 'rgba(59, 130, 246, 0.1)';
+    }
+  };
+
   if (loading) {
     return (
       <div className="admin-page">
@@ -228,7 +238,7 @@ const PassengerManagement = () => {
   return (
     <div className="admin-page">
       {/* Header */}
-      <div className="admin-header">
+      <div className="admin-header admin-animate-in">
         <div className="admin-header-left">
           <div className="admin-greeting">
             {t('admin.passengerManagement') || 'Passenger Management'}
@@ -238,46 +248,47 @@ const PassengerManagement = () => {
           </div>
         </div>
         <div className="admin-header-actions">
-          <button className="admin-icon-btn" onClick={fetchPassengers}>
-            <FaSearch />
+          <button className="admin-icon-btn" onClick={fetchPassengers} title="Refresh">
+            <FaCheckCircle />
           </button>
-          <button className="admin-icon-btn" onClick={exportCSV}>
+          <button className="admin-icon-btn" onClick={exportCSV} title="Export CSV">
             <FaDownload />
           </button>
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="admin-search">
+      {/* Search */}
+      <div className="admin-search admin-animate-in-delay-1">
         <FaSearch />
         <input
           type="text"
-          placeholder={t('admin.searchPassengers') || 'Search passengers...'}
+          placeholder={t('admin.searchPassengers') || 'Search by name, phone, or email...'}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
-      <div className="admin-filter-tabs">
+      {/* Tabs */}
+      <div className="admin-filter-tabs admin-animate-in-delay-1">
         <button className={`admin-filter-tab ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>
-          {t('admin.all') || 'All'}
+          {t('admin.all') || 'All'} ({passengers.length})
         </button>
         <button className={`admin-filter-tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>
-          {t('admin.active') || 'Active'}
+          {t('admin.active') || 'Active'} ({passengers.filter(p => p.status === 'active').length})
         </button>
         <button className={`admin-filter-tab ${activeTab === 'suspended' ? 'active' : ''}`} onClick={() => setActiveTab('suspended')}>
-          {t('admin.suspended') || 'Suspended'}
+          {t('admin.suspended') || 'Suspended'} ({passengers.filter(p => p.status === 'suspended').length})
         </button>
         <button className={`admin-filter-tab ${activeTab === 'behavior' ? 'active' : ''}`} onClick={() => setActiveTab('behavior')}>
-          {t('admin.behavior') || 'Behavior'}
+          <FaExclamationTriangle /> {t('admin.behavior') || 'Behavior'}
         </button>
         <button className={`admin-filter-tab ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-          {t('admin.analytics') || 'Analytics'}
+          <FaChartBar /> {t('admin.analytics') || 'Analytics'}
         </button>
       </div>
 
-      {/* Passenger Stats */}
-      <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
+      {/* Stats Grid */}
+      <div className="admin-stats-grid admin-animate-in-delay-2" style={{ marginBottom: 20 }}>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
             <FaUserCheck />
@@ -318,52 +329,149 @@ const PassengerManagement = () => {
 
       {/* All Passengers Tab */}
       {activeTab === 'all' && (
-        <>
+        <div className="admin-animate-in-delay-3">
           <div className="admin-section-title"><FaUsers /> {t('admin.allPassengers') || 'All Passengers'}</div>
           <div className="admin-activity-list">
-            {filteredPassengers.map((passenger) => (
-              <div key={passenger.id} className="admin-activity-item" style={{ cursor: 'pointer' }} onClick={() => openDetail(passenger, 'overview')}>
-                <div className="admin-activity-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: getPassengerStatusColor(passenger.status) }}>
-                  <FaIdCard />
-                </div>
-                <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text">{passenger.firstName} {passenger.lastName}</div>
-                  <div className="admin-activity-time">{passenger.phoneNumber} • {passenger.email}</div>
-                  <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 11, color: '#6b7280' }}>
-                    <span>⭐ {passenger.rating?.toFixed(1) || 'N/A'}</span>
-                    <span>🚗 {passenger.totalTrips || 0} trips</span>
-                    <span>💰 ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
-                    {passenger.complaints > 0 && <span style={{ color: '#ef4444' }}>📩 {passenger.complaints} complaints</span>}
-                    {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ FRAUD FLAG</span>}
+            {filteredPassengers.length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p>
+              </div>
+            ) : (
+              filteredPassengers.map((passenger) => (
+                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'overview')}>
+                  <div className="admin-activity-icon" style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status) }}>
+                    <FaIdCard />
+                  </div>
+                  <div className="admin-activity-info" style={{ flex: 1, minWidth: 0 }}>
+                    <div className="admin-activity-text" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {passenger.firstName} {passenger.lastName}
+                    </div>
+                    <div className="admin-activity-time" style={{ color: 'var(--text-secondary)', marginTop: 2 }}>
+                      {passenger.phoneNumber} {passenger.email ? `• ${passenger.email}` : ''}
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span>⭐ {passenger.rating?.toFixed(1) || 'N/A'}</span>
+                      <span>🚗 {passenger.totalTrips || 0} trips</span>
+                      <span>💰 ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
+                      {passenger.complaints > 0 && <span style={{ color: '#ef4444' }}>📩 {passenger.complaints}</span>}
+                      {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ FRAUD</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <div className="status-badge" style={{
+                      background: getPassengerStatusBg(passenger.status),
+                      color: getPassengerStatusColor(passenger.status),
+                      fontWeight: 600,
+                      fontSize: 11,
+                      padding: '4px 10px',
+                      borderRadius: 20
+                    }}>
+                      {passenger.status}
+                    </div>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="View Details" onClick={(e) => { e.stopPropagation(); openDetail(passenger, 'overview'); }}>
+                        <FaEye />
+                      </button>
+                      <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="Wallet" onClick={(e) => { e.stopPropagation(); handleViewWallet(passenger._id || passenger.id); }}>
+                        <FaWallet />
+                      </button>
+                      {passenger.status === 'active' ? (
+                        <button className="admin-icon-btn" style={{ width: 32, height: 32, color: '#ef4444' }} title="Suspend" onClick={(e) => { e.stopPropagation(); setSelectedPassenger(passenger); setShowSuspendModal(true); }}>
+                          <FaBan />
+                        </button>
+                      ) : passenger.status === 'suspended' ? (
+                        <button className="admin-icon-btn" style={{ width: 32, height: 32, color: '#10b981' }} title="Reactivate" onClick={(e) => { e.stopPropagation(); handleReactivatePassenger(passenger._id || passenger.id); }}>
+                          <FaToggleOn />
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div className="status-badge" style={{
-                    background: passenger.status === 'active' ? '#dcfce7' : passenger.status === 'suspended' ? '#fef2f2' : '#f3f4f6',
-                    color: passenger.status === 'active' ? '#15803d' : passenger.status === 'suspended' ? '#dc2626' : '#6b7280'
-                  }}>
-                    {passenger.status}
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Active Tab */}
+      {activeTab === 'active' && (
+        <div className="admin-animate-in-delay-3">
+          <div className="admin-section-title"><FaUserCheck /> {t('admin.activePassengers') || 'Active Passengers'}</div>
+          <div className="admin-activity-list">
+            {filteredPassengers.filter(p => p.status === 'active').length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaUserCheck style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>{t('noActivePassengers') || 'No active passengers'}</p>
+              </div>
+            ) : (
+              filteredPassengers.filter(p => p.status === 'active').map((passenger) => (
+                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'overview')}>
+                  <div className="admin-activity-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                    <FaUserCheck />
+                  </div>
+                  <div className="admin-activity-info" style={{ flex: 1 }}>
+                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
+                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span>⭐ {passenger.rating?.toFixed(1) || 'N/A'}</span>
+                      <span>🚗 {passenger.totalTrips || 0} trips</span>
+                      <span>💰 ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} onClick={(e) => { e.stopPropagation(); handleViewWallet(passenger.id); }}>
-                      <FaWallet />
+                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="View" onClick={(e) => { e.stopPropagation(); openDetail(passenger); }}>
+                      <FaEye />
                     </button>
-                    {passenger.status === 'active' && (
-                      <button className="admin-icon-btn" style={{ width: 32, height: 32 }} onClick={(e) => { e.stopPropagation(); setShowSuspendModal(true); setSelectedPassenger(passenger); }}>
-                        <FaBan />
-                      </button>
-                    )}
+                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="Suspend" onClick={(e) => { e.stopPropagation(); setSelectedPassenger(passenger); setShowSuspendModal(true); }}>
+                      <FaBan />
+                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Suspended Tab */}
+      {activeTab === 'suspended' && (
+        <div className="admin-animate-in-delay-3">
+          <div className="admin-section-title"><FaBan /> {t('admin.suspendedPassengers') || 'Suspended Passengers'}</div>
+          <div className="admin-activity-list">
+            {filteredPassengers.filter(p => p.status === 'suspended').length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaBan style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>{t('noSuspendedPassengers') || 'No suspended passengers'}</p>
+              </div>
+            ) : (
+              filteredPassengers.filter(p => p.status === 'suspended').map((passenger) => (
+                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'overview')}>
+                  <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                    <FaBan />
+                  </div>
+                  <div className="admin-activity-info" style={{ flex: 1 }}>
+                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
+                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="View" onClick={(e) => { e.stopPropagation(); openDetail(passenger); }}>
+                      <FaEye />
+                    </button>
+                    <button className="admin-icon-btn" style={{ width: 32, height: 32, color: '#10b981' }} title="Reactivate" onClick={(e) => { e.stopPropagation(); handleReactivatePassenger(passenger._id || passenger.id); }}>
+                      <FaToggleOn />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       )}
 
       {/* Behavior Tab */}
       {activeTab === 'behavior' && (
-        <>
+        <div className="admin-animate-in-delay-3">
           <div className="admin-section-title"><FaExclamationTriangle /> {t('admin.behaviorMonitoring') || 'Behavior Monitoring'}</div>
           <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
             <div className="admin-stat-card">
@@ -384,29 +492,37 @@ const PassengerManagement = () => {
             </div>
           </div>
           <div className="admin-activity-list">
-            {passengers.filter(p => p.cancellations > 5 || p.noShows > 3 || p.fraudFlags > 0 || p.complaints > 2).map(passenger => (
-              <div key={passenger.id} className="admin-activity-item" style={{ cursor: 'pointer' }} onClick={() => openDetail(passenger, 'behavior')}>
-                <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}><FaExclamationTriangle /></div>
-                <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text">{passenger.firstName} {passenger.lastName}</div>
-                  <div className="admin-activity-time">{passenger.phoneNumber}</div>
-                  <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 11, color: '#6b7280' }}>
-                    <span>❌ {passenger.cancellations || 0} cancellations</span>
-                    <span>⏰ {passenger.noShows || 0} no-shows</span>
-                    {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ {passenger.fraudFlags} fraud flags</span>}
-                    {passenger.complaints > 0 && <span style={{ color: '#ef4444' }}>📩 {passenger.complaints} complaints</span>}
+            {passengers.filter(p => (p.cancellations || 0) > 5 || (p.noShows || 0) > 3 || (p.fraudFlags || 0) > 0 || (p.complaints || 0) > 2).length === 0 ? (
+              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaCheckCircle style={{ fontSize: 48, color: '#10b981', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>All passengers have good behavior</p>
+              </div>
+            ) : (
+              passengers.filter(p => (p.cancellations || 0) > 5 || (p.noShows || 0) > 3 || (p.fraudFlags || 0) > 0 || (p.complaints || 0) > 2).map(passenger => (
+                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'behavior')}>
+                  <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><FaExclamationTriangle /></div>
+                  <div className="admin-activity-info" style={{ flex: 1 }}>
+                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
+                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span style={{ color: '#ef4444' }}>❌ {passenger.cancellations || 0} cancellations</span>
+                      <span style={{ color: '#f59e0b' }}>⏰ {passenger.noShows || 0} no-shows</span>
+                      {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ {passenger.fraudFlags} fraud flags</span>}
+                    </div>
+                  </div>
+                  <div className="status-badge" style={{ background: '#fef2f2', color: '#dc2626', padding: '4px 10px', borderRadius: 20, fontSize: 11 }}>
+                    Review
                   </div>
                 </div>
-                <div className="status-badge" style={{ background: '#fef2f2', color: '#dc2626' }}>Review Required</div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        </>
+        </div>
       )}
 
       {/* Analytics Tab */}
       {activeTab === 'analytics' && (
-        <>
+        <div className="admin-animate-in-delay-3">
           <div className="admin-section-title"><FaChartBar /> {t('admin.analytics') || 'Analytics'}</div>
           <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
             <div className="admin-stat-card">
@@ -426,23 +542,36 @@ const PassengerManagement = () => {
               <div><div className="admin-stat-value">{passengers.length > 0 ? (passengers.reduce((acc, p) => acc + (p.rating || 0), 0) / passengers.length).toFixed(1) : '0.0'}</div><div className="admin-stat-label">Avg Rating</div></div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {/* Passenger Detail Modal */}
+      {/* ===== PASSENGER DETAIL MODAL ===== */}
       {showDetailModal && selectedPassenger && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 600, maxHeight: '80vh', overflowY: 'auto' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{selectedPassenger.firstName} {selectedPassenger.lastName}</h3>
               <button className="modal-close" onClick={() => setShowDetailModal(false)}><FaTimes /></button>
             </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto' }}>
-              <button className={`btn btn-sm ${detailTab === 'overview' ? 'btn-primary' : ''}`} style={{ background: detailTab === 'overview' ? '#3b82f6' : '#f3f4f6' }} onClick={() => setDetailTab('overview')}>Overview</button>
-              <button className={`btn btn-sm ${detailTab === 'financial' ? 'btn-primary' : ''}`} style={{ background: detailTab === 'financial' ? '#3b82f6' : '#f3f4f6' }} onClick={() => setDetailTab('financial')}>Financial</button>
-              <button className={`btn btn-sm ${detailTab === 'history' ? 'btn-primary' : ''}`} style={{ background: detailTab === 'history' ? '#3b82f6' : '#f3f4f6' }} onClick={() => setDetailTab('history')}>Ride History</button>
-              <button className={`btn btn-sm ${detailTab === 'behavior' ? 'btn-primary' : ''}`} style={{ background: detailTab === 'behavior' ? '#3b82f6' : '#f3f4f6' }} onClick={() => setDetailTab('behavior')}>Behavior</button>
-              <button className={`btn btn-sm ${detailTab === 'actions' ? 'btn-primary' : ''}`} style={{ background: detailTab === 'actions' ? '#3b82f6' : '#f3f4f6' }} onClick={() => setDetailTab('actions')}>Actions</button>
+
+            {/* Detail Tabs */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
+              {['overview', 'financial', 'history', 'behavior', 'actions'].map(tab => (
+                <button key={tab} className="btn btn-sm" style={{
+                  background: detailTab === tab ? '#3b82f6' : 'var(--bg-secondary)',
+                  color: detailTab === tab ? 'white' : 'var(--text-secondary)',
+                  borderRadius: 20,
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }} onClick={() => setDetailTab(tab)}>
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
 
             {/* Overview */}
@@ -450,41 +579,13 @@ const PassengerManagement = () => {
               <div className="driver-detail">
                 <div className="detail-row"><span className="detail-key">Name</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
                 <div className="detail-row"><span className="detail-key">Phone</span><span className="detail-val">{selectedPassenger.phoneNumber}</span></div>
-                <div className="detail-row"><span className="detail-key">Email</span><span className="detail-val">{selectedPassenger.email}</span></div>
-                <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val" style={{ color: getPassengerStatusColor(selectedPassenger.status) }}>{selectedPassenger.status}</span></div>
+                <div className="detail-row"><span className="detail-key">Email</span><span className="detail-val">{selectedPassenger.email || 'N/A'}</span></div>
+                <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val" style={{ color: getPassengerStatusColor(selectedPassenger.status), fontWeight: 600 }}>{selectedPassenger.status}</span></div>
                 <div className="detail-row"><span className="detail-key">Rating</span><span className="detail-val">⭐ {selectedPassenger.rating?.toFixed(1) || 'N/A'}</span></div>
                 <div className="detail-row"><span className="detail-key">Total Trips</span><span className="detail-val">{selectedPassenger.totalTrips || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Total Spent</span><span className="detail-val">ETB {(selectedPassenger.totalSpent || 0).toLocaleString()}</span></div>
-                <div className="detail-row"><span className="detail-key">Wallet Balance</span><span className="detail-val">ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
-                <div className="detail-row"><span className="detail-key">Payment Method</span><span className="detail-val" style={{ textTransform: 'capitalize' }}>{selectedPassenger.paymentMethod || 'cash'}</span></div>
+                <div className="detail-row"><span className="detail-key">Wallet Balance</span><span className="detail-val" style={{ color: '#10b981', fontWeight: 600 }}>ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">Joined</span><span className="detail-val">{selectedPassenger.createdAt ? new Date(selectedPassenger.createdAt).toLocaleDateString() : 'N/A'}</span></div>
-                <div className="detail-row"><span className="detail-key">Last Seen</span><span className="detail-val">{selectedPassenger.lastSeen ? new Date(selectedPassenger.lastSeen).toLocaleDateString() : 'N/A'}</span></div>
-                
-                {/* Emergency Contacts */}
-                {selectedPassenger.emergencyContacts && selectedPassenger.emergencyContacts.length > 0 && (
-                  <div style={{ marginTop: 16, padding: 12, background: '#f9fafb', borderRadius: 8 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13 }}>Emergency Contacts</div>
-                    {selectedPassenger.emergencyContacts.map((contact, idx) => (
-                      <div key={idx} style={{ padding: 8, background: 'white', borderRadius: 4, marginBottom: 4, fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{contact.name}</span>
-                        <span style={{ color: '#6b7280' }}>{contact.phone}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Saved Places */}
-                {selectedPassenger.favoriteLocations && selectedPassenger.favoriteLocations.length > 0 && (
-                  <div style={{ marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 8 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8, fontSize: 13 }}>Saved Places</div>
-                    {selectedPassenger.favoriteLocations.map((place, idx) => (
-                      <div key={idx} style={{ padding: 8, background: 'white', borderRadius: 4, marginBottom: 4, fontSize: 12 }}>
-                        <div style={{ fontWeight: 600 }}>{place.name}</div>
-                        <div style={{ color: '#6b7280' }}>{place.address}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
@@ -494,20 +595,24 @@ const PassengerManagement = () => {
                 <div className="detail-row"><span className="detail-key">Wallet Balance</span><span className="detail-val" style={{ color: '#10b981', fontWeight: 600 }}>ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">Total Spent</span><span className="detail-val">ETB {(selectedPassenger.totalSpent || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">Avg per Trip</span><span className="detail-val">ETB {selectedPassenger.totalTrips > 0 ? Math.round((selectedPassenger.totalSpent || 0) / selectedPassenger.totalTrips).toLocaleString() : 0}</span></div>
-                <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-                  <button className="btn btn-primary" style={{ background: '#10b981' }} onClick={() => { setShowAddFundsModal(true); }}>Add Funds</button>
-                  <button className="btn" style={{ background: '#ef4444', color: 'white' }} onClick={() => { setShowRefundModal(true); }}>Process Refund</button>
+                <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn btn-primary btn-sm" style={{ background: '#10b981', flex: 1 }} onClick={() => { setShowAddFundsModal(true); }}>
+                    <FaPlus /> Add Funds
+                  </button>
+                  <button className="btn btn-primary btn-sm" style={{ background: '#ef4444', flex: 1 }} onClick={() => { setShowRefundModal(true); }}>
+                    <FaMoneyBillWave /> Process Refund
+                  </button>
                 </div>
                 {passengerTransactions.length > 0 && (
                   <div style={{ marginTop: 16 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>Recent Transactions</div>
+                    <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>Recent Transactions</div>
                     {passengerTransactions.slice(0, 5).map(tx => (
-                      <div key={tx._id} style={{ padding: 8, background: '#f9fafb', borderRadius: 4, marginBottom: 4, fontSize: 12 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>{tx.description || tx.type}</span>
-                          <span style={{ color: tx.type === 'credit' ? '#10b981' : '#ef4444' }}>{tx.type === 'credit' ? '+' : '-'}ETB {tx.amount?.toLocaleString()}</span>
+                      <div key={tx._id} style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 8, marginBottom: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                          <span style={{ color: 'var(--text-primary)' }}>{tx.description || tx.type}</span>
+                          <span style={{ color: tx.type === 'credit' ? '#10b981' : '#ef4444', fontWeight: 600 }}>{tx.type === 'credit' ? '+' : '-'}ETB {tx.amount?.toLocaleString()}</span>
                         </div>
-                        <div style={{ color: '#6b7280', fontSize: 10 }}>{new Date(tx.createdAt).toLocaleDateString()}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{new Date(tx.createdAt).toLocaleDateString()}</div>
                       </div>
                     ))}
                   </div>
@@ -521,17 +626,17 @@ const PassengerManagement = () => {
                 <div className="detail-row"><span className="detail-key">Total Trips</span><span className="detail-val">{selectedPassenger.totalTrips || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Cancellations</span><span className="detail-val">{selectedPassenger.cancellations || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">No-Shows</span><span className="detail-val">{selectedPassenger.noShows || 0}</span></div>
-                <div className="detail-row"><span className="detail-key">Cancellation Rate</span><span className="detail-val">{selectedPassenger.totalTrips > 0 ? ((selectedPassenger.cancellations / selectedPassenger.totalTrips) * 100).toFixed(1) : 0}%</span></div>
+                <div className="detail-row"><span className="detail-key">Completion Rate</span><span className="detail-val">{selectedPassenger.totalTrips > 0 ? ((1 - (selectedPassenger.cancellations || 0) / selectedPassenger.totalTrips) * 100).toFixed(1) : 0}%</span></div>
                 {passengerTrips.length > 0 && (
                   <div style={{ marginTop: 16 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>Recent Trips</div>
+                    <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>Recent Trips</div>
                     {passengerTrips.slice(0, 5).map(trip => (
-                      <div key={trip._id} style={{ padding: 8, background: '#f9fafb', borderRadius: 4, marginBottom: 4, fontSize: 12 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>{trip.status}</span>
-                          <span>ETB {trip.fare?.totalFare?.toLocaleString() || 0}</span>
+                      <div key={trip._id} style={{ padding: 10, background: 'var(--bg-secondary)', borderRadius: 8, marginBottom: 6 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                          <span style={{ color: 'var(--text-primary)' }}>{trip.status}</span>
+                          <span style={{ fontWeight: 600 }}>ETB {trip.fare?.totalFare?.toLocaleString() || 0}</span>
                         </div>
-                        <div style={{ color: '#6b7280', fontSize: 10 }}>{new Date(trip.createdAt).toLocaleDateString()}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{new Date(trip.createdAt).toLocaleDateString()}</div>
                       </div>
                     ))}
                   </div>
@@ -547,8 +652,8 @@ const PassengerManagement = () => {
                 <div className="detail-row"><span className="detail-key">Fraud Flags</span><span className="detail-val" style={{ color: (selectedPassenger.fraudFlags || 0) > 0 ? '#dc2626' : '#10b981' }}>{selectedPassenger.fraudFlags || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Complaints</span><span className="detail-val" style={{ color: (selectedPassenger.complaints || 0) > 0 ? '#ef4444' : '#10b981' }}>{selectedPassenger.complaints || 0}</span></div>
                 {(selectedPassenger.fraudFlags || 0) > 0 && (
-                  <div style={{ marginTop: 8, padding: 8, background: '#fef2f2', borderRadius: 6, border: '1px solid #fecaca' }}>
-                    <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 600 }}>⚠️ Fraud Flag - Review Required</span>
+                  <div style={{ marginTop: 12, padding: 12, background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
+                    <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>⚠️ Fraud Flag - Review Required</span>
                   </div>
                 )}
               </div>
@@ -556,24 +661,29 @@ const PassengerManagement = () => {
 
             {/* Actions */}
             {detailTab === 'actions' && (
-              <div className="driver-detail">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: '#f9fafb', borderRadius: 8 }}>
-                  <span style={{ fontWeight: 600 }}>Account Status</span>
-                  <button className="btn btn-sm" style={{ background: selectedPassenger.status === 'active' ? '#10b981' : '#6b7280', color: 'white' }} onClick={() => selectedPassenger.status === 'active' ? handleSuspendPassenger(selectedPassenger.id, 'Deactivated by admin') : handleReactivatePassenger(selectedPassenger.id)}>
+              <div className="driver-detail" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, background: 'var(--bg-secondary)', borderRadius: 10 }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Account Status</span>
+                  <button className="btn btn-sm" style={{
+                    background: selectedPassenger.status === 'active' ? '#10b981' : '#6b7280',
+                    color: 'white',
+                    borderRadius: 20,
+                    padding: '6px 16px'
+                  }} onClick={() => selectedPassenger.status === 'active' ? handleSuspendPassenger(selectedPassenger._id || selectedPassenger.id, 'Deactivated by admin') : handleReactivatePassenger(selectedPassenger._id || selectedPassenger.id)}>
                     {selectedPassenger.status === 'active' ? 'Deactivate' : 'Activate'}
                   </button>
                 </div>
-                <button className="btn" style={{ background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowMessageModal(true); setMessageMode('message'); setMessageText(''); }}>
+                <button className="btn" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowMessageModal(true); setMessageMode('message'); setMessageText(''); }}>
                   <FaEnvelope /> Send Message
                 </button>
-                <button className="btn" style={{ background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowMessageModal(true); setMessageMode('warning'); setMessageText(''); }}>
+                <button className="btn" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#b45309', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowMessageModal(true); setMessageMode('warning'); setMessageText(''); }}>
                   <FaExclamationTriangle /> Issue Warning
                 </button>
-                <button className="btn" style={{ background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowSuspendModal(true); }}>
+                <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowSuspendModal(true); }}>
                   <FaBan /> Suspend Account
                 </button>
-                <button className="btn" style={{ background: '#7f1d1d15', color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => { setShowBanModal(true); }}>
-                  <FaBan /> Permanently Ban
+                <button className="btn" style={{ background: 'rgba(127, 29, 29, 0.1)', color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowBanModal(true); }}>
+                  <FaUserSlash /> Permanently Ban
                 </button>
               </div>
             )}
@@ -581,111 +691,124 @@ const PassengerManagement = () => {
         </div>
       )}
 
-      {/* Message Modal */}
+      {/* ===== MESSAGE MODAL ===== */}
       {showMessageModal && selectedPassenger && (
         <div className="modal-overlay" onClick={() => setShowMessageModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{messageMode === 'message' ? 'Send Message' : 'Issue Warning'}</h3>
               <button className="modal-close" onClick={() => setShowMessageModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
               <div className="detail-row"><span className="detail-key">To</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>{messageMode === 'message' ? 'Message' : 'Reason'}</label>
-                <textarea value={messageText} onChange={e => setMessageText(e.target.value)} placeholder={messageMode === 'message' ? 'Enter your message...' : 'Enter reason for warning...'} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', minHeight: 80 }} />
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>{messageMode === 'message' ? 'Message' : 'Reason'}</label>
+                <textarea value={messageText} onChange={e => setMessageText(e.target.value)} placeholder={messageMode === 'message' ? 'Enter your message...' : 'Enter reason for warning...'} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 12, background: messageMode === 'message' ? '#3b82f6' : '#f59e0b' }} onClick={messageMode === 'message' ? handleSendMessage : handleIssueWarning}>{messageMode === 'message' ? 'Send Message' : 'Issue Warning'}</button>
+              <button className="btn btn-primary" style={{ marginTop: 16, background: messageMode === 'message' ? '#3b82f6' : '#f59e0b', width: '100%', padding: 12, borderRadius: 10 }} onClick={messageMode === 'message' ? handleSendMessage : handleIssueWarning}>
+                {messageMode === 'message' ? 'Send Message' : 'Issue Warning'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Suspend Modal */}
+      {/* ===== SUSPEND MODAL ===== */}
       {showSuspendModal && selectedPassenger && (
         <div className="modal-overlay" onClick={() => setShowSuspendModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Suspend Passenger</h3>
               <button className="modal-close" onClick={() => setShowSuspendModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
               <div className="detail-row"><span className="detail-key">Passenger</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Reason</label>
-                <textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)} placeholder="Enter reason for suspension..." style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', minHeight: 80 }} />
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason for Suspension</label>
+                <textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)} placeholder="Enter reason for suspension..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 12, background: '#ef4444' }} onClick={() => handleSuspendPassenger(selectedPassenger.id, suspendReason)}>Suspend</button>
+              <button className="btn btn-primary" style={{ marginTop: 16, background: '#ef4444', width: '100%', padding: 12, borderRadius: 10 }} onClick={() => handleSuspendPassenger(selectedPassenger._id || selectedPassenger.id, suspendReason)}>
+                Suspend Account
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Ban Modal */}
+      {/* ===== BAN MODAL ===== */}
       {showBanModal && selectedPassenger && (
         <div className="modal-overlay" onClick={() => setShowBanModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Ban Passenger</h3>
+              <h3>Permanently Ban Passenger</h3>
               <button className="modal-close" onClick={() => setShowBanModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
               <div className="detail-row"><span className="detail-key">Passenger</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Reason</label>
-                <textarea value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Enter reason for permanent ban..." style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', minHeight: 80 }} />
+              <div style={{ marginTop: 12, padding: 12, background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
+                <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>⚠️ This action is permanent and cannot be undone.</span>
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 12, background: '#7f1d1d' }} onClick={() => handleBanPassenger(selectedPassenger.id, banReason)}>Permanently Ban</button>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason for Ban</label>
+                <textarea value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Enter reason for permanent ban..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+              </div>
+              <button className="btn btn-primary" style={{ marginTop: 16, background: '#7f1d1d', width: '100%', padding: 12, borderRadius: 10 }} onClick={() => handleBanPassenger(selectedPassenger._id || selectedPassenger.id, banReason)}>
+                Permanently Ban
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add Funds Modal */}
+      {/* ===== ADD FUNDS MODAL ===== */}
       {showAddFundsModal && selectedPassenger && (
         <div className="modal-overlay" onClick={() => setShowAddFundsModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add Funds</h3>
+              <h3>Add Funds to Wallet</h3>
               <button className="modal-close" onClick={() => setShowAddFundsModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
               <div className="detail-row"><span className="detail-key">Passenger</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
-              <div className="detail-row"><span className="detail-key">Current Balance</span><span className="detail-val">ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Amount (ETB)</label>
-                <input type="number" value={addFundsAmount} onChange={e => setAddFundsAmount(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+              <div className="detail-row"><span className="detail-key">Current Balance</span><span className="detail-val" style={{ color: '#10b981', fontWeight: 600 }}>ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Amount (ETB)</label>
+                <input type="number" value={addFundsAmount} onChange={e => setAddFundsAmount(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Reason</label>
-                <input type="text" value={addFundsReason} onChange={e => setAddFundsReason(e.target.value)} placeholder="Bonus, refund, etc." style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason</label>
+                <input type="text" value={addFundsReason} onChange={e => setAddFundsReason(e.target.value)} placeholder="Bonus, refund, correction..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 12, background: '#10b981' }} onClick={handleAddFunds}>Add Funds</button>
+              <button className="btn btn-primary" style={{ marginTop: 16, background: '#10b981', width: '100%', padding: 12, borderRadius: 10 }} onClick={handleAddFunds}>
+                Add Funds
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Refund Modal */}
+      {/* ===== REFUND MODAL ===== */}
       {showRefundModal && selectedPassenger && (
         <div className="modal-overlay" onClick={() => setShowRefundModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Process Refund</h3>
               <button className="modal-close" onClick={() => setShowRefundModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
               <div className="detail-row"><span className="detail-key">Passenger</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
-              <div className="detail-row"><span className="detail-key">Current Balance</span><span className="detail-val">ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Refund Amount (ETB)</label>
-                <input type="number" value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+              <div className="detail-row"><span className="detail-key">Current Balance</span><span className="detail-val" style={{ color: '#10b981', fontWeight: 600 }}>ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Refund Amount (ETB)</label>
+                <input type="number" value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <div style={{ marginTop: 12 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Reason</label>
-                <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} placeholder="Enter reason for refund..." style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #e5e7eb', minHeight: 80 }} />
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason for Refund</label>
+                <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} placeholder="Enter reason for refund..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 12, background: '#ef4444' }} onClick={handleProcessRefund}>Process Refund</button>
+              <button className="btn btn-primary" style={{ marginTop: 16, background: '#ef4444', width: '100%', padding: 12, borderRadius: 10 }} onClick={handleProcessRefund}>
+                Process Refund
+              </button>
             </div>
           </div>
         </div>
