@@ -5,7 +5,8 @@ import {
   FaCreditCard, FaTag, FaChartBar, FaBell, FaSync, FaSearch,
   FaUserShield, FaUserClock, FaUserCheck, FaUserSlash,
   FaArrowRight, FaMapMarkerAlt, FaClock, FaEllipsisH, FaMoon, FaSun, FaGlobe,
-  FaCheck, FaRoute, FaHeadset, FaChartLine, FaCog, FaStar
+  FaCheck, FaRoute, FaHeadset, FaChartLine, FaCog, FaStar, FaMap,
+  FaServer, FaDatabase, FaWifi, FaCheckCircle, FaTimesCircle, FaHourglassHalf
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -23,9 +24,16 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [activeTrips, setActiveTrips] = useState([]);
+  const [onlineDrivers, setOnlineDrivers] = useState([]);
+  const [recentSOS, setRecentSOS] = useState([]);
+  const [systemHealth, setSystemHealth] = useState({ api: 'operational', db: 'operational', socket: 'operational' });
 
   useEffect(() => {
     fetchDashboard();
+    // Poll for live data every 30 seconds
+    const interval = setInterval(fetchDashboard, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboard = async () => {
@@ -34,6 +42,10 @@ const AdminDashboard = () => {
       const res = await adminAPI.dashboard();
       setStats(res.data.stats);
       setRecentActivity(res.data.recentActivity || []);
+      setActiveTrips(res.data.activeTrips || []);
+      setOnlineDrivers(res.data.onlineDrivers || []);
+      setRecentSOS(res.data.recentSOS || []);
+      setSystemHealth(res.data.systemHealth || { api: 'operational', db: 'operational', socket: 'operational' });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard');
     } finally {
@@ -41,27 +53,35 @@ const AdminDashboard = () => {
     }
   };
 
+  // Today's Live Metrics
   const statCards = [
-    { key: 'users', icon: <FaUsers />, value: stats?.totalUsers || 0, color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-    { key: 'drivers', icon: <FaCar />, value: stats?.activeDrivers || 0, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-    { key: 'trips', icon: <FaExclamationTriangle />, value: stats?.totalTrips || 0, color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
-    { key: 'revenue', label: t('admin.revenue'), icon: <FaMoneyBillWave />, value: stats?.revenue || 0, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', isCurrency: true },
+    { key: 'onlineDrivers', icon: <FaCar />, value: stats?.onlineDrivers || 0, color: '#10b981', bg: 'rgba(16,185,129,0.08)', label: 'Online Now' },
+    { key: 'activeTrips', icon: <FaRoute />, value: stats?.activeTrips || 0, color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', label: 'Active Trips' },
+    { key: 'todayRevenue', icon: <FaMoneyBillWave />, value: stats?.todayRevenue || 0, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', isCurrency: true, label: "Today's Revenue" },
+    { key: 'sosAlerts', icon: <FaShieldAlt />, value: stats?.sosAlerts || 0, color: '#dc2626', bg: 'rgba(220,38,38,0.08)', label: 'SOS Alerts' },
+    { key: 'completedToday', icon: <FaCheckCircle />, value: stats?.completedToday || 0, color: '#059669', bg: 'rgba(5,150,105,0.08)', label: 'Completed Today' },
+    { key: 'pendingApprovals', icon: <FaHourglassHalf />, value: stats?.pendingApprovals || 0, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', label: 'Pending Approvals' },
   ];
 
+  // Quick Actions - Most Used Admin Tasks
   const quickActions = [
-    { icon: <FaUsers />, label: t('admin.users') || 'Users', path: '/admin/users', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-    { icon: <FaCar />, label: t('admin.drivers') || 'Drivers', path: '/admin/driver-management', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-    { icon: <FaExclamationTriangle />, label: t('admin.sos') || 'SOS', path: '/admin/safety', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
-    { icon: <FaCreditCard />, label: t('admin.payments') || 'Payments', path: '/admin/financials', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
+    { icon: <FaMap />, label: 'Live Map', path: '/admin/monitoring', color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', priority: 'high' },
+    { icon: <FaRoute />, label: 'Active Trips', path: '/admin/trip-management', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', priority: 'high' },
+    { icon: <FaShieldAlt />, label: 'SOS Alerts', path: '/admin/safety', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', priority: 'critical' },
+    { icon: <FaUserCheck />, label: 'Driver Approvals', path: '/admin/driver-management', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', priority: 'high' },
+    { icon: <FaCreditCard />, label: 'Financial Summary', path: '/admin/financials', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', priority: 'medium' },
+    { icon: <FaHeadset />, label: 'Support Tickets', path: '/admin/support', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', priority: 'medium' },
   ];
 
-  const roles = [
-    { icon: <FaUserCheck />, name: t('admin.admin') || 'Admin', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/users', color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-    { icon: <FaCar />, name: t('admin.drivers') || 'Drivers', count: (stats?.activeDrivers || 0) + ' ' + (t('admin.active') || 'active'), path: '/admin/driver-management', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-    { icon: <FaUsers />, name: t('admin.passengers') || 'Passengers', count: (stats?.totalUsers || 0) + ' ' + (t('admin.total') || 'total'), path: '/admin/passenger-management', color: '#d97706', bg: 'rgba(217,119,6,0.08)' },
-    { icon: <FaChartBar />, name: t('admin.reports') || 'Reports', count: t('admin.viewReports') || 'View all', path: '/admin/analytics', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
-    { icon: <FaTag />, name: t('admin.promos') || 'Promos', count: t('admin.manage') || 'Manage', path: '/admin/content', color: '#0891b2', bg: 'rgba(8,145,178,0.08)' },
-  ];
+  // System Health Status
+  const getHealthStatus = (status) => {
+    switch (status) {
+      case 'operational': return { color: '#10b981', bg: 'rgba(16,185,129,0.08)', icon: <FaCheckCircle /> };
+      case 'degraded': return { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', icon: <FaExclamationTriangle /> };
+      case 'down': return { color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <FaTimesCircle /> };
+      default: return { color: '#6b7280', bg: 'rgba(107,114,128,0.08)', icon: <FaTimesCircle /> };
+    }
+  };
 
   if (loading) {
     return (
