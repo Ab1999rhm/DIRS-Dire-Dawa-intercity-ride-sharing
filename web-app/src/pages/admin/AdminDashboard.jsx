@@ -96,7 +96,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="admin-stats-grid">
-          {[1,2,3,4].map(i => <div key={i} className="admin-skeleton" style={{ height: 72 }}></div>)}
+          {[1,2,3,4,5,6].map(i => <div key={i} className="admin-skeleton" style={{ height: 72 }}></div>)}
         </div>
         <div className="admin-skeleton" style={{ height: 100 }}></div>
         <div className="admin-skeleton" style={{ height: 200 }}></div>
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
           <button className="admin-icon-btn" onClick={fetchDashboard}>
             <FaSync />
           </button>
-          <button className="admin-icon-btn">
+          <button className="admin-icon-btn" onClick={() => navigate('/admin/safety')}>
             <FaBell />
             {(stats?.sosAlerts || 0) > 0 && (
               <span className="badge">{stats.sosAlerts}</span>
@@ -172,8 +172,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="admin-stats-grid admin-animate-in-delay-1">
+      {/* Today's Live Metrics - 6 cards */}
+      <div className="admin-stats-grid admin-animate-in-delay-1" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         {statCards.map((card) => (
           <div key={card.key} className="admin-stat-card">
             <div className="admin-stat-icon" style={{ background: card.bg, color: card.color }}>
@@ -183,57 +183,169 @@ const AdminDashboard = () => {
               <div className="admin-stat-value">
                 {card.isCurrency ? `ETB ${(card.value || 0).toLocaleString()}` : (card.value || 0).toLocaleString()}
               </div>
-              <div className="admin-stat-label">{card.label || t(`admin.${card.key}`) || card.key}</div>
+              <div className="admin-stat-label">{card.label}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="admin-section-title admin-animate-in-delay-2">
-        <FaSearch /> {t('admin.quickActions') || 'Quick Actions'}
+      {/* Quick Actions - Most Used Tasks */}
+      <div className="admin-section-title admin-animate-in-delay-2" style={{ marginTop: 24 }}>
+        <FaSearch /> Quick Actions
       </div>
-      <div className="admin-actions-grid admin-animate-in-delay-2">
+      <div className="admin-actions-grid admin-animate-in-delay-2" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         {quickActions.map((action, i) => (
           <button key={i} className="admin-action-card" onClick={() => navigate(action.path)}>
             <div className="admin-action-icon" style={{ background: action.bg, color: action.color }}>
               {action.icon}
             </div>
             <div className="admin-action-label">{action.label}</div>
+            {action.priority === 'critical' && <span className="badge" style={{ position: 'absolute', top: 8, right: 8, background: '#dc2626' }}>!</span>}
           </button>
         ))}
       </div>
 
-      {/* All Admin Roles */}
-      <div className="admin-roles-section admin-animate-in-delay-3">
-        <div className="admin-section-title">
-          <FaUserShield /> {t('admin.allRoles') || 'All Roles'}
+      {/* Live Status Panels */}
+      <div className="admin-section-title admin-animate-in-delay-3" style={{ marginTop: 24 }}>
+        <FaWifi /> Live Status
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
+        {/* Active Trips Panel */}
+        <div style={{ padding: 16, background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+            <FaRoute style={{ color: '#3b82f6', marginRight: 8 }} />
+            <span style={{ fontWeight: 600 }}>Active Trips Now</span>
+          </div>
+          {activeTrips.length === 0 ? (
+            <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>
+              No active trips
+            </div>
+          ) : (
+            <div>
+              {activeTrips.slice(0, 5).map((trip) => (
+                <div key={trip._id} style={{ padding: 8, borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{trip.driver?.name || 'Unknown'}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{trip.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="admin-roles-grid">
-          {roles.map((role, i) => (
-            <button key={i} className="admin-role-card" onClick={() => navigate(role.path)}>
-              <div className="admin-role-icon" style={{ background: role.bg, color: role.color }}>
-                {role.icon}
+
+        {/* Online Drivers Panel */}
+        <div style={{ padding: 16, background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+            <FaCar style={{ color: '#10b981', marginRight: 8 }} />
+            <span style={{ fontWeight: 600 }}>Online Drivers</span>
+          </div>
+          {onlineDrivers.length === 0 ? (
+            <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>
+              No drivers online
+            </div>
+          ) : (
+            <div>
+              {onlineDrivers.slice(0, 5).map((driver) => (
+                <div key={driver._id} style={{ padding: 8, borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{driver.name}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{driver.vehicleType || 'N/A'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent SOS Panel */}
+        <div style={{ padding: 16, background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+            <FaShieldAlt style={{ color: '#dc2626', marginRight: 8 }} />
+            <span style={{ fontWeight: 600 }}>Recent SOS Alerts</span>
+          </div>
+          {recentSOS.length === 0 ? (
+            <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)' }}>
+              No recent alerts
+            </div>
+          ) : (
+            <div>
+              {recentSOS.slice(0, 5).map((sos) => (
+                <div key={sos._id} style={{ padding: 8, borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{sos.user?.name || 'Unknown'}</span>
+                  <span style={{ fontSize: 12, color: sos.status === 'active' ? '#dc2626' : '#10b981' }}>{sos.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* System Health Panel */}
+        <div style={{ padding: 16, background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+            <FaServer style={{ color: '#7c3aed', marginRight: 8 }} />
+            <span style={{ fontWeight: 600 }}>System Health</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>API</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {getHealthStatus(systemHealth.api).icon}
+                <span style={{ fontSize: 12, color: getHealthStatus(systemHealth.api).color }}>{systemHealth.api}</span>
               </div>
-              <div className="admin-role-info">
-                <div className="admin-role-name">{role.name}</div>
-                <div className="admin-role-count">{role.count}</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Database</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {getHealthStatus(systemHealth.db).icon}
+                <span style={{ fontSize: 12, color: getHealthStatus(systemHealth.db).color }}>{systemHealth.db}</span>
               </div>
-              <div className="admin-role-arrow"><FaArrowRight /></div>
-            </button>
-          ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Socket</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {getHealthStatus(systemHealth.socket).icon}
+                <span style={{ fontSize: 12, color: getHealthStatus(systemHealth.socket).color }}>{systemHealth.socket}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Operational Summary */}
+      <div className="admin-section-title admin-animate-in-delay-4" style={{ marginTop: 24 }}>
+        <FaChartBar /> Operational Summary
+      </div>
+      <div style={{ padding: 16, background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Trips Today</div>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>{stats?.completedToday || 0} completed</div>
+            <div style={{ fontSize: 12, color: '#dc2626' }}>{stats?.cancelledToday || 0} cancelled</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Revenue Today</div>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>ETB {(stats?.todayRevenue || 0).toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: '#10b981' }}>{stats?.commissionToday || 0} commission</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Driver Activity</div>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>{stats?.onlineDrivers || 0} online</div>
+            <div style={{ fontSize: 12, color: '#f59e0b' }}>{stats?.onTripDrivers || 0} on trip</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Passenger Activity</div>
+            <div style={{ fontSize: 20, fontWeight: 600 }}>{stats?.activePassengers || 0} active</div>
+            <div style={{ fontSize: 12, color: '#3b82f6' }}>{stats?.newSignupsToday || 0} new today</div>
+          </div>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="admin-activity-section admin-animate-in-delay-4">
+      <div className="admin-activity-section admin-animate-in-delay-5">
         <div className="admin-section-title">
-          <FaClock /> {t('admin.recentActivity') || 'Recent Activity'}
+          <FaClock /> Recent Activity
         </div>
         <div className="admin-activity-list">
           {recentActivity.length === 0 ? (
             <div className="admin-empty" style={{ padding: '24px 16px' }}>
-              <p>{t('admin.noActivity') || 'No recent activity'}</p>
+              <p>No recent activity</p>
             </div>
           ) : (
             recentActivity.slice(0, 8).map((activity, i) => (
@@ -258,31 +370,6 @@ const AdminDashboard = () => {
             ))
           )}
         </div>
-      </div>
-
-      {/* More Actions */}
-      <div className="admin-section-title" style={{ marginTop: 8 }}>
-        <FaEllipsisH /> {t('admin.moreActions') || 'More'}
-      </div>
-      <div className="admin-actions-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        <button className="admin-action-card" onClick={() => navigate('/admin/trips')}>
-          <div className="admin-action-icon" style={{ background: 'rgba(217,119,6,0.08)', color: '#d97706' }}>
-            <FaCar />
-          </div>
-          <div className="admin-action-label">{t('admin.trips') || 'Trips'}</div>
-        </button>
-        <button className="admin-action-card" onClick={() => navigate('/admin/tariffs')}>
-          <div className="admin-action-icon" style={{ background: 'rgba(8,145,178,0.08)', color: '#0891b2' }}>
-            <FaTag />
-          </div>
-          <div className="admin-action-label">{t('admin.tariffs') || 'Tariffs'}</div>
-        </button>
-        <button className="admin-action-card" onClick={() => navigate('/admin/promos')}>
-          <div className="admin-action-icon" style={{ background: 'rgba(236,72,153,0.08)', color: '#ec4899' }}>
-            <FaTag />
-          </div>
-          <div className="admin-action-label">{t('admin.promos') || 'Promos'}</div>
-        </button>
       </div>
     </div>
   );

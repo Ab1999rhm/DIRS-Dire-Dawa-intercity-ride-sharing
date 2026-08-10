@@ -53,15 +53,18 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const activeDrivers = await Driver.countDocuments({ isAvailable: true });
   const totalTrips = await Trip.countDocuments();
   const completedTrips = await Trip.countDocuments({ status: 'completed' });
-  const activeTrips = await Trip.countDocuments({ status: { $in: ['driver_arriving', 'in_progress'] } });
+  const activeTripsCount = await Trip.countDocuments({ status: { $in: ['driver_arriving', 'in_progress'] } });
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const todayTrips = await Trip.countDocuments({ createdAt: { $gte: today } });
+  const completedToday = await Trip.countDocuments({ status: 'completed', createdAt: { $gte: today } });
+  const cancelledToday = await Trip.countDocuments({ status: 'cancelled', createdAt: { $gte: today } });
+  
   const todayRevenue = await Payment.aggregate([
     { $match: { status: 'completed', createdAt: { $gte: today } } },
-    { $group: { _id: null, total: { $sum: '$platformCommission' } } }
+    { $group: { _id: null, total: { $sum: '$amount' }, commission: { $sum: '$platformCommission' } } }
   ]);
 
   const monthlyRevenue = await Payment.aggregate([
@@ -76,29 +79,85 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 
   const activeSOS = await SOSAlert.countDocuments({ status: 'active' });
 
-  const recentTrips = await Trip.find()
+  // Get active trips with details
+  const activeTrips = await Trip.find({ status: { $in: ['driver_arriving', 'in_progress'] } })
+    .populate('driver', 'firstName lastName')
+    .populate('passenger', 'firstName lastName')
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+  // Get online drivers
+  const onlineDrivers = await Driver.find({ isAvailable: true })
+    .populate('user', 'firstName lastName')
+    .limit(10);
+
+  // Get recent SOS alerts
+  const recentSOS = await SOSAlert.find({ status: { $in: ['active', 'resolved'] } })
+    .populate('user', 'firstName lastName')
+    .sort({ createdAt: -1 })
+    .limit(5);
+
+  // Get drivers on trip
+  const onTripDrivers = await Driver.countDocuments({ currentTrip: { $exists: true, $ne: null } });
+
+  // Get active passengers (those with active trips)
+  const activePassengers = await User.countDocuments({ 
+    role: 'passenger',
+    _id: { $in: activeTrips.map(t => t.passenger) }
+  });
+
+  // Get new signups today
+  const newSignupsToday = await User.countDocuments({ 
+    createdAt: { $gte: today } 
+  });
+
+  // System health check
+  const systemHealth = {
+    api: 'operational',
+    db: mongoose.connection.readyState === 1 ? 'operational' : 'degraded',
+    socket: 'operational'
+  };
+
+  // Recent activity
+  const recentActivity = await Trip.find()
     .populate('passenger', 'firstName lastName')
     .populate('driver', 'user')
     .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName' } })
     .sort({ createdAt: -1 })
-    .limit(5);
+    .limit(8);
 
   res.json({
     stats: {
       totalUsers,
       totalPassengers,
       totalDrivers,
-      pendingVerifications,
-      activeDrivers,
+      pendingVerifications: pendingVerifications,
+      activeDrivers: activeDrivers,
       totalTrips,
       completedTrips,
-      activeTrips,
+      activeTrips: activeTripsCount,
       todayTrips,
       todayRevenue: todayRevenue[0]?.total || 0,
+      commissionToday: todayRevenue[0]?.commission || 0,
       monthlyRevenue: monthlyRevenue[0]?.total || 0,
-      activeSOS
+      sosAlerts: activeSOS,
+      completedToday,
+      cancelledToday,
+      onlineDrivers: activeDrivers,
+      pendingApprovals: pendingVerifications,
+      onTripDrivers,
+      activePassengers,
+      newSignupsToday
     },
-    recentTrips
+    recentActivity: recentActivity.map(t => ({
+      type: 'trip',
+      description: `Trip ${t.status}`,
+      time: new Date(t.createdAt).toLocaleString()
+    })),
+    activeTrips,
+    onlineDrivers,
+    recentSOS,
+    systemHealth
   });
 });
 
