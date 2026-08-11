@@ -265,22 +265,22 @@ const AnalyticsReporting = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #059669)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
         <FaChartLine style={{ fontSize: 20 }} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>{t('admin.analyticsReporting') || 'Analytics & Reporting'}</span>
-        <button onClick={() => handleExport(activeTab)} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.15)', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-          <FaDownload style={{ fontSize: 10 }} /> Export CSV
+        <button className="analytics-export-btn" onClick={() => handleExport(activeTab)}>
+          <FaDownload /> Export CSV
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
         {periodButtons.map(p => (
-          <button key={p.key} onClick={() => setFilterPeriod(p.key)} style={{ padding: '6px 14px', borderRadius: 16, border: filterPeriod === p.key ? 'none' : '1px solid #e5e7eb', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filterPeriod === p.key ? 'linear-gradient(135deg, #059669, #10b981)' : 'white', color: filterPeriod === p.key ? 'white' : '#6b7280', transition: 'all 0.2s ease' }}>
-          {p.label}
-        </button>
+          <button key={p.key} onClick={() => setFilterPeriod(p.key)} className={`analytics-period-btn ${filterPeriod === p.key ? 'active' : ''}`}>
+            {p.label}
+          </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 16, border: activeTab === tab.key ? 'none' : '1px solid #e5e7eb', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', background: activeTab === tab.key ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white', color: activeTab === tab.key ? 'white' : '#6b7280', transition: 'all 0.2s ease' }}>
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`analytics-tab-btn ${activeTab === tab.key ? 'active' : ''}`}>
             {tab.icon} {tab.label}
           </button>
         ))}
