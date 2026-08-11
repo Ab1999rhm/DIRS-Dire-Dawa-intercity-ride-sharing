@@ -13,12 +13,12 @@ const buildDateFilter = (startDate, endDate) => {
   const f = {};
   if (startDate && !isNaN(new Date(startDate).getTime())) f.$gte = new Date(startDate);
   if (endDate && !isNaN(new Date(endDate).getTime())) f.$lte = new Date(endDate);
-  return f;
+  return Object.keys(f).length > 0 ? f : undefined;
 };
 
 const dateQ = (startDate, endDate) => {
   const f = buildDateFilter(startDate, endDate);
-  return Object.keys(f).length > 0 ? { createdAt: f } : {};
+  return f ? { createdAt: f } : {};
 };
 const Ticket = require('../../models/Ticket');
 const SupportChat = require('../../models/SupportChat');
@@ -3059,11 +3059,9 @@ exports.getRevenueTrends = asyncHandler(async (req, res) => {
 exports.getRevenueByRoute = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = buildDateFilter(startDate, endDate);
-  
   const trips = await Trip.find({
     status: 'completed',
-    createdAt: dateFilter
+    ...dateQ(startDate, endDate)
   }).populate('payment');
   
   const revenueByRoute = {};
@@ -3083,11 +3081,9 @@ exports.getRevenueByRoute = asyncHandler(async (req, res) => {
 exports.getRevenueByVehicleType = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = buildDateFilter(startDate, endDate);
-  
   const trips = await Trip.find({
     status: 'completed',
-    createdAt: dateFilter
+    ...dateQ(startDate, endDate)
   }).populate('driver').populate('payment');
   
   const revenueByVehicle = {};
@@ -3167,11 +3163,9 @@ exports.getRevenuePerPassenger = asyncHandler(async (req, res) => {
 exports.getSurgePricingImpact = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = buildDateFilter(startDate, endDate);
-  
   const trips = await Trip.find({
     status: 'completed',
-    createdAt: dateFilter
+    ...dateQ(startDate, endDate)
   }).populate('payment');
   
   let surgeRevenue = 0;
