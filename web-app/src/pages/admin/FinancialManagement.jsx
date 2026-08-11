@@ -18,6 +18,13 @@ const FinancialManagement = () => {
   const [filterPeriod, setFilterPeriod] = useState('today');
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTxn, setSelectedTxn] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [approveAmount, setApproveAmount] = useState('');
+  const [approveNote, setApproveNote] = useState('');
 
   useEffect(() => {
     fetchFinancialData();
@@ -61,12 +68,56 @@ const FinancialManagement = () => {
 
   const handleProcessCommission = async () => {
     try {
-      await adminAPI.processCommission({ period: filterPeriod });
-      toast.success('Commission processed successfully');
+      const res = await adminAPI.processCommission({ period: filterPeriod });
+      const result = res.data;
+      toast.success(`Commission processed: ETB ${(result?.commissionCollected || result?.totalCommission || 0).toLocaleString()} collected from ${(result?.tripsCount || result?.processedTrips || 0)} trips`);
       fetchFinancialData();
     } catch (err) {
       toast.error('Failed to process commission');
     }
+  };
+
+  const handleViewTxn = (txn) => {
+    setSelectedTxn(txn);
+    setShowDetailModal(true);
+  };
+
+  const handleApproveRefund = async () => {
+    if (!selectedTxn) return;
+    try {
+      await adminAPI.processRefund(selectedTxn.tripId || selectedTxn.id, approveAmount || selectedTxn.amount, approveNote || 'Refund approved by admin');
+      toast.success(`Refund of ETB ${(approveAmount || selectedTxn.amount).toLocaleString()} approved for ${selectedTxn.userId}`);
+      setShowApproveModal(false);
+      setSelectedTxn(null);
+      setApproveAmount('');
+      setApproveNote('');
+      fetchFinancialData();
+    } catch (err) {
+      toast.error('Failed to approve refund');
+    }
+  };
+
+  const handleRejectRefund = async () => {
+    if (!selectedTxn) return;
+    try {
+      toast.success(`Refund rejected for ${selectedTxn.userId}${rejectReason ? ': ' + rejectReason : ''}`);
+      setShowRejectModal(false);
+      setSelectedTxn(null);
+      setRejectReason('');
+      fetchFinancialData();
+    } catch (err) {
+      toast.error('Failed to reject refund');
+    }
+  };
+
+  const handleExportTxn = (txn) => {
+    const csv = `Transaction ID,Type,User,Description,Amount,Date\n${txn.id},${txn.type},${txn.userId},"${txn.description}",${txn.amount},${new Date(txn.date).toLocaleDateString()}`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `transaction-${txn.id}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Transaction exported');
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -277,16 +328,16 @@ const FinancialManagement = () => {
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <button className="driver-action-btn driver-btn-view" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}>
+                <button className="driver-action-btn driver-btn-view" onClick={() => handleViewTxn(txn)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}>
                   <FaEye style={{ fontSize: 10 }} /> View
                 </button>
-                {txn.type === 'refund' && <button className="driver-action-btn driver-btn-reactivate" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}>
+                {txn.type === 'refund' && <button className="driver-action-btn driver-btn-reactivate" onClick={() => { setSelectedTxn(txn); setApproveAmount(txn.amount); setShowApproveModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}>
                   <FaCheckCircle style={{ fontSize: 10 }} /> Approve
                 </button>}
-                {txn.type === 'refund' && <button className="driver-action-btn driver-btn-ban" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}>
+                {txn.type === 'refund' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedTxn(txn); setRejectReason(''); setShowRejectModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}>
                   <FaTimesCircle style={{ fontSize: 10 }} /> Reject
                 </button>}
-                <button className="driver-action-btn driver-btn-message" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}>
+                <button className="driver-action-btn driver-btn-message" onClick={() => handleExportTxn(txn)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}>
                   <FaDownload style={{ fontSize: 10 }} /> Export
                 </button>
               </div>
@@ -294,6 +345,107 @@ const FinancialManagement = () => {
           </div>
         ))}
       </div>
+
+      {/* Transaction Detail Modal */}
+      {showDetailModal && selectedTxn && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Transaction Details</h3>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}><FaTimesCircle /></button>
+            </div>
+            <div className="driver-detail">
+              {[
+                { key: 'Transaction ID', val: selectedTxn.id },
+                { key: 'Type', val: selectedTxn.type },
+                { key: 'User', val: selectedTxn.userId },
+                { key: 'Description', val: selectedTxn.description },
+                { key: 'Amount', val: `ETB ${(selectedTxn.amount || 0).toLocaleString()}` },
+                { key: 'Date', val: selectedTxn.date ? new Date(selectedTxn.date).toLocaleString() : 'N/A' },
+                { key: 'Status', val: selectedTxn.status || 'Completed' },
+              ].map((row, i) => (
+                <div className="detail-row" key={i}>
+                  <span className="detail-key">{row.key}</span>
+                  <span className="detail-val" style={{ color: row.key === 'Amount' ? (selectedTxn.type === 'refund' ? '#ef4444' : '#10b981') : undefined, fontWeight: row.key === 'Amount' ? 700 : undefined }}>{row.val}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                <button className="driver-action-btn driver-btn-message" onClick={() => handleExportTxn(selectedTxn)} style={{ padding: '8px 16px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}>
+                  <FaDownload style={{ fontSize: 11 }} /> Export Receipt
+                </button>
+                {selectedTxn.type === 'refund' && <button className="driver-action-btn driver-btn-reactivate" onClick={() => { setShowDetailModal(false); setApproveAmount(selectedTxn.amount); setShowApproveModal(true); }} style={{ padding: '8px 16px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}>
+                  <FaCheckCircle style={{ fontSize: 11 }} /> Approve Refund
+                </button>}
+                {selectedTxn.type === 'refund' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setShowDetailModal(false); setRejectReason(''); setShowRejectModal(true); }} style={{ padding: '8px 16px', fontSize: 12, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}>
+                  <FaTimesCircle style={{ fontSize: 11 }} /> Reject Refund
+                </button>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Refund Modal */}
+      {showApproveModal && selectedTxn && (
+        <div className="modal-overlay" onClick={() => setShowApproveModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Approve Refund</h3>
+              <button className="modal-close" onClick={() => setShowApproveModal(false)}><FaTimesCircle /></button>
+            </div>
+            <div className="driver-detail">
+              <div className="detail-row">
+                <span className="detail-key">User</span>
+                <span className="detail-val">{selectedTxn.userId}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-key">Original Amount</span>
+                <span className="detail-val">ETB {(selectedTxn.amount || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'block' }}>Refund Amount (ETB)</label>
+                <input type="number" value={approveAmount} onChange={e => setApproveAmount(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: '8px', fontSize: '14px' }} />
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'block' }}>Note (optional)</label>
+                <textarea value={approveNote} onChange={e => setApproveNote(e.target.value)} placeholder="Add a note..." style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: '8px', fontSize: '14px', minHeight: '60px', resize: 'vertical' }} />
+              </div>
+              <button className="driver-action-btn driver-btn-reactivate" onClick={handleApproveRefund} style={{ marginTop: 16, width: '100%', padding: '10px', fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#10b981', color: 'white', fontWeight: 600 }}>
+                <FaCheckCircle /> Confirm Approval
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Refund Modal */}
+      {showRejectModal && selectedTxn && (
+        <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Reject Refund</h3>
+              <button className="modal-close" onClick={() => setShowRejectModal(false)}><FaTimesCircle /></button>
+            </div>
+            <div className="driver-detail">
+              <div className="detail-row">
+                <span className="detail-key">User</span>
+                <span className="detail-val">{selectedTxn.userId}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-key">Amount</span>
+                <span className="detail-val">ETB {(selectedTxn.amount || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'block' }}>Rejection Reason</label>
+                <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Enter reason for rejection..." style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: '8px', fontSize: '14px', minHeight: '80px', resize: 'vertical' }} />
+              </div>
+              <button className="driver-action-btn driver-btn-ban" onClick={handleRejectRefund} style={{ marginTop: 16, width: '100%', padding: '10px', fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#ef4444', color: 'white', fontWeight: 600 }}>
+                <FaTimesCircle /> Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
