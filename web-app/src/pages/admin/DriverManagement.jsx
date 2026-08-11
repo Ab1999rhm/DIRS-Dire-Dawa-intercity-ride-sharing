@@ -430,22 +430,90 @@ const DriverManagement = () => {
           <div className="admin-role-badge"><FaCar /> {drivers.length} {t('admin.totalDrivers') || 'Total Drivers'}</div>
         </div>
         <div className="admin-header-actions">
-          <button className="admin-icon-btn" onClick={exportCSV} title="Export CSV" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <FaFileExport /> <span style={{ fontSize: 11, fontWeight: 600 }}>Export</span>
+          <button 
+            className="admin-icon-btn" 
+            onClick={exportCSV} 
+            title="Export CSV" 
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+              borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white', fontWeight: 600, fontSize: 12,
+              transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(16,185,129,0.2)'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.2)'; }}
+          >
+            <FaFileExport /> <span>Export</span>
           </button>
-          <button className="admin-icon-btn" onClick={() => setShowAnnouncementModal(true)} title="Send Announcement" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <FaBullhorn /> <span style={{ fontSize: 11, fontWeight: 600 }}>Announce</span>
+          <button 
+            className="admin-icon-btn" 
+            onClick={() => setShowAnnouncementModal(true)} 
+            title="Send Announcement" 
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+              borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              color: 'white', fontWeight: 600, fontSize: 12,
+              transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(245,158,11,0.2)'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,158,11,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(245,158,11,0.2)'; }}
+          >
+            <FaBullhorn /> <span>Announce</span>
           </button>
-          <button className="admin-icon-btn" onClick={fetchDrivers} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <FaSync /> <span style={{ fontSize: 11, fontWeight: 600 }}>Sync</span>
+          <button 
+            className="admin-icon-btn" 
+            onClick={fetchDrivers} 
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+              borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              color: 'white', fontWeight: 600, fontSize: 12,
+              transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(59,130,246,0.2)'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(59,130,246,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(59,130,246,0.2)'; }}
+          >
+            <FaSync /> <span>Sync</span>
           </button>
         </div>
       </div>
 
       <div className="admin-stats-grid" style={{ marginBottom: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
         {statCards.map((stat, idx) => (
-          <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${Math.min(idx + 1, 5)}`} style={{ borderLeft: `4px solid ${stat.color}` }}>
-            <div className="admin-stat-icon" style={{ background: `${stat.color}15`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+          <div 
+            key={stat.label} 
+            className={`admin-stat-card admin-animate-in admin-animate-in-delay-${Math.min(idx + 1, 5)}`} 
+            style={{ 
+              borderLeft: `4px solid ${stat.color}`,
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+              e.currentTarget.style.boxShadow = `0 8px 24px ${stat.color}30`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div 
+              className="admin-stat-icon" 
+              style={{ 
+                background: `${stat.color}15`, 
+                color: stat.color, 
+                borderRadius: '50%', 
+                width: 40, 
+                height: 40, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: 16,
+                transition: 'all 0.3s ease'
+              }}
+            >
               {stat.icon}
             </div>
             <div>
@@ -503,45 +571,61 @@ const DriverManagement = () => {
             })}
           </div>
           <div className="admin-section-title"><FaCar /> All Drivers ({filteredDrivers.length})</div>
-          <div className="admin-activity-list">
-            {filteredDrivers.map(driver => (
-              <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: `3px solid ${getStatusColor(driver.status)}`, borderRadius: 10, marginBottom: 8, padding: 14 }} onClick={() => openDetail(driver)} onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="admin-activity-icon" style={{ background: `${getStatusColor(driver.status)}15`, color: getStatusColor(driver.status), flexShrink: 0 }}>
-                    <FaCarSide />
+          <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+            {filteredDrivers.length === 0 ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaCar style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>No drivers found</p>
+              </div>
+            ) : filteredDrivers.map((driver, idx) => (
+              <div
+                key={driver._id}
+                style={{
+                  padding: '14px 16px',
+                  borderBottom: idx < filteredDrivers.length - 1 ? '1px solid var(--border-light)' : 'none',
+                  background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onClick={() => openDetail(driver)}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.03)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))'; }}
+              >
+                {/* Top row: Avatar, Name, Status, Rating */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${getStatusColor(driver.status)}15`, color: getStatusColor(driver.status), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FaCarSide style={{ fontSize: 14 }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{driver.user?.phoneNumber || driver.phoneNumber}</div>
+                    </div>
                   </div>
-                  <div className="admin-activity-info" style={{ flex: 1 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 700, fontSize: 14 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
-                    <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.vehicle?.plateNumber} · {driver.user?.phoneNumber || driver.phoneNumber}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600, color: '#f59e0b' }}>
+                      <FaStar style={{ fontSize: 11 }} /> {getDriverRating(driver).toFixed(1)}
+                    </span>
+                    <span style={{ background: getStatusBg(driver.status), color: getStatusColor(driver.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{driver.status}</span>
+                    {driver.warnings > 0 && <span style={{ fontSize: 9, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 2 }}><FaExclamationTriangle style={{ fontSize: 8 }} /> {driver.warnings}</span>}
                   </div>
-                  <span className="status-badge" style={{ background: getStatusBg(driver.status), color: getStatusColor(driver.status), fontSize: 10, padding: '3px 10px', borderRadius: 12, fontWeight: 600, textTransform: 'capitalize', flexShrink: 0 }}>{driver.status}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}><FaStar style={{ fontSize: 10 }} /> {getDriverRating(driver).toFixed(1)}</span>
-                  <span style={{ fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 3 }}><FaCar style={{ fontSize: 10 }} /> {driver.totalTrips || 0} trips</span>
-                  <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}><FaMoneyBillWave style={{ fontSize: 10 }} /> ETB {(driver.totalEarnings || 0).toLocaleString()}</span>
-                  {driver.warnings > 0 && <span style={{ fontSize: 10, color: '#ef4444', background: '#fef2f2', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}><FaExclamationTriangle style={{ fontSize: 9 }} /> {driver.warnings} warnings</span>}
-                  {driver.complaints > 0 && <span style={{ fontSize: 10, color: '#d97706', background: '#fef3c7', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}><FaEnvelope style={{ fontSize: 9 }} /> {driver.complaints} complaints</span>}
+
+                {/* Middle row: Vehicle, Stats */}
+                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10, flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FaCar style={{ color: '#3b82f6', fontSize: 11 }} />{driver.vehicle?.make} {driver.vehicle?.model} · {driver.vehicle?.plateNumber}</span>
+                  <span><FaCar style={{ color: '#3b82f6', marginRight: 4 }} />{driver.totalTrips || 0} trips</span>
+                  <span><FaWallet style={{ color: '#10b981', marginRight: 4 }} />ETB {(driver.totalEarnings || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                  <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(driver)}>
-                    <FaEye style={{ fontSize: 10 }} /> View
-                  </button>
-                  <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedDriver(driver); setShowMessageModal(true); }}>
-                    <FaPaperPlane style={{ fontSize: 10 }} /> Message
-                  </button>
-                  <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedDriver(driver); setShowWarnModal(true); }}>
-                    <FaExclamationTriangle style={{ fontSize: 10 }} /> Warn
-                  </button>
-                  {driver.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedDriver(driver); setShowSuspendModal(true); }}>
-                    <FaBan style={{ fontSize: 10 }} /> Suspend
-                  </button>}
-                  {driver.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedDriver(driver); setShowBanModal(true); }}>
-                    <FaTrash style={{ fontSize: 10 }} /> Ban
-                  </button>}
-                  {(driver.status === 'suspended' || driver.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivate(driver._id)}>
-                    <FaCheck style={{ fontSize: 10 }} /> Reactivate
-                  </button>}
+
+                {/* Bottom row: Action Buttons */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                  <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(driver)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> View</button>
+                  <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedDriver(driver); setShowMessageModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaPaperPlane style={{ fontSize: 10 }} /> Message</button>
+                  <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedDriver(driver); setShowWarnModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 10 }} /> Warn</button>
+                  {driver.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedDriver(driver); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
+                  {driver.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedDriver(driver); setShowBanModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Ban</button>}
+                  {(driver.status === 'suspended' || driver.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivate(driver._id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 10 }} /> Reactivate</button>}
                 </div>
               </div>
             ))}
