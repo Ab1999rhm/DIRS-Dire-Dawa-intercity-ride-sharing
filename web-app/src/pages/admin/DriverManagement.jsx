@@ -517,7 +517,7 @@ const DriverManagement = () => {
                   <span className="status-badge" style={{ background: getStatusBg(driver.status), color: getStatusColor(driver.status), fontSize: 10, padding: '3px 10px', borderRadius: 12, fontWeight: 600, textTransform: 'capitalize', flexShrink: 0 }}>{driver.status}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}><FaStar style={{ fontSize: 10 }} /> {{getDriverRating(driver).toFixed(1)}</span>
+                  <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}><FaStar style={{ fontSize: 10 }} /> {getDriverRating(driver).toFixed(1)}</span>
                   <span style={{ fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 3 }}><FaCar style={{ fontSize: 10 }} /> {driver.totalTrips || 0} trips</span>
                   <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}><FaMoneyBillWave style={{ fontSize: 10 }} /> ETB {(driver.totalEarnings || 0).toLocaleString()}</span>
                   {driver.warnings > 0 && <span style={{ fontSize: 10, color: '#ef4444', background: '#fef2f2', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}><FaExclamationTriangle style={{ fontSize: 9 }} /> {driver.warnings} warnings</span>}
@@ -655,7 +655,7 @@ const DriverManagement = () => {
                   <div className="admin-activity-info" style={{ flex: 1 }}>
                     <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ color: '#f59e0b', fontSize: 9 }} /> {{getDriverRating(driver).toFixed(1)}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ color: '#f59e0b', fontSize: 9 }} /> {getDriverRating(driver).toFixed(1)}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCheckCircle style={{ color: '#10b981', fontSize: 9 }} /> {completionRate}% completion</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCar style={{ color: '#3b82f6', fontSize: 9 }} /> {driver.totalTrips || 0} trips</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaTimesCircle style={{ color: '#ef4444', fontSize: 9 }} /> {driver.cancelledTrips || 0} cancelled</span>
@@ -873,7 +873,7 @@ const DriverManagement = () => {
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedDriver.user?.firstName || selectedDriver.firstName} {selectedDriver.user?.lastName || selectedDriver.lastName}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <span className="status-badge" style={{ background: getStatusBg(selectedDriver.status), color: getStatusColor(selectedDriver.status), fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 600, textTransform: 'capitalize' }}>{selectedDriver.status}</span>
-                    <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ fontSize: 10 }} /> {{getDriverRating(selectedDriver).toFixed(1)}</span>
+                    <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ fontSize: 10 }} /> {getDriverRating(selectedDriver).toFixed(1)}</span>
                     <span style={{ fontSize: 11, color: '#6b7280' }}>{selectedDriver.vehicle?.make} {selectedDriver.vehicle?.model}</span>
                   </div>
                 </div>
