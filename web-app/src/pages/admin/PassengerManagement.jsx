@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FaUsers, FaUserCheck, FaUserTimes, FaStar, FaWallet, FaSearch,
-  FaFilter, FaEye, FaCheckCircle, FaTimesCircle, FaClock, FaBan,
-  FaMoneyBillWave, FaIdCard, FaCreditCard, FaHistory, FaExclamationTriangle,
-  FaEnvelope, FaShieldAlt, FaMapMarkerAlt, FaChartBar, FaDownload,
-  FaBell, FaSms, FaFileAlt, FaCar, FaTimes, FaPlus, FaExclamationCircle,
-  FaUserSlash, FaUserShield, FaToggleOn, FaToggleOff
+  FaUsers, FaUserCheck, FaStar, FaWallet, FaSearch,
+  FaEye, FaCheckCircle, FaBan,
+  FaMoneyBillWave, FaIdCard, FaExclamationTriangle,
+  FaEnvelope,
+  FaUserSlash, FaToggleOn, FaDownload, FaSync, FaPlus,
+  FaPaperPlane, FaCar, FaTimes, FaCheck, FaTrash,
+  FaUser
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -20,10 +21,8 @@ const PassengerManagement = () => {
   const [selectedPassenger, setSelectedPassenger] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
   const [detailTab, setDetailTab] = useState('overview');
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageMode, setMessageMode] = useState('message');
@@ -88,16 +87,6 @@ const PassengerManagement = () => {
       fetchPassengers();
     } catch (err) {
       toast.error('Failed to reactivate passenger');
-    }
-  };
-
-  const handleViewWallet = async (passengerId) => {
-    try {
-      const res = await adminAPI.getPassengerWallet(passengerId);
-      setSelectedPassenger({ ...res.data, id: passengerId });
-      setShowWalletModal(true);
-    } catch (err) {
-      toast.error('Failed to fetch wallet information');
     }
   };
 
@@ -225,6 +214,12 @@ const PassengerManagement = () => {
     }
   };
 
+  const getRating = (p) => {
+    if (typeof p.rating === 'number') return p.rating;
+    if (p.rating && typeof p.rating === 'object') return p.rating.average || 0;
+    return 0;
+  };
+
   if (loading) {
     return (
       <div className="admin-page">
@@ -268,282 +263,124 @@ const PassengerManagement = () => {
         />
       </div>
 
-      {/* Tabs */}
-      <div className="admin-filter-tabs admin-animate-in-delay-1">
-        <button className={`admin-filter-tab ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>
-          {t('admin.all') || 'All'} ({passengers.length})
-        </button>
-        <button className={`admin-filter-tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>
-          {t('admin.active') || 'Active'} ({passengers.filter(p => p.status === 'active').length})
-        </button>
-        <button className={`admin-filter-tab ${activeTab === 'suspended' ? 'active' : ''}`} onClick={() => setActiveTab('suspended')}>
-          {t('admin.suspended') || 'Suspended'} ({passengers.filter(p => p.status === 'suspended').length})
-        </button>
-        <button className={`admin-filter-tab ${activeTab === 'behavior' ? 'active' : ''}`} onClick={() => setActiveTab('behavior')}>
-          <FaExclamationTriangle /> {t('admin.behavior') || 'Behavior'}
-        </button>
-        <button className={`admin-filter-tab ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-          <FaChartBar /> {t('admin.analytics') || 'Analytics'}
-        </button>
+      {/* Filter Tabs */}
+      <div className="admin-filter-tabs" style={{ gap: 6, marginBottom: 16 }}>
+        {['all', 'active', 'suspended'].map(s => {
+          const count = s === 'all' ? passengers.length : passengers.filter(p => p.status === s).length;
+          return (
+            <button key={s} onClick={() => setFilterStatus(s)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+              borderRadius: 16, border: filterStatus === s ? 'none' : '1px solid #e5e7eb',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: filterStatus === s ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
+              color: filterStatus === s ? 'white' : '#6b7280', transition: 'all 0.2s ease',
+            }}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 20, height: 20, borderRadius: 10, fontSize: 10, fontWeight: 700,
+                background: filterStatus === s ? 'rgba(255,255,255,0.25)' : '#e5e7eb',
+                color: filterStatus === s ? 'white' : '#6b7280',
+              }}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Stats Grid */}
-      <div className="admin-stats-grid admin-animate-in-delay-2" style={{ marginBottom: 20 }}>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-            <FaUserCheck />
+      {/* Stats */}
+      <div className="admin-stats-grid admin-animate-in-delay-1" style={{ marginBottom: 20 }}>
+        {[
+          { icon: <FaUserCheck />, val: passengers.filter(p => p.status === 'active').length, label: t('admin.active') || 'Active', color: '#10b981' },
+          { icon: <FaBan />, val: passengers.filter(p => p.status === 'suspended').length, label: t('admin.suspended') || 'Suspended', color: '#ef4444' },
+          { icon: <FaWallet />, val: `ETB ${passengers.reduce((a, p) => a + (p.walletBalance || 0), 0).toLocaleString()}`, label: t('admin.totalWalletBalance') || 'Total Balance', color: '#3b82f6' },
+          { icon: <FaStar />, val: passengers.length > 0 ? (passengers.reduce((a, p) => a + getRating(p), 0) / passengers.length).toFixed(1) : '0.0', label: t('admin.avgRating') || 'Avg Rating', color: '#f59e0b' },
+        ].map((s, i) => (
+          <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
+            <div><div className="admin-stat-value">{s.val}</div><div className="admin-stat-label">{s.label}</div></div>
           </div>
-          <div>
-            <div className="admin-stat-value">{passengers.filter(p => p.status === 'active').length}</div>
-            <div className="admin-stat-label">{t('admin.active') || 'Active'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}>
-            <FaBan />
-          </div>
-          <div>
-            <div className="admin-stat-value">{passengers.filter(p => p.status === 'suspended').length}</div>
-            <div className="admin-stat-label">{t('admin.suspended') || 'Suspended'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-            <FaWallet />
-          </div>
-          <div>
-            <div className="admin-stat-value">ETB {passengers.reduce((acc, p) => acc + (p.walletBalance || 0), 0).toLocaleString()}</div>
-            <div className="admin-stat-label">{t('admin.totalWalletBalance') || 'Total Balance'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-            <FaStar />
-          </div>
-          <div>
-            <div className="admin-stat-value">{passengers.length > 0 ? (passengers.reduce((acc, p) => acc + (p.rating || 0), 0) / passengers.length).toFixed(1) : '0.0'}</div>
-            <div className="admin-stat-label">{t('admin.avgRating') || 'Avg Rating'}</div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* All Passengers Tab */}
-      {activeTab === 'all' && (
-        <div className="admin-animate-in-delay-3">
-          <div className="admin-section-title"><FaUsers /> {t('admin.allPassengers') || 'All Passengers'}</div>
-          <div className="admin-activity-list">
-            {filteredPassengers.length === 0 ? (
-              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
-                <p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p>
-              </div>
-            ) : (
-              filteredPassengers.map((passenger) => (
-                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'overview')}>
-                  <div className="admin-activity-icon" style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status) }}>
-                    <FaIdCard />
-                  </div>
-                  <div className="admin-activity-info" style={{ flex: 1, minWidth: 0 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {passenger.firstName} {passenger.lastName}
-                    </div>
-                    <div className="admin-activity-time" style={{ color: 'var(--text-secondary)', marginTop: 2 }}>
-                      {passenger.phoneNumber} {passenger.email ? `• ${passenger.email}` : ''}
-                    </div>
-                    <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-                      <span>⭐ {passenger.rating?.toFixed(1) || 'N/A'}</span>
-                      <span>🚗 {passenger.totalTrips || 0} trips</span>
-                      <span>💰 ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
-                      {passenger.complaints > 0 && <span style={{ color: '#ef4444' }}>📩 {passenger.complaints}</span>}
-                      {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ FRAUD</span>}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <div className="status-badge" style={{
-                      background: getPassengerStatusBg(passenger.status),
-                      color: getPassengerStatusColor(passenger.status),
-                      fontWeight: 600,
-                      fontSize: 11,
-                      padding: '4px 10px',
-                      borderRadius: 20
-                    }}>
-                      {passenger.status}
-                    </div>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="View Details" onClick={(e) => { e.stopPropagation(); openDetail(passenger, 'overview'); }}>
-                        <FaEye />
-                      </button>
-                      <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="Wallet" onClick={(e) => { e.stopPropagation(); handleViewWallet(passenger._id || passenger.id); }}>
-                        <FaWallet />
-                      </button>
-                      {passenger.status === 'active' ? (
-                        <button className="admin-icon-btn" style={{ width: 32, height: 32, color: '#ef4444' }} title="Suspend" onClick={(e) => { e.stopPropagation(); setSelectedPassenger(passenger); setShowSuspendModal(true); }}>
-                          <FaBan />
-                        </button>
-                      ) : passenger.status === 'suspended' ? (
-                        <button className="admin-icon-btn" style={{ width: 32, height: 32, color: '#10b981' }} title="Reactivate" onClick={(e) => { e.stopPropagation(); handleReactivatePassenger(passenger._id || passenger.id); }}>
-                          <FaToggleOn />
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {/* Desktop Table */}
+      <div className="driver-table-desktop" style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 160px 120px 100px 120px 100px 240px', gap: 12, padding: '12px 16px', background: 'var(--bg-secondary, rgba(0,0,0,0.02))', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div>Passenger</div><div>Contact</div><div>Rating</div><div>Trips</div><div>Spent</div><div>Status</div><div style={{ textAlign: 'right' }}>Actions</div>
         </div>
-      )}
+        {filteredPassengers.map((passenger, idx) => (
+          <div key={passenger._id || passenger.id} style={{
+            display: 'grid', gridTemplateColumns: '200px 160px 120px 100px 120px 100px 240px',
+            gap: 12, padding: '12px 16px',
+            borderBottom: idx < filteredPassengers.length - 1 ? '1px solid var(--border-light)' : 'none',
+            alignItems: 'center',
+            background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
+            transition: 'all 0.2s ease', cursor: 'pointer',
+          }}
+          onClick={() => openDetail(passenger, 'overview')}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.03)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))'; }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{passenger.firstName} {passenger.lastName}</div>
+              {passenger.email && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{passenger.email}</div>}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{passenger.phoneNumber || 'N/A'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <FaStar style={{ fontSize: 12, color: '#f59e0b' }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#f59e0b' }}>{getRating(passenger).toFixed(1)}</span>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{passenger.totalTrips || 0}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>ETB {(passenger.totalSpent || 0).toLocaleString()}</div>
+            <div>
+              <span style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{passenger.status}</span>
+              {passenger.fraudFlags > 0 && <span style={{ fontSize: 9, color: '#dc2626', marginLeft: 6, display: 'flex', alignItems: 'center', gap: 2 }}><FaExclamationTriangle style={{ fontSize: 8 }} /> {passenger.fraudFlags}</span>}
+            </div>
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
+              <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(passenger, 'overview')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> View</button>
+              <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('message'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaEnvelope style={{ fontSize: 10 }} /> Msg</button>
+              <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('warning'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 10 }} /> Warn</button>
+              {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
+              {passenger.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedPassenger(passenger); setShowBanModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Ban</button>}
+              {(passenger.status === 'suspended' || passenger.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivatePassenger(passenger._id || passenger.id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 10 }} /> Reactivate</button>}
+            </div>
+          </div>
+        ))}
+        {filteredPassengers.length === 0 && <div style={{ padding: '40px 20px', textAlign: 'center' }}><FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} /><p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p></div>}
+      </div>
 
-      {/* Active Tab */}
-      {activeTab === 'active' && (
-        <div className="admin-animate-in-delay-3">
-          <div className="admin-section-title"><FaUserCheck /> {t('admin.activePassengers') || 'Active Passengers'}</div>
-          <div className="admin-activity-list">
-            {filteredPassengers.filter(p => p.status === 'active').length === 0 ? (
-              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <FaUserCheck style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
-                <p style={{ color: 'var(--text-muted)' }}>{t('noActivePassengers') || 'No active passengers'}</p>
+      {/* Mobile Card Layout */}
+      <div className="driver-table-mobile" style={{ display: 'none' }}>
+        {filteredPassengers.map((passenger, idx) => (
+          <div key={passenger._id || passenger.id} style={{ padding: 16, borderBottom: idx < filteredPassengers.length - 1 ? '1px solid var(--border-light)' : 'none', background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))' }} onClick={() => openDetail(passenger)}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${getPassengerStatusColor(passenger.status)}15`, color: getPassengerStatusColor(passenger.status), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaIdCard style={{ fontSize: 16 }} /></div>
+                <div><div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{passenger.firstName} {passenger.lastName}</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{passenger.phoneNumber}</div></div>
               </div>
-            ) : (
-              filteredPassengers.filter(p => p.status === 'active').map((passenger) => (
-                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'overview')}>
-                  <div className="admin-activity-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
-                    <FaUserCheck />
-                  </div>
-                  <div className="admin-activity-info" style={{ flex: 1 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
-                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
-                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
-                      <span>⭐ {passenger.rating?.toFixed(1) || 'N/A'}</span>
-                      <span>🚗 {passenger.totalTrips || 0} trips</span>
-                      <span>💰 ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="View" onClick={(e) => { e.stopPropagation(); openDetail(passenger); }}>
-                      <FaEye />
-                    </button>
-                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="Suspend" onClick={(e) => { e.stopPropagation(); setSelectedPassenger(passenger); setShowSuspendModal(true); }}>
-                      <FaBan />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+              <span style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700 }}>{passenger.status}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              <span><FaStar style={{ color: '#f59e0b', marginRight: 4 }} />{getRating(passenger).toFixed(1)}</span>
+              <span><FaCar style={{ color: '#3b82f6', marginRight: 4 }} />{passenger.totalTrips || 0} trips</span>
+              <span><FaWallet style={{ color: '#10b981', marginRight: 4 }} />ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+              <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(passenger)} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 9 }} /> View</button>
+              <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('message'); }} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaEnvelope style={{ fontSize: 9 }} /> Msg</button>
+              <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('warning'); }} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 9 }} /> Warn</button>
+              {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 9 }} /> Suspend</button>}
+              {(passenger.status === 'suspended' || passenger.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivatePassenger(passenger._id || passenger.id)} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 9 }} /> Reactivate</button>}
+            </div>
           </div>
-        </div>
-      )}
+        ))}
+        {filteredPassengers.length === 0 && <div style={{ padding: '40px 20px', textAlign: 'center' }}><FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} /><p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p></div>}
+      </div>
 
-      {/* Suspended Tab */}
-      {activeTab === 'suspended' && (
-        <div className="admin-animate-in-delay-3">
-          <div className="admin-section-title"><FaBan /> {t('admin.suspendedPassengers') || 'Suspended Passengers'}</div>
-          <div className="admin-activity-list">
-            {filteredPassengers.filter(p => p.status === 'suspended').length === 0 ? (
-              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <FaBan style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
-                <p style={{ color: 'var(--text-muted)' }}>{t('noSuspendedPassengers') || 'No suspended passengers'}</p>
-              </div>
-            ) : (
-              filteredPassengers.filter(p => p.status === 'suspended').map((passenger) => (
-                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'overview')}>
-                  <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                    <FaBan />
-                  </div>
-                  <div className="admin-activity-info" style={{ flex: 1 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
-                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button className="admin-icon-btn" style={{ width: 32, height: 32 }} title="View" onClick={(e) => { e.stopPropagation(); openDetail(passenger); }}>
-                      <FaEye />
-                    </button>
-                    <button className="admin-icon-btn" style={{ width: 32, height: 32, color: '#10b981' }} title="Reactivate" onClick={(e) => { e.stopPropagation(); handleReactivatePassenger(passenger._id || passenger.id); }}>
-                      <FaToggleOn />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      {/* Stats Grid (replaces old separate tabs) */}
 
-      {/* Behavior Tab */}
-      {activeTab === 'behavior' && (
-        <div className="admin-animate-in-delay-3">
-          <div className="admin-section-title"><FaExclamationTriangle /> {t('admin.behaviorMonitoring') || 'Behavior Monitoring'}</div>
-          <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}><FaTimesCircle /></div>
-              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.cancellations || 0), 0)}</div><div className="admin-stat-label">Total Cancellations</div></div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}><FaClock /></div>
-              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.noShows || 0), 0)}</div><div className="admin-stat-label">No-Shows</div></div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}><FaExclamationCircle /></div>
-              <div><div className="admin-stat-value">{passengers.filter(p => p.fraudFlags > 0).length}</div><div className="admin-stat-label">Fraud Flags</div></div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(107, 114, 128, 0.08)', color: '#6b7280' }}><FaExclamationTriangle /></div>
-              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.complaints || 0), 0)}</div><div className="admin-stat-label">Complaints</div></div>
-            </div>
-          </div>
-          <div className="admin-activity-list">
-            {passengers.filter(p => (p.cancellations || 0) > 5 || (p.noShows || 0) > 3 || (p.fraudFlags || 0) > 0 || (p.complaints || 0) > 2).length === 0 ? (
-              <div className="admin-empty" style={{ padding: '40px 20px', textAlign: 'center' }}>
-                <FaCheckCircle style={{ fontSize: 48, color: '#10b981', marginBottom: 16 }} />
-                <p style={{ color: 'var(--text-muted)' }}>All passengers have good behavior</p>
-              </div>
-            ) : (
-              passengers.filter(p => (p.cancellations || 0) > 5 || (p.noShows || 0) > 3 || (p.fraudFlags || 0) > 0 || (p.complaints || 0) > 2).map(passenger => (
-                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16 }} onClick={() => openDetail(passenger, 'behavior')}>
-                  <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><FaExclamationTriangle /></div>
-                  <div className="admin-activity-info" style={{ flex: 1 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
-                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
-                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-muted)' }}>
-                      <span style={{ color: '#ef4444' }}>❌ {passenger.cancellations || 0} cancellations</span>
-                      <span style={{ color: '#f59e0b' }}>⏰ {passenger.noShows || 0} no-shows</span>
-                      {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>⚠️ {passenger.fraudFlags} fraud flags</span>}
-                    </div>
-                  </div>
-                  <div className="status-badge" style={{ background: '#fef2f2', color: '#dc2626', padding: '4px 10px', borderRadius: 20, fontSize: 11 }}>
-                    Review
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      {/* Behavior Tab (kept inline) */}
 
-      {/* Analytics Tab */}
-      {activeTab === 'analytics' && (
-        <div className="admin-animate-in-delay-3">
-          <div className="admin-section-title"><FaChartBar /> {t('admin.analytics') || 'Analytics'}</div>
-          <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}><FaUsers /></div>
-              <div><div className="admin-stat-value">{passengers.length}</div><div className="admin-stat-label">Total Passengers</div></div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}><FaWallet /></div>
-              <div><div className="admin-stat-value">ETB {passengers.reduce((acc, p) => acc + (p.totalSpent || 0), 0).toLocaleString()}</div><div className="admin-stat-label">Total Revenue</div></div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}><FaCar /></div>
-              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.totalTrips || 0), 0)}</div><div className="admin-stat-label">Total Trips</div></div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' }}><FaStar /></div>
-              <div><div className="admin-stat-value">{passengers.length > 0 ? (passengers.reduce((acc, p) => acc + (p.rating || 0), 0) / passengers.length).toFixed(1) : '0.0'}</div><div className="admin-stat-label">Avg Rating</div></div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Detail Modal */}
 
       {/* ===== PASSENGER DETAIL MODAL ===== */}
       {showDetailModal && selectedPassenger && (
@@ -581,7 +418,7 @@ const PassengerManagement = () => {
                 <div className="detail-row"><span className="detail-key">Phone</span><span className="detail-val">{selectedPassenger.phoneNumber}</span></div>
                 <div className="detail-row"><span className="detail-key">Email</span><span className="detail-val">{selectedPassenger.email || 'N/A'}</span></div>
                 <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val" style={{ color: getPassengerStatusColor(selectedPassenger.status), fontWeight: 600 }}>{selectedPassenger.status}</span></div>
-                <div className="detail-row"><span className="detail-key">Rating</span><span className="detail-val">⭐ {selectedPassenger.rating?.toFixed(1) || 'N/A'}</span></div>
+                <div className="detail-row"><span className="detail-key">Rating</span><span className="detail-val">⭐ {getRating(selectedPassenger).toFixed(1)}</span></div>
                 <div className="detail-row"><span className="detail-key">Total Trips</span><span className="detail-val">{selectedPassenger.totalTrips || 0}</span></div>
                 <div className="detail-row"><span className="detail-key">Total Spent</span><span className="detail-val">ETB {(selectedPassenger.totalSpent || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">Wallet Balance</span><span className="detail-val" style={{ color: '#10b981', fontWeight: 600 }}>ETB {(selectedPassenger.walletBalance || 0).toLocaleString()}</span></div>
@@ -596,11 +433,11 @@ const PassengerManagement = () => {
                 <div className="detail-row"><span className="detail-key">Total Spent</span><span className="detail-val">ETB {(selectedPassenger.totalSpent || 0).toLocaleString()}</span></div>
                 <div className="detail-row"><span className="detail-key">Avg per Trip</span><span className="detail-val">ETB {selectedPassenger.totalTrips > 0 ? Math.round((selectedPassenger.totalSpent || 0) / selectedPassenger.totalTrips).toLocaleString() : 0}</span></div>
                 <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-primary btn-sm" style={{ background: '#10b981', flex: 1 }} onClick={() => { setShowAddFundsModal(true); }}>
+                  <button className="driver-action-btn driver-btn-reactivate" onClick={() => setShowAddFundsModal(true)} style={{ background: '#10b981', color: 'white', padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, flex: 1 }}>
                     <FaPlus /> Add Funds
                   </button>
-                  <button className="btn btn-primary btn-sm" style={{ background: '#ef4444', flex: 1 }} onClick={() => { setShowRefundModal(true); }}>
-                    <FaMoneyBillWave /> Process Refund
+                  <button className="driver-action-btn driver-btn-suspend" onClick={() => setShowRefundModal(true)} style={{ background: '#ef4444', color: 'white', padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, flex: 1 }}>
+                    <FaMoneyBillWave /> Refund
                   </button>
                 </div>
                 {passengerTransactions.length > 0 && (
@@ -664,27 +501,14 @@ const PassengerManagement = () => {
               <div className="driver-detail" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, background: 'var(--bg-secondary)', borderRadius: 10 }}>
                   <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Account Status</span>
-                  <button className="btn btn-sm" style={{
-                    background: selectedPassenger.status === 'active' ? '#10b981' : '#6b7280',
-                    color: 'white',
-                    borderRadius: 20,
-                    padding: '6px 16px'
-                  }} onClick={() => selectedPassenger.status === 'active' ? handleSuspendPassenger(selectedPassenger._id || selectedPassenger.id, 'Deactivated by admin') : handleReactivatePassenger(selectedPassenger._id || selectedPassenger.id)}>
+                  <button className="driver-action-btn" style={{ background: selectedPassenger.status === 'active' ? '#10b981' : '#6b7280', color: 'white', borderRadius: 8, padding: '6px 16px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12 }} onClick={() => selectedPassenger.status === 'active' ? handleSuspendPassenger(selectedPassenger._id || selectedPassenger.id, 'Deactivated by admin') : handleReactivatePassenger(selectedPassenger._id || selectedPassenger.id)}>
                     {selectedPassenger.status === 'active' ? 'Deactivate' : 'Activate'}
                   </button>
                 </div>
-                <button className="btn" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowMessageModal(true); setMessageMode('message'); setMessageText(''); }}>
-                  <FaEnvelope /> Send Message
-                </button>
-                <button className="btn" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#b45309', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowMessageModal(true); setMessageMode('warning'); setMessageText(''); }}>
-                  <FaExclamationTriangle /> Issue Warning
-                </button>
-                <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowSuspendModal(true); }}>
-                  <FaBan /> Suspend Account
-                </button>
-                <button className="btn" style={{ background: 'rgba(127, 29, 29, 0.1)', color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setShowBanModal(true); }}>
-                  <FaUserSlash /> Permanently Ban
-                </button>
+                <button className="driver-action-btn driver-btn-message" onClick={() => { setShowMessageModal(true); setMessageMode('message'); setMessageText(''); }} style={{ background: '#0891b2', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaEnvelope /> Send Message</button>
+                <button className="driver-action-btn driver-btn-warn" onClick={() => { setShowMessageModal(true); setMessageMode('warning'); setMessageText(''); }} style={{ background: '#f59e0b', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaExclamationTriangle /> Issue Warning</button>
+                <button className="driver-action-btn driver-btn-suspend" onClick={() => setShowSuspendModal(true)} style={{ background: '#6b7280', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaBan /> Suspend Account</button>
+                <button className="driver-action-btn driver-btn-ban" onClick={() => setShowBanModal(true)} style={{ background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaUserSlash /> Permanently Ban</button>
               </div>
             )}
           </div>
@@ -705,7 +529,7 @@ const PassengerManagement = () => {
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>{messageMode === 'message' ? 'Message' : 'Reason'}</label>
                 <textarea value={messageText} onChange={e => setMessageText(e.target.value)} placeholder={messageMode === 'message' ? 'Enter your message...' : 'Enter reason for warning...'} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 16, background: messageMode === 'message' ? '#3b82f6' : '#f59e0b', width: '100%', padding: 12, borderRadius: 10 }} onClick={messageMode === 'message' ? handleSendMessage : handleIssueWarning}>
+              <button className="driver-action-btn" style={{ marginTop: 16, background: messageMode === 'message' ? '#0891b2' : '#f59e0b', color: 'white', width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }} onClick={messageMode === 'message' ? handleSendMessage : handleIssueWarning}>
                 {messageMode === 'message' ? 'Send Message' : 'Issue Warning'}
               </button>
             </div>
@@ -727,7 +551,7 @@ const PassengerManagement = () => {
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason for Suspension</label>
                 <textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)} placeholder="Enter reason for suspension..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 16, background: '#ef4444', width: '100%', padding: 12, borderRadius: 10 }} onClick={() => handleSuspendPassenger(selectedPassenger._id || selectedPassenger.id, suspendReason)}>
+              <button className="driver-action-btn driver-btn-suspend" style={{ marginTop: 16, background: '#6b7280', color: 'white', width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }} onClick={() => handleSuspendPassenger(selectedPassenger._id || selectedPassenger.id, suspendReason)}>
                 Suspend Account
               </button>
             </div>
@@ -752,7 +576,7 @@ const PassengerManagement = () => {
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason for Ban</label>
                 <textarea value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Enter reason for permanent ban..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 16, background: '#7f1d1d', width: '100%', padding: 12, borderRadius: 10 }} onClick={() => handleBanPassenger(selectedPassenger._id || selectedPassenger.id, banReason)}>
+              <button className="driver-action-btn driver-btn-ban" style={{ marginTop: 16, background: '#ef4444', color: 'white', width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }} onClick={() => handleBanPassenger(selectedPassenger._id || selectedPassenger.id, banReason)}>
                 Permanently Ban
               </button>
             </div>
@@ -779,7 +603,7 @@ const PassengerManagement = () => {
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason</label>
                 <input type="text" value={addFundsReason} onChange={e => setAddFundsReason(e.target.value)} placeholder="Bonus, refund, correction..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 16, background: '#10b981', width: '100%', padding: 12, borderRadius: 10 }} onClick={handleAddFunds}>
+              <button className="driver-action-btn driver-btn-reactivate" style={{ marginTop: 16, background: '#10b981', color: 'white', width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }} onClick={handleAddFunds}>
                 Add Funds
               </button>
             </div>
@@ -806,7 +630,7 @@ const PassengerManagement = () => {
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8, color: 'var(--text-primary)' }}>Reason for Refund</label>
                 <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} placeholder="Enter reason for refund..." style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 100, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
-              <button className="btn btn-primary" style={{ marginTop: 16, background: '#ef4444', width: '100%', padding: 12, borderRadius: 10 }} onClick={handleProcessRefund}>
+              <button className="driver-action-btn driver-btn-suspend" style={{ marginTop: 16, background: '#ef4444', color: 'white', width: '100%', padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }} onClick={handleProcessRefund}>
                 Process Refund
               </button>
             </div>
