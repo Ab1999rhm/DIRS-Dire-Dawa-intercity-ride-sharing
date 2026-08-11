@@ -8,6 +8,13 @@ const SOSAlert = require('../../models/SOSAlert');
 const Incident = require('../../models/Incident');
 const FraudDetection = require('../../models/FraudDetection');
 const SuspiciousActivity = require('../../models/SuspiciousActivity');
+
+const buildDateFilter = (startDate, endDate) => {
+  const dateFilter = {};
+  if (startDate && !isNaN(new Date(startDate).getTime())) dateFilter.$gte = new Date(startDate);
+  if (endDate && !isNaN(new Date(endDate).getTime())) dateFilter.$lte = new Date(endDate);
+  return dateFilter;
+};
 const Ticket = require('../../models/Ticket');
 const SupportChat = require('../../models/SupportChat');
 const FAQ = require('../../models/FAQ');
@@ -3021,12 +3028,12 @@ exports.getRevenueTrends = asyncHandler(async (req, res) => {
   const { period = 'month', startDate, endDate } = req.query;
   
   const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  if (startDate && !isNaN(new Date(startDate).getTime())) dateFilter.$gte = new Date(startDate);
+  if (endDate && !isNaN(new Date(endDate).getTime())) dateFilter.$lte = new Date(endDate);
   
   const payments = await Payment.find({
     status: 'completed',
-    createdAt: dateFilter
+    ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {})
   });
   
   const revenueByDate = {};
@@ -3047,9 +3054,7 @@ exports.getRevenueTrends = asyncHandler(async (req, res) => {
 exports.getRevenueByRoute = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3073,9 +3078,7 @@ exports.getRevenueByRoute = asyncHandler(async (req, res) => {
 exports.getRevenueByVehicleType = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3097,9 +3100,7 @@ exports.getRevenueByVehicleType = asyncHandler(async (req, res) => {
 exports.getRevenuePerDriver = asyncHandler(async (req, res) => {
   const { startDate, endDate, limit = 20 } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3130,9 +3131,7 @@ exports.getRevenuePerDriver = asyncHandler(async (req, res) => {
 exports.getRevenuePerPassenger = asyncHandler(async (req, res) => {
   const { startDate, endDate, limit = 20 } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3163,9 +3162,7 @@ exports.getRevenuePerPassenger = asyncHandler(async (req, res) => {
 exports.getSurgePricingImpact = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3199,9 +3196,7 @@ exports.getSurgePricingImpact = asyncHandler(async (req, res) => {
 exports.getTripCompletionRate = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const totalTrips = await Trip.countDocuments({ createdAt: dateFilter });
   const completedTrips = await Trip.countDocuments({ status: 'completed', createdAt: dateFilter });
@@ -3216,9 +3211,7 @@ exports.getTripCompletionRate = asyncHandler(async (req, res) => {
 exports.getCancellationReasons = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const cancelledTrips = await Trip.find({
     status: 'cancelled',
@@ -3241,9 +3234,7 @@ exports.getCancellationReasons = asyncHandler(async (req, res) => {
 exports.getAverageTripDuration = asyncHandler(async (req, res) => {
   const { startDate, endDate, groupBy = 'route' } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3283,9 +3274,7 @@ exports.getAverageTripDuration = asyncHandler(async (req, res) => {
 exports.getAverageTripDistance = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3304,9 +3293,7 @@ exports.getAverageTripDistance = asyncHandler(async (req, res) => {
 exports.getTripVolumeTrends = asyncHandler(async (req, res) => {
   const { period = 'week', startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     createdAt: dateFilter
@@ -3497,9 +3484,7 @@ exports.getDriverAvailability = asyncHandler(async (req, res) => {
 exports.getDriverUtilization = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const drivers = await Driver.find({});
   
@@ -3534,9 +3519,7 @@ exports.getDriverUtilization = asyncHandler(async (req, res) => {
 exports.getDriverPerformance = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const drivers = await Driver.find({}).populate('user');
   
@@ -3568,9 +3551,7 @@ exports.getDriverPerformance = asyncHandler(async (req, res) => {
 exports.getDriverEarnings = asyncHandler(async (req, res) => {
   const { startDate, endDate, limit = 20 } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const drivers = await Driver.find({}).populate('user');
   
@@ -3671,9 +3652,7 @@ exports.getSupplyHeatmap = asyncHandler(async (req, res) => {
 exports.getRoutePopularity = asyncHandler(async (req, res) => {
   const { startDate, endDate, limit = 20 } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3697,9 +3676,7 @@ exports.getRoutePopularity = asyncHandler(async (req, res) => {
 exports.getAreaPerformance = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3840,9 +3817,7 @@ exports.getSeasonalTrends = asyncHandler(async (req, res) => {
 exports.getHolidayImpact = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const holidayTrips = await Trip.countDocuments({
     createdAt: dateFilter,
@@ -3863,9 +3838,7 @@ exports.getHolidayImpact = asyncHandler(async (req, res) => {
 exports.getCommissionCollectionRate = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const payments = await Payment.find({
     status: 'completed',
@@ -3882,9 +3855,7 @@ exports.getCommissionCollectionRate = asyncHandler(async (req, res) => {
 exports.getRefundRate = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const totalPayments = await Payment.countDocuments({
     createdAt: dateFilter
@@ -3903,9 +3874,7 @@ exports.getRefundRate = asyncHandler(async (req, res) => {
 exports.getAverageFare = asyncHandler(async (req, res) => {
   const { startDate, endDate, groupBy = 'route' } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3940,9 +3909,7 @@ exports.getAverageFare = asyncHandler(async (req, res) => {
 exports.getPaymentMethodDistribution = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const payments = await Payment.find({
     status: 'completed',
@@ -3969,9 +3936,7 @@ exports.getPaymentMethodDistribution = asyncHandler(async (req, res) => {
 exports.getDriverResponseTime = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -3990,9 +3955,7 @@ exports.getDriverResponseTime = asyncHandler(async (req, res) => {
 exports.getAverageWaitTime = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const trips = await Trip.find({
     status: 'completed',
@@ -4125,9 +4088,7 @@ exports.generateMonthlyReport = asyncHandler(async (req, res) => {
 exports.generateCustomReport = asyncHandler(async (req, res) => {
   const { startDate, endDate, format = 'json' } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   const [trips, payments, users] = await Promise.all([
     Trip.find({ createdAt: dateFilter }),
@@ -4163,9 +4124,7 @@ exports.generateCustomReport = asyncHandler(async (req, res) => {
 exports.exportReport = asyncHandler(async (req, res) => {
   const { type, startDate, endDate, format = 'csv' } = req.query;
   
-  const dateFilter = {};
-  if (startDate) dateFilter.$gte = new Date(startDate);
-  if (endDate) dateFilter.$lte = new Date(endDate);
+  const dateFilter = buildDateFilter(startDate, endDate);
   
   let data = [];
   
