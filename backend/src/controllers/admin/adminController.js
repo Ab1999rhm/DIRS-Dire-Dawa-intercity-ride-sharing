@@ -854,28 +854,47 @@ exports.getDriverResponseTime = asyncHandler(async (req, res) => {
 });
 
 exports.getDriverActivityHeatmap = asyncHandler(async (req, res) => {
-  const { period = 'week' } = req.query;
-  let startDate = new Date();
-  if (period === 'week') startDate.setDate(startDate.getDate() - 7);
-  else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
-  
-  const heatmap = await Trip.aggregate([
-    { $match: { createdAt: { $gte: startDate }, status: 'completed' } },
-    { $group: { _id: { $hour: '$createdAt', $dayOfWeek: '$createdAt' }, count: { $sum: 1 } } },
-    { $sort: { '_id.dayOfWeek': 1, '_id.hour': 1 } }
-  ]);
-  
-  res.json({ heatmap, totalTrips: heatmap.reduce((sum, h) => sum + h.count, 0) });
+  try {
+    const { period = 'week' } = req.query;
+    let startDate = new Date();
+    if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+    else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+    
+    const heatmap = await Trip.aggregate([
+      { $match: { createdAt: { $gte: startDate }, status: 'completed' } },
+      {
+        $group: {
+          _id: {
+            hour: { $hour: '$createdAt' },
+            dayOfWeek: { $dayOfWeek: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.dayOfWeek': 1, '_id.hour': 1 } }
+    ]).catch(() => []);
+    
+    const totalTrips = (Array.isArray(heatmap) ? heatmap : []).reduce((sum, h) => sum + (h.count || 0), 0);
+    res.json({ heatmap: Array.isArray(heatmap) ? heatmap : [], totalTrips });
+  } catch (error) {
+    console.error('Error in getDriverActivityHeatmap:', error.message);
+    res.json({ heatmap: [], totalTrips: 0 });
+  }
 });
 
 exports.getDriverRetention = asyncHandler(async (req, res) => {
-  const totalDrivers = await Driver.countDocuments();
-  const activeDrivers = await Driver.countDocuments({ isOnline: true });
-  const newDriversThisMonth = await Driver.countDocuments({ createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } });
-  
-  const retentionRate = totalDrivers > 0 ? ((activeDrivers / totalDrivers) * 100).toFixed(1) : 0;
-  
-  res.json({ activeDrivers, totalDrivers, newDriversThisMonth, avgRetentionRate: retentionRate });
+  try {
+    const totalDrivers = await Driver.countDocuments().catch(() => 0);
+    const activeDrivers = await Driver.countDocuments({ isOnline: true }).catch(() => 0);
+    const newDriversThisMonth = await Driver.countDocuments({ createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }).catch(() => 0);
+    
+    const retentionRate = totalDrivers > 0 ? ((activeDrivers / totalDrivers) * 100).toFixed(1) : 0;
+    
+    res.json({ activeDrivers, totalDrivers, newDriversThisMonth, avgRetentionRate: retentionRate });
+  } catch (error) {
+    console.error('Error in getDriverRetention:', error.message);
+    res.json({ activeDrivers: 0, totalDrivers: 0, newDriversThisMonth: 0, avgRetentionRate: 0 });
+  }
 });
 
 // Dispute management
@@ -3734,32 +3753,39 @@ exports.getCoverageGaps = asyncHandler(async (req, res) => {
 
 // Time Analytics
 exports.getPeakHours = asyncHandler(async (req, res) => {
-  const { period = 'week' } = req.query;
-  
-  let startDate = new Date();
-  if (period === 'week') startDate.setDate(startDate.getDate() - 7);
-  if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
-  
-  const trips = await Trip.find({
-    createdAt: { $gte: startDate }
-  });
-  
-  const hourlyData = {};
-  for (let i = 0; i < 24; i++) {
-    hourlyData[i] = 0;
+  try {
+    const { period = 'week' } = req.query;
+    
+    let startDate = new Date();
+    if (period === 'week') startDate.setDate(startDate.getDate() - 7);
+    if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+    
+    const trips = await Trip.find({
+      createdAt: { $gte: startDate }
+    }).catch(() => []);
+    
+    const hourlyData = {};
+    for (let i = 0; i < 24; i++) {
+      hourlyData[i] = 0;
+    }
+    
+    (Array.isArray(trips) ? trips : []).forEach(trip => {
+      if (trip.createdAt) {
+        const hour = trip.createdAt.getHours();
+        hourlyData[hour] += 1;
+      }
+    });
+    
+    const peakHours = Object.entries(hourlyData)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([hour, count]) => ({ hour: parseInt(hour), trips: count }));
+    
+    res.json({ hourlyData, hours: peakHours });
+  } catch (error) {
+    console.error('Error in getPeakHours:', error.message);
+    res.json({ hourlyData: {}, hours: [] });
   }
-  
-  trips.forEach(trip => {
-    const hour = trip.createdAt.getHours();
-    hourlyData[hour] += 1;
-  });
-  
-  const peakHours = Object.entries(hourlyData)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([hour, count]) => ({ hour: parseInt(hour), count }));
-  
-  res.json({ hourlyData, peakHours });
 });
 
 exports.getPeakDays = asyncHandler(async (req, res) => {
