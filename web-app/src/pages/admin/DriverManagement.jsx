@@ -608,10 +608,11 @@ const DriverManagement = () => {
                   {Object.entries(driver.documents || {}).map(([key, info]) => {
                     const label = key.replace('Photo', '');
                     return info.status === 'expired' && (
-                    <button key={key} className="btn btn-sm" style={{ background: '#ef444415', color: '#ef4444', fontSize: 10, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px' }} onClick={() => handleRequestResubmit(driver._id, label)}>
-                      <FaRedo /> Re-submit {label}
-                    </button>
-                  ))}
+                      <button key={key} className="btn btn-sm" style={{ background: '#ef444415', color: '#ef4444', fontSize: 10, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px' }} onClick={() => handleRequestResubmit(driver._id, label)}>
+                        <FaRedo /> Re-submit {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}
