@@ -173,7 +173,13 @@ const DriverManagement = () => {
   const pendingCount = drivers.filter(d => d.status === 'pending').length;
   const suspendedCount = drivers.filter(d => d.status === 'suspended').length;
   const bannedCount = drivers.filter(d => d.status === 'banned').length;
-  const avgRating = drivers.length > 0 ? (drivers.reduce((a, d) => a + (d.rating || 0), 0) / drivers.length).toFixed(1) : '0.0';
+  const getDriverRating = (d) => {
+    if (typeof d.rating === 'number') return d.rating;
+    if (d.rating?.average) return d.rating.average;
+    if (d.rating?.rating) return d.rating.rating;
+    return 0;
+  };
+  const avgRating = drivers.length > 0 ? (drivers.reduce((a, d) => a + getDriverRating(d), 0) / drivers.length).toFixed(1) : '0.0';
   const totalTrips = drivers.reduce((a, d) => a + (d.totalTrips || 0), 0);
   const totalRevenue = drivers.reduce((a, d) => a + (d.totalEarnings || 0), 0);
 
@@ -511,7 +517,7 @@ const DriverManagement = () => {
                   <span className="status-badge" style={{ background: getStatusBg(driver.status), color: getStatusColor(driver.status), fontSize: 10, padding: '3px 10px', borderRadius: 12, fontWeight: 600, textTransform: 'capitalize', flexShrink: 0 }}>{driver.status}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}><FaStar style={{ fontSize: 10 }} /> {driver.rating?.toFixed(1) || 'N/A'}</span>
+                  <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}><FaStar style={{ fontSize: 10 }} /> {{getDriverRating(driver).toFixed(1)}</span>
                   <span style={{ fontSize: 11, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 3 }}><FaCar style={{ fontSize: 10 }} /> {driver.totalTrips || 0} trips</span>
                   <span style={{ fontSize: 11, color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}><FaMoneyBillWave style={{ fontSize: 10 }} /> ETB {(driver.totalEarnings || 0).toLocaleString()}</span>
                   {driver.warnings > 0 && <span style={{ fontSize: 10, color: '#ef4444', background: '#fef2f2', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}><FaExclamationTriangle style={{ fontSize: 9 }} /> {driver.warnings} warnings</span>}
@@ -649,7 +655,7 @@ const DriverManagement = () => {
                   <div className="admin-activity-info" style={{ flex: 1 }}>
                     <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ color: '#f59e0b', fontSize: 9 }} /> {driver.rating?.toFixed(1) || 'N/A'}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ color: '#f59e0b', fontSize: 9 }} /> {{getDriverRating(driver).toFixed(1)}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCheckCircle style={{ color: '#10b981', fontSize: 9 }} /> {completionRate}% completion</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCar style={{ color: '#3b82f6', fontSize: 9 }} /> {driver.totalTrips || 0} trips</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaTimesCircle style={{ color: '#ef4444', fontSize: 9 }} /> {driver.cancelledTrips || 0} cancelled</span>
@@ -867,7 +873,7 @@ const DriverManagement = () => {
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedDriver.user?.firstName || selectedDriver.firstName} {selectedDriver.user?.lastName || selectedDriver.lastName}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <span className="status-badge" style={{ background: getStatusBg(selectedDriver.status), color: getStatusColor(selectedDriver.status), fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 600, textTransform: 'capitalize' }}>{selectedDriver.status}</span>
-                    <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ fontSize: 10 }} /> {selectedDriver.rating?.toFixed(1) || 'N/A'}</span>
+                    <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ fontSize: 10 }} /> {{getDriverRating(selectedDriver).toFixed(1)}</span>
                     <span style={{ fontSize: 11, color: '#6b7280' }}>{selectedDriver.vehicle?.make} {selectedDriver.vehicle?.model}</span>
                   </div>
                 </div>
@@ -886,7 +892,7 @@ const DriverManagement = () => {
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Vehicle</span><span className="detail-val">{selectedDriver.vehicle?.make} {selectedDriver.vehicle?.model} ({selectedDriver.vehicle?.type})</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Plate</span><span className="detail-val">{selectedDriver.vehicle?.plateNumber}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Status</span><span className="detail-val" style={{ color: getStatusColor(selectedDriver.status), fontWeight: 600 }}>{selectedDriver.status}</span></div>
-                <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Rating</span><span className="detail-val">\u2B50 {selectedDriver.rating?.toFixed(1) || 'N/A'}</span></div>
+                <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Rating</span><span className="detail-val">⭐ {getDriverRating(selectedDriver).toFixed(1)}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Joined</span><span className="detail-val">{selectedDriver.joinedAt}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Last Active</span><span className="detail-val">{selectedDriver.lastActive || 'Never'}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Total Trips</span><span className="detail-val">{selectedDriver.totalTrips || 0}</span></div>
@@ -923,7 +929,7 @@ const DriverManagement = () => {
 
             {detailTab === 'performance' && (
               <div className="driver-detail">
-                <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Rating</span><span className="detail-val">\u2B50 {selectedDriver.rating?.toFixed(1) || 'N/A'}</span></div>
+                <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Rating</span><span className="detail-val">⭐ {getDriverRating(selectedDriver).toFixed(1)}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Total Trips</span><span className="detail-val">{selectedDriver.totalTrips || 0}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Completed</span><span className="detail-val">{selectedDriver.completedTrips || 0}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Cancelled</span><span className="detail-val">{selectedDriver.cancelledTrips || 0}</span></div>
@@ -1029,7 +1035,7 @@ const DriverManagement = () => {
             </div>
             <div className="driver-detail">
               <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val" style={{ color: getStatusColor(selectedDriver.status) }}>{selectedDriver.status}</span></div>
-              <div className="detail-row"><span className="detail-key">Rating</span><span className="detail-val">\u2B50 {selectedDriver.rating?.toFixed(1)}</span></div>
+              <div className="detail-row"><span className="detail-key">Rating</span><span className="detail-val">⭐ {getDriverRating(selectedDriver).toFixed(1)}</span></div>
               <div className="detail-row"><span className="detail-key">Complaints</span><span className="detail-val">{selectedDriver.complaints || 0}</span></div>
             </div>
             <textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)} placeholder="Reason for suspension..." style={{ width: '100%', minHeight: 80, padding: 12, borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, resize: 'vertical', marginTop: 12 }} />

@@ -1,6 +1,6 @@
 /* ===== ADMIN — MOBILE-FIRST CENTERED ===== */
 .admin-page {
-  max-width: 480px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 16px 16px 100px;
   padding: 18px 18px 100px;
@@ -843,7 +843,7 @@
 /* ===== RESPONSIVE ===== */
 @media (min-width: 768px) {
   .admin-page {
-    max-width: 600px;
+    max-width: 800px;
     padding: 24px 24px 100px;
   }
   .admin-greeting {
@@ -859,7 +859,7 @@
 
 @media (min-width: 1024px) {
   .admin-page {
-    max-width: 800px;
+    max-width: 960px;
     padding: 32px 32px 100px;
   }
   .admin-stats-grid {
