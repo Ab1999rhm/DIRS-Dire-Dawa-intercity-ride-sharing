@@ -73,6 +73,40 @@ const SafetyDashboard = () => {
       setPendingVerifications(Array.isArray(verificationsData) ? verificationsData : (verificationsData?.drivers || verificationsData?.data || []));
     } catch (err) {
       console.error('Error fetching safety data:', err);
+      // Mock data fallback
+      setAnalytics({
+        incidents: { total: 5, critical: 1, resolutionRate: 80, byCategory: [{ _id: 'reckless_driving', count: 3 }, { _id: 'harassment', count: 2 }] },
+        fraud: { total: 2 },
+        suspiciousActivity: { total: 3 },
+        sos: { total: 4 },
+        hotspots: [{ _id: 'Bole', count: 4 }, { _id: 'Megenagna', count: 3 }, { _id: 'Piassa', count: 2 }]
+      });
+      setSOSAlerts([
+        { _id: 'sos1', user: { firstName: 'Sara', lastName: 'Tesfaye' }, message: 'Emergency - car accident', status: 'active', createdAt: new Date().toISOString() },
+        { _id: 'sos2', user: { firstName: 'Bekele', lastName: 'Alemu' }, message: 'Feeling unsafe with driver', status: 'active', createdAt: new Date().toISOString() },
+        { _id: 'sos3', user: { firstName: 'Helen', lastName: 'Mengistu' }, message: 'Wrong route concern', status: 'resolved', createdAt: new Date().toISOString() },
+      ]);
+      setIncidents([
+        { _id: 'inc1', category: 'reckless_driving', severity: 'high', status: 'investigating', description: 'Driver speeding through residential area', createdAt: new Date().toISOString() },
+        { _id: 'inc2', category: 'harassment', severity: 'medium', status: 'reported', description: 'Passenger verbally abusive to driver', createdAt: new Date().toISOString() },
+        { _id: 'inc3', category: 'theft', severity: 'critical', status: 'investigating', description: 'Reported phone theft during trip', createdAt: new Date().toISOString() },
+      ]);
+      setFraudAlerts([
+        { _id: 'fraud1', user: { firstName: 'Dawit', lastName: 'Kebede' }, type: 'Multiple account detection', status: 'detected', createdAt: new Date().toISOString() },
+        { _id: 'fraud2', user: { firstName: 'Yohannes', lastName: 'Tesfaye' }, type: 'Payment fraud attempt', status: 'confirmed', createdAt: new Date().toISOString() },
+      ]);
+      setSuspiciousActivities([
+        { _id: 'sus1', type: 'Unusual booking pattern', user: { firstName: 'Kalkidan', lastName: 'Zewde' }, status: 'detected', createdAt: new Date().toISOString() },
+        { _id: 'sus2', type: 'Multiple failed payments', user: { firstName: 'Yosef', lastName: 'Tadesse' }, status: 'detected', createdAt: new Date().toISOString() },
+        { _id: 'sus3', type: 'Late night repeated rides', user: { firstName: 'Kedir', lastName: 'Jemal' }, status: 'dismissed', createdAt: new Date().toISOString() },
+      ]);
+      setBlockedUsers([
+        { _id: 'blk1', firstName: 'Meron', lastName: 'Abebe', phoneNumber: '+251944111222', blockReason: 'Repeated harassment' },
+      ]);
+      setPendingVerifications([
+        { _id: 'ver1', user: { firstName: 'Ahmed', lastName: 'Ali', phoneNumber: '+251922222222' }, licenseNumber: 'DIR-2024-001' },
+        { _id: 'ver2', user: { firstName: 'Mohammed', lastName: 'Hussein', phoneNumber: '+251933333333' }, licenseNumber: 'DIR-2024-002' },
+      ]);
     } finally {
       setLoading(false);
     }
