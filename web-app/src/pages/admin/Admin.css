@@ -62,6 +62,8 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  position: relative;
+  z-index: 100;
 }
 .admin-header-left {
   flex: 1;

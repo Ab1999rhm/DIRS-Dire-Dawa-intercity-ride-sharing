@@ -163,7 +163,7 @@ const AdminDashboard = () => {
           <button className="admin-icon-btn" onClick={fetchDashboard}>
             <FaSync />
           </button>
-          <button className="admin-icon-btn" onClick={() => navigate('/admin/safety')}>
+          <button className="admin-icon-btn" title="Notifications">
             <FaBell />
             {(stats?.sosAlerts || 0) > 0 && (
               <span className="badge">{stats.sosAlerts}</span>
