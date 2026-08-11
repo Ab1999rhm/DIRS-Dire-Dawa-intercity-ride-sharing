@@ -47,15 +47,51 @@ const TripManagement = () => {
     fetchTrips();
   }, []);
 
+  const normalizeTrip = (trip) => {
+    const driverUser = trip.driver?.user || trip.driver || {};
+    const passengerUser = trip.passenger || {};
+    const vehicle = trip.vehicle || {};
+    const pickup = trip.pickupLocation || {};
+    const dropoff = trip.dropoffLocation || {};
+    const fareObj = trip.fare || {};
+    const totalFare = typeof fareObj === 'number' ? fareObj : (fareObj.totalFare || 0);
+    const driverName = `${driverUser.firstName || ''} ${driverUser.lastName || ''}`.trim() || 'Unknown Driver';
+    const passengerName = `${passengerUser.firstName || ''} ${passengerUser.lastName || ''}`.trim() || 'Unknown Passenger';
+    const vehicleType = vehicle.make ? `${vehicle.make} ${vehicle.model || ''}`.trim() : (trip.vehicleType || 'N/A');
+    const distance = trip.actualDistance || trip.distance || 0;
+    const durationMin = trip.actualDuration ? Math.round(trip.actualDuration / 60) : 0;
+    const duration = trip.duration || (durationMin ? `${durationMin} min` : 'N/A');
+    const from = pickup.address || trip.from || 'Unknown';
+    const to = dropoff.address || trip.to || 'Unknown';
+    const status = trip.status || 'unknown';
+    const rating = trip.driverRating;
+    const driverRating = typeof rating === 'number' ? rating : (rating?.average || rating?.score || 0);
+    return {
+      ...trip,
+      id: trip._id || trip.id,
+      driverName,
+      passengerName,
+      from,
+      to,
+      distance,
+      duration,
+      vehicleType,
+      fare: totalFare,
+      status,
+      driverRating,
+      disputeReason: trip.disputeIssue || trip.disputeReason || null,
+    };
+  };
+
   const fetchTrips = async () => {
     try {
       const res = await adminAPI.trips();
       const data = res.data;
-      setTrips(Array.isArray(data) ? data : (data?.trips || data?.data || []));
+      const raw = Array.isArray(data) ? data : (data?.trips || data?.data || []);
+      setTrips(raw.map(normalizeTrip));
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch trips:', err);
-      // Use mock data as fallback
       setTrips([
         { id: 1, driverName: 'Ahmed Ali', passengerName: 'Sara Tesfaye', from: 'Bole', to: 'Megenagna', distance: 8.5, duration: '25 min', fare: 150, status: 'completed', vehicleType: 'Toyota Corolla', driverRating: 4.8 },
         { id: 2, driverName: 'Mohammed Hussein', passengerName: 'Bekele Alemu', from: 'Kazanchis', to: 'Piassa', distance: 5.2, duration: '18 min', fare: 120, status: 'in_progress', vehicleType: 'Hyundai Accent', driverRating: 4.5 },
@@ -71,7 +107,7 @@ const TripManagement = () => {
   const handleViewTripDetails = async (tripId) => {
     try {
       const res = await adminAPI.getTripDetails(tripId);
-      setSelectedTrip(res.data);
+      setSelectedTrip(normalizeTrip(res.data?.trip || res.data));
       setShowTripDetailModal(true);
     } catch (err) {
       toast.error('Failed to fetch trip details');
