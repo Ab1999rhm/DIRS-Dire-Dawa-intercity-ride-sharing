@@ -276,6 +276,11 @@ const TripManagement = () => {
 
   return (
     <div className="admin-page">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
+        <FaRoute style={{ fontSize: 20 }} />
+        <span style={{ fontWeight: 700, fontSize: 15 }}>Trip Management</span>
+      </div>
+
       {/* Header */}
       <div className="admin-header">
         <div className="admin-header-left">
@@ -310,125 +315,119 @@ const TripManagement = () => {
         />
       </div>
 
-      <div className="admin-filter-tabs">
-        <button
-          className={`admin-filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('all')}
-        >
-          {t('admin.all') || 'All'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'in_progress' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('in_progress')}
-        >
-          {t('admin.inProgress') || 'In Progress'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'completed' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('completed')}
-        >
-          {t('admin.completed') || 'Completed'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'disputed' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('disputed')}
-        >
-          {t('admin.disputed') || 'Disputed'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'cancelled' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('cancelled')}
-        >
-          {t('admin.cancelled') || 'Cancelled'}
-        </button>
+      <div className="admin-filter-tabs" style={{ gap: 6, marginBottom: 16 }}>
+        {[
+          { key: 'all', label: t('admin.all') || 'All' },
+          { key: 'in_progress', label: t('admin.inProgress') || 'In Progress' },
+          { key: 'completed', label: t('admin.completed') || 'Completed' },
+          { key: 'disputed', label: t('admin.disputed') || 'Disputed' },
+          { key: 'cancelled', label: t('admin.cancelled') || 'Cancelled' },
+        ].map(tab => {
+          const count = tab.key === 'all' ? trips.length : trips.filter(t => t.status === tab.key).length;
+          return (
+            <button key={tab.key} onClick={() => setFilterStatus(tab.key)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+              borderRadius: 16, border: filterStatus === tab.key ? 'none' : '1px solid #e5e7eb',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: filterStatus === tab.key ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
+              color: filterStatus === tab.key ? 'white' : '#6b7280', transition: 'all 0.2s ease',
+            }}>
+              {tab.label}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 20, height: 20, borderRadius: 10, fontSize: 10, fontWeight: 700,
+                background: filterStatus === tab.key ? 'rgba(255,255,255,0.25)' : '#e5e7eb',
+                color: filterStatus === tab.key ? 'white' : '#6b7280',
+              }}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Trip Stats */}
       <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-            <FaRoute />
+        {[
+          { icon: <FaRoute />, val: trips.filter(t => t.status === 'in_progress').length, label: t('admin.activeTrips') || 'Active', color: '#3b82f6' },
+          { icon: <FaCheckCircle />, val: trips.filter(t => t.status === 'completed').length, label: t('admin.completed') || 'Completed', color: '#10b981' },
+          { icon: <FaExclamationTriangle />, val: trips.filter(t => t.status === 'disputed').length, label: t('admin.disputed') || 'Disputed', color: '#f59e0b' },
+          { icon: <FaMoneyBillWave />, val: `ETB ${trips.reduce((acc, t) => acc + (t.fare?.totalFare || t.fare || 0), 0).toLocaleString()}`, label: t('admin.totalRevenue') || 'Total Revenue', color: '#7c3aed' },
+        ].map((s, i) => (
+          <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
+            <div><div className="admin-stat-value">{s.val}</div><div className="admin-stat-label">{s.label}</div></div>
           </div>
-          <div>
-            <div className="admin-stat-value">{trips.filter(t => t.status === 'in_progress').length}</div>
-            <div className="admin-stat-label">{t('admin.activeTrips') || 'Active'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-            <FaCheckCircle />
-          </div>
-          <div>
-            <div className="admin-stat-value">{trips.filter(t => t.status === 'completed').length}</div>
-            <div className="admin-stat-label">{t('admin.completed') || 'Completed'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-            <FaExclamationTriangle />
-          </div>
-          <div>
-            <div className="admin-stat-value">{trips.filter(t => t.status === 'disputed').length}</div>
-            <div className="admin-stat-label">{t('admin.disputed') || 'Disputed'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(124, 58, 237, 0.08)', color: '#7c3aed' }}>
-            <FaMoneyBillWave />
-          </div>
-          <div>
-            <div className="admin-stat-value">
-              ETB {trips.reduce((acc, t) => acc + (t.fare?.totalFare || t.fare || 0), 0).toLocaleString()}
-            </div>
-            <div className="admin-stat-label">{t('admin.totalRevenue') || 'Total Revenue'}</div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Trips List */}
       <div className="admin-section-title">
-        <FaRoute /> {t('admin.allTrips') || 'All Trips'}
+        <FaRoute /> {t('admin.allTrips') || 'All Trips'} ({filteredTrips.length})
       </div>
-      <div className="admin-activity-list">
-        {filteredTrips.map((trip) => (
-          <div key={trip.id} className="admin-activity-item">
-            <div className="admin-activity-icon" style={{
-              background: 'rgba(59, 130, 246, 0.08)',
-              color: getTripStatusColor(trip.status)
-            }}>
-              <FaRoute />
+      <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+        {filteredTrips.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <FaRoute style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+            <p style={{ color: 'var(--text-muted)' }}>No trips found</p>
+          </div>
+        ) : filteredTrips.map((trip, idx) => (
+          <div
+            key={trip._id || trip.id}
+            style={{
+              padding: '14px 16px',
+              borderBottom: idx < filteredTrips.length - 1 ? '1px solid var(--border-light)' : 'none',
+              background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.03)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))'; }}
+          >
+            {/* Top row: Route, Status, Rating */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${getTripStatusColor(trip.status)}15`, color: getTripStatusColor(trip.status), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FaRoute style={{ fontSize: 14 }} />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+                    <FaMapPin style={{ fontSize: 11, color: '#10b981', marginRight: 4 }} />{trip.from}
+                    <FaArrowRight style={{ fontSize: 10, color: 'var(--text-muted)', margin: '0 6px' }} />
+                    <FaMapPin style={{ fontSize: 11, color: '#ef4444', marginRight: 4 }} />{trip.to}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    <FaUser style={{ marginRight: 4 }} />{trip.passengerName} · <FaCar style={{ margin: '0 4px' }} />{trip.driverName}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600, color: '#f59e0b' }}>
+                  <FaStar style={{ fontSize: 11 }} /> {trip.driverRating?.toFixed(1) || '0.0'}
+                </span>
+                <span style={{ background: `${getTripStatusColor(trip.status)}15`, color: getTripStatusColor(trip.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{trip.status?.replace('_', ' ')}</span>
+              </div>
             </div>
-            <div className="admin-activity-info">
-              <div className="admin-activity-text">
-                {trip.driverName} → {trip.passengerName}
-              </div>
-              <div className="admin-activity-time">
-                <FaMapPin /> {trip.from} <FaArrowRight /> {trip.to}
-              </div>
-              <div className="admin-activity-time">
-                <FaClock /> {trip.duration} • ETB {trip.fare?.totalFare || trip.fare || 0}
-              </div>
+
+            {/* Middle row: Stats */}
+            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10, flexWrap: 'wrap' }}>
+              <span><FaClock style={{ color: '#6b7280', marginRight: 4 }} />{trip.duration}</span>
+              <span><FaCar style={{ color: '#3b82f6', marginRight: 4 }} />{trip.vehicleType}</span>
+              <span>{trip.distance} km</span>
+              <span style={{ fontWeight: 700, color: '#10b981' }}>ETB {trip.fare?.totalFare || trip.fare || 0}</span>
+              {trip.disputeReason && <span style={{ color: '#ef4444' }}><FaExclamationTriangle style={{ marginRight: 4 }} />{trip.disputeReason}</span>}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div className="status-badge" style={{
-                background: trip.status === 'completed' ? '#dcfce7' :
-                         trip.status === 'in_progress' ? '#dbeafe' :
-                         trip.status === 'disputed' ? '#fef3c7' :
-                         trip.status === 'cancelled' ? '#fef2f2' : '#f3f4f6',
-                color: trip.status === 'completed' ? '#15803d' :
-                       trip.status === 'in_progress' ? '#1d4ed8' :
-                       trip.status === 'disputed' ? '#92400e' :
-                       trip.status === 'cancelled' ? '#dc2626' : '#6b7280'
-              }}>
-                {trip.status}
-              </div>
-              <button
-                className="admin-icon-btn"
-                style={{ width: 32, height: 32 }}
-                onClick={() => handleViewTripDetails(trip.id)}
-              >
-                <FaEye />
-              </button>
+
+            {/* Bottom row: Action Buttons */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+              <button className="driver-action-btn driver-btn-view" onClick={() => handleViewTripDetails(trip._id || trip.id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> View</button>
+              {trip.status === 'completed' && <button className="driver-action-btn driver-btn-view" onClick={() => { setSelectedTrip(trip); setShowFareAdjustmentModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#8b5cf6', color: 'white', fontWeight: 600 }}><FaEdit style={{ fontSize: 10 }} /> Fare</button>}
+              {trip.status === 'completed' && <button className="driver-action-btn driver-btn-reactivate" onClick={() => { setSelectedTrip(trip); setShowRefundModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaHandHoldingUsd style={{ fontSize: 10 }} /> Refund</button>}
+              {trip.status === 'completed' && <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedTrip(trip); setShowPayoutModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaMoneyBillWave style={{ fontSize: 10 }} /> Payout</button>}
+              {trip.status === 'completed' && <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedTrip(trip); setShowPromoModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ec4899', color: 'white', fontWeight: 600 }}><FaTag style={{ fontSize: 10 }} /> Promo</button>}
+              {trip.status === 'in_progress' && <button className="driver-action-btn driver-btn-reactivate" onClick={handleCompleteTrip} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheckCircle style={{ fontSize: 10 }} /> Complete</button>}
+              {trip.status === 'in_progress' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedTrip(trip); setShowCancelModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Cancel</button>}
+              {trip.status === 'in_progress' && <button className="driver-action-btn driver-btn-view" onClick={() => { setSelectedTrip(trip); setShowReassignModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#8b5cf6', color: 'white', fontWeight: 600 }}><FaExchangeAlt style={{ fontSize: 10 }} /> Reassign</button>}
+              {trip.status === 'in_progress' && <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedTrip(trip); setShowNoShowModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaUserCheck style={{ fontSize: 10 }} /> No-Show</button>}
+              {trip.status === 'disputed' && <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedTrip(trip); setShowDisputeModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaComment style={{ fontSize: 10 }} /> Resolve</button>}
             </div>
           </div>
         ))}
@@ -489,103 +488,16 @@ const TripManagement = () => {
                 <span className="detail-key">{t('admin.rating')}</span>
                 <span className="detail-val">{selectedTrip.driverRating?.toFixed(1) || 0} ⭐</span>
               </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    setShowTripDetailModal(false);
-                    setShowFareAdjustmentModal(true);
-                  }}
-                >
-                  <FaEdit /> {t('admin.adjustFare') || 'Adjust Fare'}
-                </button>
-                {selectedTrip.status === 'in_progress' && (
-                  <button
-                    className="btn btn-primary"
-                    style={{ background: '#10b981' }}
-                    onClick={handleCompleteTrip}
-                  >
-                    <FaCheckCircle /> {t('admin.completeTrip') || 'Complete Trip'}
-                  </button>
-                )}
-                {selectedTrip.status === 'in_progress' && (
-                  <button
-                    className="btn btn-primary"
-                    style={{ background: '#ef4444' }}
-                    onClick={() => {
-                      setShowTripDetailModal(false);
-                      setShowCancelModal(true);
-                    }}
-                  >
-                    <FaBan /> {t('admin.cancelTrip') || 'Cancel Trip'}
-                  </button>
-                )}
-                {selectedTrip.status === 'in_progress' && (
-                  <button
-                    className="btn btn-primary"
-                    style={{ background: '#8b5cf6' }}
-                    onClick={() => {
-                      setShowTripDetailModal(false);
-                      setShowReassignModal(true);
-                    }}
-                  >
-                    <FaExchangeAlt /> {t('admin.reassignDriver') || 'Reassign Driver'}
-                  </button>
-                )}
-                {selectedTrip.status === 'in_progress' && (
-                  <button
-                    className="btn btn-primary"
-                    style={{ background: '#f59e0b' }}
-                    onClick={() => {
-                      setShowTripDetailModal(false);
-                      setShowNoShowModal(true);
-                    }}
-                  >
-                    <FaUserCheck /> {t('admin.markNoShow') || 'Mark No-Show'}
-                  </button>
-                )}
-                <button
-                  className="btn btn-primary"
-                  style={{ background: '#06b6d4' }}
-                  onClick={() => {
-                    setShowTripDetailModal(false);
-                    setShowRefundModal(true);
-                  }}
-                >
-                  <FaHandHoldingUsd /> {t('admin.processRefund') || 'Process Refund'}
-                </button>
-                <button
-                  className="btn btn-primary"
-                  style={{ background: '#14b8a6' }}
-                  onClick={() => {
-                    setShowTripDetailModal(false);
-                    setShowPayoutModal(true);
-                  }}
-                >
-                  <FaMoneyBillWave /> {t('admin.processPayout') || 'Process Payout'}
-                </button>
-                <button
-                  className="btn btn-primary"
-                  style={{ background: '#ec4899' }}
-                  onClick={() => {
-                    setShowTripDetailModal(false);
-                    setShowPromoModal(true);
-                  }}
-                >
-                  <FaTag /> {t('admin.applyPromo') || 'Apply Promo Code'}
-                </button>
-                {selectedTrip.status === 'disputed' && (
-                  <button
-                    className="btn btn-primary"
-                    style={{ background: '#f59e0b' }}
-                    onClick={() => {
-                      setShowTripDetailModal(false);
-                      setShowDisputeModal(true);
-                    }}
-                  >
-                    <FaComment /> {t('admin.resolveDispute') || 'Resolve Dispute'}
-                  </button>
-                )}
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                <button className="driver-action-btn driver-btn-view" onClick={() => { setShowTripDetailModal(false); setShowFareAdjustmentModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEdit style={{ fontSize: 10 }} /> {t('admin.adjustFare') || 'Adjust Fare'}</button>
+                {selectedTrip.status === 'in_progress' && <button className="driver-action-btn driver-btn-reactivate" onClick={handleCompleteTrip} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheckCircle style={{ fontSize: 10 }} /> {t('admin.completeTrip') || 'Complete'}</button>}
+                {selectedTrip.status === 'in_progress' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setShowTripDetailModal(false); setShowCancelModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> {t('admin.cancelTrip') || 'Cancel'}</button>}
+                {selectedTrip.status === 'in_progress' && <button className="driver-action-btn driver-btn-view" onClick={() => { setShowTripDetailModal(false); setShowReassignModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#8b5cf6', color: 'white', fontWeight: 600 }}><FaExchangeAlt style={{ fontSize: 10 }} /> {t('admin.reassignDriver') || 'Reassign'}</button>}
+                {selectedTrip.status === 'in_progress' && <button className="driver-action-btn driver-btn-warn" onClick={() => { setShowTripDetailModal(false); setShowNoShowModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaUserCheck style={{ fontSize: 10 }} /> {t('admin.markNoShow') || 'No-Show'}</button>}
+                <button className="driver-action-btn driver-btn-message" onClick={() => { setShowTripDetailModal(false); setShowRefundModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaHandHoldingUsd style={{ fontSize: 10 }} /> {t('admin.processRefund') || 'Refund'}</button>
+                <button className="driver-action-btn driver-btn-reactivate" onClick={() => { setShowTripDetailModal(false); setShowPayoutModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaMoneyBillWave style={{ fontSize: 10 }} /> {t('admin.processPayout') || 'Payout'}</button>
+                <button className="driver-action-btn driver-btn-warn" onClick={() => { setShowTripDetailModal(false); setShowPromoModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaTag style={{ fontSize: 10 }} /> {t('admin.applyPromo') || 'Promo'}</button>
+                {selectedTrip.status === 'disputed' && <button className="driver-action-btn driver-btn-warn" onClick={() => { setShowTripDetailModal(false); setShowDisputeModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaComment style={{ fontSize: 10 }} /> {t('admin.resolveDispute') || 'Resolve'}</button>}
               </div>
             </div>
           </div>
