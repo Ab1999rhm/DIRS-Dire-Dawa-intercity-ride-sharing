@@ -562,11 +562,11 @@ const DriverManagement = () => {
                   <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                   <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.user?.phoneNumber || driver.phoneNumber}</div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                    {['license', 'insurance', 'registration'].map(doc => {
-                      const docStatus = driver.documents?.[doc]?.status || 'pending';
+                    {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto']].map(([label, key]) => {
+                      const docStatus = driver.documents?.[key]?.status || 'pending';
                       return (
-                        <span key={doc} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(docStatus)}15`, color: getDocStatusColor(docStatus), fontWeight: 600, textTransform: 'capitalize' }}>
-                          {doc}: {docStatus}
+                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(docStatus)}15`, color: getDocStatusColor(docStatus), fontWeight: 600, textTransform: 'capitalize' }}>
+                          {label}: {docStatus}
                         </span>
                       );
                     })}
@@ -593,21 +593,23 @@ const DriverManagement = () => {
                 <div className="admin-activity-info" style={{ flex: 1 }}>
                   <div className="admin-activity-text" style={{ fontWeight: 600 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                    {['license', 'insurance', 'registration'].map(doc => {
-                      const st = driver.documents?.[doc]?.status || 'unknown';
+                    {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto']].map(([label, key]) => {
+                      const st = driver.documents?.[key]?.status || 'unknown';
                       return (
-                        <span key={doc} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(st)}15`, color: getDocStatusColor(st), fontWeight: 600, textTransform: 'capitalize' }}>
-                          {doc}: {st}
-                          {st === 'expired' && <FaRedo style={{ cursor: 'pointer', marginLeft: 4 }} onClick={() => handleRequestResubmit(driver._id, doc)} />}
+                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(st)}15`, color: getDocStatusColor(st), fontWeight: 600, textTransform: 'capitalize' }}>
+                          {label}: {st}
+                          {st === 'expired' && <FaRedo style={{ cursor: 'pointer', marginLeft: 4 }} onClick={() => handleRequestResubmit(driver._id, label)} />}
                         </span>
                       );
                     })}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
-                  {Object.entries(driver.documents || {}).map(([doc, info]) => info.status === 'expired' && (
-                    <button key={doc} className="btn btn-sm" style={{ background: '#ef444415', color: '#ef4444', fontSize: 10, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px' }} onClick={() => handleRequestResubmit(driver._id, doc)}>
-                      <FaRedo /> Re-submit {doc}
+                  {Object.entries(driver.documents || {}).map(([key, info]) => {
+                    const label = key.replace('Photo', '');
+                    return info.status === 'expired' && (
+                    <button key={key} className="btn btn-sm" style={{ background: '#ef444415', color: '#ef4444', fontSize: 10, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px' }} onClick={() => handleRequestResubmit(driver._id, label)}>
+                      <FaRedo /> Re-submit {label}
                     </button>
                   ))}
                 </div>
@@ -897,9 +899,9 @@ const DriverManagement = () => {
 
             {detailTab === 'documents' && (
               <div className="driver-detail">
-                {['license', 'insurance', 'registration', 'backgroundCheck'].map(doc => {
-                  const info = selectedDriver.documents?.[doc] || {};
-                  const docLabel = doc === 'backgroundCheck' ? 'Background Check' : doc;
+                {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto'], ['backgroundCheck', 'backgroundCheckPhoto']].map(([label, key]) => {
+                  const info = selectedDriver.documents?.[key] || {};
+                  const docLabel = label === 'backgroundCheck' ? 'Background Check' : label;
                   return (
                     <div key={doc} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: `1px solid ${getDocStatusColor(info.status)}30` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -908,9 +910,9 @@ const DriverManagement = () => {
                       </div>
                       {info.expiry && <div style={{ fontSize: 11, color: '#6b7280' }}>Expires: {info.expiry}</div>}
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white', borderRadius: 6, padding: '4px 10px' }} onClick={() => toast.success(`${docLabel} approved`)}>Approve</button>
-                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white', borderRadius: 6, padding: '4px 10px' }} onClick={() => toast.success(`${docLabel} rejected`)}>Reject</button>
-                        <button className="btn btn-sm" style={{ background: '#f59e0b15', color: '#d97706', borderRadius: 6, padding: '4px 10px' }} onClick={() => handleRequestResubmit(selectedDriver._id, doc)}>Request Re-submit</button>
+                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white' }} onClick={() => toast.success(`${docLabel} approved`)}>Approve</button>
+                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white' }} onClick={() => toast.success(`${docLabel} rejected`)}>Reject</button>
+                        <button className="btn btn-sm" style={{ background: '#f59e0b15', color: '#d97706' }} onClick={() => handleRequestResubmit(selectedDriver._id, label)}>Request Re-submit</button>
                       </div>
                     </div>
                   );
