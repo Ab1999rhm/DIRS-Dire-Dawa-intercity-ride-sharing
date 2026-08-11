@@ -3067,7 +3067,7 @@ exports.getRevenueByRoute = asyncHandler(async (req, res) => {
   const revenueByRoute = {};
   trips.forEach(trip => {
     const routeKey = `${trip.pickupLocation?.address || 'Unknown'} to ${trip.dropoffLocation?.address || 'Unknown'}`;
-    const fare = trip.payment?.amount || trip.fare || 0;
+    const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
     revenueByRoute[routeKey] = (revenueByRoute[routeKey] || 0) + fare;
   });
   
@@ -3089,7 +3089,7 @@ exports.getRevenueByVehicleType = asyncHandler(async (req, res) => {
   const revenueByVehicle = {};
   trips.forEach(trip => {
     const vehicleType = trip.driver?.vehicle?.type || 'unknown';
-    const fare = trip.payment?.amount || trip.fare || 0;
+    const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
     revenueByVehicle[vehicleType] = (revenueByVehicle[vehicleType] || { revenue: 0, count: 0 });
     revenueByVehicle[vehicleType].revenue += fare;
     revenueByVehicle[vehicleType].count += 1;
@@ -3113,7 +3113,7 @@ exports.getRevenuePerDriver = asyncHandler(async (req, res) => {
     if (!trip.driver) return;
     const driverId = trip.driver._id.toString();
     const driverName = trip.driver.user ? `${trip.driver.user.firstName} ${trip.driver.user.lastName}` : 'Unknown';
-    const fare = trip.payment?.amount || trip.fare || 0;
+    const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
     
     if (!revenueByDriver[driverId]) {
       revenueByDriver[driverId] = { driverId, driverName, revenue: 0, tripCount: 0 };
@@ -3144,7 +3144,7 @@ exports.getRevenuePerPassenger = asyncHandler(async (req, res) => {
     if (!trip.passenger) return;
     const passengerId = trip.passenger._id.toString();
     const passengerName = `${trip.passenger.firstName} ${trip.passenger.lastName}`;
-    const fare = trip.payment?.amount || trip.fare || 0;
+    const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
     
     if (!revenueByPassenger[passengerId]) {
       revenueByPassenger[passengerId] = { passengerId, passengerName, revenue: 0, tripCount: 0 };
@@ -3174,7 +3174,7 @@ exports.getSurgePricingImpact = asyncHandler(async (req, res) => {
   let normalCount = 0;
   
   trips.forEach(trip => {
-    const fare = trip.payment?.amount || trip.fare || 0;
+    const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
     if (trip.surgeMultiplier && trip.surgeMultiplier > 1) {
       surgeRevenue += fare;
       surgeCount += 1;
@@ -3685,7 +3685,7 @@ exports.getAreaPerformance = asyncHandler(async (req, res) => {
   const areaPerformance = {};
   trips.forEach(trip => {
     const area = trip.pickupLocation?.address || 'Unknown';
-    const fare = trip.payment?.amount || trip.fare || 0;
+    const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
     
     if (!areaPerformance[area]) {
       areaPerformance[area] = { revenue: 0, tripCount: 0 };
@@ -3887,7 +3887,7 @@ exports.getAverageFare = asyncHandler(async (req, res) => {
     const byRoute = {};
     trips.forEach(trip => {
       const route = `${trip.pickupLocation?.address || 'Unknown'} to ${trip.dropoffLocation?.address || 'Unknown'}`;
-      const fare = trip.payment?.amount || trip.fare || 0;
+      const fare = trip.payment?.amount || trip.fare?.totalFare || 0;
       if (!byRoute[route]) byRoute[route] = { fares: [], count: 0 };
       byRoute[route].fares.push(fare);
       byRoute[route].count += 1;
