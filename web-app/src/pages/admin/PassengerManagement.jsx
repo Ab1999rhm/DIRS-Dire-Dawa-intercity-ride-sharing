@@ -6,7 +6,7 @@ import {
   FaEnvelope,
   FaUserSlash, FaToggleOn, FaDownload, FaSync, FaPlus,
   FaPaperPlane, FaChartBar, FaCar, FaTimes, FaCheck, FaTrash,
-  FaUser
+  FaUser, FaUserShield
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
