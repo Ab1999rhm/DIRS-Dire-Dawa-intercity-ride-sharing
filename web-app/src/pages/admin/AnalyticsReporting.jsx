@@ -275,6 +275,7 @@ const AnalyticsReporting = () => {
           <button key={p.key} onClick={() => setFilterPeriod(p.key)} style={{ padding: '6px 14px', borderRadius: 16, border: filterPeriod === p.key ? 'none' : '1px solid #e5e7eb', fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filterPeriod === p.key ? 'linear-gradient(135deg, #059669, #10b981)' : 'white', color: filterPeriod === p.key ? 'white' : '#6b7280', transition: 'all 0.2s ease' }}>
           {p.label}
         </button>
+        ))}
       </div>
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
