@@ -144,6 +144,7 @@
   align-items: center;
   gap: 12px;
   transition: var(--transition);
+  animation: slideUp 0.3s ease both;
 }
 .admin-stat-card:active {
   transform: scale(0.97);
@@ -163,6 +164,10 @@
   font-weight: 800;
   color: var(--text);
   line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .admin-stat-label {
   font-size: 11px;
@@ -867,7 +872,7 @@
     padding: 32px 32px 100px;
   }
   .admin-stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
   .admin-roles-grid {
     grid-template-columns: repeat(3, 1fr);
