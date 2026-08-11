@@ -24,6 +24,11 @@ const ContentNotifications = () => {
   const [automationRules, setAutomationRules] = useState([]);
   const [activeTab, setActiveTab] = useState('push');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [editData, setEditData] = useState({});
   const [notificationData, setNotificationData] = useState({
     title: '',
     message: '',
@@ -148,6 +153,39 @@ const ContentNotifications = () => {
     } catch (err) { toast.error('Failed to create announcement'); }
   };
 
+  const handleSaveEdit = async () => {
+    try {
+      if (activeTab === 'announcements') {
+        await adminAPI.updateAnnouncement(editData.id || editData._id, editData);
+      } else if (activeTab === 'promotions') {
+        await adminAPI.updatePromoCode(editData.id || editData._id, editData);
+      }
+      toast.success('Updated successfully');
+      setShowEditModal(false);
+      setEditData({});
+      setSelectedItem(null);
+      fetchContentData();
+    } catch (err) { toast.error('Failed to save changes'); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      if (activeTab === 'announcements') {
+        await adminAPI.deleteAnnouncement(selectedItem.id || selectedItem._id);
+      } else if (activeTab === 'promotions') {
+        await adminAPI.deletePromoCode(selectedItem.id || selectedItem._id);
+      }
+      toast.success('Deleted successfully');
+      setShowDeleteModal(false);
+      setSelectedItem(null);
+      fetchContentData();
+    } catch (err) { toast.error('Failed to delete'); }
+  };
+
+  const openView = (item) => { setSelectedItem(item); setShowDetailModal(true); };
+  const openEdit = (item) => { setSelectedItem(item); setEditData({ ...item }); setShowEditModal(true); };
+  const openDelete = (item) => { setSelectedItem(item); setShowDeleteModal(true); };
+
   const tabs = [
     { key: 'push', icon: <FaBell />, label: 'Push', count: notifications.length },
     { key: 'announcements', icon: <FaBullhorn />, label: 'Announcements', count: announcements.length },
@@ -234,7 +272,7 @@ const ContentNotifications = () => {
             <span><FaCalendarAlt size={11} /> {n.createdAt}</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-view"><FaEye /> View</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(n)}><FaEye /> View</button>
           </div>
         </div>
       ))}
@@ -254,8 +292,9 @@ const ContentNotifications = () => {
             <span><FaCalendarAlt size={11} /> {a.createdAt}</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-edit"><FaEdit /> Edit</button>
-            <button className="content-action-btn content-action-delete"><FaTrash /> Delete</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(a)}><FaEye /> View</button>
+            <button className="content-action-btn content-action-edit" onClick={() => openEdit(a)}><FaEdit /> Edit</button>
+            <button className="content-action-btn content-action-delete" onClick={() => openDelete(a)}><FaTrash /> Delete</button>
           </div>
         </div>
       ))}
@@ -275,7 +314,8 @@ const ContentNotifications = () => {
             <span><FaCalendarAlt size={11} /> Expires: {p.expiresAt}</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-edit"><FaEdit /> Edit</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(p)}><FaEye /> View</button>
+            <button className="content-action-btn content-action-edit" onClick={() => openEdit(p)}><FaEdit /> Edit</button>
           </div>
         </div>
       ))}
@@ -296,7 +336,7 @@ const ContentNotifications = () => {
             <span><FaEye size={11} /> {c.openRate}% open rate</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-view"><FaEye /> View</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(c)}><FaEye /> View</button>
           </div>
         </div>
       ))}
@@ -316,7 +356,7 @@ const ContentNotifications = () => {
             <span><FaPaperPlane size={11} /> {c.sentCount?.toLocaleString()} sent</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-view"><FaEye /> View</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(c)}><FaEye /> View</button>
           </div>
         </div>
       ))}
@@ -336,7 +376,7 @@ const ContentNotifications = () => {
             <span><FaEye size={11} /> {c.viewCount?.toLocaleString()} views</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-view"><FaEye /> View</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(c)}><FaEye /> View</button>
           </div>
         </div>
       ))}
@@ -356,7 +396,7 @@ const ContentNotifications = () => {
             <span><FaUsers size={11} /> {s.estimatedSize?.toLocaleString()} users</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-view"><FaEye /> View</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(s)}><FaEye /> View</button>
           </div>
         </div>
       ))}
@@ -376,12 +416,84 @@ const ContentNotifications = () => {
             <span><FaChartBar size={11} /> {r.executionCount?.toLocaleString()} runs</span>
           </div>
           <div className="content-card-actions">
-            <button className="content-action-btn content-action-view"><FaEye /> View</button>
+            <button className="content-action-btn content-action-view" onClick={() => openView(r)}><FaEye /> View</button>
           </div>
         </div>
       ))}
 
-      {/* Create Modal */}
+      {/* ===== VIEW DETAIL MODAL ===== */}
+      {showDetailModal && selectedItem && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Details</h3>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}><FaTimes /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {Object.entries(selectedItem).filter(([k]) => !['id', '_id'].includes(k)).map(([key, val]) => (
+                <div key={key} className="detail-row">
+                  <span className="detail-key">{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+                  <span className="detail-val">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== EDIT MODAL ===== */}
+      {showEditModal && selectedItem && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Edit {activeTab === 'announcements' ? 'Announcement' : 'Promotion'}</h3>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}><FaTimes /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Title</label>
+                <input type="text" value={editData.title || ''} onChange={(e) => setEditData({ ...editData, title: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Message</label>
+                <textarea value={editData.message || ''} onChange={(e) => setEditData({ ...editData, message: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, minHeight: 100, resize: 'vertical', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Status</label>
+                <select value={editData.status || 'active'} onChange={(e) => setEditData({ ...editData, status: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14 }}>
+                  <option value="active">Active</option>
+                  <option value="draft">Draft</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+              </div>
+              <button className="content-action-btn content-action-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', fontSize: 14 }} onClick={handleSaveEdit}>
+                <FaSave /> Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== DELETE CONFIRMATION MODAL ===== */}
+      {showDeleteModal && selectedItem && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete Confirmation</h3>
+              <button className="modal-close" onClick={() => setShowDeleteModal(false)}><FaTimes /></button>
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>
+              Are you sure you want to delete <strong>"{selectedItem.title || selectedItem.name}"</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button className="content-action-btn content-action-view" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button className="content-action-btn content-action-delete" onClick={handleDelete}><FaTrash /> Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== CREATE MODAL ===== */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -401,7 +513,7 @@ const ContentNotifications = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Title</label>
-                <input type="text" value={notificationData.title} onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })} placeholder="Enter title..." style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none', transition: 'border 0.2s ease' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = 'var(--border-light)'} />
+                <input type="text" value={notificationData.title} onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })} placeholder="Enter title..." style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
               </div>
               <div>
                 <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Message</label>

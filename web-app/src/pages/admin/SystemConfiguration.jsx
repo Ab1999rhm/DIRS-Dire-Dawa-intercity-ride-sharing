@@ -4,8 +4,7 @@ import {
   FaEdit, FaSave, FaPlus, FaTrash, FaCheckCircle, FaTimesCircle,
   FaPercent, FaRoute, FaMobileAlt, FaServer, FaUpload, FaDownload,
   FaBell, FaShieldAlt, FaFlag, FaTachometerAlt, FaGlobe, FaHistory,
-  FaKey, FaLink, FaUsers, FaCreditCard, FaLock, FaDatabase, FaTimes,
-  FaEnvelope
+  FaKey, FaLink, FaUsers, FaCreditCard, FaLock, FaDatabase, FaTimes
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -30,6 +29,9 @@ const SystemConfiguration = () => {
   const [webhooks, setWebhooks] = useState([]);
   const [activeTab, setActiveTab] = useState('tariff');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [editData, setEditData] = useState({});
 
   const MOCK = {
@@ -147,9 +149,34 @@ const SystemConfiguration = () => {
       toast.success('Tariff saved successfully');
       setShowEditModal(false);
       setEditData({});
+      setSelectedItem(null);
       fetchConfigurationData();
     } catch (err) { toast.error('Failed to save tariff'); }
   };
+
+  const handleDeleteItem = async () => {
+    try {
+      if (activeTab === 'tariff') {
+        await adminAPI.deletePricingConfig(selectedItem._id);
+      } else if (activeTab === 'service') {
+        await adminAPI.deleteServiceZone(selectedItem._id);
+      } else if (activeTab === 'vehicles') {
+        await adminAPI.deleteVehicleCategory(selectedItem._id);
+      } else if (activeTab === 'api') {
+        await adminAPI.revokeAPIKey(selectedItem._id);
+      } else if (activeTab === 'webhooks') {
+        await adminAPI.deleteWebhook(selectedItem._id);
+      }
+      toast.success('Deleted successfully');
+      setShowDeleteModal(false);
+      setSelectedItem(null);
+      fetchConfigurationData();
+    } catch (err) { toast.error('Failed to delete'); }
+  };
+
+  const openView = (item) => { setSelectedItem(item); setShowDetailModal(true); };
+  const openEdit = (item) => { setSelectedItem(item); setEditData({ ...item }); setShowEditModal(true); };
+  const openDelete = (item) => { setSelectedItem(item); setShowDeleteModal(true); };
 
   const tabs = [
     { key: 'tariff', icon: <FaMoneyBillWave />, label: 'Tariffs', count: tariffs.length },
@@ -225,15 +252,13 @@ const SystemConfiguration = () => {
                 <span className="status-badge active">active</span>
               </div>
               <div className="config-card-actions">
-                <button className="config-btn config-btn-edit" onClick={() => { setEditData(tariff); setShowEditModal(true); }}>
-                  <FaEdit /> Edit
-                </button>
+                <button className="config-btn config-btn-view" onClick={() => openView(tariff)}><FaEye /> View</button>
+                <button className="config-btn config-btn-edit" onClick={() => openEdit(tariff)}><FaEdit /> Edit</button>
+                <button className="config-btn config-btn-delete" onClick={() => openDelete(tariff)}><FaTrash /> Delete</button>
               </div>
             </div>
           ))}
-          <button className="config-add-btn" onClick={() => { setEditData({}); setShowEditModal(true); }}>
-            <FaPlus /> Add Tariff Zone
-          </button>
+          <button className="config-add-btn" onClick={() => { setEditData({}); setShowEditModal(true); }}><FaPlus /> Add Tariff Zone</button>
         </div>
       )}
 
@@ -251,7 +276,9 @@ const SystemConfiguration = () => {
                 <span className="status-badge active">active</span>
               </div>
               <div className="config-card-actions">
-                <button className="config-btn config-btn-edit"><FaEdit /> Edit</button>
+                <button className="config-btn config-btn-view" onClick={() => openView(area)}><FaEye /> View</button>
+                <button className="config-btn config-btn-edit" onClick={() => openEdit(area)}><FaEdit /> Edit</button>
+                <button className="config-btn config-btn-delete" onClick={() => openDelete(area)}><FaTrash /> Delete</button>
               </div>
             </div>
           ))}
@@ -273,7 +300,9 @@ const SystemConfiguration = () => {
                 <span className="status-badge active">active</span>
               </div>
               <div className="config-card-actions">
-                <button className="config-btn config-btn-edit"><FaEdit /> Edit</button>
+                <button className="config-btn config-btn-view" onClick={() => openView(v)}><FaEye /> View</button>
+                <button className="config-btn config-btn-edit" onClick={() => openEdit(v)}><FaEdit /> Edit</button>
+                <button className="config-btn config-btn-delete" onClick={() => openDelete(v)}><FaTrash /> Delete</button>
               </div>
             </div>
           ))}
@@ -374,6 +403,7 @@ const SystemConfiguration = () => {
                 <span className={`status-badge ${flag.enabled ? 'active' : 'inactive'}`}>{flag.enabled ? 'Enabled' : 'Disabled'}</span>
               </div>
               <div className="config-card-actions">
+                <button className="config-btn config-btn-view" onClick={() => openView(flag)}><FaEye /> View</button>
                 <button className={`config-btn ${flag.enabled ? 'config-btn-disable' : 'config-btn-enable'}`} onClick={() => adminAPI.toggleFeatureFlag(flag._id, { enabled: !flag.enabled }).then(() => fetchConfigurationData())}>
                   {flag.enabled ? 'Disable' : 'Enable'}
                 </button>
@@ -460,6 +490,9 @@ const SystemConfiguration = () => {
               <div className="config-card-stats">
                 <span><FaHistory size={11} /> {new Date(log.timestamp).toLocaleString()}</span>
               </div>
+              <div className="config-card-actions">
+                <button className="config-btn config-btn-view" onClick={() => openView(log)}><FaEye /> View</button>
+              </div>
             </div>
           ))}
         </div>
@@ -479,9 +512,8 @@ const SystemConfiguration = () => {
                 <span className={`status-badge ${key.isActive ? 'active' : 'suspended'}`}>{key.isActive ? 'Active' : 'Revoked'}</span>
               </div>
               <div className="config-card-actions">
-                <button className="config-btn config-btn-delete" onClick={() => adminAPI.revokeAPIKey(key._id).then(() => fetchConfigurationData())}>
-                  <FaLock /> Revoke
-                </button>
+                <button className="config-btn config-btn-view" onClick={() => openView(key)}><FaEye /> View</button>
+                <button className="config-btn config-btn-delete" onClick={() => openDelete(key)}><FaLock /> Revoke</button>
               </div>
             </div>
           ))}
@@ -503,9 +535,9 @@ const SystemConfiguration = () => {
                 <span className={`status-badge ${wh.isActive ? 'active' : 'inactive'}`}>{wh.isActive ? 'Active' : 'Inactive'}</span>
               </div>
               <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => adminAPI.testWebhook(wh._id).then(() => toast.success('Webhook test sent'))}>
-                  <FaSearch /> Test
-                </button>
+                <button className="config-btn config-btn-view" onClick={() => openView(wh)}><FaEye /> View</button>
+                <button className="config-btn config-btn-view" onClick={() => adminAPI.testWebhook(wh._id).then(() => toast.success('Webhook test sent'))}><FaSearch /> Test</button>
+                <button className="config-btn config-btn-delete" onClick={() => openDelete(wh)}><FaTrash /> Delete</button>
               </div>
             </div>
           ))}
@@ -513,34 +545,105 @@ const SystemConfiguration = () => {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* ===== VIEW DETAIL MODAL ===== */}
+      {showDetailModal && selectedItem && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Details</h3>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}><FaTimes /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {Object.entries(selectedItem).filter(([k]) => !['_id'].includes(k)).map(([key, val]) => (
+                <div key={key} className="detail-row">
+                  <span className="detail-key">{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+                  <span className="detail-val">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== EDIT MODAL ===== */}
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Edit Tariff</h3>
+              <h3>{editData._id ? 'Edit' : 'Add'} {activeTab === 'tariff' ? 'Tariff' : activeTab === 'service' ? 'Service Area' : 'Vehicle'}</h3>
               <button className="modal-close" onClick={() => setShowEditModal(false)}><FaTimes /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Zone</label>
-                <input type="text" value={editData.zone || ''} onChange={(e) => setEditData({ ...editData, zone: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Base Fare (ETB)</label>
-                <input type="number" value={editData.baseFare || ''} onChange={(e) => setEditData({ ...editData, baseFare: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Per Kilometer (ETB)</label>
-                <input type="number" value={editData.perKm || ''} onChange={(e) => setEditData({ ...editData, perKm: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Per Minute (ETB)</label>
-                <input type="number" value={editData.perMinute || ''} onChange={(e) => setEditData({ ...editData, perMinute: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-              </div>
+              {activeTab === 'tariff' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Zone</label>
+                    <input type="text" value={editData.zone || ''} onChange={(e) => setEditData({ ...editData, zone: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Base Fare (ETB)</label>
+                    <input type="number" value={editData.baseFare || ''} onChange={(e) => setEditData({ ...editData, baseFare: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Per Kilometer (ETB)</label>
+                    <input type="number" value={editData.perKm || ''} onChange={(e) => setEditData({ ...editData, perKm: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Per Minute (ETB)</label>
+                    <input type="number" value={editData.perMinute || ''} onChange={(e) => setEditData({ ...editData, perMinute: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                </>
+              )}
+              {activeTab === 'service' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Name</label>
+                    <input type="text" value={editData.name || ''} onChange={(e) => setEditData({ ...editData, name: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Coverage</label>
+                    <input type="text" value={editData.coverage || ''} onChange={(e) => setEditData({ ...editData, coverage: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                </>
+              )}
+              {activeTab === 'vehicles' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Name</label>
+                    <input type="text" value={editData.name || ''} onChange={(e) => setEditData({ ...editData, name: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Capacity</label>
+                    <input type="number" value={editData.capacity || ''} onChange={(e) => setEditData({ ...editData, capacity: parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Base Fare (ETB)</label>
+                    <input type="number" value={editData.baseFare || ''} onChange={(e) => setEditData({ ...editData, baseFare: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
+                  </div>
+                </>
+              )}
               <button className="config-btn config-btn-save" style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', fontSize: 14 }} onClick={handleSaveTariff}>
                 <FaSave /> Save Changes
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== DELETE CONFIRMATION MODAL ===== */}
+      {showDeleteModal && selectedItem && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete Confirmation</h3>
+              <button className="modal-close" onClick={() => setShowDeleteModal(false)}><FaTimes /></button>
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>
+              Are you sure you want to delete <strong>"{selectedItem.zone || selectedItem.name}"</strong>? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button className="config-btn config-btn-view" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button className="config-btn config-btn-delete" onClick={handleDeleteItem}><FaTrash /> Delete</button>
             </div>
           </div>
         </div>

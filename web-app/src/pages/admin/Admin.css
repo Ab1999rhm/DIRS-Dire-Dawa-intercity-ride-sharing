@@ -1592,6 +1592,44 @@
   background: #16213e;
   border-color: #2a2a4a;
 }
+
+/* ===== MOBILE RESPONSIVE BUTTONS ===== */
+@media (max-width: 480px) {
+  .content-card-actions,
+  .config-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .content-card-actions:has(> :only-child),
+  .config-card-actions:has(> :only-child) {
+    grid-template-columns: 1fr;
+  }
+  .content-action-btn,
+  .config-btn {
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .content-card-stats,
+  .config-card-stats {
+    gap: 8px;
+    font-size: 10px;
+  }
+  .config-add-btn {
+    padding: 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .content-card-actions,
+  .config-card-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark mode for content/config pages continued */
 [data-theme="dark"] .config-settings-card {
   background: #16213e;
   border-color: #2a2a4a;
