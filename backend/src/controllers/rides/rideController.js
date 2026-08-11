@@ -4,6 +4,7 @@ const Driver = require('../../models/Driver');
 const Vehicle = require('../../models/Vehicle');
 const Payment = require('../../models/Payment');
 const User = require('../../models/User');
+const SuspiciousActivity = require('../../models/SuspiciousActivity');
 const { findNearbyDrivers } = require('../../services/rideMatchingService');
 const { calculateFare } = require('../../services/pricingService');
 const { notifyRideUpdate } = require('../../services/notificationService');
@@ -114,6 +115,28 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
     vehicleType,
     paymentMethod
   });
+
+  const recentBookings = await RideRequest.countDocuments({
+    passenger: req.user._id,
+    createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) }
+  });
+  if (recentBookings >= 5) {
+    const existing = await SuspiciousActivity.findOne({
+      user: req.user._id,
+      type: 'rapid_bookings',
+      status: { $in: ['detected', 'investigating'] },
+      detectedAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) }
+    });
+    if (!existing) {
+      await SuspiciousActivity.create({
+        user: req.user._id,
+        type: 'rapid_bookings',
+        severity: 'medium',
+        description: `${recentBookings} ride requests in 10 minutes`,
+        status: 'detected'
+      });
+    }
+  }
 
   const nearbyDrivers = await findNearbyDrivers(
     toLngLat(pickupLocation.coordinates),
@@ -282,6 +305,31 @@ exports.cancelRideRequest = asyncHandler(async (req, res) => {
   rideRequest.cancelledBy = 'passenger';
   rideRequest.cancelledAt = new Date();
   await rideRequest.save();
+
+  const recentCancellations = await RideRequest.countDocuments({
+    passenger: req.user._id,
+    status: 'cancelled',
+    cancelledAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+  });
+  if (recentCancellations >= 3) {
+    const existing = await SuspiciousActivity.findOne({
+      user: req.user._id,
+      type: 'multiple_cancellations',
+      status: { $in: ['detected', 'investigating'] },
+      detectedAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) }
+    });
+    if (!existing) {
+      await SuspiciousActivity.create({
+        user: req.user._id,
+        type: 'multiple_cancellations',
+        severity: 'medium',
+        description: `${recentCancellations} cancellations in 24 hours`,
+        status: 'detected',
+        cancellationCount: recentCancellations,
+        timeWindow: '1day'
+      });
+    }
+  }
 
   if (rideRequest.driver) {
     const driver = await Driver.findById(rideRequest.driver);

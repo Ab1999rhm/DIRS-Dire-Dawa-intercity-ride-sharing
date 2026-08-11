@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, paymentsAPI, vehiclesAPI, authAPI } from '../../services/api';
+import { ridesAPI, paymentsAPI, vehiclesAPI, authAPI, sosAPI, reportAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import L from 'leaflet';
@@ -10,7 +10,8 @@ import {
   FaCar, FaPowerOff, FaMapMarkerAlt, FaPhone, FaCheck, FaTimes,
   FaStar, FaMoneyBillWave, FaClock, FaRoad, FaBell,
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
-  FaHome, FaListUl, FaWallet, FaCog, FaChevronRight
+  FaHome, FaListUl, FaWallet, FaCog, FaChevronRight,
+  FaExclamationTriangle, FaFlag, FaShieldAlt, FaUserSlash, FaEllipsisH
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import './Driver.css';
@@ -79,6 +80,10 @@ const DriverDashboard = () => {
   const [vehicleType, setVehicleType] = useState(null);
   const [vehicle, setVehicle] = useState(null);
   const [intendedDestination, setIntendedDestination] = useState(user?.intendedDestination?.city || null);
+  const [showReportSection, setShowReportSection] = useState(false);
+  const [reportCategory, setReportCategory] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
 
   // Sync isOnline with user data when it loads async
   useEffect(() => {
@@ -272,6 +277,54 @@ const DriverDashboard = () => {
     }
   };
 
+  const handleSOS = async () => {
+    try {
+      let location = null;
+      try {
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+        );
+        location = { coordinates: [pos.coords.longitude, pos.coords.latitude], address: '' };
+      } catch (_) {}
+      await sosAPI.trigger({ location, tripId: activeTrip?._id, description: 'SOS triggered by driver' });
+      toast.warning('SOS alert sent!');
+    } catch (err) {
+      toast.error('Failed to send SOS');
+    }
+  };
+
+  const REPORT_OPTIONS = [
+    { key: 'passenger_misbehavior', label: 'Passenger behavior', icon: FaUserSlash },
+    { key: 'safety_concern', label: 'Safety concern', icon: FaShieldAlt },
+    { key: 'vehicle_damage', label: 'Vehicle damage', icon: FaCar },
+    { key: 'payment_evasion', label: 'Payment evasion', icon: FaEllipsisH },
+    { key: 'other', label: 'Other', icon: FaFlag },
+  ];
+
+  const handleReportIssue = async () => {
+    if (!reportCategory) {
+      toast.error('Please select an issue type');
+      return;
+    }
+    setSubmittingReport(true);
+    try {
+      await reportAPI.create({
+        tripId: activeTrip?._id,
+        category: reportCategory,
+        description: reportDescription,
+        severity: reportCategory === 'passenger_misbehavior' ? 'high' : 'medium',
+      });
+      toast.success('Issue reported successfully.');
+      setReportCategory('');
+      setReportDescription('');
+      setShowReportSection(false);
+    } catch (err) {
+      toast.error('Failed to submit report');
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="driver-page">
@@ -450,6 +503,55 @@ const DriverDashboard = () => {
                 {getNextAction().action === 'complete' && <FaCheck />}
                 {getNextAction().label}
               </button>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button
+                onClick={handleSOS}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#dc2626', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <FaExclamationTriangle /> SOS
+              </button>
+              <button
+                onClick={() => setShowReportSection(!showReportSection)}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#f59e0b', color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <FaFlag /> Report Issue
+              </button>
+            </div>
+
+            {showReportSection && (
+              <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary, #f9fafb)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                  {REPORT_OPTIONS.map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setReportCategory(opt.key)}
+                      style={{
+                        padding: '6px 12px', borderRadius: 16, border: reportCategory === opt.key ? 'none' : '1px solid #e5e7eb',
+                        background: reportCategory === opt.key ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
+                        color: reportCategory === opt.key ? 'white' : '#6b7280',
+                        fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                      }}
+                    >
+                      <opt.icon /> {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={reportDescription}
+                  onChange={(e) => setReportDescription(e.target.value)}
+                  placeholder="Describe the issue..."
+                  style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid var(--border-light)', minHeight: 60, fontSize: 12, resize: 'vertical', background: 'white', color: 'var(--text)', boxSizing: 'border-box' }}
+                />
+                <button
+                  onClick={handleReportIssue}
+                  disabled={submittingReport || !reportCategory}
+                  style={{ marginTop: 8, width: '100%', padding: 8, borderRadius: 8, border: 'none', background: submittingReport || !reportCategory ? '#9ca3af' : '#3b82f6', color: 'white', fontSize: 12, fontWeight: 600, cursor: submittingReport || !reportCategory ? 'not-allowed' : 'pointer' }}
+                >
+                  {submittingReport ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
             )}
           </Card>
         </div>

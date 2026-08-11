@@ -11,7 +11,7 @@ import {
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, sosAPI, ratingsAPI } from '../../services/api';
+import { ridesAPI, sosAPI, reportAPI, ratingsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/common';
 import FlexibleMap from '../../components/common/FlexibleMap';
@@ -91,10 +91,10 @@ const PassengerTripDetail = () => {
   };
 
   const REPORT_OPTIONS = [
-    { key: 'lost_item', label: 'Lost item', icon: FaSuitcase },
-    { key: 'fare_dispute', label: 'Fare dispute', icon: FaDollarSign },
-    { key: 'safety_concern', label: 'Safety concern', icon: FaShieldAlt },
-    { key: 'driver_behavior', label: 'Driver behavior', icon: FaUserSlash },
+    { key: 'vehicle_damage', label: 'Lost item', icon: FaSuitcase },
+    { key: 'payment_evasion', label: 'Fare dispute', icon: FaDollarSign },
+    { key: 'harassment', label: 'Safety concern', icon: FaShieldAlt },
+    { key: 'reckless_driving', label: 'Driver behavior', icon: FaUserSlash },
     { key: 'other', label: 'Other', icon: FaEllipsisH },
   ];
 
@@ -105,14 +105,16 @@ const PassengerTripDetail = () => {
     }
     setSubmittingReport(true);
     try {
-      await sosAPI.trigger({
+      await reportAPI.create({
         tripId,
-        description: `[${reportCategory}] ${reportDescription}`,
-        location: null,
+        category: reportCategory,
+        description: reportDescription,
+        severity: reportCategory === 'harassment' ? 'high' : 'medium',
       });
       toast.success('Issue reported successfully. We will get back to you.');
       setReportCategory('');
       setReportDescription('');
+      setShowReportSection(false);
     } catch (err) {
       toast.error('Failed to submit report');
     } finally {

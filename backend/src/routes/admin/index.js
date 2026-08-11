@@ -29,11 +29,6 @@ router.get('/financials/revenue', protect, authorize('admin'), adminController.g
 router.get('/financials/transactions', protect, authorize('admin'), adminController.getPaymentTransactions);
 router.post('/financials/commission', protect, authorize('admin'), adminController.processCommission);
 
-// Safety
-router.get('/safety/fraud-alerts', protect, authorize('admin'), adminController.getFraudAlerts);
-router.get('/safety/suspicious-activity', protect, authorize('admin'), adminController.getSuspiciousActivity);
-router.post('/safety/incidents', protect, authorize('admin'), adminController.reportIncident);
-
 // ==================== SAFETY & SECURITY ROUTES ====================
 
 // SOS/Emergency System

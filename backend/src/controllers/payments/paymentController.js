@@ -1,6 +1,8 @@
 const Payment = require('../../models/Payment');
 const Trip = require('../../models/Trip');
 const Driver = require('../../models/Driver');
+const User = require('../../models/User');
+const FraudDetection = require('../../models/FraudDetection');
 const { calculateCommission } = require('../../services/pricingService');
 const { notifyRideUpdate } = require('../../services/notificationService');
 const { calculateTotalFare } = require('../../services/pricingService');
@@ -79,6 +81,33 @@ exports.processPayment = asyncHandler(async (req, res) => {
     paymentStatus = result.success ? 'pending' : 'failed';
     transactionId = result.transactionId;
     gatewayResponse = result;
+  }
+
+  if (paymentStatus === 'failed') {
+    const recentFailed = await Payment.countDocuments({
+      passenger: req.user._id,
+      status: 'failed',
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    });
+    if (recentFailed >= 3) {
+      const existingFraud = await FraudDetection.findOne({
+        user: req.user._id,
+        type: 'payment_fraud',
+        status: { $in: ['detected', 'investigating'] }
+      });
+      if (!existingFraud) {
+        await FraudDetection.create({
+          user: req.user._id,
+          type: 'payment_fraud',
+          severity: 'high',
+          description: `${recentFailed} failed payment attempts in 24 hours`,
+          evidence: { ipAddress: req.ip, userAgent: req.get('user-agent') },
+          status: 'detected',
+          failedPayments: [{ attemptDate: new Date(), amount: trip.fare.totalFare, paymentMethod: method, failureReason: 'Gateway rejected' }]
+        });
+        logger.warn('Fraud detection: multiple failed payments', { userId: req.user._id, count: recentFailed });
+      }
+    }
   }
 
   const payment = await Payment.create({

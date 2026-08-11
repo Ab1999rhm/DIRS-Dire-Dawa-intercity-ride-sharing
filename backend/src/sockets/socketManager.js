@@ -1,6 +1,7 @@
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const SuspiciousActivity = require('../models/SuspiciousActivity');
 const logger = require('../config/logger');
 
 let io;
@@ -83,6 +84,25 @@ const initializeSocket = (server) => {
             coordinates,
             timestamp: new Date()
           });
+          const existingSpeed = await SuspiciousActivity.findOne({
+            driver: socket.userId,
+            type: 'speed_violation',
+            status: { $in: ['detected', 'investigating'] },
+            detectedAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) }
+          });
+          if (!existingSpeed) {
+            await SuspiciousActivity.create({
+              user: socket.userId,
+              driver: socket.userId,
+              type: 'speed_violation',
+              severity: speed > 120 ? 'high' : 'medium',
+              description: `Recorded speed: ${speed} km/h (limit: 80 km/h)`,
+              location: { type: 'Point', coordinates },
+              status: 'detected',
+              recordedSpeed: speed,
+              speedLimit: 80
+            });
+          }
         }
 
         // Geofencing check (Dire Dawa service area bounds)
@@ -96,6 +116,23 @@ const initializeSocket = (server) => {
             message: 'Driver left service area',
             timestamp: new Date()
           });
+          const existingJump = await SuspiciousActivity.findOne({
+            driver: socket.userId,
+            type: 'location_jump',
+            status: { $in: ['detected', 'investigating'] },
+            detectedAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) }
+          });
+          if (!existingJump) {
+            await SuspiciousActivity.create({
+              user: socket.userId,
+              driver: socket.userId,
+              type: 'location_jump',
+              severity: 'high',
+              description: 'Driver location outside service area bounds',
+              location: { type: 'Point', coordinates },
+              status: 'detected'
+            });
+          }
         }
 
         if (tripId) {

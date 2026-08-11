@@ -2039,7 +2039,7 @@ exports.approveDriverVerification = asyncHandler(async (req, res) => {
   const driver = await Driver.findByIdAndUpdate(
     driverId,
     {
-      verificationStatus: 'verified',
+      verificationStatus: 'approved',
       verificationNotes: notes,
       verifiedAt: new Date()
     },

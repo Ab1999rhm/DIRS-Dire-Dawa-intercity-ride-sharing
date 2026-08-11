@@ -1,4 +1,5 @@
 const SOSAlert = require('../../models/SOSAlert');
+const Incident = require('../../models/Incident');
 const User = require('../../models/User');
 const Trip = require('../../models/Trip');
 const Driver = require('../../models/Driver');
@@ -89,6 +90,11 @@ exports.resolveSOS = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'SOS alert not found' });
   }
 
+  const validStatuses = ['resolved', 'false_alarm'];
+  if (!validStatuses.includes(resolution)) {
+    return res.status(400).json({ error: 'Invalid resolution. Must be "resolved" or "false_alarm".' });
+  }
+
   sosAlert.status = resolution;
   sosAlert.resolvedBy = req.user._id;
   sosAlert.resolvedAt = new Date();
@@ -157,4 +163,78 @@ exports.shareTrip = asyncHandler(async (req, res) => {
   }
 
   res.json({ message: 'Trip shared successfully' });
+});
+
+exports.createUserIncident = asyncHandler(async (req, res) => {
+  const { tripId, category, description, location, severity } = req.body;
+
+  const validCategories = ['assault', 'theft', 'accident', 'harassment', 'reckless_driving', 'substance_abuse', 'vehicle_safety', 'passenger_misbehavior', 'vehicle_damage', 'fake_emergency', 'payment_evasion', 'other'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ error: 'Invalid category' });
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const incidentData = {
+    reportedBy: req.user._id,
+    category,
+    description,
+    severity: severity || 'medium',
+    status: 'reported'
+  };
+
+  if (location && location.coordinates) {
+    incidentData.location = {
+      type: 'Point',
+      coordinates: location.coordinates,
+      address: location.address || ''
+    };
+  }
+
+  if (tripId) {
+    const trip = await Trip.findById(tripId);
+    if (trip) {
+      incidentData.trip = tripId;
+      if (user.role === 'passenger' && trip.driver) {
+        incidentData.reportedDriver = trip.driver;
+      }
+      if (user.role === 'driver' && trip.passenger) {
+        incidentData.reportedUser = trip.passenger;
+      }
+    }
+  }
+
+  const incident = await Incident.create(incidentData);
+
+  const io = getIO();
+  io.to('admins').emit('incident_reported', {
+    incidentId: incident._id,
+    category,
+    severity: incident.severity,
+    reportedBy: `${user.firstName} ${user.lastName}`,
+    timestamp: new Date()
+  });
+
+  logger.info('User incident reported', { userId: req.user._id, incidentId: incident._id, category });
+
+  res.status(201).json({
+    message: 'Incident reported successfully',
+    incidentId: incident._id
+  });
+});
+
+exports.getUserIncidents = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
+  const incidents = await Incident.find({ reportedBy: req.user._id })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Incident.countDocuments({ reportedBy: req.user._id });
+
+  res.json({ incidents, total, page: parseInt(page), pages: Math.ceil(total / limit) });
 });
