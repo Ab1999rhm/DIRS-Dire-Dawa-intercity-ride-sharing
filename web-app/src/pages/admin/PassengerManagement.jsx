@@ -311,78 +311,63 @@ const PassengerManagement = () => {
 
       {/* All Passengers Tab */}
       {activeTab === 'all' && (<>
-      {/* Desktop Table */}
-      <div className="driver-table-desktop" style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 160px 120px 100px 120px 100px 240px', gap: 12, padding: '12px 16px', background: 'var(--bg-secondary, rgba(0,0,0,0.02))', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          <div>Passenger</div><div>Contact</div><div>Rating</div><div>Trips</div><div>Spent</div><div>Status</div><div style={{ textAlign: 'right' }}>Actions</div>
-        </div>
-        {filteredPassengers.map((passenger, idx) => (
-          <div key={passenger._id || passenger.id} style={{
-            display: 'grid', gridTemplateColumns: '200px 160px 120px 100px 120px 100px 240px',
-            gap: 12, padding: '12px 16px',
-            borderBottom: idx < filteredPassengers.length - 1 ? '1px solid var(--border-light)' : 'none',
-            alignItems: 'center',
-            background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
-            transition: 'all 0.2s ease', cursor: 'pointer',
-          }}
-          onClick={() => openDetail(passenger, 'overview')}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.03)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))'; }}
-          >
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{passenger.firstName} {passenger.lastName}</div>
-              {passenger.email && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{passenger.email}</div>}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{passenger.phoneNumber || 'N/A'}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <FaStar style={{ fontSize: 12, color: '#f59e0b' }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#f59e0b' }}>{getRating(passenger).toFixed(1)}</span>
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{passenger.totalTrips || 0}</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>ETB {(passenger.totalSpent || 0).toLocaleString()}</div>
-            <div>
-              <span style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{passenger.status}</span>
-              {passenger.fraudFlags > 0 && <span style={{ fontSize: 9, color: '#dc2626', marginLeft: 6, display: 'flex', alignItems: 'center', gap: 2 }}><FaExclamationTriangle style={{ fontSize: 8 }} /> {passenger.fraudFlags}</span>}
-            </div>
-            <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
-              <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(passenger, 'overview')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> View</button>
-              <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('message'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaEnvelope style={{ fontSize: 10 }} /> Msg</button>
-              <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('warning'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 10 }} /> Warn</button>
-              {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
-              {passenger.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedPassenger(passenger); setShowBanModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Ban</button>}
-              {(passenger.status === 'suspended' || passenger.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivatePassenger(passenger._id || passenger.id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 10 }} /> Reactivate</button>}
-            </div>
+      <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+        {filteredPassengers.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+            <p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p>
           </div>
-        ))}
-        {filteredPassengers.length === 0 && <div style={{ padding: '40px 20px', textAlign: 'center' }}><FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} /><p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p></div>}
-      </div>
-
-      {/* Mobile Card Layout */}
-      <div className="driver-table-mobile">
-        {filteredPassengers.map((passenger, idx) => (
-          <div key={passenger._id || passenger.id} style={{ padding: 16, borderBottom: idx < filteredPassengers.length - 1 ? '1px solid var(--border-light)' : 'none', background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))' }} onClick={() => openDetail(passenger)}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${getPassengerStatusColor(passenger.status)}15`, color: getPassengerStatusColor(passenger.status), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FaIdCard style={{ fontSize: 16 }} /></div>
-                <div><div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{passenger.firstName} {passenger.lastName}</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{passenger.phoneNumber}</div></div>
+        ) : filteredPassengers.map((passenger, idx) => (
+          <div
+            key={passenger._id || passenger.id}
+            style={{
+              padding: '14px 16px',
+              borderBottom: idx < filteredPassengers.length - 1 ? '1px solid var(--border-light)' : 'none',
+              background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onClick={() => openDetail(passenger, 'overview')}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.03)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))'; }}
+          >
+            {/* Top row: Name, Status, Rating */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${getPassengerStatusColor(passenger.status)}15`, color: getPassengerStatusColor(passenger.status), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FaUser style={{ fontSize: 14 }} />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{passenger.firstName} {passenger.lastName}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{passenger.phoneNumber}{passenger.email ? ` · ${passenger.email}` : ''}</div>
+                </div>
               </div>
-              <span style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700 }}>{passenger.status}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 600, color: '#f59e0b' }}>
+                  <FaStar style={{ fontSize: 11 }} /> {getRating(passenger).toFixed(1)}
+                </span>
+                <span style={{ background: getPassengerStatusBg(passenger.status), color: getPassengerStatusColor(passenger.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{passenger.status}</span>
+                {passenger.fraudFlags > 0 && <span style={{ fontSize: 9, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 2 }}><FaExclamationTriangle style={{ fontSize: 8 }} /> {passenger.fraudFlags}</span>}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>
-              <span><FaStar style={{ color: '#f59e0b', marginRight: 4 }} />{getRating(passenger).toFixed(1)}</span>
+
+            {/* Middle row: Stats */}
+            <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10, flexWrap: 'wrap' }}>
               <span><FaCar style={{ color: '#3b82f6', marginRight: 4 }} />{passenger.totalTrips || 0} trips</span>
               <span><FaWallet style={{ color: '#10b981', marginRight: 4 }} />ETB {(passenger.totalSpent || 0).toLocaleString()}</span>
             </div>
+
+            {/* Bottom row: Action Buttons */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-              <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(passenger)} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 9 }} /> View</button>
-              <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('message'); }} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaEnvelope style={{ fontSize: 9 }} /> Msg</button>
-              <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('warning'); }} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 9 }} /> Warn</button>
-              {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 9 }} /> Suspend</button>}
-              {(passenger.status === 'suspended' || passenger.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivatePassenger(passenger._id || passenger.id)} style={{ padding: '6px 10px', fontSize: 10, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 9 }} /> Reactivate</button>}
+              <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(passenger, 'overview')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> View</button>
+              <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('message'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}><FaEnvelope style={{ fontSize: 10 }} /> Message</button>
+              <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('warning'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 10 }} /> Warn</button>
+              {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
+              {passenger.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedPassenger(passenger); setShowBanModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Ban</button>}
+              {(passenger.status === 'suspended' || passenger.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivatePassenger(passenger._id || passenger.id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 10 }} /> Reactivate</button>}
             </div>
           </div>
         ))}
-        {filteredPassengers.length === 0 && <div style={{ padding: '40px 20px', textAlign: 'center' }}><FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} /><p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p></div>}
       </div>
       </>)}
 

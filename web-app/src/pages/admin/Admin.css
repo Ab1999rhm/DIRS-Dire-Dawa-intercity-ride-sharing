@@ -1347,21 +1347,3 @@
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
   transform: translateY(-2px);
 }
-
-/* Passenger Management - Responsive Tables */
-.driver-table-desktop {
-  display: block;
-  overflow-x: auto;
-}
-.driver-table-mobile {
-  display: none !important;
-}
-
-@media (max-width: 767px) {
-  .driver-table-desktop {
-    display: none !important;
-  }
-  .driver-table-mobile {
-    display: block !important;
-  }
-}
