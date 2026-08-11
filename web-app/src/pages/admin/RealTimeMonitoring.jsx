@@ -509,35 +509,210 @@ const RealTimeMonitoring = () => {
         </div>
       </div>
 
-      {/* Driver Filter */}
-      <div className="admin-section-title" style={{ marginTop: 20 }}>
-        <FaFilter /> {t('admin.filterDrivers') || 'Filter Drivers'}
-      </div>
-      <div className="admin-filter-tabs">
-        <button
-          className={`admin-filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('all')}
+      {/* Driver Filter + Booking Queue */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: 16,
+          marginTop: 20,
+          marginBottom: 16,
+        }}
+        className="admin-animate-in-delay-2"
+      >
+        {/* Filter Tabs Card */}
+        <div
+          style={{
+            padding: 16,
+            background: 'var(--card)',
+            borderRadius: 12,
+            border: '1px solid var(--border-light)',
+            borderTop: '4px solid #3b82f6',
+          }}
         >
-          {t('admin.all') || 'All'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'available' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('available')}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <FaFilter style={{ color: '#3b82f6', fontSize: 16 }} />
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{t('admin.filterDrivers') || 'Filter Drivers'}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <button
+              onClick={() => setFilterStatus('all')}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: filterStatus === 'all' ? '#3b82f6' : 'rgba(59,130,246,0.08)',
+                color: filterStatus === 'all' ? '#fff' : '#3b82f6',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span>{t('admin.all') || 'All'}</span>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 700,
+                background: filterStatus === 'all' ? 'rgba(255,255,255,0.2)' : 'rgba(59,130,246,0.15)',
+                padding: '2px 8px',
+                borderRadius: 10,
+              }}>
+                {activeDrivers.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setFilterStatus('available')}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: filterStatus === 'available' ? '#10b981' : 'rgba(16,185,129,0.08)',
+                color: filterStatus === 'available' ? '#fff' : '#10b981',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span>{t('admin.available') || 'Available'}</span>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 700,
+                background: filterStatus === 'available' ? 'rgba(255,255,255,0.2)' : 'rgba(16,185,129,0.15)',
+                padding: '2px 8px',
+                borderRadius: 10,
+              }}>
+                {activeDrivers.filter(d => d.isAvailable).length}
+              </span>
+            </button>
+            <button
+              onClick={() => setFilterStatus('busy')}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: filterStatus === 'busy' ? '#f59e0b' : 'rgba(245,158,11,0.08)',
+                color: filterStatus === 'busy' ? '#fff' : '#f59e0b',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span>{t('admin.busy') || 'Busy'}</span>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 700,
+                background: filterStatus === 'busy' ? 'rgba(255,255,255,0.2)' : 'rgba(245,158,11,0.15)',
+                padding: '2px 8px',
+                borderRadius: 10,
+              }}>
+                {activeDrivers.filter(d => !d.isAvailable).length}
+              </span>
+            </button>
+            <button
+              onClick={() => setFilterStatus('offline')}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: filterStatus === 'offline' ? '#6b7280' : 'rgba(107,114,128,0.08)',
+                color: filterStatus === 'offline' ? '#fff' : '#6b7280',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span>{t('admin.offline') || 'Offline'}</span>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 700,
+                background: filterStatus === 'offline' ? 'rgba(255,255,255,0.2)' : 'rgba(107,114,128,0.15)',
+                padding: '2px 8px',
+                borderRadius: 10,
+              }}>
+                0
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Booking Queue Stats Card */}
+        <div
+          style={{
+            padding: 16,
+            background: 'var(--card)',
+            borderRadius: 12,
+            border: '1px solid var(--border-light)',
+            borderTop: '4px solid #7c3aed',
+          }}
         >
-          {t('admin.available') || 'Available'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'busy' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('busy')}
-        >
-          {t('admin.busy') || 'Busy'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterStatus === 'offline' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('offline')}
-        >
-          {t('admin.offline') || 'Offline'}
-        </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <FaUsers style={{ color: '#7c3aed', fontSize: 16 }} />
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{t('admin.bookingQueue') || 'Booking Queue'}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{
+              padding: '10px 12px',
+              background: 'rgba(245,158,11,0.08)',
+              borderRadius: 8,
+              border: '1px solid rgba(245,158,11,0.15)',
+            }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#f59e0b' }}>
+                {bookingQueue?.queueLength || 0}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                {t('admin.pendingRequests') || 'Pending Requests'}
+              </div>
+            </div>
+            <div style={{
+              padding: '10px 12px',
+              background: 'rgba(16,185,129,0.08)',
+              borderRadius: 8,
+              border: '1px solid rgba(16,185,129,0.15)',
+            }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#10b981' }}>
+                {bookingQueue?.availableDrivers || 0}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                {t('admin.availableDrivers') || 'Available Drivers'}
+              </div>
+            </div>
+            <div style={{
+              gridColumn: '1 / -1',
+              padding: '10px 12px',
+              background: 'rgba(59,130,246,0.08)',
+              borderRadius: 8,
+              border: '1px solid rgba(59,130,246,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#3b82f6' }}>
+                  {bookingQueue?.avgWaitTime || 0}m
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                  {t('admin.avgWaitTime') || 'Avg Wait Time'}
+                </div>
+              </div>
+              <FaTachometerAlt style={{ fontSize: 24, color: '#3b82f6', opacity: 0.3 }} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Active Drivers List */}
@@ -570,44 +745,6 @@ const RealTimeMonitoring = () => {
           </div>
         ))}
       </div>
-
-      {/* Booking Queue */}
-      {bookingQueue && (
-        <>
-          <div className="admin-section-title">
-            <FaUsers /> {t('admin.bookingQueue') || 'Booking Queue'}
-          </div>
-          <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-                <FaClock />
-              </div>
-              <div>
-                <div className="admin-stat-value">{bookingQueue.queueLength}</div>
-                <div className="admin-stat-label">{t('admin.pendingRequests') || 'Pending Requests'}</div>
-              </div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-                <FaCar />
-              </div>
-              <div>
-                <div className="admin-stat-value">{bookingQueue.availableDrivers}</div>
-                <div className="admin-stat-label">{t('admin.availableDrivers') || 'Available Drivers'}</div>
-              </div>
-            </div>
-            <div className="admin-stat-card">
-              <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-                <FaTachometerAlt />
-              </div>
-              <div>
-                <div className="admin-stat-value">{bookingQueue.avgWaitTime}m</div>
-                <div className="admin-stat-label">{t('admin.avgWaitTime') || 'Avg Wait Time'}</div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {/* Speed Alerts */}
       {speedAlerts.length > 0 && (
