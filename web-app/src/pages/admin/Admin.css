@@ -1186,3 +1186,160 @@
 [data-theme="dark"] .admin-icon-btn:active {
   background: #0f3460;
 }
+
+/* ===== DRIVER ACTION BUTTONS ===== */
+.driver-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+.driver-action-btn:active {
+  transform: scale(0.93);
+}
+.driver-action-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.driver-action-btn:hover::after {
+  opacity: 1;
+}
+
+/* View button */
+.driver-btn-view {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+.driver-btn-view:hover {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Message button */
+.driver-btn-message {
+  background: #ecfeff;
+  color: #0891b2;
+  border-color: #a5f3fc;
+}
+.driver-btn-message:hover {
+  background: #0891b2;
+  color: #fff;
+  border-color: #0891b2;
+  box-shadow: 0 4px 14px rgba(8, 145, 178, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Warn button */
+.driver-btn-warn {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fde68a;
+}
+.driver-btn-warn:hover {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Suspend button */
+.driver-btn-suspend {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.driver-btn-suspend:hover {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Ban button */
+.driver-btn-ban {
+  background: #fdf2f8;
+  color: #9d174d;
+  border-color: #fbcfe8;
+}
+.driver-btn-ban:hover {
+  background: #9d174d;
+  color: #fff;
+  border-color: #9d174d;
+  box-shadow: 0 4px 14px rgba(157, 23, 77, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Reactivate button */
+.driver-btn-reactivate {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+.driver-btn-reactivate:hover {
+  background: #059669;
+  color: #fff;
+  border-color: #059669;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Verify button */
+.driver-btn-verify {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+.driver-btn-verify:hover {
+  background: #059669;
+  color: #fff;
+  border-color: #059669;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Reject button */
+.driver-btn-reject {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.driver-btn-reject:hover {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Review button */
+.driver-btn-review {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fde68a;
+}
+.driver-btn-review:hover {
+  background: #d97706;
+  color: #fff;
+  border-color: #d97706;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+  transform: translateY(-2px);
+}

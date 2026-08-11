@@ -523,24 +523,24 @@ const DriverManagement = () => {
                   {driver.warnings > 0 && <span style={{ fontSize: 10, color: '#ef4444', background: '#fef2f2', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}><FaExclamationTriangle style={{ fontSize: 9 }} /> {driver.warnings} warnings</span>}
                   {driver.complaints > 0 && <span style={{ fontSize: 10, color: '#d97706', background: '#fef3c7', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 3 }}><FaEnvelope style={{ fontSize: 9 }} /> {driver.complaints} complaints</span>}
                 </div>
-                <div style={{ display: 'flex', gap: 4, marginTop: 10, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                  <button onClick={() => openDetail(driver)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: '#eff6ff', color: '#3b82f6', border: 'none', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                    <FaEye style={{ fontSize: 9 }} /> View
+                <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                  <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(driver)}>
+                    <FaEye style={{ fontSize: 10 }} /> View
                   </button>
-                  <button onClick={() => { setSelectedDriver(driver); setShowMessageModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: '#e0f2fe', color: '#0891b2', border: 'none', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                    <FaPaperPlane style={{ fontSize: 9 }} /> Message
+                  <button className="driver-action-btn driver-btn-message" onClick={() => { setSelectedDriver(driver); setShowMessageModal(true); }}>
+                    <FaPaperPlane style={{ fontSize: 10 }} /> Message
                   </button>
-                  <button onClick={() => { setSelectedDriver(driver); setShowWarnModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: '#fff7ed', color: '#f59e0b', border: 'none', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                    <FaExclamationTriangle style={{ fontSize: 9 }} /> Warn
+                  <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedDriver(driver); setShowWarnModal(true); }}>
+                    <FaExclamationTriangle style={{ fontSize: 10 }} /> Warn
                   </button>
-                  {driver.status === 'active' && <button onClick={() => { setSelectedDriver(driver); setShowSuspendModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: '#fee2e2', color: '#ef4444', border: 'none', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                    <FaBan style={{ fontSize: 9 }} /> Suspend
+                  {driver.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedDriver(driver); setShowSuspendModal(true); }}>
+                    <FaBan style={{ fontSize: 10 }} /> Suspend
                   </button>}
-                  {driver.status !== 'banned' && <button onClick={() => { setSelectedDriver(driver); setShowBanModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: '#7f1d1d15', color: '#7f1d1d', border: 'none', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                    <FaTrash style={{ fontSize: 9 }} /> Ban
+                  {driver.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedDriver(driver); setShowBanModal(true); }}>
+                    <FaTrash style={{ fontSize: 10 }} /> Ban
                   </button>}
-                  {(driver.status === 'suspended' || driver.status === 'banned') && <button onClick={() => handleReactivate(driver._id)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: '#dcfce7', color: '#10b981', border: 'none', fontSize: 10, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                    <FaCheck style={{ fontSize: 9 }} /> Reactivate
+                  {(driver.status === 'suspended' || driver.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivate(driver._id)}>
+                    <FaCheck style={{ fontSize: 10 }} /> Reactivate
                   </button>}
                 </div>
               </div>
@@ -579,13 +579,13 @@ const DriverManagement = () => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-                  <button className="btn btn-primary btn-sm" style={{ background: '#10b981', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '6px 12px' }} onClick={() => handleApprove(driver._id)}>
+                  <button className="driver-action-btn driver-btn-verify" onClick={() => handleApprove(driver._id)}>
                     <FaCheckCircle /> Approve
                   </button>
-                  <button className="btn btn-danger btn-sm" style={{ borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '6px 12px' }} onClick={() => handleReject(driver._id, 'Documents not verified')}>
+                  <button className="driver-action-btn driver-btn-reject" onClick={() => handleReject(driver._id, 'Documents not verified')}>
                     <FaTimesCircle /> Reject
                   </button>
-                  <button className="btn btn-sm" style={{ background: '#fef3c7', color: '#d97706', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '6px 12px' }} onClick={() => { openDetail(driver); setDetailTab('documents'); }}>
+                  <button className="driver-action-btn driver-btn-review" onClick={() => { openDetail(driver); setDetailTab('documents'); }}>
                     <FaEye /> Review
                   </button>
                 </div>
