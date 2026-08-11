@@ -844,6 +844,8 @@
 @media (min-width: 768px) {
   .admin-page {
     max-width: 800px;
+    margin-left: 260px;
+    margin-right: auto;
     padding: 24px 24px 100px;
   }
   .admin-greeting {
@@ -860,6 +862,8 @@
 @media (min-width: 1024px) {
   .admin-page {
     max-width: 960px;
+    margin-left: 260px;
+    margin-right: auto;
     padding: 32px 32px 100px;
   }
   .admin-stats-grid {
