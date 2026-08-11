@@ -883,6 +883,7 @@
       "estimatedRevenue": "Estimated Revenue",
       "pendingRequest": "Pending Request",
       "pendingRequests": "Pending Requests",
+      "bookingQueue": "Booking Queue",
       "avgWaitTime": "Avg Wait Time",
       "supportDashboard": "Support Dashboard",
       "broadcast": "Broadcast",
