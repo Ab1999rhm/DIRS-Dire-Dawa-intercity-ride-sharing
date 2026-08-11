@@ -99,3 +99,33 @@ exports.getTripRating = asyncHandler(async (req, res) => {
 
   res.json({ ratings });
 });
+
+exports.getDriverRatings = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 20 } = req.query;
+  const driverId = req.user._id;
+
+  const ratings = await Rating.find({ ratee: driverId })
+    .populate('rater', 'firstName lastName profilePhoto')
+    .populate('trip', 'pickupLocation dropoffLocation createdAt')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Rating.countDocuments({ ratee: driverId });
+
+  const avgResult = await Rating.aggregate([
+    { $match: { ratee: mongoose.Types.ObjectId.createFromHexString(driverId.toString()) } },
+    { $group: { _id: null, avgRating: { $avg: '$rating' }, totalRatings: { $sum: 1 } } }
+  ]);
+
+  const stats = avgResult.length > 0 ? avgResult[0] : { avgRating: 0, totalRatings: 0 };
+
+  res.json({
+    ratings,
+    averageRating: Math.round((stats.avgRating || 0) * 10) / 10,
+    totalRatings: stats.totalRatings || 0,
+    total,
+    page: parseInt(page),
+    pages: Math.ceil(total / limit)
+  });
+});

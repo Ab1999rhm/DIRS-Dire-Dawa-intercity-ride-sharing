@@ -7,5 +7,6 @@ const { validateRating } = require('../../middleware/validation');
 router.post('/trip/:tripId', protect, validateRating, ratingController.createRating);
 router.get('/user/:userId', ratingController.getUserRatings);
 router.get('/trip/:tripId', protect, ratingController.getTripRating);
+router.get('/driver', protect, ratingController.getDriverRatings);
 
 module.exports = router;
