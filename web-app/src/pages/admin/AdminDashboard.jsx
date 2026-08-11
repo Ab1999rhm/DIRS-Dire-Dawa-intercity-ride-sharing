@@ -30,14 +30,12 @@ const AdminDashboard = () => {
   const [systemHealth, setSystemHealth] = useState({ api: 'operational', db: 'operational', socket: 'operational' });
 
   useEffect(() => {
-    fetchDashboard();
-    const interval = setInterval(fetchDashboard, 30000);
-    return () => clearInterval(interval);
+    fetchDashboard(true);
   }, []);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await adminAPI.dashboard();
       setStats(res.data.stats);
       setRecentActivity(res.data.recentActivity || []);
@@ -156,7 +154,7 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
-          <button className="admin-icon-btn" onClick={fetchDashboard}>
+          <button className="admin-icon-btn" onClick={() => fetchDashboard(false)}>
             <FaSync />
           </button>
           <button className="admin-icon-btn" title="Notifications">
