@@ -10,10 +10,15 @@ const FraudDetection = require('../../models/FraudDetection');
 const SuspiciousActivity = require('../../models/SuspiciousActivity');
 
 const buildDateFilter = (startDate, endDate) => {
-  const dateFilter = {};
-  if (startDate && !isNaN(new Date(startDate).getTime())) dateFilter.$gte = new Date(startDate);
-  if (endDate && !isNaN(new Date(endDate).getTime())) dateFilter.$lte = new Date(endDate);
-  return dateFilter;
+  const f = {};
+  if (startDate && !isNaN(new Date(startDate).getTime())) f.$gte = new Date(startDate);
+  if (endDate && !isNaN(new Date(endDate).getTime())) f.$lte = new Date(endDate);
+  return f;
+};
+
+const dateQ = (startDate, endDate) => {
+  const f = buildDateFilter(startDate, endDate);
+  return Object.keys(f).length > 0 ? { createdAt: f } : {};
 };
 const Ticket = require('../../models/Ticket');
 const SupportChat = require('../../models/SupportChat');
