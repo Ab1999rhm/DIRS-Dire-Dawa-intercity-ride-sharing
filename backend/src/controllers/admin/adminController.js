@@ -245,6 +245,7 @@ exports.getPendingDriverVerifications = asyncHandler(async (req, res) => {
 
 exports.getAllDrivers = asyncHandler(async (req, res) => {
   const { page = 1, limit = 50, status } = req.query;
+  const Vehicle = require('../../models/Vehicle');
 
   const filter = {};
   if (status && status !== 'all') {
@@ -257,6 +258,30 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
 
+  const driverIds = drivers.map(d => d._id);
+  const vehicles = await Vehicle.find({ driver: { $in: driverIds } });
+  const vehicleMap = new Map();
+  vehicles.forEach(v => vehicleMap.set(v.driver.toString(), v));
+
+  const driversWithVehicles = drivers.map(d => {
+    const driverObj = d.toObject();
+    const vehicle = vehicleMap.get(d._id.toString());
+    if (vehicle) {
+      driverObj.vehicle = {
+        make: vehicle.make,
+        model: vehicle.model,
+        plateNumber: vehicle.plateNumber,
+        type: vehicle.vehicleType,
+        color: vehicle.color,
+        year: vehicle.year,
+        capacity: vehicle.capacity,
+        insuranceExpiry: vehicle.insuranceExpiry,
+        registrationExpiry: vehicle.registrationExpiry,
+      };
+    }
+    return driverObj;
+  });
+
   const total = await Driver.countDocuments(filter);
 
   const stats = {
@@ -266,7 +291,7 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
     rejected: await Driver.countDocuments({ verificationStatus: 'rejected' }),
   };
 
-  res.json({ drivers, total, page: parseInt(page), pages: Math.ceil(total / limit), stats });
+  res.json({ drivers: driversWithVehicles, total, page: parseInt(page), pages: Math.ceil(total / limit), stats });
 });
 
 exports.verifyDriver = asyncHandler(async (req, res) => {
