@@ -401,7 +401,7 @@ const DriverManagement = () => {
     { label: 'Suspended/Banned', value: suspendedCount + bannedCount, color: '#ef4444', icon: <FaBan /> },
     { label: 'Avg Rating', value: avgRating, color: '#7c3aed', icon: <FaStar /> },
     { label: 'Total Trips', value: totalTrips.toLocaleString(), color: '#0891b2', icon: <FaChartLine /> },
-    { label: 'Total Revenue', value: \`ETB \${totalRevenue.toLocaleString()}\`, color: '#10b981', icon: <FaMoneyBillWave /> },
+    { label: 'Total Revenue', value: `ETB ${totalRevenue.toLocaleString()}`, color: '#10b981', icon: <FaMoneyBillWave /> },
   ];
 
   return (
@@ -435,8 +435,8 @@ const DriverManagement = () => {
 
       <div className="admin-stats-grid" style={{ marginBottom: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
         {statCards.map((stat, idx) => (
-          <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${Math.min(idx + 1, 5)}`} style={{ borderLeft: \`4px solid \${stat.color}\` }}>
-            <div className="admin-stat-icon" style={{ background: \`\${stat.color}15\`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+          <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${Math.min(idx + 1, 5)}`} style={{ borderLeft: `4px solid ${stat.color}` }}>
+            <div className="admin-stat-icon" style={{ background: `${stat.color}15`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
               {stat.icon}
             </div>
             <div>
@@ -496,9 +496,9 @@ const DriverManagement = () => {
           <div className="admin-section-title"><FaCar /> All Drivers ({filteredDrivers.length})</div>
           <div className="admin-activity-list">
             {filteredDrivers.map(driver => (
-              <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: \`3px solid \${getStatusColor(driver.status)}\`, borderRadius: 10, marginBottom: 8, padding: 14 }} onClick={() => openDetail(driver)} onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+              <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', transition: 'all 0.2s ease', borderLeft: `3px solid ${getStatusColor(driver.status)}`, borderRadius: 10, marginBottom: 8, padding: 14 }} onClick={() => openDetail(driver)} onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="admin-activity-icon" style={{ background: \`\${getStatusColor(driver.status)}15\`, color: getStatusColor(driver.status), flexShrink: 0 }}>
+                  <div className="admin-activity-icon" style={{ background: `${getStatusColor(driver.status)}15`, color: getStatusColor(driver.status), flexShrink: 0 }}>
                     <FaCarSide />
                   </div>
                   <div className="admin-activity-info" style={{ flex: 1 }}>
@@ -562,7 +562,7 @@ const DriverManagement = () => {
                     {['license', 'insurance', 'registration'].map(doc => {
                       const docStatus = driver.documents?.[doc]?.status || 'pending';
                       return (
-                        <span key={doc} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: \`\${getDocStatusColor(docStatus)}15\`, color: getDocStatusColor(docStatus), fontWeight: 600, textTransform: 'capitalize' }}>
+                        <span key={doc} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(docStatus)}15`, color: getDocStatusColor(docStatus), fontWeight: 600, textTransform: 'capitalize' }}>
                           {doc}: {docStatus}
                         </span>
                       );
@@ -593,7 +593,7 @@ const DriverManagement = () => {
                     {['license', 'insurance', 'registration'].map(doc => {
                       const st = driver.documents?.[doc]?.status || 'unknown';
                       return (
-                        <span key={doc} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: \`\${getDocStatusColor(st)}15\`, color: getDocStatusColor(st), fontWeight: 600, textTransform: 'capitalize' }}>
+                        <span key={doc} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(st)}15`, color: getDocStatusColor(st), fontWeight: 600, textTransform: 'capitalize' }}>
                           {doc}: {st}
                           {st === 'expired' && <FaRedo style={{ cursor: 'pointer', marginLeft: 4 }} onClick={() => handleRequestResubmit(driver._id, doc)} />}
                         </span>
@@ -624,8 +624,8 @@ const DriverManagement = () => {
               { label: 'Cancelled Trips', value: drivers.reduce((a, d) => a + (d.cancelledTrips || 0), 0), color: '#ef4444', icon: <FaTimesCircle /> },
               { label: 'Total Complaints', value: drivers.reduce((a, d) => a + (d.complaints || 0), 0), color: '#f59e0b', icon: <FaExclamationTriangle /> },
             ].map((stat, idx) => (
-              <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${idx + 1}`} style={{ borderLeft: \`4px solid \${stat.color}\` }}>
-                <div className="admin-stat-icon" style={{ background: \`\${stat.color}15\`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{stat.icon}</div>
+              <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${idx + 1}`} style={{ borderLeft: `4px solid ${stat.color}` }}>
+                <div className="admin-stat-icon" style={{ background: `${stat.color}15`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{stat.icon}</div>
                 <div>
                   <div className="admin-stat-value" style={{ color: stat.color }}>{stat.value}</div>
                   <div className="admin-stat-label">{stat.label}</div>
@@ -638,7 +638,7 @@ const DriverManagement = () => {
               const completionRate = driver.totalTrips > 0 ? ((driver.completedTrips / driver.totalTrips) * 100).toFixed(1) : 0;
               const barColor = completionRate > 90 ? '#10b981' : completionRate > 70 ? '#f59e0b' : '#ef4444';
               return (
-                <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', borderLeft: \`3px solid \${barColor}\`, borderRadius: 10, padding: 14, marginBottom: 8 }} onClick={() => openDetail(driver, 'performance')}>
+                <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', borderLeft: `3px solid ${barColor}`, borderRadius: 10, padding: 14, marginBottom: 8 }} onClick={() => openDetail(driver, 'performance')}>
                   <div className="admin-activity-icon" style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}><FaChartBar /></div>
                   <div className="admin-activity-info" style={{ flex: 1 }}>
                     <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.firstName} {driver.lastName}</div>
@@ -652,7 +652,7 @@ const DriverManagement = () => {
                       {(driver.rating || 0) < 3.5 && <span style={{ color: '#dc2626', fontWeight: 700 }}>LOW RATING</span>}
                     </div>
                     <div style={{ marginTop: 8, height: 6, borderRadius: 3, background: '#e5e7eb', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: \`\${completionRate}%\`, background: barColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                      <div style={{ height: '100%', width: `${completionRate}%`, background: barColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
                     </div>
                     <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>{completionRate}% completion rate</div>
                   </div>
@@ -669,12 +669,12 @@ const DriverManagement = () => {
           <div className="admin-section-title"><FaMoneyBillWave /> Financial Overview</div>
           <div className="admin-stats-grid" style={{ marginBottom: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
             {[
-              { label: 'Total Driver Earnings', value: \`ETB \${drivers.reduce((a, d) => a + (d.totalEarnings || 0), 0).toLocaleString()}\`, color: '#10b981', icon: <FaMoneyBillWave /> },
-              { label: 'Total Commission', value: \`ETB \${drivers.reduce((a, d) => a + (d.commissionPaid || 0), 0).toLocaleString()}\`, color: '#7c3aed', icon: <FaWallet /> },
-              { label: 'This Month', value: \`ETB \${drivers.reduce((a, d) => a + (d.monthlyEarnings || 0), 0).toLocaleString()}\`, color: '#059669', icon: <FaChartLine /> },
+              { label: 'Total Driver Earnings', value: `ETB ${drivers.reduce((a, d) => a + (d.totalEarnings || 0), 0).toLocaleString()}`, color: '#10b981', icon: <FaMoneyBillWave /> },
+              { label: 'Total Commission', value: `ETB ${drivers.reduce((a, d) => a + (d.commissionPaid || 0), 0).toLocaleString()}`, color: '#7c3aed', icon: <FaWallet /> },
+              { label: 'This Month', value: `ETB ${drivers.reduce((a, d) => a + (d.monthlyEarnings || 0), 0).toLocaleString()}`, color: '#059669', icon: <FaChartLine /> },
             ].map((stat, idx) => (
-              <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${idx + 1}`} style={{ borderLeft: \`4px solid \${stat.color}\` }}>
-                <div className="admin-stat-icon" style={{ background: \`\${stat.color}15\`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{stat.icon}</div>
+              <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${idx + 1}`} style={{ borderLeft: `4px solid ${stat.color}` }}>
+                <div className="admin-stat-icon" style={{ background: `${stat.color}15`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{stat.icon}</div>
                 <div>
                   <div className="admin-stat-value" style={{ color: stat.color }}>{stat.value}</div>
                   <div className="admin-stat-label">{stat.label}</div>
@@ -715,7 +715,7 @@ const DriverManagement = () => {
             {disputes.map(d => {
               const borderColor = d.status === 'resolved' ? '#10b981' : d.status === 'investigating' ? '#f59e0b' : '#ef4444';
               return (
-                <div key={d._id} className="admin-activity-item" style={{ borderLeft: \`4px solid \${borderColor}\`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
+                <div key={d._id} className="admin-activity-item" style={{ borderLeft: `4px solid ${borderColor}`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
                   <div className="admin-activity-icon" style={{ background: d.status === 'resolved' ? '#10b98115' : '#ef444415', color: d.status === 'resolved' ? '#10b981' : '#ef4444' }}><FaExclamationCircle /></div>
                   <div className="admin-activity-info" style={{ flex: 1 }}>
                     <div className="admin-activity-text" style={{ fontWeight: 700 }}>{d.issue}</div>
@@ -736,7 +736,7 @@ const DriverManagement = () => {
           </div>
           <div className="admin-activity-list">
             {lostItems.map(l => (
-              <div key={l._id} className="admin-activity-item" style={{ borderLeft: \`4px solid \${l.status === 'returned' ? '#10b981' : '#f59e0b'}\`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
+              <div key={l._id} className="admin-activity-item" style={{ borderLeft: `4px solid ${l.status === 'returned' ? '#10b981' : '#f59e0b'}`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
                 <div className="admin-activity-icon" style={{ background: l.status === 'returned' ? '#10b98115' : '#f59e0b15', color: l.status === 'returned' ? '#10b981' : '#f59e0b' }}><FaBoxOpen /></div>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
                   <div className="admin-activity-text" style={{ fontWeight: 700 }}>{l.description}</div>
@@ -755,7 +755,7 @@ const DriverManagement = () => {
           </div>
           <div className="admin-activity-list">
             {issues.map(i => (
-              <div key={i._id} className="admin-activity-item" style={{ borderLeft: \`4px solid \${i.status === 'resolved' ? '#10b981' : '#3b82f6'}\`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
+              <div key={i._id} className="admin-activity-item" style={{ borderLeft: `4px solid ${i.status === 'resolved' ? '#10b981' : '#3b82f6'}`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
                 <div className="admin-activity-icon" style={{ background: i.status === 'resolved' ? '#10b98115' : '#3b82f615', color: i.status === 'resolved' ? '#10b981' : '#3b82f6' }}><FaExclamationTriangle /></div>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
                   <div className="admin-activity-text" style={{ fontWeight: 700 }}>{i.type}</div>
@@ -811,11 +811,11 @@ const DriverManagement = () => {
           <div className="admin-stats-grid" style={{ marginBottom: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
             {[
               { label: 'Active Drivers', value: driverRetention?.activeDrivers || 0, color: '#10b981', icon: <FaUsers /> },
-              { label: 'Retention Rate', value: \`\${driverRetention?.avgRetentionRate || 0}%\`, color: '#f59e0b', icon: <FaUserClock /> },
+              { label: 'Retention Rate', value: `${driverRetention?.avgRetentionRate || 0}%`, color: '#f59e0b', icon: <FaUserClock /> },
               { label: 'New This Month', value: driverRetention?.newDriversThisMonth || 0, color: '#3b82f6', icon: <FaClipboardList /> },
             ].map((stat, idx) => (
-              <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${idx + 1}`} style={{ borderLeft: \`4px solid \${stat.color}\` }}>
-                <div className="admin-stat-icon" style={{ background: \`\${stat.color}15\`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{stat.icon}</div>
+              <div key={stat.label} className={`admin-stat-card admin-animate-in admin-animate-in-delay-${idx + 1}`} style={{ borderLeft: `4px solid ${stat.color}` }}>
+                <div className="admin-stat-icon" style={{ background: `${stat.color}15`, color: stat.color, borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{stat.icon}</div>
                 <div>
                   <div className="admin-stat-value" style={{ color: stat.color }}>{stat.value}</div>
                   <div className="admin-stat-label">{stat.label}</div>
@@ -831,7 +831,7 @@ const DriverManagement = () => {
                 <div style={{ fontSize: 12 }}>total trips recorded</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginTop: 12, maxWidth: 280, margin: '12px auto 0' }}>
                   {Array.from({ length: 28 }, (_, i) => (
-                    <div key={i} style={{ width: '100%', aspectRatio: '1', borderRadius: 3, background: \`rgba(59,130,246,\${Math.random() * 0.6 + 0.1})\` }} />
+                    <div key={i} style={{ width: '100%', aspectRatio: '1', borderRadius: 3, background: `rgba(59,130,246,${Math.random() * 0.6 + 0.1})` }} />
                   ))}
                 </div>
               </div>
@@ -856,7 +856,7 @@ const DriverManagement = () => {
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, padding: 24, maxWidth: 600, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 16, marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: \`\${getStatusColor(selectedDriver.status)}15\`, color: getStatusColor(selectedDriver.status), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}><FaCarSide /></div>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: `${getStatusColor(selectedDriver.status)}15`, color: getStatusColor(selectedDriver.status), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}><FaCarSide /></div>
                 <div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedDriver.firstName} {selectedDriver.lastName}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
@@ -898,15 +898,15 @@ const DriverManagement = () => {
                   const info = selectedDriver.documents?.[doc] || {};
                   const docLabel = doc === 'backgroundCheck' ? 'Background Check' : doc;
                   return (
-                    <div key={doc} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: \`1px solid \${getDocStatusColor(info.status)}30\` }}>
+                    <div key={doc} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: `1px solid ${getDocStatusColor(info.status)}30` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <span style={{ fontWeight: 600, fontSize: 13 }}>{docLabel}</span>
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: \`\${getDocStatusColor(info.status)}15\`, color: getDocStatusColor(info.status), fontWeight: 600 }}>{info.status || 'pending'}</span>
+                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${getDocStatusColor(info.status)}15`, color: getDocStatusColor(info.status), fontWeight: 600 }}>{info.status || 'pending'}</span>
                       </div>
                       {info.expiry && <div style={{ fontSize: 11, color: '#6b7280' }}>Expires: {info.expiry}</div>}
                       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white', borderRadius: 6, padding: '4px 10px' }} onClick={() => toast.success(\`\${docLabel} approved\`)}>Approve</button>
-                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white', borderRadius: 6, padding: '4px 10px' }} onClick={() => toast.success(\`\${docLabel} rejected\`)}>Reject</button>
+                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white', borderRadius: 6, padding: '4px 10px' }} onClick={() => toast.success(`${docLabel} approved`)}>Approve</button>
+                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white', borderRadius: 6, padding: '4px 10px' }} onClick={() => toast.success(`${docLabel} rejected`)}>Reject</button>
                         <button className="btn btn-sm" style={{ background: '#f59e0b15', color: '#d97706', borderRadius: 6, padding: '4px 10px' }} onClick={() => handleRequestResubmit(selectedDriver._id, doc)}>Request Re-submit</button>
                       </div>
                     </div>
@@ -930,7 +930,7 @@ const DriverManagement = () => {
                 <div style={{ marginTop: 12 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Completion Rate</div>
                   <div style={{ height: 8, borderRadius: 4, background: '#e5e7eb', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: \`\${selectedDriver.totalTrips > 0 ? (selectedDriver.completedTrips / selectedDriver.totalTrips) * 100 : 0}%\`, background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: 4 }} />
+                    <div style={{ height: '100%', width: `${selectedDriver.totalTrips > 0 ? (selectedDriver.completedTrips / selectedDriver.totalTrips) * 100 : 0}%`, background: 'linear-gradient(90deg, #10b981, #059669)', borderRadius: 4 }} />
                   </div>
                 </div>
                 <div style={{ marginTop: 12 }}><button className="btn btn-primary" style={{ background: '#3b82f6' }} onClick={() => handleViewTrips(selectedDriver._id)}>View Trip Details</button></div>
