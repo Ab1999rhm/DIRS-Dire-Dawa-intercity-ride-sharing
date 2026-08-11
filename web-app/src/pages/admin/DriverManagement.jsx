@@ -159,9 +159,12 @@ const DriverManagement = () => {
 
   const filteredDrivers = drivers.filter(d => {
     const matchStatus = filterStatus === 'all' || d.status === filterStatus;
-    const name = `${d.firstName || ''} ${d.lastName || ''}`.trim();
+    const firstName = d.user?.firstName || d.firstName || '';
+    const lastName = d.user?.lastName || d.lastName || '';
+    const name = `${firstName} ${lastName}`.trim();
+    const phone = d.user?.phoneNumber || d.phoneNumber || '';
     const matchSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (d.phoneNumber || '').includes(searchQuery) ||
+      phone.includes(searchQuery) ||
       (d.vehicle?.plateNumber || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchStatus && matchSearch;
   });
@@ -336,7 +339,7 @@ const DriverManagement = () => {
   const exportCSV = () => {
     const headers = ['Name', 'Phone', 'Vehicle', 'Status', 'Rating', 'Total Trips', 'Total Earnings', 'Commission', 'Joined'];
     const rows = filteredDrivers.map(d => [
-      `${d.firstName} ${d.lastName}`, d.phoneNumber, `${d.vehicle?.make || ''} ${d.vehicle?.model || ''}`, d.status, d.rating || 0, d.totalTrips || 0, d.totalEarnings || 0, d.commissionPaid || 0, d.joinedAt || ''
+      `${d.user?.firstName || d.firstName} ${d.user?.lastName || d.lastName}`, d.user?.phoneNumber || d.phoneNumber, `${d.vehicle?.make || ''} ${d.vehicle?.model || ''}`, d.status, d.rating || 0, d.totalTrips || 0, d.totalEarnings || 0, d.commissionPaid || 0, d.joinedAt || ''
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -502,8 +505,8 @@ const DriverManagement = () => {
                     <FaCarSide />
                   </div>
                   <div className="admin-activity-info" style={{ flex: 1 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 700, fontSize: 14 }}>{driver.firstName} {driver.lastName}</div>
-                    <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.vehicle?.plateNumber} · {driver.phoneNumber}</div>
+                    <div className="admin-activity-text" style={{ fontWeight: 700, fontSize: 14 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                    <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.vehicle?.plateNumber} · {driver.user?.phoneNumber || driver.phoneNumber}</div>
                   </div>
                   <span className="status-badge" style={{ background: getStatusBg(driver.status), color: getStatusColor(driver.status), fontSize: 10, padding: '3px 10px', borderRadius: 12, fontWeight: 600, textTransform: 'capitalize', flexShrink: 0 }}>{driver.status}</span>
                 </div>
@@ -556,8 +559,8 @@ const DriverManagement = () => {
                   <FaIdCard />
                 </div>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.firstName} {driver.lastName}</div>
-                  <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.phoneNumber}</div>
+                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                  <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.user?.phoneNumber || driver.phoneNumber}</div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                     {['license', 'insurance', 'registration'].map(doc => {
                       const docStatus = driver.documents?.[doc]?.status || 'pending';
@@ -588,7 +591,7 @@ const DriverManagement = () => {
             {drivers.filter(d => d.status !== 'pending').map(driver => (
               <div key={driver._id} className="admin-activity-item" style={{ borderLeft: '3px solid #e5e7eb', borderRadius: 10, padding: 14, marginBottom: 8 }}>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text" style={{ fontWeight: 600 }}>{driver.firstName} {driver.lastName}</div>
+                  <div className="admin-activity-text" style={{ fontWeight: 600 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                     {['license', 'insurance', 'registration'].map(doc => {
                       const st = driver.documents?.[doc]?.status || 'unknown';
@@ -641,7 +644,7 @@ const DriverManagement = () => {
                 <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', borderLeft: `3px solid ${barColor}`, borderRadius: 10, padding: 14, marginBottom: 8 }} onClick={() => openDetail(driver, 'performance')}>
                   <div className="admin-activity-icon" style={{ background: 'rgba(59,130,246,0.08)', color: '#3b82f6' }}><FaChartBar /></div>
                   <div className="admin-activity-info" style={{ flex: 1 }}>
-                    <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.firstName} {driver.lastName}</div>
+                    <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ color: '#f59e0b', fontSize: 9 }} /> {driver.rating?.toFixed(1) || 'N/A'}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCheckCircle style={{ color: '#10b981', fontSize: 9 }} /> {completionRate}% completion</span>
@@ -687,7 +690,7 @@ const DriverManagement = () => {
               <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', borderLeft: '3px solid #10b981', borderRadius: 10, padding: 14, marginBottom: 8 }} onClick={() => openDetail(driver, 'financial')}>
                 <div className="admin-activity-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}><FaMoneyBillWave /></div>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.firstName} {driver.lastName}</div>
+                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                   <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
                     <span>Total: <strong style={{ color: '#10b981' }}>ETB {(driver.totalEarnings || 0).toLocaleString()}</strong></span>
                     <span>Commission: <strong style={{ color: '#7c3aed' }}>ETB {(driver.commissionPaid || 0).toLocaleString()}</strong></span>
@@ -789,8 +792,8 @@ const DriverManagement = () => {
               <div key={driver._id} className="admin-activity-item" style={{ borderLeft: '3px solid #3b82f6', borderRadius: 10, padding: 14, marginBottom: 8 }}>
                 <div className="admin-activity-icon" style={{ background: 'rgba(37,99,235,0.08)', color: '#2563eb' }}><FaCarSide /></div>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.firstName} {driver.lastName}</div>
-                  <div className="admin-activity-time">{driver.phoneNumber} · Warnings: <span style={{ color: (driver.warnings || 0) > 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>{driver.warnings || 0}</span></div>
+                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                  <div className="admin-activity-time">{driver.user?.phoneNumber || driver.phoneNumber} · Warnings: <span style={{ color: (driver.warnings || 0) > 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>{driver.warnings || 0}</span></div>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
                   <button className="admin-icon-btn" style={{ width: 30, height: 30, fontSize: 12, borderRadius: 8 }} title="Send Message" onClick={() => { setSelectedDriver(driver); setShowMessageModal(true); }}><FaPaperPlane /></button>
@@ -858,7 +861,7 @@ const DriverManagement = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 44, height: 44, borderRadius: '50%', background: `${getStatusColor(selectedDriver.status)}15`, color: getStatusColor(selectedDriver.status), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}><FaCarSide /></div>
                 <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedDriver.firstName} {selectedDriver.lastName}</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedDriver.user?.firstName || selectedDriver.firstName} {selectedDriver.user?.lastName || selectedDriver.lastName}</h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <span className="status-badge" style={{ background: getStatusBg(selectedDriver.status), color: getStatusColor(selectedDriver.status), fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 600, textTransform: 'capitalize' }}>{selectedDriver.status}</span>
                     <span style={{ fontSize: 11, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ fontSize: 10 }} /> {selectedDriver.rating?.toFixed(1) || 'N/A'}</span>
@@ -876,7 +879,7 @@ const DriverManagement = () => {
 
             {detailTab === 'overview' && (
               <div className="driver-detail">
-                <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Phone</span><span className="detail-val">{selectedDriver.phoneNumber}</span></div>
+                <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Phone</span><span className="detail-val">{selectedDriver.user?.phoneNumber || selectedDriver.phoneNumber}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Vehicle</span><span className="detail-val">{selectedDriver.vehicle?.make} {selectedDriver.vehicle?.model} ({selectedDriver.vehicle?.type})</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: '#f9fafb', marginBottom: 6 }}><span className="detail-key">Plate</span><span className="detail-val">{selectedDriver.vehicle?.plateNumber}</span></div>
                 <div className="detail-row" style={{ padding: '10px 12px', borderRadius: 8, background: 'white', marginBottom: 6 }}><span className="detail-key">Status</span><span className="detail-val" style={{ color: getStatusColor(selectedDriver.status), fontWeight: 600 }}>{selectedDriver.status}</span></div>
@@ -981,7 +984,7 @@ const DriverManagement = () => {
         <div className="modal-overlay" onClick={() => setShowMessageModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, padding: 24, maxWidth: 400, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 16, marginBottom: 20 }}>
-              <h3>Send Message to {selectedDriver.firstName}</h3>
+              <h3>Send Message to {selectedDriver.user?.firstName || selectedDriver.firstName}</h3>
               <button className="modal-close" onClick={() => setShowMessageModal(false)}><FaTimes /></button>
             </div>
             <textarea value={messageText} onChange={e => setMessageText(e.target.value)} placeholder="Type your message..." style={{ width: '100%', minHeight: 100, padding: 12, borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 13, resize: 'vertical' }} />
@@ -998,7 +1001,7 @@ const DriverManagement = () => {
         <div className="modal-overlay" onClick={() => setShowWarnModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, padding: 24, maxWidth: 400, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 16, marginBottom: 20 }}>
-              <h3>Issue Warning to {selectedDriver.firstName}</h3>
+              <h3>Issue Warning to {selectedDriver.user?.firstName || selectedDriver.firstName}</h3>
               <button className="modal-close" onClick={() => setShowWarnModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
@@ -1018,7 +1021,7 @@ const DriverManagement = () => {
         <div className="modal-overlay" onClick={() => setShowSuspendModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, padding: 24, maxWidth: 400, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 16, marginBottom: 20 }}>
-              <h3>Suspend {selectedDriver.firstName}'s Account</h3>
+              <h3>Suspend {selectedDriver.user?.firstName || selectedDriver.firstName}'s Account</h3>
               <button className="modal-close" onClick={() => setShowSuspendModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
@@ -1040,7 +1043,7 @@ const DriverManagement = () => {
         <div className="modal-overlay" onClick={() => setShowBanModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, padding: 24, maxWidth: 400, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 16, marginBottom: 20 }}>
-              <h3>Permanently Ban {selectedDriver.firstName}</h3>
+              <h3>Permanently Ban {selectedDriver.user?.firstName || selectedDriver.firstName}</h3>
               <button className="modal-close" onClick={() => setShowBanModal(false)}><FaTimes /></button>
             </div>
             <div style={{ padding: '12px 0', color: '#ef4444', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1115,7 +1118,7 @@ const DriverManagement = () => {
               <button className="modal-close" onClick={() => setShowCommissionModal(false)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
-              <div className="detail-row"><span className="detail-key">Driver</span><span className="detail-val">{selectedDriver.firstName} {selectedDriver.lastName}</span></div>
+              <div className="detail-row"><span className="detail-key">Driver</span><span className="detail-val">{selectedDriver.user?.firstName || selectedDriver.firstName} {selectedDriver.user?.lastName || selectedDriver.lastName}</span></div>
               <div className="detail-row"><span className="detail-key">Current Rate</span><span className="detail-val">{selectedDriver.commissionRate || 10}%</span></div>
             </div>
             <div style={{ marginTop: 12 }}>
@@ -1135,7 +1138,7 @@ const DriverManagement = () => {
         <div className="modal-overlay" onClick={() => setShowTripsModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, padding: 24, maxWidth: 600, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: 16, marginBottom: 20 }}>
-              <h3>Trip Breakdown - {selectedDriver.firstName} {selectedDriver.lastName}</h3>
+              <h3>Trip Breakdown - {selectedDriver.user?.firstName || selectedDriver.firstName} {selectedDriver.user?.lastName || selectedDriver.lastName}</h3>
               <button className="modal-close" onClick={() => setShowTripsModal(false)}><FaTimes /></button>
             </div>
             {selectedDriverTrips.length > 0 ? (
