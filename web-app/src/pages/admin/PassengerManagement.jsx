@@ -233,6 +233,11 @@ const PassengerManagement = () => {
 
   return (
     <div className="admin-page">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
+        <FaUserShield style={{ fontSize: 20 }} />
+        <span style={{ fontWeight: 700, fontSize: 15 }}>Passenger Management</span>
+      </div>
+
       {/* Header */}
       <div className="admin-header admin-animate-in">
         <div className="admin-header-left">
