@@ -4,7 +4,8 @@ import {
   FaEdit, FaSave, FaPlus, FaTrash, FaCheckCircle, FaTimesCircle,
   FaPercent, FaRoute, FaMobileAlt, FaServer, FaUpload, FaDownload,
   FaBell, FaShieldAlt, FaFlag, FaTachometerAlt, FaGlobe, FaHistory,
-  FaKey, FaLink, FaUsers, FaCreditCard, FaLock, FaDatabase, FaTimes
+  FaKey, FaLink, FaUsers, FaCreditCard, FaLock, FaDatabase, FaTimes,
+  FaEnvelope, FaEye
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
