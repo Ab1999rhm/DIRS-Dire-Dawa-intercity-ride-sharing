@@ -920,6 +920,8 @@
       "avgResponseTime": "Avg Response Time",
       "satisfaction": "Satisfaction",
       "activeChats": "Active Chats",
+      "ticketsByCategory": "Tickets by Category",
+      "popularFAQs": "Popular FAQs",
       "geographic": "Geographic",
       "time": "Time",
       "financial": "Financial",
