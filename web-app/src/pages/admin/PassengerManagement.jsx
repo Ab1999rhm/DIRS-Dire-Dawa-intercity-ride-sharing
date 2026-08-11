@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   FaUsers, FaUserCheck, FaStar, FaWallet, FaSearch,
-  FaEye, FaCheckCircle, FaBan,
-  FaMoneyBillWave, FaIdCard, FaExclamationTriangle,
+  FaEye, FaCheckCircle, FaTimesCircle, FaClock, FaBan,
+  FaMoneyBillWave, FaIdCard, FaExclamationTriangle, FaExclamationCircle,
   FaEnvelope,
   FaUserSlash, FaToggleOn, FaDownload, FaSync, FaPlus,
-  FaPaperPlane, FaCar, FaTimes, FaCheck, FaTrash,
+  FaPaperPlane, FaChartBar, FaCar, FaTimes, FaCheck, FaTrash,
   FaUser
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
@@ -21,6 +21,7 @@ const PassengerManagement = () => {
   const [selectedPassenger, setSelectedPassenger] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
   const [detailTab, setDetailTab] = useState('overview');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -263,28 +264,34 @@ const PassengerManagement = () => {
         />
       </div>
 
-      {/* Filter Tabs */}
-      <div className="admin-filter-tabs" style={{ gap: 6, marginBottom: 16 }}>
-        {['all', 'active', 'suspended'].map(s => {
-          const count = s === 'all' ? passengers.length : passengers.filter(p => p.status === s).length;
-          return (
-            <button key={s} onClick={() => setFilterStatus(s)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-              borderRadius: 16, border: filterStatus === s ? 'none' : '1px solid #e5e7eb',
-              fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              background: filterStatus === s ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
-              color: filterStatus === s ? 'white' : '#6b7280', transition: 'all 0.2s ease',
-            }}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+      {/* Tabs */}
+      <div className="admin-filter-tabs admin-animate-in-delay-1">
+        {[
+          { key: 'all', label: t('admin.all') || 'All', count: passengers.length },
+          { key: 'active', label: t('admin.active') || 'Active', count: passengers.filter(p => p.status === 'active').length },
+          { key: 'suspended', label: t('admin.suspended') || 'Suspended', count: passengers.filter(p => p.status === 'suspended').length },
+          { key: 'behavior', label: t('admin.behavior') || 'Behavior', icon: <FaExclamationTriangle /> },
+          { key: 'analytics', label: t('admin.analytics') || 'Analytics', icon: <FaChartBar /> },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+            borderRadius: 16, border: activeTab === tab.key ? 'none' : '1px solid #e5e7eb',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            background: activeTab === tab.key ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
+            color: activeTab === tab.key ? 'white' : '#6b7280', transition: 'all 0.2s ease',
+          }}>
+            {tab.icon && tab.icon}
+            {tab.label}
+            {tab.count !== undefined && (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 minWidth: 20, height: 20, borderRadius: 10, fontSize: 10, fontWeight: 700,
-                background: filterStatus === s ? 'rgba(255,255,255,0.25)' : '#e5e7eb',
-                color: filterStatus === s ? 'white' : '#6b7280',
-              }}>{count}</span>
-            </button>
-          );
-        })}
+                background: activeTab === tab.key ? 'rgba(255,255,255,0.25)' : '#e5e7eb',
+                color: activeTab === tab.key ? 'white' : '#6b7280',
+              }}>{tab.count}</span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Stats */}
@@ -302,6 +309,8 @@ const PassengerManagement = () => {
         ))}
       </div>
 
+      {/* All Passengers Tab */}
+      {activeTab === 'all' && (<>
       {/* Desktop Table */}
       <div className="driver-table-desktop" style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '200px 160px 120px 100px 120px 100px 240px', gap: 12, padding: '12px 16px', background: 'var(--bg-secondary, rgba(0,0,0,0.02))', borderBottom: '1px solid var(--border-light)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -349,7 +358,7 @@ const PassengerManagement = () => {
       </div>
 
       {/* Mobile Card Layout */}
-      <div className="driver-table-mobile" style={{ display: 'none' }}>
+      <div className="driver-table-mobile">
         {filteredPassengers.map((passenger, idx) => (
           <div key={passenger._id || passenger.id} style={{ padding: 16, borderBottom: idx < filteredPassengers.length - 1 ? '1px solid var(--border-light)' : 'none', background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))' }} onClick={() => openDetail(passenger)}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -375,12 +384,84 @@ const PassengerManagement = () => {
         ))}
         {filteredPassengers.length === 0 && <div style={{ padding: '40px 20px', textAlign: 'center' }}><FaUsers style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} /><p style={{ color: 'var(--text-muted)' }}>{t('admin.noPassengers') || 'No passengers found'}</p></div>}
       </div>
+      </>)}
 
-      {/* Stats Grid (replaces old separate tabs) */}
+      {/* Behavior Tab */}
+      {activeTab === 'behavior' && (
+        <div className="admin-animate-in-delay-3">
+          <div className="admin-section-title"><FaExclamationTriangle /> {t('admin.behaviorMonitoring') || 'Behavior Monitoring'}</div>
+          <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}><FaTimesCircle /></div>
+              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.cancellations || 0), 0)}</div><div className="admin-stat-label">Total Cancellations</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}><FaClock /></div>
+              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.noShows || 0), 0)}</div><div className="admin-stat-label">No-Shows</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(220, 38, 38, 0.08)', color: '#dc2626' }}><FaExclamationCircle /></div>
+              <div><div className="admin-stat-value">{passengers.filter(p => p.fraudFlags > 0).length}</div><div className="admin-stat-label">Fraud Flags</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(107, 114, 128, 0.08)', color: '#6b7280' }}><FaExclamationTriangle /></div>
+              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.complaints || 0), 0)}</div><div className="admin-stat-label">Complaints</div></div>
+            </div>
+          </div>
+          <div className="admin-activity-list">
+            {passengers.filter(p => (p.cancellations || 0) > 5 || (p.noShows || 0) > 3 || (p.fraudFlags || 0) > 0 || (p.complaints || 0) > 2).length === 0 ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaCheckCircle style={{ fontSize: 48, color: '#10b981', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>All passengers have good behavior</p>
+              </div>
+            ) : (
+              passengers.filter(p => (p.cancellations || 0) > 5 || (p.noShows || 0) > 3 || (p.fraudFlags || 0) > 0 || (p.complaints || 0) > 2).map(passenger => (
+                <div key={passenger._id || passenger.id} className="admin-activity-item" style={{ cursor: 'pointer', padding: 16, borderLeft: '4px solid #ef4444', borderRadius: 10, marginBottom: 8 }} onClick={() => openDetail(passenger, 'behavior')}>
+                  <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><FaExclamationTriangle /></div>
+                  <div className="admin-activity-info" style={{ flex: 1 }}>
+                    <div className="admin-activity-text" style={{ fontWeight: 600 }}>{passenger.firstName} {passenger.lastName}</div>
+                    <div className="admin-activity-time">{passenger.phoneNumber}</div>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                      <span style={{ color: '#ef4444' }}>{passenger.cancellations || 0} cancellations</span>
+                      <span style={{ color: '#f59e0b' }}>{passenger.noShows || 0} no-shows</span>
+                      {passenger.fraudFlags > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}>{passenger.fraudFlags} fraud flags</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                    <button className="driver-action-btn driver-btn-view" onClick={() => openDetail(passenger, 'behavior')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> Review</button>
+                    {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
-      {/* Behavior Tab (kept inline) */}
-
-      {/* Detail Modal */}
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <div className="admin-animate-in-delay-3">
+          <div className="admin-section-title"><FaChartBar /> {t('admin.analytics') || 'Analytics'}</div>
+          <div className="admin-stats-grid" style={{ marginBottom: 16 }}>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}><FaUsers /></div>
+              <div><div className="admin-stat-value">{passengers.length}</div><div className="admin-stat-label">Total Passengers</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}><FaWallet /></div>
+              <div><div className="admin-stat-value">ETB {passengers.reduce((acc, p) => acc + (p.totalSpent || 0), 0).toLocaleString()}</div><div className="admin-stat-label">Total Revenue</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}><FaCar /></div>
+              <div><div className="admin-stat-value">{passengers.reduce((acc, p) => acc + (p.totalTrips || 0), 0)}</div><div className="admin-stat-label">Total Trips</div></div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-icon" style={{ background: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' }}><FaStar /></div>
+              <div><div className="admin-stat-value">{passengers.length > 0 ? (passengers.reduce((acc, p) => acc + getRating(p), 0) / passengers.length).toFixed(1) : '0.0'}</div><div className="admin-stat-label">Avg Rating</div></div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== PASSENGER DETAIL MODAL ===== */}
       {showDetailModal && selectedPassenger && (
