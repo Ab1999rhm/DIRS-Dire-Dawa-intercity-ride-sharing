@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FaMoneyBillWave, FaChartLine, FaCreditCard, FaWallet, FaSearch,
   FaFilter, FaDownload, FaCalendar, FaArrowUp, FaArrowDown, FaPercent,
-  FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaReceipt, FaExchangeAlt
+  FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaReceipt, FaExchangeAlt, FaEye
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -99,230 +99,196 @@ const FinancialManagement = () => {
 
   return (
     <div className="admin-page">
-      {/* Header */}
-      <div className="admin-header">
-        <div className="admin-header-left">
-          <div className="admin-greeting">
-            {t('admin.financialManagement') || 'Financial Management'}
-          </div>
-          <div className="admin-role-badge">
-            <FaMoneyBillWave /> {t('admin.finance') || 'Finance'}
-          </div>
-        </div>
-        <div className="admin-header-actions">
-          <button className="admin-icon-btn" onClick={fetchFinancialData}>
-            <FaSearch />
-          </button>
-          <button className="admin-icon-btn">
-            <FaDownload />
-          </button>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
+        <FaMoneyBillWave style={{ fontSize: 20 }} />
+        <span style={{ fontWeight: 700, fontSize: 15 }}>{t('admin.financialManagement') || 'Financial Management'}</span>
       </div>
 
-      {/* Period Filter */}
-      <div className="admin-filter-tabs">
-        <button
-          className={`admin-filter-tab ${filterPeriod === 'today' ? 'active' : ''}`}
-          onClick={() => setFilterPeriod('today')}
-        >
-          {t('admin.today') || 'Today'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterPeriod === 'week' ? 'active' : ''}`}
-          onClick={() => setFilterPeriod('week')}
-        >
-          {t('admin.thisWeek') || 'This Week'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterPeriod === 'month' ? 'active' : ''}`}
-          onClick={() => setFilterPeriod('month')}
-        >
-          {t('admin.thisMonth') || 'This Month'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterPeriod === 'year' ? 'active' : ''}`}
-          onClick={() => setFilterPeriod('year')}
-        >
-          {t('admin.thisYear') || 'This Year'}
+      {/* Period Filter — Gradient Pills with Counts */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+        {[
+          { key: 'today', label: t('admin.today') || 'Today' },
+          { key: 'week', label: t('admin.thisWeek') || 'This Week' },
+          { key: 'month', label: t('admin.thisMonth') || 'This Month' },
+          { key: 'year', label: t('admin.thisYear') || 'This Year' },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => setFilterPeriod(tab.key)} style={{
+            display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+            borderRadius: 16, border: filterPeriod === tab.key ? 'none' : '1px solid #e5e7eb',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            background: filterPeriod === tab.key ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
+            color: filterPeriod === tab.key ? 'white' : '#6b7280', transition: 'all 0.2s ease',
+          }}>
+            {tab.label}
+          </button>
+        ))}
+        <button onClick={fetchFinancialData} style={{
+          display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px',
+          borderRadius: 16, border: '1px solid #e5e7eb', fontSize: 12, fontWeight: 600,
+          cursor: 'pointer', background: 'white', color: '#6b7280', marginLeft: 'auto',
+        }}>
+          <FaSearch style={{ fontSize: 10 }} /> Refresh
         </button>
       </div>
 
-      {/* Revenue Stats */}
+      {/* Revenue Stats — Staggered Animation */}
       <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-            <FaMoneyBillWave />
+        {[
+          { icon: <FaMoneyBillWave />, val: `ETB ${revenueData?.totalRevenue?.toLocaleString() || 0}`, label: t('admin.totalRevenue') || 'Total Revenue', color: '#10b981' },
+          { icon: <FaPercent />, val: `${revenueData?.commissionRate || 15}%`, label: t('admin.commissionRate') || 'Commission Rate', color: '#f59e0b' },
+          { icon: <FaWallet />, val: `ETB ${revenueData?.commissionCollected?.toLocaleString() || 0}`, label: t('admin.commissionCollected') || 'Commission Collected', color: '#3b82f6' },
+          { icon: <FaReceipt />, val: `ETB ${revenueData?.refundsProcessed?.toLocaleString() || 0}`, label: t('admin.refundsProcessed') || 'Refunds Processed', color: '#ef4444' },
+          { icon: <FaChartLine />, val: `ETB ${revenueData?.netRevenue?.toLocaleString() || 0}`, label: t('admin.netRevenue') || 'Net Revenue', color: '#7c3aed' },
+        ].map((s, i) => (
+          <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
+            <div><div className="admin-stat-value">{s.val}</div><div className="admin-stat-label">{s.label}</div></div>
           </div>
-          <div>
-            <div className="admin-stat-value">ETB {revenueData?.totalRevenue?.toLocaleString() || 0}</div>
-            <div className="admin-stat-label">{t('admin.totalRevenue') || 'Total Revenue'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-            <FaPercent />
-          </div>
-          <div>
-            <div className="admin-stat-value">{revenueData?.commissionRate || 15}%</div>
-            <div className="admin-stat-label">{t('admin.commissionRate') || 'Commission Rate'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-            <FaWallet />
-          </div>
-          <div>
-            <div className="admin-stat-value">ETB {revenueData?.commissionCollected?.toLocaleString() || 0}</div>
-            <div className="admin-stat-label">{t('admin.commissionCollected') || 'Commission Collected'}</div>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}>
-            <FaReceipt />
-          </div>
-          <div>
-            <div className="admin-stat-value">ETB {revenueData?.refundsProcessed?.toLocaleString() || 0}</div>
-            <div className="admin-stat-label">{t('admin.refundsProcessed') || 'Refunds Processed'}</div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Revenue Breakdown */}
+      {/* Revenue Breakdown — Card Layout */}
       <div className="admin-section-title">
         <FaChartLine /> {t('admin.revenueBreakdown') || 'Revenue Breakdown'}
       </div>
-      <div className="admin-activity-list" style={{ marginBottom: 20 }}>
-        <div className="admin-activity-item">
-          <div className="admin-activity-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-            <FaMoneyBillWave />
+      <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden', marginBottom: 20 }}>
+        {[
+          { icon: <FaMoneyBillWave />, label: t('admin.tripPayments') || 'Trip Payments', sub: t('admin.completedTrips') || 'Completed trips', val: revenueData?.tripPayments, color: '#10b981' },
+          { icon: <FaPercent />, label: t('admin.platformCommission') || 'Platform Commission', sub: `${revenueData?.commissionRate || 15}% ${t('admin.ofRevenue') || 'of revenue'}`, val: revenueData?.platformCommission, color: '#f59e0b' },
+          { icon: <FaReceipt />, label: t('admin.refunds') || 'Refunds', sub: t('admin.processedRefunds') || 'Processed refunds', val: revenueData?.refunds, color: '#ef4444', negate: true },
+          { icon: <FaWallet />, label: t('admin.netRevenue') || 'Net Revenue', sub: t('admin.afterDeductions') || 'After deductions', val: revenueData?.netRevenue, color: '#3b82f6' },
+        ].map((item, i) => (
+          <div key={i} style={{
+            padding: '14px 16px',
+            borderBottom: i < 3 ? '1px solid var(--border-light)' : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${item.color}12`, color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {item.icon}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{item.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.sub}</div>
+              </div>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: item.color }}>
+              {item.negate ? '-' : ''}ETB {(item.val || 0).toLocaleString()}
+            </div>
           </div>
-          <div className="admin-activity-info">
-            <div className="admin-activity-text">{t('admin.tripPayments') || 'Trip Payments'}</div>
-            <div className="admin-activity-time">{t('admin.completedTrips') || 'Completed trips'}</div>
-          </div>
-          <div style={{ fontWeight: 700, color: '#10b981' }}>
-            ETB {revenueData?.tripPayments?.toLocaleString() || 0}
-          </div>
-        </div>
-        <div className="admin-activity-item">
-          <div className="admin-activity-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-            <FaPercent />
-          </div>
-          <div className="admin-activity-info">
-            <div className="admin-activity-text">{t('admin.platformCommission') || 'Platform Commission'}</div>
-            <div className="admin-activity-time">{revenueData?.commissionRate || 15}% {t('admin.ofRevenue') || 'of revenue'}</div>
-          </div>
-          <div style={{ fontWeight: 700, color: '#f59e0b' }}>
-            ETB {revenueData?.platformCommission?.toLocaleString() || 0}
-          </div>
-        </div>
-        <div className="admin-activity-item">
-          <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}>
-            <FaReceipt />
-          </div>
-          <div className="admin-activity-info">
-            <div className="admin-activity-text">{t('admin.refunds') || 'Refunds'}</div>
-            <div className="admin-activity-time">{t('admin.processedRefunds') || 'Processed refunds'}</div>
-          </div>
-          <div style={{ fontWeight: 700, color: '#ef4444' }}>
-            -ETB {revenueData?.refunds?.toLocaleString() || 0}
-          </div>
-        </div>
-        <div className="admin-activity-item">
-          <div className="admin-activity-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-            <FaWallet />
-          </div>
-          <div className="admin-activity-info">
-            <div className="admin-activity-text">{t('admin.netRevenue') || 'Net Revenue'}</div>
-            <div className="admin-activity-time">{t('admin.afterDeductions') || 'After deductions'}</div>
-          </div>
-          <div style={{ fontWeight: 700, color: '#3b82f6' }}>
-            ETB {revenueData?.netRevenue?.toLocaleString() || 0}
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Process Commission Button */}
       <button
-        className="btn btn-primary"
-        style={{ width: '100%', marginBottom: 20 }}
+        className="driver-action-btn driver-btn-reactivate"
         onClick={handleProcessCommission}
+        style={{ width: '100%', marginBottom: 20, padding: '10px 16px', fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 600 }}
       >
-        <FaExchangeAlt /> {t('admin.processCommission') || 'Process Commission'}
+        <FaExchangeAlt style={{ fontSize: 12 }} /> {t('admin.processCommission') || 'Process Commission'}
       </button>
 
-      {/* Search and Filter */}
-      <div className="admin-search">
-        <FaSearch />
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: 12 }}>
+        <FaSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 13 }} />
         <input
           type="text"
           placeholder={t('admin.searchTransactions') || 'Search transactions...'}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: 8, border: '1px solid var(--border-light)', fontSize: 13, background: 'var(--card)', color: 'var(--text)', outline: 'none' }}
         />
       </div>
 
-      <div className="admin-filter-tabs">
-        <button
-          className={`admin-filter-tab ${filterType === 'all' ? 'active' : ''}`}
-          onClick={() => setFilterType('all')}
-        >
-          {t('admin.all') || 'All'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterType === 'payment' ? 'active' : ''}`}
-          onClick={() => setFilterType('payment')}
-        >
-          {t('admin.payments') || 'Payments'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterType === 'refund' ? 'active' : ''}`}
-          onClick={() => setFilterType('refund')}
-        >
-          {t('admin.refunds') || 'Refunds'}
-        </button>
-        <button
-          className={`admin-filter-tab ${filterType === 'commission' ? 'active' : ''}`}
-          onClick={() => setFilterType('commission')}
-        >
-          {t('admin.commission') || 'Commission'}
-        </button>
+      {/* Transaction Type Filter — Gradient Pills with Counts */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+        {[
+          { key: 'all', label: t('admin.all') || 'All' },
+          { key: 'payment', label: t('admin.payments') || 'Payments' },
+          { key: 'refund', label: t('admin.refunds') || 'Refunds' },
+          { key: 'commission', label: t('admin.commission') || 'Commission' },
+        ].map(tab => {
+          const count = tab.key === 'all' ? transactions.length : transactions.filter(tr => tr.type === tab.key).length;
+          return (
+            <button key={tab.key} onClick={() => setFilterType(tab.key)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+              borderRadius: 16, border: filterType === tab.key ? 'none' : '1px solid #e5e7eb',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              background: filterType === tab.key ? 'linear-gradient(135deg, #3b82f6, #7c3aed)' : 'white',
+              color: filterType === tab.key ? 'white' : '#6b7280', transition: 'all 0.2s ease',
+            }}>
+              {tab.label}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                minWidth: 20, height: 20, borderRadius: 10, fontSize: 10, fontWeight: 700,
+                background: filterType === tab.key ? 'rgba(255,255,255,0.25)' : '#e5e7eb',
+                color: filterType === tab.key ? 'white' : '#6b7280',
+              }}>{count}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Transactions List */}
+      {/* Transactions List — Card Layout */}
       <div className="admin-section-title">
-        <FaCreditCard /> {t('admin.transactions') || 'Transactions'}
+        <FaCreditCard /> {t('admin.transactions') || 'Transactions'} ({filteredTransactions.length})
       </div>
-      <div className="admin-activity-list">
-        {filteredTransactions.map((transaction) => (
-          <div key={transaction.id} className="admin-activity-item">
-            <div className="admin-activity-icon" style={{
-              background: 'rgba(59, 130, 246, 0.08)',
-              color: getTransactionTypeColor(transaction.type)
-            }}>
-              {transaction.type === 'payment' ? <FaMoneyBillWave /> :
-               transaction.type === 'refund' ? <FaReceipt /> :
-               transaction.type === 'commission' ? <FaPercent /> : <FaCreditCard />}
-            </div>
-            <div className="admin-activity-info">
-              <div className="admin-activity-text">{transaction.description}</div>
-              <div className="admin-activity-time">
-                {transaction.userId} • {new Date(transaction.date).toLocaleDateString()}
+      <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+        {filteredTransactions.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <FaCreditCard style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+            <p style={{ color: 'var(--text-muted)' }}>No transactions found</p>
+          </div>
+        ) : filteredTransactions.map((txn, idx) => (
+          <div key={txn.id || idx} style={{
+            padding: '14px 16px',
+            borderBottom: idx < filteredTransactions.length - 1 ? '1px solid var(--border-light)' : 'none',
+            background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
+          }}>
+            {/* Top row: Icon + Description + Amount */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${getTransactionTypeColor(txn.type)}12`, color: getTransactionTypeColor(txn.type), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {txn.type === 'payment' ? <FaMoneyBillWave style={{ fontSize: 14 }} /> :
+                   txn.type === 'refund' ? <FaReceipt style={{ fontSize: 14 }} /> :
+                   txn.type === 'commission' ? <FaPercent style={{ fontSize: 14 }} /> : <FaCreditCard style={{ fontSize: 14 }} />}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>{txn.description || 'Transaction'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {txn.userId || 'Unknown'} · {txn.id || 'N/A'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: txn.type === 'refund' ? '#ef4444' : '#10b981', flexShrink: 0 }}>
+                {txn.type === 'refund' ? '-' : '+'}ETB {(txn.amount || 0).toLocaleString()}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div className="status-badge" style={{
-                background: transaction.type === 'payment' ? '#dcfce7' :
-                         transaction.type === 'refund' ? '#fef2f2' :
-                         transaction.type === 'commission' ? '#fef3c7' : '#f3f4f6',
-                color: transaction.type === 'payment' ? '#15803d' :
-                       transaction.type === 'refund' ? '#dc2626' :
-                       transaction.type === 'commission' ? '#92400e' : '#6b7280'
-              }}>
-                {transaction.type}
+
+            {/* Bottom row: Status + Date + Action Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{
+                  background: `${getTransactionTypeColor(txn.type)}15`, color: getTransactionTypeColor(txn.type),
+                  fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize',
+                }}>{txn.type}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {txn.date ? new Date(txn.date).toLocaleDateString() : 'N/A'}
+                </span>
               </div>
-              <div style={{ fontWeight: 700, color: transaction.type === 'refund' ? '#ef4444' : '#10b981' }}>
-                {transaction.type === 'refund' ? '-' : '+'}ETB {transaction.amount?.toLocaleString() || 0}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <button className="driver-action-btn driver-btn-view" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}>
+                  <FaEye style={{ fontSize: 10 }} /> View
+                </button>
+                {txn.type === 'refund' && <button className="driver-action-btn driver-btn-reactivate" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}>
+                  <FaCheckCircle style={{ fontSize: 10 }} /> Approve
+                </button>}
+                {txn.type === 'refund' && <button className="driver-action-btn driver-btn-ban" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}>
+                  <FaTimesCircle style={{ fontSize: 10 }} /> Reject
+                </button>}
+                <button className="driver-action-btn driver-btn-message" style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}>
+                  <FaDownload style={{ fontSize: 10 }} /> Export
+                </button>
               </div>
             </div>
           </div>
