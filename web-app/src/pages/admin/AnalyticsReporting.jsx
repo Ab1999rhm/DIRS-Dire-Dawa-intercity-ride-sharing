@@ -270,7 +270,7 @@ const AnalyticsReporting = () => {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+      <div className="analytics-period-grid" style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
         {periodButtons.map(p => (
           <button key={p.key} onClick={() => setFilterPeriod(p.key)} className={`analytics-period-btn ${filterPeriod === p.key ? 'active' : ''}`}>
             {p.label}
@@ -278,7 +278,7 @@ const AnalyticsReporting = () => {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
+      <div className="analytics-tabs-grid" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`analytics-tab-btn ${activeTab === tab.key ? 'active' : ''}`}>
             {tab.icon} {tab.label}

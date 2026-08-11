@@ -2122,6 +2122,33 @@
   transform: scale(0.96);
 }
 
+/* Mobile responsive analytics tabs - 2 rows of 5 */
+@media (max-width: 640px) {
+  .analytics-tabs-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 6px !important;
+    flex-wrap: unset !important;
+    overflow-x: unset !important;
+  }
+  .analytics-tab-btn {
+    padding: 8px 6px;
+    font-size: 10px;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+    min-width: 0;
+  }
+  .analytics-tab-btn svg {
+    display: none;
+  }
+  .analytics-period-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+}
+
 .analytics-export-btn {
   display: inline-flex;
   align-items: center;
