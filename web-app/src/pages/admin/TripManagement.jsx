@@ -61,30 +61,37 @@ const TripManagement = () => {
     const distance = trip.actualDistance || trip.distance || 0;
     let durationMin = 0;
     if (trip.actualDuration) {
-      durationMin = Math.round(trip.actualDuration / 60);
+      // actualDuration is stored in minutes
+      durationMin = Math.round(trip.actualDuration);
     } else if (trip.duration) {
       // Parse duration if it's a string like "25 min"
       const match = trip.duration.toString().match(/(\d+)/);
       durationMin = match ? parseInt(match[1]) : 0;
-    } else if (trip.startedAt && trip.completedAt) {
+    } else if (trip.startTime && trip.endTime) {
       // Calculate duration from timestamps
-      const started = new Date(trip.startedAt);
-      const completed = new Date(trip.completedAt);
-      const diffMs = completed - started;
+      const diffMs = new Date(trip.endTime) - new Date(trip.startTime);
       durationMin = Math.round(diffMs / 60000); // Convert to minutes
     } else if (trip.createdAt && trip.updatedAt) {
       // Fallback to createdAt and updatedAt
-      const created = new Date(trip.createdAt);
-      const updated = new Date(trip.updatedAt);
-      const diffMs = updated - created;
+      const diffMs = new Date(trip.updatedAt) - new Date(trip.createdAt);
       durationMin = Math.round(diffMs / 60000);
     }
     const duration = durationMin > 0 ? `${durationMin} min` : 'N/A';
     const from = pickup.address || trip.from || 'Unknown';
     const to = dropoff.address || trip.to || 'Unknown';
     const status = trip.status || 'unknown';
-    const rating = trip.driverRating;
-    const driverRating = typeof rating === 'number' ? rating : (rating?.average || rating?.score || 0);
+    const ratingRef = trip.driverRating;
+    let driverRating = 0;
+    if (typeof ratingRef === 'number') {
+      driverRating = ratingRef;
+    } else if (ratingRef?.rating) {
+      driverRating = ratingRef.rating;
+    } else if (ratingRef?.average || ratingRef?.score) {
+      driverRating = ratingRef.average || ratingRef.score;
+    } else if (driverUser.averageRating) {
+      driverRating = driverUser.averageRating;
+    }
+    driverRating = Number(driverRating) || 0;
     return {
       ...trip,
       id: trip._id || trip.id,

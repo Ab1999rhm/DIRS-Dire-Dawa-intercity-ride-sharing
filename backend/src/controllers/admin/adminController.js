@@ -399,8 +399,9 @@ exports.getAllTrips = asyncHandler(async (req, res) => {
   const trips = await Trip.find(query)
     .populate('passenger', 'firstName lastName phoneNumber')
     .populate('driver', 'user')
-    .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } })
+    .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber averageRating' } })
     .populate('vehicle', 'make model plateNumber')
+    .populate('driverRating', 'rating')
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
