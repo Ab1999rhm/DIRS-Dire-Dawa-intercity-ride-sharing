@@ -227,7 +227,7 @@ const RealTimeMonitoring = () => {
 
       {/* System Health */}
       {systemHealth && (
-        <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
           <div className="admin-stat-card">
             <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
               <FaServer />
@@ -269,7 +269,7 @@ const RealTimeMonitoring = () => {
 
       {/* Extended System Health */}
       {systemHealth && (
-        <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
           <div className="admin-stat-card">
             <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
               <FaClock />
@@ -313,7 +313,7 @@ const RealTimeMonitoring = () => {
       <div className="admin-section-title">
         <FaChartBar /> {t('admin.liveAnalytics') || 'Live Analytics'}
       </div>
-      <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
             <FaCar />

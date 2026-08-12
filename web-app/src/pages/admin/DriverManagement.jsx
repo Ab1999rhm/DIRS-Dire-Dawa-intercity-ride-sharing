@@ -418,47 +418,29 @@ const DriverManagement = () => {
       <div className="admin-logo-bar" style={{
         display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
         background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
-        borderRadius: 12, marginBottom: 16, color: 'white'
+        borderRadius: 12, marginBottom: 16, color: 'white', flexWrap: 'wrap'
       }}>
         <FaShieldAlt style={{ fontSize: 20 }} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>Driver Management</span>
-        <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.9 }}><FaCar /> {drivers.length} {t('admin.totalDrivers') || 'Total Drivers'}</span>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: 4 }}><FaCar /> {drivers.length} {t('admin.totalDrivers') || 'Total Drivers'}</span>
+        <div className="admin-logo-actions">
           <button 
-            className="admin-icon-btn" 
+            className="admin-icon-btn admin-logo-action-btn" 
             onClick={exportCSV} 
             title="Export CSV" 
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
-              borderRadius: 6, border: 'none', cursor: 'pointer',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white', fontWeight: 600, fontSize: 11
-            }}
           >
             <FaFileExport /> <span>Export</span>
           </button>
           <button 
-            className="admin-icon-btn" 
+            className="admin-icon-btn admin-logo-action-btn" 
             onClick={() => setShowAnnouncementModal(true)} 
             title="Send Announcement" 
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
-              borderRadius: 6, border: 'none', cursor: 'pointer',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white', fontWeight: 600, fontSize: 11
-            }}
           >
             <FaBullhorn /> <span>Announce</span>
           </button>
           <button 
-            className="admin-icon-btn" 
+            className="admin-icon-btn admin-logo-action-btn" 
             onClick={fetchDrivers} 
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
-              borderRadius: 6, border: 'none', cursor: 'pointer',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white', fontWeight: 600, fontSize: 11
-            }}
           >
             <FaSync /> <span>Sync</span>
           </button>

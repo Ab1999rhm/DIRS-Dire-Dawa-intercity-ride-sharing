@@ -24,6 +24,45 @@
   filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));
 }
 
+/* Flexible header action buttons (Export / Announce / Sync) */
+.admin-logo-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.admin-logo-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  min-height: 36px;
+}
+
+@media (max-width: 640px) {
+  .admin-logo-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .admin-logo-action-btn {
+    flex: 1 1 auto;
+    min-height: 44px;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+}
+
 /* Cultural border decoration */
 .admin-page::before {
   content: '';
