@@ -12,6 +12,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
+import AdminLiveMap from '../../components/admin/AdminLiveMap';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -169,7 +170,6 @@ const AdminDashboard = () => {
       {/* Today's Live Metrics */}
       <div
         className="admin-stats-grid admin-animate-in-delay-1"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}
       >
         {statCards.map((card, index) => (
           <div
@@ -252,13 +252,12 @@ const AdminDashboard = () => {
         <FaWifi /> Live Status
       </div>
       <div
+        className="admin-live-panels-grid admin-animate-in-delay-3"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: 16,
           marginBottom: 24,
         }}
-        className="admin-animate-in-delay-3"
       >
         {/* Active Trips Panel */}
         <div
@@ -607,7 +606,7 @@ const AdminDashboard = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 16,
           }}
         >
@@ -677,6 +676,18 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Live Map */}
+      <div className="admin-section-title admin-animate-in-delay-5" style={{ marginTop: 24 }}>
+        <FaMap /> Live Map
+      </div>
+      <div className="admin-animate-in-delay-5" style={{ marginBottom: 24 }}>
+        <AdminLiveMap
+          drivers={onlineDrivers}
+          trips={activeTrips}
+          sosAlerts={recentSOS}
+        />
       </div>
 
       {/* Recent Activity */}

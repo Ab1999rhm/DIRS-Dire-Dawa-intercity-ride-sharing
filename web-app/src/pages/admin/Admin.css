@@ -33,7 +33,7 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
-  z-index: 50;
+  z-index: 1;
   border: 14px solid #2D5A3D;
   border-image: linear-gradient(135deg, #2D5A3D, #8B7355, #2D5A3D, #8B7355) 1;
 }
@@ -47,7 +47,7 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
-  z-index: 49;
+  z-index: 1;
   border: 18px solid transparent;
   background: repeating-linear-gradient(45deg, #2D5A3D 0px, #2D5A3D 8px, #8B7355 8px, #8B7355 16px, #C4A265 16px, #C4A265 24px);
   opacity: 0.12;
@@ -63,7 +63,7 @@
   justify-content: space-between;
   margin-bottom: 20px;
   position: relative;
-  z-index: 100;
+  z-index: 10;
 }
 .admin-header-left {
   flex: 1;
@@ -134,6 +134,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-bottom: 20px;
+}
+.admin-live-panels-grid {
+  grid-template-columns: 1fr;
 }
 .admin-stat-card {
   padding: 16px;
@@ -861,6 +864,9 @@
   }
   .admin-actions-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+  .admin-live-panels-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
