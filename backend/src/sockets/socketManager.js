@@ -1,6 +1,7 @@
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Driver = require('../models/Driver');
 const SuspiciousActivity = require('../models/SuspiciousActivity');
 const logger = require('../config/logger');
 
@@ -207,6 +208,12 @@ const initializeSocket = (server) => {
           isOnline: false,
           'currentLocation.updatedAt': new Date()
         });
+        if (socket.userRole === 'driver') {
+          await Driver.updateOne(
+            { user: socket.userId },
+            { isOnline: false, isAvailable: false, currentTrip: null }
+          );
+        }
       } catch (error) {
         logger.error('Disconnect update error', { error: error.message, socketId: socket.id });
       }

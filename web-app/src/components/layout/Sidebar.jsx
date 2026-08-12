@@ -12,6 +12,7 @@ import {
   FaTools, FaServer, FaLock, FaPalette
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
+import { adminAPI } from '../../services/api';
 import './Sidebar.css';
 
 const Sidebar = ({ mobileOpen, onClose }) => {
@@ -19,6 +20,31 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const { t } = useLanguage();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [stats, setStats] = useState({ activeDrivers: 0, activeTrips: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchStats = async () => {
+      try {
+        const res = await adminAPI.dashboard();
+        const s = res.data?.stats;
+        if (mounted && s) {
+          setStats({
+            activeDrivers: s.activeDrivers || 0,
+            activeTrips: s.activeTrips || 0
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch sidebar stats:', err);
+      }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -181,11 +207,11 @@ const Sidebar = ({ mobileOpen, onClose }) => {
         {!isCollapsed && (
           <div className="sidebar-stats">
             <div className="sidebar-stat">
-              <span className="sidebar-stat-value">12</span>
+              <span className="sidebar-stat-value">{stats.activeDrivers}</span>
               <span className="sidebar-stat-label">Active Drivers</span>
             </div>
             <div className="sidebar-stat">
-              <span className="sidebar-stat-value">8</span>
+              <span className="sidebar-stat-value">{stats.activeTrips}</span>
               <span className="sidebar-stat-label">Live Trips</span>
             </div>
           </div>

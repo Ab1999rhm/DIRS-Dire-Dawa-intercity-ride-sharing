@@ -513,6 +513,7 @@ exports.updateDriverStatus = asyncHandler(async (req, res) => {
   }
 
   driver.isAvailable = isOnline;
+  driver.isOnline = isOnline;
   if (!isOnline) {
     driver.currentTrip = null;
   }

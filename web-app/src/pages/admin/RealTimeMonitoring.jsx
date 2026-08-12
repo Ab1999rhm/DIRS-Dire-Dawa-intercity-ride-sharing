@@ -50,6 +50,7 @@ const RealTimeMonitoring = () => {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [mapLayer, setMapLayer] = useState('streets');
   const [filterStatus, setFilterStatus] = useState('all');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [incidentChatOpen, setIncidentChatOpen] = useState(false);
@@ -387,8 +388,42 @@ const RealTimeMonitoring = () => {
       )}
 
       {/* Live Map Section */}
-      <div className="admin-section-title">
-        <FaMapMarkerAlt /> {t('admin.liveMap') || 'Live Map'}
+      <div className="admin-section-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <FaMapMarkerAlt /> <span>{t('admin.liveMap') || 'Live Map'}</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+          <button
+            onClick={() => setMapLayer('streets')}
+            style={{
+              padding: '5px 12px',
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 12,
+              background: mapLayer === 'streets' ? '#3b82f6' : 'rgba(59,130,246,0.1)',
+              color: mapLayer === 'streets' ? '#fff' : '#3b82f6',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Streets
+          </button>
+          <button
+            onClick={() => setMapLayer('satellite')}
+            style={{
+              padding: '5px 12px',
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 12,
+              background: mapLayer === 'satellite' ? '#10b981' : 'rgba(16,185,129,0.1)',
+              color: mapLayer === 'satellite' ? '#fff' : '#10b981',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Satellite
+          </button>
+        </div>
       </div>
       <div className={`admin-live-map ${mapFullscreen ? 'fullscreen' : ''}`}>
         <MapContainer
@@ -397,8 +432,13 @@ const RealTimeMonitoring = () => {
           style={{ height: mapFullscreen ? '80vh' : '400px', width: '100%' }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            key={mapLayer}
+            attribution={mapLayer === 'satellite'
+              ? 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+              : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}
+            url={mapLayer === 'satellite'
+              ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+              : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
           />
           
           {/* Driver Markers */}
