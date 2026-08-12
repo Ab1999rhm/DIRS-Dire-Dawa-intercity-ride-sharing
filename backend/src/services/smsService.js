@@ -22,6 +22,9 @@ const getTransporter = async () => {
       host: SMTP_HOST,
       port: parseInt(SMTP_PORT, 10) || 587,
       secure: SMTP_SECURE === 'true' || parseInt(SMTP_PORT, 10) === 465,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS
@@ -52,13 +55,21 @@ const getTransporter = async () => {
 };
 
 const sendEmailOTP = async (email, otp) => {
-  try {
-    const transport = await getTransporter();
+  const attempts = 3;
+  let lastError = null;
 
-    const info = await transport.sendMail({
-      from: EMAIL_FROM,
-      to: email,
-      subject: 'Your DIRS Verification Code',
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    if (attempt > 1) {
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+    try {
+      const transport = await getTransporter();
+
+      const info = await transport.sendMail({
+        from: EMAIL_FROM,
+        to: email,
+        subject: 'Your DIRS Verification Code',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -79,11 +90,17 @@ const sendEmailOTP = async (email, otp) => {
     const previewUrl = nodemailer.getTestMessageUrl(info);
     logger.info(`Email OTP sent`, { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp, previewUrl: previewUrl || null });
 
-    return { success: true, previewUrl: previewUrl || null, otpCode: otp };
-  } catch (error) {
-    logger.error('Email sending failed', { error: error.message });
-    return { success: false, error: error.message };
+      return { success: true, previewUrl: previewUrl || null, otpCode: otp };
+    } catch (error) {
+      lastError = error;
+      logger.warn(`Email send attempt ${attempt}/${attempts} failed: ${error.message}`);
+      try { transporter?.close?.(); } catch (e) {}
+      transporter = null;
+    }
   }
+
+  logger.error('Email sending failed', { error: lastError?.message });
+  return { success: false, error: lastError?.message || 'Unknown error' };
 };
 
 const generateOTP = () => {
