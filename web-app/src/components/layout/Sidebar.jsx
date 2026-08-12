@@ -19,6 +19,15 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const { t } = useLanguage();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+    return () => document.body.classList.remove('sidebar-open');
+  }, [mobileOpen]);
   const [activeGroup, setActiveGroup] = useState(null);
 
   const navGroups = [

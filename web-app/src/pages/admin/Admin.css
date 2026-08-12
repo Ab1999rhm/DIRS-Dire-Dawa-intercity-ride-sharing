@@ -33,7 +33,7 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
   border: 14px solid #2D5A3D;
   border-image: linear-gradient(135deg, #2D5A3D, #8B7355, #2D5A3D, #8B7355) 1;
 }
@@ -47,7 +47,7 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
   border: 18px solid transparent;
   background: repeating-linear-gradient(45deg, #2D5A3D 0px, #2D5A3D 8px, #8B7355 8px, #8B7355 16px, #C4A265 16px, #C4A265 24px);
   opacity: 0.12;
@@ -2188,4 +2188,29 @@
 .analytics-export-btn:active {
   transform: scale(0.94);
   background: rgba(255, 255, 255, 0.4);
+}
+
+/* ===== MOBILE SIDEBAR + MAP FIX ===== */
+@media (max-width: 767px) {
+  .admin-page {
+    overflow-x: hidden;
+    padding-top: 76px;
+  }
+  /* Prevent map from flowing into sidebar area */
+  .admin-page .leaflet-container,
+  .admin-page [class*="leaflet"] {
+    z-index: 1 !important;
+  }
+  /* When sidebar is open, push content behind overlay */
+  .sidebar-open .admin-page {
+    pointer-events: none;
+  }
+}
+
+/* ===== DESKTOP: SIDEBAR INSIDE CULTURAL BORDER ===== */
+@media (min-width: 768px) {
+  .admin-page {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
 }
