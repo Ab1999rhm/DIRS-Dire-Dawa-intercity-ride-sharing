@@ -54,7 +54,77 @@ const getTransporter = async () => {
   return transporter;
 };
 
+const buildOtpHtml = (otp) => `
+  <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h2 style="color: #2563eb;">DIRS Ride Sharing</h2>
+    </div>
+    <div style="background: #f8fafc; border-radius: 12px; padding: 24px; text-align: center;">
+      <p style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Your verification code is</p>
+      <p style="font-size: 32px; font-weight: 800; color: #2563eb; letter-spacing: 8px; margin: 16px 0;">${otp}</p>
+      <p style="font-size: 12px; color: #94a3b8;">Valid for 5 minutes. Do not share this code.</p>
+    </div>
+    <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 20px;">
+      Dire Dawa Intercity & Ride Sharing System
+    </p>
+  </div>
+`;
+
+const parseSender = (from) => {
+  const m = String(from || '').match(/^\s*(?:"([^"]*)"|([^<]*))?\s*(?:<\s*([^>]+)\s*>)?/);
+  const email = m?.[3] || from;
+  const name = (m?.[1] || m?.[2] || 'DIRS Ride Sharing').trim() || 'DIRS Ride Sharing';
+  return { name, email };
+};
+
+const sendEmailOTPviaBrevoApi = async (email, otp) => {
+  const attempts = 3;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    if (attempt > 1) {
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+    try {
+      const res = await fetch(process.env.BREVO_API_URL || 'https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+          accept: 'application/json'
+        },
+        body: JSON.stringify({
+          sender: parseSender(EMAIL_FROM),
+          to: [{ email }],
+          subject: 'Your DIRS Verification Code',
+          htmlContent: buildOtpHtml(otp)
+        })
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        lastError = new Error(`Brevo API ${res.status}: ${text.slice(0, 200)}`);
+        throw lastError;
+      }
+
+      logger.info('Email OTP sent via Brevo API', { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp });
+      return { success: true, otpCode: otp };
+    } catch (error) {
+      lastError = error;
+      logger.warn(`Brevo API attempt ${attempt}/${attempts} failed: ${error.message}`);
+    }
+  }
+
+  logger.error('Email sending failed via Brevo API', { error: lastError?.message });
+  return { success: false, error: lastError?.message || 'Unknown error' };
+};
+
 const sendEmailOTP = async (email, otp) => {
+  if (process.env.BREVO_API_KEY) {
+    return sendEmailOTPviaBrevoApi(email, otp);
+  }
+
   const attempts = 3;
   let lastError = null;
 
@@ -70,25 +140,11 @@ const sendEmailOTP = async (email, otp) => {
         from: EMAIL_FROM,
         to: email,
         subject: 'Your DIRS Verification Code',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #2563eb;">DIRS Ride Sharing</h2>
-          </div>
-          <div style="background: #f8fafc; border-radius: 12px; padding: 24px; text-align: center;">
-            <p style="font-size: 14px; color: #64748b; margin-bottom: 8px;">Your verification code is</p>
-            <p style="font-size: 32px; font-weight: 800; color: #2563eb; letter-spacing: 8px; margin: 16px 0;">${otp}</p>
-            <p style="font-size: 12px; color: #94a3b8;">Valid for 5 minutes. Do not share this code.</p>
-          </div>
-          <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: 20px;">
-            Dire Dawa Intercity & Ride Sharing System
-          </p>
-        </div>
-      `
-    });
+        html: buildOtpHtml(otp)
+      });
 
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-    logger.info(`Email OTP sent`, { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp, previewUrl: previewUrl || null });
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      logger.info(`Email OTP sent`, { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp, previewUrl: previewUrl || null });
 
       return { success: true, previewUrl: previewUrl || null, otpCode: otp };
     } catch (error) {

@@ -51,6 +51,8 @@ services:
         value: "false"
       - key: EMAIL_FROM
         sync: false          # e.g. "Nexa" <sender@example.com>
+      - key: BREVO_API_KEY
+        sync: false          # Preferred over SMTP; HTTP API on port 443. Brevo -> SMTP & API -> API Keys (xkeysib-...)
 
   # ── Frontend Static Site (optional — can also deploy to Vercel) ───────────
   - type: web
