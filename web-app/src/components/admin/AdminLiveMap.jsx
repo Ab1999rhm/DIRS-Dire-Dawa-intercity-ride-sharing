@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, LayersControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { FaExpandCompress, FaSatellite, FaMap, FaSync } from 'react-icons/fa';
-import { adminAPI } from '../../services/api';
+import { FaSatellite, FaMap } from 'react-icons/fa';
 
 const DRIVER_COLORS = {
   online: '#10b981',
