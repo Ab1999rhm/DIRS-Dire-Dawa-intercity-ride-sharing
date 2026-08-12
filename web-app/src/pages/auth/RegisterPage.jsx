@@ -151,6 +151,8 @@ const RegisterPage = () => {
       startCountdown(setResendTimer, emailTimerRef);
       setOtpDigits(['', '', '', '', '', '']);
     } catch (err) {
+      setOtpCode('');
+      setResendTimer(0);
       toast.error('Failed to send OTP email');
     }
     setOtpSending(false);
@@ -201,6 +203,8 @@ const RegisterPage = () => {
       startCountdown(setPhoneResendTimer, phoneTimerRef);
       setPhoneOtpDigits(['', '', '', '', '', '']);
     } catch (err) {
+      setPhoneOtpCode('');
+      setPhoneResendTimer(0);
       toast.error('Failed to send phone OTP');
     }
     setPhoneOtpSending(false);
