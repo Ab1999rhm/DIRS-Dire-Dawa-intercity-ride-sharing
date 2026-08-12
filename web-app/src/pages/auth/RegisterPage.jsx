@@ -134,18 +134,7 @@ const RegisterPage = () => {
       }
     } catch (err) {
       if (err?.response?.status === 409 && err.response.data?.needsVerification) {
-        const existingEmail = err.response.data.email || formData.email;
-        if (existingEmail !== formData.email) {
-          setFormData(f => ({ ...f, email: existingEmail }));
-        }
-        const sent = await sendEmailOTP(existingEmail);
-        if (sent) {
-          setError('');
-          setStep(2);
-          toast.success(`Account already exists. We sent a new OTP to ${existingEmail}.`);
-        } else {
-          setError('This email already has an account that is not verified. We could not send a new OTP right now — try again in a moment.');
-        }
+        setError('An account with this email or phone number is already registered. Please sign in or use a different one.');
         return;
       }
       const msg = safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
