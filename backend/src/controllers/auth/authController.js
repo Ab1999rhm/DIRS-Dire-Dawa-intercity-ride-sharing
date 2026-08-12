@@ -46,7 +46,8 @@ exports.register = asyncHandler(async (req, res) => {
     if (!existingByPhone.isVerified) {
       return res.status(409).json({
         error: 'Phone number already registered. Please verify your account.',
-        needsVerification: true
+        needsVerification: true,
+        email: existingByPhone.email || existingByEmail?.email || email
       });
     }
     return res.status(400).json({ error: 'Phone number already registered' });
@@ -56,7 +57,9 @@ exports.register = asyncHandler(async (req, res) => {
     if (!existingByEmail.isVerified) {
       return res.status(409).json({
         error: 'Email address already registered. Please verify your account.',
-        needsVerification: true
+        needsVerification: true,
+        email: existingByEmail.email,
+        phoneNumber: existingByEmail.phoneNumber
       });
     }
     return res.status(400).json({ error: 'Email address already registered' });

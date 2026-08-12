@@ -130,7 +130,11 @@ const RegisterPage = () => {
       setStep(2);
     } catch (err) {
       if (err?.response?.status === 409 && err.response.data?.needsVerification) {
-        sendEmailOTP();
+        const existingEmail = err.response.data.email || formData.email;
+        if (existingEmail !== formData.email) {
+          setFormData(f => ({ ...f, email: existingEmail }));
+        }
+        sendEmailOTP(existingEmail);
         setStep(2);
         return;
       }
@@ -141,10 +145,10 @@ const RegisterPage = () => {
     }
   };
 
-  const sendEmailOTP = async () => {
+  const sendEmailOTP = async (overrideEmail) => {
     setOtpSending(true);
     try {
-      const res = await authAPI.sendEmailOTP(formData.email);
+      const res = await authAPI.sendEmailOTP(overrideEmail || formData.email);
       setPreviewUrl(res.data.previewUrl || '');
       setOtpCode(res.data.otpCode || '');
       toast.success('OTP sent to your email!');
