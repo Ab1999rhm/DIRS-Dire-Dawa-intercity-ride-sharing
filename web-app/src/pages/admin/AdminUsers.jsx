@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaEye, FaBan, FaSearch, FaFilter } from 'react-icons/fa';
+import { FaEye, FaBan, FaSearch, FaCheckCircle, FaTrashAlt } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -18,6 +18,7 @@ const AdminUsers = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [verificationFilter, setVerificationFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -28,7 +29,7 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await adminAPI.users();
+      const res = await adminAPI.users({ limit: 500 });
       const d = res.data; setUsers(Array.isArray(d) ? d : (d?.data || d?.users || []));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load users');
@@ -43,8 +44,46 @@ const AdminUsers = () => {
       u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.phoneNumber?.includes(searchQuery);
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesVerification = verificationFilter === 'all' ||
+      (verificationFilter === 'verified' && u.isVerified) ||
+      (verificationFilter === 'unverified' && !u.isVerified);
+    return matchesSearch && matchesRole && matchesVerification;
   });
+
+  const handleVerify = async (userId) => {
+    try {
+      await adminAPI.verifyUser(userId);
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isVerified: true } : u));
+      toast.success('User verified');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to verify user');
+    }
+  };
+
+  const handleDeleteUser = async (userId, name) => {
+    if (!window.confirm(`Delete ${name} permanently? This cannot be undone.`)) return;
+    try {
+      await adminAPI.deleteUser(userId);
+      setUsers(prev => prev.filter(u => u._id !== userId));
+      toast.success('User deleted');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
+  const handleDeleteUnverified = async () => {
+    if (!window.confirm('Delete ALL unverified accounts? This cannot be undone.')) return;
+    try {
+      setLoading(true);
+      const res = await adminAPI.deleteUnverifiedUsers({});
+      toast.success(res.data.message || 'Unverified accounts deleted');
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete unverified users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSuspend = async (userId) => {
     try {
@@ -118,6 +157,18 @@ const AdminUsers = () => {
           <option value="passenger">{t('admin.passenger') || 'Passenger'}</option>
           <option value="driver">{t('admin.driver') || 'Driver'}</option>
         </select>
+        <select
+          value={verificationFilter}
+          onChange={(e) => setVerificationFilter(e.target.value)}
+          style={{ padding: '10px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 14, background: 'var(--card)' }}
+        >
+          <option value="all">All Verification</option>
+          <option value="verified">Verified</option>
+          <option value="unverified">Unverified</option>
+        </select>
+        <button className="btn btn-danger" onClick={handleDeleteUnverified} disabled={loading}>
+          <FaTrashAlt /> Delete Unverified
+        </button>
       </div>
 
       {filteredUsers.length === 0 ? (
@@ -148,11 +199,21 @@ const AdminUsers = () => {
               </div>
               <div>{u.phoneNumber}</div>
               <div><Badge variant={u.role === 'driver' ? 'success' : u.role === 'admin' ? 'warning' : 'primary'}>{u.role}</Badge></div>
-              <div><StatusBadge status={u.status || 'active'} /></div>
+              <div>
+                <StatusBadge status={u.status || 'active'} />
+                <div style={{ marginTop: 4 }}>
+                  <Badge variant={u.isVerified ? 'success' : 'warning'}>{u.isVerified ? 'Verified' : 'Unverified'}</Badge>
+                </div>
+              </div>
               <div className="row-actions">
                 <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedUser(u); setShowModal(true); }}>
                   <FaEye /> {t('common.view') || 'View'}
                 </button>
+                {!u.isVerified && (
+                  <button className="btn btn-success btn-sm" onClick={() => handleVerify(u._id)}>
+                    <FaCheckCircle /> Verify
+                  </button>
+                )}
                 {u.status !== 'suspended' ? (
                   <button className="btn btn-danger btn-sm" onClick={() => handleSuspend(u._id)}>
                     <FaBan /> {t('admin.suspend')}
@@ -162,6 +223,9 @@ const AdminUsers = () => {
                     {t('admin.reactivate') || 'Reactivate'}
                   </button>
                 )}
+                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)}>
+                  <FaTrashAlt />
+                </button>
               </div>
             </div>
           ))}
@@ -175,6 +239,7 @@ const AdminUsers = () => {
             <div className="detail-row"><span className="detail-key">{t('admin.phone') || 'Phone'}</span><span className="detail-val">{selectedUser.phoneNumber}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.role') || 'Role'}</span><span className="detail-val">{selectedUser.role}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val">{selectedUser.status || 'active'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.verification') || 'Verification'}</span><span className="detail-val">{selectedUser.isVerified ? 'Verified' : 'Unverified'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.email') || 'Email'}</span><span className="detail-val">{selectedUser.email || 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.joined') || 'Joined'}</span><span className="detail-val">{new Date(selectedUser.createdAt).toLocaleDateString()}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.id') || 'ID'}</span><span className="detail-val" style={{ fontSize: 11 }}>{selectedUser._id}</span></div>

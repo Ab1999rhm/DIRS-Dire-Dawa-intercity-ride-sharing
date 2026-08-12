@@ -219,11 +219,12 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 });
 
 exports.getAllUsers = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 20, role, search, isActive } = req.query;
+  const { page = 1, limit = 20, role, search, isActive, isVerified } = req.query;
 
   const query = {};
   if (role) query.role = role;
   if (isActive !== undefined) query.isActive = isActive === 'true';
+  if (isVerified !== undefined) query.isVerified = isVerified === 'true';
   if (search) {
     const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     query.$or = [
@@ -284,6 +285,74 @@ exports.reactivateUser = asyncHandler(async (req, res) => {
   logger.info('User reactivated', { userId });
 
   res.json({ message: 'User reactivated', user });
+});
+
+exports.verifyUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { isVerified: true },
+    { new: true }
+  );
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  logger.info('User verified by admin', { userId });
+  res.json({ message: 'User verified', user });
+});
+
+exports.deleteUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findByIdAndDelete(userId);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const driverProfile = await Driver.findOneAndDelete({ user: userId });
+  if (driverProfile) {
+    await Vehicle.deleteMany({ driver: driverProfile._id });
+  }
+
+  logger.warn('User deleted by admin', { userId });
+  res.json({ message: 'User deleted', userId });
+});
+
+exports.deleteUnverifiedUsers = asyncHandler(async (req, res) => {
+  const { olderThanDays, limit = 500 } = req.body || {};
+
+  const query = { isVerified: false };
+  if (olderThanDays && Number(olderThanDays) > 0) {
+    const cutoff = new Date(Date.now() - Number(olderThanDays) * 24 * 60 * 60 * 1000);
+    query.createdAt = { $lt: cutoff };
+  }
+
+  const toDelete = await User.find(query)
+    .limit(Math.min(parseInt(limit, 10) || 500, 2000))
+    .select('_id');
+
+  const ids = toDelete.map(u => u._id);
+
+  if (ids.length === 0) {
+    return res.json({ message: 'No unverified accounts matched', deletedCount: 0 });
+  }
+
+  const driverDocs = await Driver.find({ user: { $in: ids } }).select('_id');
+  const driverIds = driverDocs.map(d => d._id);
+
+  const result = await User.deleteMany({ _id: { $in: ids } });
+  if (driverIds.length > 0) await Driver.deleteMany({ _id: { $in: driverIds } });
+  if (driverIds.length > 0) await Vehicle.deleteMany({ driver: { $in: driverIds } });
+
+  logger.warn('Admin deleted unverified users', { count: result.deletedCount, driverCount: driverIds.length });
+  res.json({
+    message: `${result.deletedCount} unverified account(s) deleted`,
+    deletedCount: result.deletedCount,
+    driverCount: driverIds.length
+  });
 });
 
 exports.getPendingDriverVerifications = asyncHandler(async (req, res) => {
