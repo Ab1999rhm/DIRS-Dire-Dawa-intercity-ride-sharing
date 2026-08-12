@@ -99,9 +99,12 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     .limit(10);
 
   // Get online drivers
-  const onlineDrivers = await Driver.find({ isAvailable: true })
+  const onlineDriverDocs = await Driver.find({ isAvailable: true })
     .populate('user', 'firstName lastName')
     .limit(10);
+
+  // Convert to plain objects so attached fields (vehicle/rating) serialize in the response
+  const onlineDrivers = onlineDriverDocs.map(d => d.toObject());
 
   // Get vehicle info for online drivers
   const driverIds = onlineDrivers.map(d => d._id);

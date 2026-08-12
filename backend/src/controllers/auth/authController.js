@@ -176,7 +176,7 @@ exports.sendEmailOTP = asyncHandler(async (req, res) => {
       previewUrl: result.previewUrl || null
     });
   } else {
-    res.status(500).json({ error: 'Failed to send OTP email' });
+    res.status(500).json({ error: 'Failed to send OTP email', reason: result.error || 'Unknown error' });
   }
 });
 

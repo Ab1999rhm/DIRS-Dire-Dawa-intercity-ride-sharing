@@ -2,13 +2,40 @@ const nodemailer = require('nodemailer');
 const logger = require('../config/logger');
 
 let transporter = null;
-let previewAccount = null;
+
+const EMAIL_FROM = process.env.EMAIL_FROM || '"DIRS Ride Sharing" <noreply@dirs-et.com>';
 
 const getTransporter = async () => {
   if (transporter) return transporter;
 
-  logger.info('Creating Ethereal test email account');
-  previewAccount = await nodemailer.createTestAccount();
+  const {
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USER,
+    SMTP_PASS,
+    SMTP_SECURE
+  } = process.env;
+
+  if (SMTP_HOST && SMTP_USER) {
+    logger.info('Creating real SMTP transporter', { host: SMTP_HOST });
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: parseInt(SMTP_PORT, 10) || 587,
+      secure: SMTP_SECURE === 'true' || parseInt(SMTP_PORT, 10) === 465,
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS
+      }
+    });
+    return transporter;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SMTP email is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER and SMTP_PASS in the environment.');
+  }
+
+  logger.warn('SMTP not configured - falling back to Ethereal test email (emails are NOT delivered to real inboxes)');
+  const previewAccount = await nodemailer.createTestAccount();
   logger.info(`Ethereal account created: ${previewAccount.user}`);
 
   transporter = nodemailer.createTransport({
@@ -29,7 +56,7 @@ const sendEmailOTP = async (email, otp) => {
     const transport = await getTransporter();
 
     const info = await transport.sendMail({
-      from: '"DIRS Ride Sharing" <noreply@dirs-et.com>',
+      from: EMAIL_FROM,
       to: email,
       subject: 'Your DIRS Verification Code',
       html: `
@@ -50,9 +77,9 @@ const sendEmailOTP = async (email, otp) => {
     });
 
     const previewUrl = nodemailer.getTestMessageUrl(info);
-    logger.info(`Email OTP sent`, { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp, previewUrl });
+    logger.info(`Email OTP sent`, { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp, previewUrl: previewUrl || null });
 
-    return { success: true, previewUrl, otpCode: otp };
+    return { success: true, previewUrl: previewUrl || null, otpCode: otp };
   } catch (error) {
     logger.error('Email sending failed', { error: error.message });
     return { success: false, error: error.message };
