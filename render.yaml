@@ -33,6 +33,12 @@ services:
         sync: false
       - key: BACKEND_URL
         sync: false
+      - key: KEEP_ALIVE_ENABLED
+        value: "true"
+      - key: KEEP_ALIVE_INTERVAL_MINUTES
+        value: "10"
+      - key: KEEP_ALIVE_URLS
+        sync: false          # https://dirs-backend.onrender.com/api/health,https://dirs-web-app.vercel.app/
       - key: SMTP_HOST
         sync: false          # e.g. smtp-relay.brevo.com
       - key: SMTP_PORT
