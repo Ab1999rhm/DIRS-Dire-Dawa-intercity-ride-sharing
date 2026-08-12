@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPhone, FaLock, FaEye, FaEyeSlash, FaUser, FaCheckCircle, FaEnvelope, FaExternalLinkAlt, FaGift } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
@@ -41,6 +41,8 @@ const RegisterPage = () => {
   const [phoneOtpSending, setPhoneOtpSending] = useState(false);
   const [phoneOtpCode, setPhoneOtpCode] = useState('');
   const [phoneResendTimer, setPhoneResendTimer] = useState(60);
+  const emailTimerRef = useRef(null);
+  const phoneTimerRef = useRef(null);
 
   useEffect(() => {
     const code = otpDigits.join('');
@@ -48,6 +50,42 @@ const RegisterPage = () => {
       handleVerifyOTP();
     }
   }, [otpDigits]);
+
+  useEffect(() => {
+    return () => {
+      if (emailTimerRef.current) clearInterval(emailTimerRef.current);
+      if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
+    };
+  }, []);
+
+  const startCountdown = (setTimer, timerRef) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimer(60);
+    timerRef.current = setInterval(() => {
+      setTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return { level: 0, label: '', color: '' };
+    let score = 0;
+    if (pwd.length >= 8) score += 1;
+    if (pwd.length >= 12) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[a-z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+    if (score <= 2) return { level: 1, label: t('auth.passwordWeak'), color: '#ef4444' };
+    if (score <= 4) return { level: 2, label: t('auth.passwordMedium'), color: '#f59e0b' };
+    return { level: 3, label: t('auth.passwordStrong'), color: '#10b981' };
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,7 +100,7 @@ const RegisterPage = () => {
     if (!formData.email.trim()) return t('auth.emailRequired');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return t('auth.validEmailRequired');
     if (!formData.password) return t('auth.passwordRequired');
-    if (formData.password.length < 6) return t('auth.passwordMinChars');
+    if (formData.password.length < 8) return t('auth.passwordMinChars');
     if (formData.password !== formData.confirmPassword) return t('auth.passwordMismatch');
     return null;
   };
@@ -105,13 +143,8 @@ const RegisterPage = () => {
       setPreviewUrl(res.data.previewUrl || '');
       setOtpCode(res.data.otpCode || '');
       toast.success('OTP sent to your email!');
-      setResendTimer(60);
-      const interval = setInterval(() => {
-        setResendTimer(prev => {
-          if (prev <= 0) { clearInterval(interval); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
+      startCountdown(setResendTimer, emailTimerRef);
+      setOtpDigits(['', '', '', '', '', '']);
     } catch (err) {
       toast.error('Failed to send OTP email');
     }
@@ -160,13 +193,8 @@ const RegisterPage = () => {
       const res = await authAPI.sendPhoneOTP({ phoneNumber: formData.phoneNumber });
       setPhoneOtpCode(res.data.otpCode || '');
       toast.success('OTP sent to your phone!');
-      setPhoneResendTimer(60);
-      const interval = setInterval(() => {
-        setPhoneResendTimer(prev => {
-          if (prev <= 0) { clearInterval(interval); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
+      startCountdown(setPhoneResendTimer, phoneTimerRef);
+      setPhoneOtpDigits(['', '', '', '', '', '']);
     } catch (err) {
       toast.error('Failed to send phone OTP');
     }
@@ -220,6 +248,7 @@ const RegisterPage = () => {
   };
 
   const userRole = formData.role;
+  const strength = getPasswordStrength(formData.password);
 
   return (
     <div className="auth-page">
@@ -347,6 +376,27 @@ const RegisterPage = () => {
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
+                {formData.password && (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {[1, 2, 3].map(i => (
+                        <div
+                          key={i}
+                          style={{
+                            height: 4,
+                            flex: 1,
+                            borderRadius: 2,
+                            background: strength.level >= i ? strength.color : 'var(--border)',
+                            transition: 'background 0.2s'
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 12, marginTop: 4, color: strength.color, fontWeight: 600 }}>
+                      {strength.label}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="input-group">

@@ -12,7 +12,7 @@ const validateRegistration = [
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
   body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid Ethiopian phone number required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('role').isIn(['passenger', 'driver']).withMessage('Role must be passenger or driver'),
   handleValidation
 ];
@@ -99,7 +99,7 @@ const validateForgotPassword = [
 const validateResetPassword = [
   body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid phone number required'),
   body('otp').isLength({ min: 4, max: 6 }).withMessage('OTP must be 4-6 digits'),
-  body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   handleValidation
 ];
 
