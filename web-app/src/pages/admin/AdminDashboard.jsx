@@ -12,7 +12,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
-import AdminLiveMap from '../../components/admin/AdminLiveMap';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -676,18 +675,6 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Live Map */}
-      <div className="admin-section-title admin-animate-in-delay-5" style={{ marginTop: 24 }}>
-        <FaMap /> Live Map
-      </div>
-      <div className="admin-animate-in-delay-5" style={{ marginBottom: 24 }}>
-        <AdminLiveMap
-          drivers={onlineDrivers}
-          trips={activeTrips}
-          sosAlerts={recentSOS}
-        />
       </div>
 
       {/* Recent Activity */}
