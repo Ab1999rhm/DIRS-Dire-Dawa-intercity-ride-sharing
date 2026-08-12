@@ -126,22 +126,26 @@ const RegisterPage = () => {
         role: formData.role,
         referralCode: formData.referralCode || undefined,
       });
-      sendEmailOTP();
-      setStep(2);
+      const sent = await sendEmailOTP();
+      if (sent) {
+        setStep(2);
+      } else {
+        setError('Account created, but we could not send the OTP email right now. Please try again in a moment.');
+      }
     } catch (err) {
       if (err?.response?.status === 409 && err.response.data?.needsVerification) {
         const existingEmail = err.response.data.email || formData.email;
-        const errorMsg = err.response.data.error || 'Account already exists. Please verify your email.';
-        setError(errorMsg);
         if (existingEmail !== formData.email) {
           setFormData(f => ({ ...f, email: existingEmail }));
         }
-        // Auto-proceed to verification after showing the error
-        setTimeout(() => {
-          sendEmailOTP(existingEmail);
-          setStep(2);
+        const sent = await sendEmailOTP(existingEmail);
+        if (sent) {
           setError('');
-        }, 2000);
+          setStep(2);
+          toast.success(`Account already exists. We sent a new OTP to ${existingEmail}.`);
+        } else {
+          setError('This email already has an account that is not verified. We could not send a new OTP right now — try again in a moment.');
+        }
         return;
       }
       const msg = safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
@@ -160,12 +164,15 @@ const RegisterPage = () => {
       toast.success('OTP sent to your email!');
       startCountdown(setResendTimer, emailTimerRef);
       setOtpDigits(['', '', '', '', '', '']);
+      return true;
     } catch (err) {
       setOtpCode('');
       setResendTimer(0);
-      toast.error('Failed to send OTP email');
+      toast.error(`Could not send the OTP to ${overrideEmail || formData.email}. Please try again shortly.`);
+      return false;
+    } finally {
+      setOtpSending(false);
     }
-    setOtpSending(false);
   };
 
   const handleOtpChange = (index, value) => {
@@ -535,7 +542,7 @@ const RegisterPage = () => {
                   <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('auth.resendIn', { seconds: resendTimer })}</span>
                 ) : (
                   <button
-                    onClick={sendEmailOTP}
+                    onClick={() => sendEmailOTP()}
                     disabled={otpSending}
                     style={{
                       background: 'none', border: 'none', color: 'var(--primary)',
