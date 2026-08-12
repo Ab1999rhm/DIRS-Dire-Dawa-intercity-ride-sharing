@@ -129,6 +129,11 @@ const RegisterPage = () => {
       sendEmailOTP();
       setStep(2);
     } catch (err) {
+      if (err?.response?.status === 409 && err.response.data?.needsVerification) {
+        sendEmailOTP();
+        setStep(2);
+        return;
+      }
       const msg = safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
       setError(msg);
     } finally {

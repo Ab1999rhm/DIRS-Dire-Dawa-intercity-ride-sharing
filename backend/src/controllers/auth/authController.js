@@ -39,6 +39,12 @@ exports.register = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ phoneNumber });
   if (existingUser) {
+    if (!existingUser.isVerified) {
+      return res.status(409).json({
+        error: 'Phone number already registered. Please verify your account.',
+        needsVerification: true
+      });
+    }
     return res.status(400).json({ error: 'Phone number already registered' });
   }
 
@@ -88,6 +94,10 @@ exports.login = asyncHandler(async (req, res) => {
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
     return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  if (!user.isVerified) {
+    return res.status(403).json({ error: 'Account not verified. Please verify your email using the OTP sent during registration.' });
   }
 
   const { accessToken, refreshToken } = generateTokens(user._id);
@@ -171,10 +181,14 @@ exports.sendEmailOTP = asyncHandler(async (req, res) => {
   const result = await sendEmailOTP(email, otp);
 
   if (result.success) {
-    res.json({
+    const response = {
       message: 'OTP sent to your email',
       previewUrl: result.previewUrl || null
-    });
+    };
+    if (process.env.NODE_ENV !== 'production' && result.otpCode) {
+      response.otpCode = result.otpCode;
+    }
+    res.json(response);
   } else {
     res.status(500).json({ error: 'Failed to send OTP email', reason: result.error || 'Unknown error' });
   }
@@ -411,9 +425,13 @@ exports.sendPhoneOTP = asyncHandler(async (req, res) => {
   const result = await sendOTPSms(phoneNumber, otp);
 
   if (result.success) {
-    res.json({ message: 'OTP sent to your phone' });
+    const response = { message: 'OTP sent to your phone' };
+    if (process.env.NODE_ENV !== 'production') {
+      response.otpCode = otp;
+    }
+    res.json(response);
   } else {
-    res.json({ message: 'OTP sent (development mode)', otp });
+    res.json({ message: 'OTP sent (development mode)', otpCode: otp });
   }
 });
 
