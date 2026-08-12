@@ -37,15 +37,29 @@ function incrementOTPAttempts(key) {
 exports.register = asyncHandler(async (req, res) => {
   const { firstName, lastName, phoneNumber, email, password, role, referralCode } = req.body;
 
-  const existingUser = await User.findOne({ phoneNumber });
-  if (existingUser) {
-    if (!existingUser.isVerified) {
+  const [existingByPhone, existingByEmail] = await Promise.all([
+    User.findOne({ phoneNumber }),
+    email ? User.findOne({ email }) : Promise.resolve(null)
+  ]);
+
+  if (existingByPhone) {
+    if (!existingByPhone.isVerified) {
       return res.status(409).json({
         error: 'Phone number already registered. Please verify your account.',
         needsVerification: true
       });
     }
     return res.status(400).json({ error: 'Phone number already registered' });
+  }
+
+  if (existingByEmail) {
+    if (!existingByEmail.isVerified) {
+      return res.status(409).json({
+        error: 'Email address already registered. Please verify your account.',
+        needsVerification: true
+      });
+    }
+    return res.status(400).json({ error: 'Email address already registered' });
   }
 
   const userReferralCode = generateReferralCode(firstName);
