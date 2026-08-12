@@ -100,8 +100,45 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 
   // Get online drivers
   const onlineDrivers = await Driver.find({ isAvailable: true })
-    .populate('user', 'firstName lastName averageRating')
+    .populate('user', 'firstName lastName')
     .limit(10);
+
+  // Get vehicle info for online drivers
+  const driverIds = onlineDrivers.map(d => d._id);
+  const vehicles = await Vehicle.find({ driver: { $in: driverIds } });
+  const vehicleMap = {};
+  vehicles.forEach(v => {
+    vehicleMap[v.driver.toString()] = v;
+  });
+
+  // Get ratings for online drivers
+  const ratings = await Rating.find({ driver: { $in: driverIds } });
+  const ratingMap = {};
+  ratings.forEach(r => {
+    if (!ratingMap[r.driver]) {
+      ratingMap[r.driver] = { total: 0, count: 0 };
+    }
+    ratingMap[r.driver].total += r.rating;
+    ratingMap[r.driver].count += 1;
+  });
+
+  // Attach vehicle and rating info to drivers
+  onlineDrivers.forEach(driver => {
+    const vehicle = vehicleMap[driver._id.toString()];
+    if (vehicle) {
+      driver.vehicle = {
+        make: vehicle.make,
+        model: vehicle.model,
+        type: vehicle.vehicleType
+      };
+    }
+    const driverRating = ratingMap[driver._id.toString()];
+    if (driverRating && driverRating.count > 0) {
+      driver.rating = driverRating.total / driverRating.count;
+    } else {
+      driver.rating = 0;
+    }
+  });
 
   // Get recent SOS alerts
   const recentSOS = await SOSAlert.find({ status: { $in: ['active', 'resolved'] } })
