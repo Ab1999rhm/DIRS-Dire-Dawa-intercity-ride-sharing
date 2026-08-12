@@ -131,11 +131,17 @@ const RegisterPage = () => {
     } catch (err) {
       if (err?.response?.status === 409 && err.response.data?.needsVerification) {
         const existingEmail = err.response.data.email || formData.email;
+        const errorMsg = err.response.data.error || 'Account already exists. Please verify your email.';
+        setError(errorMsg);
         if (existingEmail !== formData.email) {
           setFormData(f => ({ ...f, email: existingEmail }));
         }
-        sendEmailOTP(existingEmail);
-        setStep(2);
+        // Auto-proceed to verification after showing the error
+        setTimeout(() => {
+          sendEmailOTP(existingEmail);
+          setStep(2);
+          setError('');
+        }, 2000);
         return;
       }
       const msg = safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
