@@ -55,6 +55,31 @@ router.post('/register', validateRegistration, authController.register);
 
 /**
  * @swagger
+ * /auth/check-duplicate:
+ *   post:
+ *     summary: Check if email or phone is already registered (no account is created)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               phoneNumber:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email and phone are available
+ *       409:
+ *         description: Email or phone already registered
+ */
+router.post('/check-duplicate', authController.checkDuplicate);
+
+/**
+ * @swagger
  * /auth/login:
  *   post:
  *     summary: Login with phone number and password

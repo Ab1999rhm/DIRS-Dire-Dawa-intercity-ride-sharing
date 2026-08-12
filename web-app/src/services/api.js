@@ -97,6 +97,7 @@ async function offlineFirst(apiCall, fallbackCacheFn) {
 
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
+  checkDuplicate: (email, phoneNumber) => api.post('/auth/check-duplicate', { email, phoneNumber }),
   login: (data) => api.post('/auth/login', data),
   getMe: () => offlineFirst(
     () => api.get('/auth/me'),

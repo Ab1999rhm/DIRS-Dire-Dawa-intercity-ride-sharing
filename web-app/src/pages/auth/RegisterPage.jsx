@@ -11,7 +11,7 @@ import './Auth.css';
 
 const RegisterPage = () => {
   const { t } = useLanguage();
-  const { register, completeRegistration } = useAuth();
+  const { completeRegistration } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -117,27 +117,16 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      const result = await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        referralCode: formData.referralCode || undefined,
-      });
+      await authAPI.checkDuplicate(formData.email, formData.phoneNumber);
       const sent = await sendEmailOTP();
       if (sent) {
         setStep(2);
       } else {
-        setError('Account created, but we could not send the OTP email right now. Please try again in a moment.');
+        setError('We could not send the OTP email right now. No account was created — please try again in a moment.');
       }
     } catch (err) {
-      if (err?.response?.status === 409 && err.response.data?.needsVerification) {
-        setError('An account with this email or phone number is already registered. Please sign in or use a different one.');
-        return;
-      }
-      const msg = safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
+      const msg = err?.response?.data?.error ||
+        safeErrorMessage(err, t('auth.registrationFailed') || 'Registration failed. Please try again.');
       setError(msg);
     } finally {
       setLoading(false);
@@ -190,12 +179,21 @@ const RegisterPage = () => {
 
     setOtpLoading(true);
     try {
-      await authAPI.verifyEmailOTP(formData.email, code);
+      const res = await authAPI.register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        referralCode: formData.referralCode || undefined,
+        otp: code,
+      });
       toast.success('Email verified!');
       sendPhoneOTP();
       setStep(3);
     } catch (err) {
-      toast.error(safeErrorMessage(err, 'Invalid OTP'));
+      toast.error(err?.response?.data?.error || safeErrorMessage(err, 'Invalid OTP'));
     }
     setOtpLoading(false);
   };

@@ -35,7 +35,7 @@ function incrementOTPAttempts(key) {
 }
 
 exports.register = asyncHandler(async (req, res) => {
-  const { firstName, lastName, phoneNumber, email, password, role, referralCode } = req.body;
+  const { firstName, lastName, phoneNumber, email, password, role, referralCode, otp } = req.body;
 
   const [existingByPhone, existingByEmail] = await Promise.all([
     User.findOne({ phoneNumber }),
@@ -43,32 +43,35 @@ exports.register = asyncHandler(async (req, res) => {
   ]);
 
   if (existingByPhone) {
-    if (!existingByPhone.isVerified) {
-      return res.status(409).json({
-        error: 'Phone number already registered. Please verify your account.',
-        needsVerification: true,
-        email: existingByPhone.email || existingByEmail?.email || email
-      });
-    }
-    return res.status(400).json({ error: 'Phone number already registered' });
+    return res.status(400).json({ error: 'An account with this phone number is already registered. Please sign in or use a different one.' });
   }
 
   if (existingByEmail) {
-    if (!existingByEmail.isVerified) {
-      return res.status(409).json({
-        error: 'Email address already registered. Please verify your account.',
-        needsVerification: true,
-        email: existingByEmail.email,
-        phoneNumber: existingByEmail.phoneNumber
-      });
-    }
-    return res.status(400).json({ error: 'Email address already registered' });
+    return res.status(400).json({ error: 'An account with this email is already registered. Please sign in or use a different one.' });
   }
+
+  if (!canAttemptOTP(email)) {
+    return res.status(429).json({ error: 'Too many OTP attempts. Please try again later.' });
+  }
+
+  const storedOTP = otpStore.get(email);
+  if (!storedOTP) {
+    return res.status(400).json({ error: 'OTP not found. Request a code before completing registration.' });
+  }
+  if (storedOTP.expiresAt < Date.now()) {
+    otpStore.delete(email);
+    return res.status(400).json({ error: 'OTP expired. Request a new code.' });
+  }
+  if (storedOTP.otp !== otp) {
+    incrementOTPAttempts(email);
+    return res.status(400).json({ error: 'Invalid OTP' });
+  }
+  otpStore.delete(email);
 
   const userReferralCode = generateReferralCode(firstName);
 
   const user = await User.create({
-    firstName, lastName, phoneNumber, email, password, role, referralCode: userReferralCode
+    firstName, lastName, phoneNumber, email, password, role, isVerified: true, referralCode: userReferralCode
   });
 
   if (role === 'driver') {
@@ -91,13 +94,44 @@ exports.register = asyncHandler(async (req, res) => {
     }
   }
 
-  logger.info('User registered (pending email verification)', { userId: user._id, role: user.role });
+  const { accessToken, refreshToken } = generateTokens(user._id);
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  let driverProfile = null;
+  if (role === 'driver') {
+    driverProfile = await Driver.findOne({ user: user._id });
+  }
+
+  logger.info('User registered with verified email', { userId: user._id, role: user.role });
 
   res.status(201).json({
-    message: 'Registration successful. Please verify your email.',
-    userId: user._id,
-    email: user.email
+    message: 'Registration successful',
+    accessToken,
+    refreshToken,
+    user: { _id: user._id, email: user.email, role: user.role },
+    driverProfile
   });
+});
+
+exports.checkDuplicate = asyncHandler(async (req, res) => {
+  const { email, phoneNumber } = req.body;
+
+  if (phoneNumber) {
+    const byPhone = await User.findOne({ phoneNumber });
+    if (byPhone) {
+      return res.status(409).json({ error: 'An account with this phone number is already registered. Please sign in or use a different one.' });
+    }
+  }
+
+  if (email) {
+    const byEmail = await User.findOne({ email });
+    if (byEmail) {
+      return res.status(409).json({ error: 'An account with this email is already registered. Please sign in or use a different one.' });
+    }
+  }
+
+  res.json({ available: true });
 });
 
 exports.login = asyncHandler(async (req, res) => {
