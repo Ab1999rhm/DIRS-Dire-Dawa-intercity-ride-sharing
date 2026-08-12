@@ -143,11 +143,13 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     }
   });
 
-  // Get recent SOS alerts
-  const recentSOS = await SOSAlert.find({ status: { $in: ['active', 'resolved'] } })
+  // Get recent SOS alerts (drop orphaned records with no user and no name snapshot)
+  const recentSOS = (await SOSAlert.find({ status: { $in: ['active', 'resolved'] } })
     .populate('user', 'firstName lastName')
     .sort({ createdAt: -1 })
-    .limit(5);
+    .limit(20))
+    .filter(a => a.user || a.userName)
+    .slice(0, 5);
 
   // Get drivers on trip
   const onTripDrivers = await Driver.countDocuments({ currentTrip: { $exists: true, $ne: null } });
@@ -532,7 +534,9 @@ exports.getSOSAlerts = asyncHandler(async (req, res) => {
 
   const total = await SOSAlert.countDocuments(query);
 
-  res.json({ alerts, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+  const linkedAlerts = alerts.filter(a => a.user || a.userName);
+
+  res.json({ alerts: linkedAlerts, total, page: parseInt(page), pages: Math.ceil(total / limit) });
 });
 
 const convertToCSV = (data) => {
@@ -1810,11 +1814,12 @@ exports.exportTripData = asyncHandler(async (req, res) => {
 exports.getSOSAlerts = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = status ? { status } : {};
-  const alerts = await SOSAlert.find(filter)
+  const alerts = (await SOSAlert.find(filter)
     .populate('user', 'firstName lastName phoneNumber')
     .populate('trip')
     .populate('resolvedBy', 'firstName lastName')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 }))
+    .filter(a => a.user || a.userName);
   res.json({ alerts });
 });
 
