@@ -404,15 +404,13 @@ const AdminDashboard = () => {
                         : 'Unknown'}
                     </span>
                     <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                      {driver.vehicle?.make && driver.vehicle?.model
-                        ? `${driver.vehicle.make} ${driver.vehicle.model}`
-                        : driver.vehicle?.type || 'N/A'}
+                      N/A
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <FaStar style={{ fontSize: 10, color: '#f59e0b' }} />
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#f59e0b' }}>
-                      {driver.rating ? driver.rating.toFixed(1) : '-'}
+                      {driver.user?.averageRating ? driver.user.averageRating.toFixed(1) : '-'}
                     </span>
                   </div>
                 </div>
