@@ -11,7 +11,8 @@ import {
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI } from '../../services/api';
+import { adminAPI, sosAPI } from '../../services/api';
+import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -19,6 +20,7 @@ const AdminDashboard = () => {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +49,16 @@ const AdminDashboard = () => {
       setError(err.response?.data?.message || 'Failed to load dashboard');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResolveSOS = async (alertId) => {
+    try {
+      await sosAPI.resolve(alertId);
+      setRecentSOS(prev => prev.map(a => a._id === alertId ? { ...a, status: 'resolved' } : a));
+      toast.success('SOS alert resolved');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resolve alert');
     }
   };
 
@@ -406,7 +418,7 @@ const AdminDashboard = () => {
                     <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
                       {driver.vehicle?.make && driver.vehicle?.model
                         ? `${driver.vehicle.make} ${driver.vehicle.model}`
-                        : driver.vehicle?.type || 'N/A'}
+                        : driver.vehicle?.type || 'No vehicle'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -482,7 +494,7 @@ const AdminDashboard = () => {
                   <span style={{ fontSize: 13, fontWeight: 500 }}>
                     {sos.user?.firstName && sos.user?.lastName
                       ? `${sos.user.firstName} ${sos.user.lastName}`
-                      : 'Unknown'}
+                      : sos.userName || 'Unknown user'}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span
@@ -511,6 +523,7 @@ const AdminDashboard = () => {
                           borderRadius: 6,
                           cursor: 'pointer',
                         }}
+                        onClick={() => handleResolveSOS(sos._id)}
                       >
                         Resolve
                       </button>

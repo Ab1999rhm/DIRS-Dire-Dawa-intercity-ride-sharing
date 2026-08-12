@@ -25,6 +25,14 @@ const sosAlertSchema = new mongoose.Schema({
     type: String,
     default: 'Emergency SOS Alert'
   },
+  userName: {
+    type: String,
+    default: ''
+  },
+  userPhone: {
+    type: String,
+    default: ''
+  },
   notifiedContacts: [{
     name: String,
     phoneNumber: String,

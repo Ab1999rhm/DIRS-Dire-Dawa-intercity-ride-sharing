@@ -111,15 +111,18 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     vehicleMap[v.driver.toString()] = v;
   });
 
-  // Get ratings for online drivers
-  const ratings = await Rating.find({ driver: { $in: driverIds } });
+  // Get ratings for online drivers (rating documents reference the driver's user profile)
+  const driverUserIds = onlineDrivers.map(d => d.user?._id).filter(Boolean);
+  const ratings = await Rating.find({ ratee: { $in: driverUserIds } });
   const ratingMap = {};
   ratings.forEach(r => {
-    if (!ratingMap[r.driver]) {
-      ratingMap[r.driver] = { total: 0, count: 0 };
+    const key = r.ratee?.toString();
+    if (!key) return;
+    if (!ratingMap[key]) {
+      ratingMap[key] = { total: 0, count: 0 };
     }
-    ratingMap[r.driver].total += r.rating;
-    ratingMap[r.driver].count += 1;
+    ratingMap[key].total += r.rating;
+    ratingMap[key].count += 1;
   });
 
   // Attach vehicle and rating info to drivers
@@ -132,7 +135,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         type: vehicle.vehicleType
       };
     }
-    const driverRating = ratingMap[driver._id.toString()];
+    const driverRating = ratingMap[driver.user?._id?.toString()];
     if (driverRating && driverRating.count > 0) {
       driver.rating = driverRating.total / driverRating.count;
     } else {

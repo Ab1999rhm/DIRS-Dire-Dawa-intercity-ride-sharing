@@ -185,7 +185,7 @@ export const notificationsAPI = {
 
 export const sosAPI = {
   trigger: (data) => api.post('/sos/trigger', data),
-  resolve: (id) => api.put(`/sos/${id}/resolve`),
+  resolve: (id) => api.put(`/sos/${id}/resolve`, { resolution: 'resolved' }),
   history: (params) => api.get('/sos/history', { params }),
   active: () => api.get('/sos/active'),
   shareTrip: (data) => api.post('/sos/share-trip', data),

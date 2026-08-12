@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
+const SOSAlert = require('./models/SOSAlert');
 
 const connectDB = async () => {
   const uri = process.env.MONGODB_URI;
@@ -117,6 +118,7 @@ const seed = async () => {
     await Payment.deleteMany({});
     await Rating.deleteMany({});
     await Referral.deleteMany({});
+    await SOSAlert.deleteMany({});
     console.log('Cleared existing data');
 
     const hash = async (pw) => await bcrypt.hash(pw, 10);

@@ -522,8 +522,8 @@ const SOSAlertsSection = () => {
         {alerts.map((alert) => (
           <div key={alert._id} className={`alert-card ${alert.status}`}>
             <div className="alert-info">
-              <h4>{alert.user?.firstName} {alert.user?.lastName}</h4>
-              <p>Phone: {alert.user?.phoneNumber}</p>
+              <h4>{alert.userName || [alert.user?.firstName, alert.user?.lastName].filter(Boolean).join(' ') || 'Unknown user'}</h4>
+              <p>Phone: {alert.user?.phoneNumber || alert.userPhone || 'N/A'}</p>
               <p>Message: {alert.message || 'Emergency SOS triggered'}</p>
               <p>Trip: {alert.trip?._id || 'N/A'}</p>
               <p>Time: {new Date(alert.createdAt).toLocaleString()}</p>

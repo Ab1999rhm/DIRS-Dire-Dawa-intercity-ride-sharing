@@ -173,8 +173,8 @@ const AdminSOS = () => {
                   <div className="sos-alert-header">
                     <FaExclamationTriangle style={{ color: activeTab === 'active' ? '#dc2626' : '#16a34a', fontSize: 18, flexShrink: 0 }} />
                     <div className="sos-alert-info">
-                      <h4>{alert.user?.firstName || t('admin.unknown') || 'Unknown'} {alert.user?.lastName || ''}</h4>
-                      <p>{alert.user?.phoneNumber || t('admin.noPhone') || 'No phone'}</p>
+                      <h4>{alert.userName || `${alert.user?.firstName || ''} ${alert.user?.lastName || ''}`.trim() || t('admin.unknown') || 'Unknown'}</h4>
+                      <p>{alert.user?.phoneNumber || alert.userPhone || t('admin.noPhone') || 'No phone'}</p>
                     </div>
                     <Badge variant={activeTab === 'active' ? 'danger' : 'success'} style={{ marginLeft: 'auto' }}>
                       {alert.urgency || (activeTab === 'active' ? (t('admin.high') || 'HIGH') : (t('admin.resolved') || 'resolved'))}

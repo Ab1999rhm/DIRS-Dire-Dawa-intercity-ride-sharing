@@ -26,6 +26,8 @@ exports.triggerSOS = asyncHandler(async (req, res) => {
     user: req.user._id,
     trip: tripId || null,
     message: message || 'Emergency SOS Alert',
+    userName: `${user.firstName} ${user.lastName}`.trim(),
+    userPhone: user.phoneNumber,
     location: {
       type: 'Point',
       coordinates: coordinates || user.currentLocation.coordinates,
