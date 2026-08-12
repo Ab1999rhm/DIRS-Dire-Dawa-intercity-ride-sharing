@@ -236,23 +236,12 @@ const PassengerManagement = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
         <FaUserShield style={{ fontSize: 20 }} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>Passenger Management</span>
-      </div>
-
-      {/* Header */}
-      <div className="admin-header admin-animate-in">
-        <div className="admin-header-left">
-          <div className="admin-greeting">
-            {t('admin.passengerManagement') || 'Passenger Management'}
-          </div>
-          <div className="admin-role-badge">
-            <FaUsers /> {passengers.length} {t('admin.totalPassengers') || 'Total Passengers'}
-          </div>
-        </div>
-        <div className="admin-header-actions">
-          <button className="admin-icon-btn" onClick={fetchPassengers} title="Refresh">
+        <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.9 }}><FaUsers /> {passengers.length} {t('admin.totalPassengers') || 'Total Passengers'}</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="admin-icon-btn" onClick={fetchPassengers} title="Refresh" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             <FaCheckCircle />
           </button>
-          <button className="admin-icon-btn" onClick={exportCSV} title="Export CSV">
+          <button className="admin-icon-btn" onClick={exportCSV} title="Export CSV" style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             <FaDownload />
           </button>
         </div>

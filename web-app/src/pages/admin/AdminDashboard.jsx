@@ -404,13 +404,15 @@ const AdminDashboard = () => {
                         : 'Unknown'}
                     </span>
                     <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                      {driver.vehicleType || 'N/A'}
+                      {driver.vehicle?.make && driver.vehicle?.model
+                        ? `${driver.vehicle.make} ${driver.vehicle.model}`
+                        : driver.vehicle?.type || 'N/A'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <FaStar style={{ fontSize: 10, color: '#f59e0b' }} />
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#f59e0b' }}>
-                      {driver.rating || '-'}
+                      {driver.rating ? driver.rating.toFixed(1) : '-'}
                     </span>
                   </div>
                 </div>
@@ -478,7 +480,11 @@ const AdminDashboard = () => {
                   }}
                 >
                   <span style={{ fontSize: 13, fontWeight: 500 }}>
-                    {sos.user?.firstName && sos.user?.lastName
+                    {sos.passenger?.firstName && sos.passenger?.lastName
+                      ? `${sos.passenger.firstName} ${sos.passenger.lastName}`
+                      : sos.driver?.firstName && sos.driver?.lastName
+                      ? `${sos.driver.firstName} ${sos.driver.lastName}`
+                      : sos.user?.firstName && sos.user?.lastName
                       ? `${sos.user.firstName} ${sos.user.lastName}`
                       : 'Unknown'}
                   </span>

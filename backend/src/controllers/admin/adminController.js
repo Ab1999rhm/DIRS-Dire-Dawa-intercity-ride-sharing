@@ -101,11 +101,13 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   // Get online drivers
   const onlineDrivers = await Driver.find({ isAvailable: true })
     .populate('user', 'firstName lastName')
+    .populate('vehicle', 'make model type')
     .limit(10);
 
   // Get recent SOS alerts
   const recentSOS = await SOSAlert.find({ status: { $in: ['active', 'resolved'] } })
-    .populate('user', 'firstName lastName')
+    .populate('passenger', 'firstName lastName')
+    .populate('driver', 'firstName lastName')
     .sort({ createdAt: -1 })
     .limit(5);
 

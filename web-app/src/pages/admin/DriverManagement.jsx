@@ -422,27 +422,18 @@ const DriverManagement = () => {
       }}>
         <FaShieldAlt style={{ fontSize: 20 }} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>Driver Management</span>
-      </div>
-
-      <div className="admin-header">
-        <div className="admin-header-left">
-          <div className="admin-greeting">{t('admin.driverManagement') || 'Driver Management'}</div>
-          <div className="admin-role-badge"><FaCar /> {drivers.length} {t('admin.totalDrivers') || 'Total Drivers'}</div>
-        </div>
-        <div className="admin-header-actions">
+        <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.9 }}><FaCar /> {drivers.length} {t('admin.totalDrivers') || 'Total Drivers'}</span>
+        <div style={{ display: 'flex', gap: 6 }}>
           <button 
             className="admin-icon-btn" 
             onClick={exportCSV} 
             title="Export CSV" 
             style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-              borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              color: 'white', fontWeight: 600, fontSize: 12,
-              transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(16,185,129,0.2)'
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+              borderRadius: 6, border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white', fontWeight: 600, fontSize: 11
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.2)'; }}
           >
             <FaFileExport /> <span>Export</span>
           </button>
@@ -451,14 +442,11 @@ const DriverManagement = () => {
             onClick={() => setShowAnnouncementModal(true)} 
             title="Send Announcement" 
             style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-              borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              color: 'white', fontWeight: 600, fontSize: 12,
-              transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(245,158,11,0.2)'
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+              borderRadius: 6, border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white', fontWeight: 600, fontSize: 11
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(245,158,11,0.3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(245,158,11,0.2)'; }}
           >
             <FaBullhorn /> <span>Announce</span>
           </button>
@@ -466,14 +454,11 @@ const DriverManagement = () => {
             className="admin-icon-btn" 
             onClick={fetchDrivers} 
             style={{ 
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-              borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-              color: 'white', fontWeight: 600, fontSize: 12,
-              transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(59,130,246,0.2)'
+              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+              borderRadius: 6, border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white', fontWeight: 600, fontSize: 11
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(59,130,246,0.3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(59,130,246,0.2)'; }}
           >
             <FaSync /> <span>Sync</span>
           </button>

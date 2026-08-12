@@ -208,29 +208,18 @@ const RealTimeMonitoring = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
         <FaSignal style={{ fontSize: 20 }} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>Real-Time Monitoring</span>
-      </div>
-
-      {/* Header */}
-      <div className="admin-header">
-        <div className="admin-header-left">
-          <div className="admin-greeting">
-            {t('admin.realTimeMonitoring') || 'Real-Time Monitoring'}
-          </div>
-          <div className="admin-role-badge">
-            <FaSignal /> {t('admin.live') || 'Live'}
-          </div>
-        </div>
-        <div className="admin-header-actions">
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button
             className={`admin-icon-btn ${autoRefresh ? 'active' : ''}`}
             onClick={() => setAutoRefresh(!autoRefresh)}
+            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}
           >
             <FaSync className={autoRefresh ? 'spinning' : ''} />
           </button>
-          <button className="admin-icon-btn" onClick={fetchRealTimeData}>
+          <button className="admin-icon-btn" onClick={fetchRealTimeData} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             <FaSync />
           </button>
-          <button className="admin-icon-btn" onClick={() => setMapFullscreen(!mapFullscreen)}>
+          <button className="admin-icon-btn" onClick={() => setMapFullscreen(!mapFullscreen)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             {mapFullscreen ? <FaCompress /> : <FaExpand />}
           </button>
         </div>

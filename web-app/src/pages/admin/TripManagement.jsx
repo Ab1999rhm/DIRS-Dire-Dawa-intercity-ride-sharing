@@ -59,8 +59,27 @@ const TripManagement = () => {
     const passengerName = `${passengerUser.firstName || ''} ${passengerUser.lastName || ''}`.trim() || 'Unknown Passenger';
     const vehicleType = vehicle.make ? `${vehicle.make} ${vehicle.model || ''}`.trim() : (trip.vehicleType || 'N/A');
     const distance = trip.actualDistance || trip.distance || 0;
-    const durationMin = trip.actualDuration ? Math.round(trip.actualDuration / 60) : 0;
-    const duration = trip.duration || (durationMin ? `${durationMin} min` : 'N/A');
+    let durationMin = 0;
+    if (trip.actualDuration) {
+      durationMin = Math.round(trip.actualDuration / 60);
+    } else if (trip.duration) {
+      // Parse duration if it's a string like "25 min"
+      const match = trip.duration.toString().match(/(\d+)/);
+      durationMin = match ? parseInt(match[1]) : 0;
+    } else if (trip.startedAt && trip.completedAt) {
+      // Calculate duration from timestamps
+      const started = new Date(trip.startedAt);
+      const completed = new Date(trip.completedAt);
+      const diffMs = completed - started;
+      durationMin = Math.round(diffMs / 60000); // Convert to minutes
+    } else if (trip.createdAt && trip.updatedAt) {
+      // Fallback to createdAt and updatedAt
+      const created = new Date(trip.createdAt);
+      const updated = new Date(trip.updatedAt);
+      const diffMs = updated - created;
+      durationMin = Math.round(diffMs / 60000);
+    }
+    const duration = durationMin > 0 ? `${durationMin} min` : 'N/A';
     const from = pickup.address || trip.from || 'Unknown';
     const to = dropoff.address || trip.to || 'Unknown';
     const status = trip.status || 'unknown';
@@ -315,26 +334,15 @@ const TripManagement = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
         <FaRoute style={{ fontSize: 20 }} />
         <span style={{ fontWeight: 700, fontSize: 15 }}>Trip Management</span>
-      </div>
-
-      {/* Header */}
-      <div className="admin-header">
-        <div className="admin-header-left">
-          <div className="admin-greeting">
-            {t('admin.tripManagement') || 'Trip Management'}
-          </div>
-          <div className="admin-role-badge">
-            <FaRoute /> {trips.length} {t('admin.totalTrips') || 'Total Trips'}
-          </div>
-        </div>
-        <div className="admin-header-actions">
-          <button className="admin-icon-btn" onClick={handleViewAnalytics}>
+        <span style={{ marginLeft: 'auto', fontSize: 12, opacity: 0.9 }}><FaRoute /> {trips.length} {t('admin.totalTrips') || 'Total Trips'}</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="admin-icon-btn" onClick={handleViewAnalytics} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             <FaChartLine />
           </button>
-          <button className="admin-icon-btn" onClick={() => handleExportData('csv')}>
+          <button className="admin-icon-btn" onClick={() => handleExportData('csv')} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             <FaFileExport />
           </button>
-          <button className="admin-icon-btn" onClick={fetchTrips}>
+          <button className="admin-icon-btn" onClick={fetchTrips} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '6px 10px', borderRadius: 6, cursor: 'pointer' }}>
             <FaSearch />
           </button>
         </div>
