@@ -957,11 +957,11 @@ const DriverManagement = () => {
 
             {detailTab === 'documents' && (
               <div className="driver-detail">
-                {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto'], ['backgroundCheck', 'backgroundCheckPhoto']].map(([label, key]) => {
-                  const info = selectedDriver.documents?.[key] || {};
+                {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto'], ['backgroundCheck', 'backgroundCheckPhoto']].map(([label, docKey]) => {
+                  const info = selectedDriver.documents?.[docKey] || {};
                   const docLabel = label === 'backgroundCheck' ? 'Background Check' : label;
                   return (
-                    <div key={doc} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: `1px solid ${getDocStatusColor(info.status)}30` }}>
+                    <div key={docKey} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: `1px solid ${getDocStatusColor(info.status)}30` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                         <span style={{ fontWeight: 600, fontSize: 13 }}>{docLabel}</span>
                         <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${getDocStatusColor(info.status)}15`, color: getDocStatusColor(info.status), fontWeight: 600 }}>{info.status || 'pending'}</span>
