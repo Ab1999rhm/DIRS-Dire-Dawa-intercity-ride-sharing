@@ -135,15 +135,18 @@ const PassengerHistory = () => {
       </div>
 
       <div className="history-stats">
-        <Card className="history-stat" hover>
+        <Card className="history-stat stat-trips" hover>
+          <div className="history-stat-icon"><FaCar /></div>
           <span className="history-stat-value">{stats.totalTrips}</span>
           <span className="history-stat-label">{t('passenger.totalTrips')}</span>
         </Card>
-        <Card className="history-stat" hover>
+        <Card className="history-stat stat-spent" hover>
+          <div className="history-stat-icon"><FaWallet /></div>
           <span className="history-stat-value">ETB {stats.totalSpent.toLocaleString()}</span>
           <span className="history-stat-label">{t('passenger.totalSpent')}</span>
         </Card>
-        <Card className="history-stat" hover>
+        <Card className="history-stat stat-rating" hover>
+          <div className="history-stat-icon"><FaStar /></div>
           <span className="history-stat-value">{stats.avgRating}</span>
           <span className="history-stat-label">{t('passenger.avgRating')}</span>
         </Card>
