@@ -11,6 +11,7 @@ const handleValidation = (req, res, next) => {
 const validateRegistration = [
   body('firstName').trim().notEmpty().withMessage('First name is required'),
   body('lastName').trim().notEmpty().withMessage('Last name is required'),
+  body('email').optional().isEmail().normalizeEmail().withMessage('Valid email required'),
   body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid Ethiopian phone number required'),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('role').isIn(['passenger', 'driver']).withMessage('Role must be passenger or driver'),

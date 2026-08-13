@@ -83,7 +83,7 @@ exports.register = asyncHandler(async (req, res) => {
   if (role === 'driver') {
     await Driver.create({
       user: user._id,
-      licenseNumber: 'PENDING',
+      licenseNumber: `PENDING-${user._id}`,
       licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       licensePhoto: 'pending',
       nationalId: 'PENDING',
