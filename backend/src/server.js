@@ -22,6 +22,8 @@ if (!fs.existsSync(uploadsDir)) {
 const app = express();
 const server = http.createServer(app);
 
+app.set('trust proxy', 1);
+
 connectDB();
 initializeSocket(server);
 
