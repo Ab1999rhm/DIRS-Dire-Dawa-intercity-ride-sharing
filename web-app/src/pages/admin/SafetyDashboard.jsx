@@ -7,12 +7,14 @@ import {
   FaDownload, FaCalendar, FaClock, FaMapPin, FaFirstAid, FaUserSlash
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
 const SafetyDashboard = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -135,8 +137,12 @@ const SafetyDashboard = () => {
   };
 
   const handleAssignIncident = async (incidentId) => {
+    if (!user?._id) {
+      toast.error('Unable to identify the current admin');
+      return;
+    }
     try {
-      await adminAPI.assignIncident(incidentId, 'admin');
+      await adminAPI.assignIncident(incidentId, user._id);
       toast.success('Incident assigned');
       fetchSafetyData();
     } catch (err) {

@@ -2058,7 +2058,16 @@ exports.createIncident = asyncHandler(async (req, res) => {
 exports.assignIncident = asyncHandler(async (req, res) => {
   const { incidentId } = req.params;
   const { assignedTo } = req.body;
-  
+
+  if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+    return res.status(400).json({ error: 'Invalid assigned user' });
+  }
+
+  const assignedUser = await User.findById(assignedTo);
+  if (!assignedUser) {
+    return res.status(404).json({ error: 'Assigned user not found' });
+  }
+
   const incident = await Incident.findByIdAndUpdate(
     incidentId,
     {
@@ -2067,10 +2076,14 @@ exports.assignIncident = asyncHandler(async (req, res) => {
     },
     { new: true }
   );
-  
+
+  if (!incident) {
+    return res.status(404).json({ error: 'Incident not found' });
+  }
+
   await createNotification(assignedTo, 'incident_assigned', 'New Incident Assigned',
     `You have been assigned to investigate incident #${incidentId}`);
-  
+
   logger.info('Incident assigned', { incidentId, assignedTo });
   res.json({ message: 'Incident assigned successfully', incident });
 });
