@@ -36,7 +36,7 @@ const incidentSchema = new mongoose.Schema({
     required: true
   },
   location: {
-    type: { type: String, enum: ['Point'], default: 'Point' },
+    type: { type: String, enum: ['Point'] },
     coordinates: { type: [Number] },
     address: String
   },
@@ -81,7 +81,7 @@ const incidentSchema = new mongoose.Schema({
   },
   hospitalName: String,
   hospitalLocation: {
-    type: { type: String, enum: ['Point'], default: 'Point' },
+    type: { type: String, enum: ['Point'] },
     coordinates: [Number],
     address: String
   },

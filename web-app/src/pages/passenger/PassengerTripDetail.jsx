@@ -14,6 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, sosAPI, reportAPI, ratingsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/common';
+import Modal from '../../components/common/Modal';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
 import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
@@ -51,7 +52,7 @@ const getVehicleIcon = (type) => {
 const PassengerTripDetail = () => {
   const { tripId } = useParams();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, socket } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -72,6 +73,23 @@ const PassengerTripDetail = () => {
   const [reportCategory, setReportCategory] = useState('');
   const [reportDescription, setReportDescription] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+
+  // SOS state
+  const [sosModalOpen, setSosModalOpen] = useState(false);
+  const [sosLocation, setSosLocation] = useState(null);
+  const [sosSending, setSosSending] = useState(false);
+  const [sosType, setSosType] = useState(null);
+  const [sosDescription, setSosDescription] = useState('');
+
+  const SOS_TYPES = [
+    { type: 'accident', label: '🚗 Accident' },
+    { type: 'medical', label: '🚑 Medical Emergency' },
+    { type: 'harassment', label: '👮 Harassment / Security' },
+    { type: 'theft', label: '💰 Theft' },
+    { type: 'fire', label: '🔥 Fire' },
+    { type: 'breakdown', label: '⚙️ Vehicle Breakdown' },
+    { type: 'other', label: '⚠️ Other Emergency' },
+  ];
 
   useEffect(() => {
     fetchTripDetail();
@@ -105,10 +123,11 @@ const PassengerTripDetail = () => {
     }
     setSubmittingReport(true);
     try {
+      const categoryLabel = REPORT_OPTIONS.find(o => o.key === reportCategory)?.label || 'Issue';
       await reportAPI.create({
         tripId,
         category: reportCategory,
-        description: reportDescription,
+        description: reportDescription.trim() || categoryLabel,
         severity: reportCategory === 'harassment' ? 'high' : 'medium',
       });
       toast.success('Issue reported successfully. We will get back to you.');
@@ -123,18 +142,50 @@ const PassengerTripDetail = () => {
   };
 
   const handleSOS = async () => {
+    if (sosSending) return;
+    setSosLocation(null);
+    setSosType(null);
+    setSosDescription('');
     try {
-      let location = null;
-      try {
-        const pos = await new Promise((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-        );
-        location = { coordinates: [pos.coords.longitude, pos.coords.latitude], address: '' };
-      } catch (_) {}
-      await sosAPI.trigger({ location, tripId, description: 'SOS triggered from trip detail' });
-      toast.warning('SOS alert sent!');
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
+      );
+      if (pos && pos.coords) {
+        setSosLocation({
+          coordinates: [pos.coords.longitude, pos.coords.latitude],
+          address: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`
+        });
+      }
+    } catch (_) {}
+    setSosModalOpen(true);
+  };
+
+  const handleSOSClose = () => {
+    if (sosSending) return;
+    setSosModalOpen(false);
+    setSosType(null);
+    setSosDescription('');
+  };
+
+  const handleSendSOS = async () => {
+    setSosSending(true);
+    try {
+      const desc = sosDescription.trim() || sosType.label;
+      await sosAPI.trigger({
+        type: sosType.type,
+        description: desc,
+        tripId,
+        location: sosLocation || null,
+      });
+      const locTxt = sosLocation ? ` at ${sosLocation.address}` : '';
+      toast.warning(`🚨 SOS alert sent — ${sosType.label}: "${desc}"${locTxt}!`);
+      setSosModalOpen(false);
+      setSosType(null);
+      setSosDescription('');
     } catch (err) {
       toast.error('Failed to send SOS');
+    } finally {
+      setSosSending(false);
     }
   };
 
@@ -152,8 +203,11 @@ const PassengerTripDetail = () => {
   };
 
   const callDriver = () => {
-    if (trip?.driver?.phone) {
-      window.location.href = `tel:${trip.driver.phone}`;
+    const phone = trip?.driver?.user?.phoneNumber || trip?.driver?.phone;
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      toast.info('Driver phone number is not available yet');
     }
   };
 
@@ -516,7 +570,8 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         isOpen={showChat}
         onClose={() => setShowChat(false)}
         tripId={tripId}
-        driverName={trip?.driver?.firstName ? `${trip.driver.firstName} ${trip.driver.lastName || ''}` : 'Abebe Kebede'}
+        driverName={trip?.driver?.user?.firstName ? `${trip.driver.user.firstName} ${trip.driver.user.lastName || ''}` : 'Driver'}
+        socket={socket}
       />
 
       <DigitalTicketModal
@@ -525,6 +580,84 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         trip={trip}
         passenger={user}
       />
+
+      <Modal isOpen={sosModalOpen} onClose={handleSOSClose} title="🚨 Emergency SOS" size="sm">
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Select the type of emergency. Your live location is sent to the admin command center and your emergency contacts.
+        </p>
+        {sosLocation ? (
+          <p style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <FaMapMarkerAlt /> 📍 {sosLocation.address}
+          </p>
+        ) : (
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>⏳ Locating your position…</p>
+        )}
+
+        {!sosType ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {SOS_TYPES.map(item => (
+              <button
+                key={item.type}
+                type="button"
+                disabled={sosSending}
+                onClick={() => setSosType(item)}
+                style={{
+                  padding: '12px 8px', borderRadius: 10, border: '1px solid var(--border-light)',
+                  background: 'var(--card)', color: 'var(--text)', cursor: 'pointer',
+                  fontWeight: 600, fontSize: 13, transition: 'all 0.15s',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <strong style={{ fontSize: 14, color: '#dc2626' }}>{sosType.label}</strong>
+              <button type="button" onClick={() => setSosType(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+                ← Change type
+              </button>
+            </div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
+              Describe your location / situation (e.g. "Near Bole Bridge, red building")
+            </label>
+            <textarea
+              value={sosDescription}
+              onChange={e => setSosDescription(e.target.value)}
+              placeholder="Write a short description so responders can find you…"
+              rows={3}
+              maxLength={300}
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10,
+                border: '1px solid var(--border)', background: 'var(--bg-secondary, #fff)', color: 'var(--text)',
+                fontSize: 14, resize: 'vertical', marginBottom: 12,
+              }}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="button"
+                disabled={sosSending}
+                onClick={handleSendSOS}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#dc2626',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                }}
+              >
+                {sosSending ? 'Sending…' : '🚨 Send SOS Alert'}
+              </button>
+            </div>
+          </div>
+        )}
+        {sosSending && <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--text-muted)' }}>Sending alert…</p>}
+      </Modal>
     </div>
   );
 };
