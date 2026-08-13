@@ -71,6 +71,7 @@ const DriverDashboard = () => {
   const toast = useToast();
 
   const [isOnline, setIsOnline] = useState(user?.isOnline || false);
+  const [rideRequests, setRideRequests] = useState([]);
   const [activeTrip, setActiveTrip] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0 });

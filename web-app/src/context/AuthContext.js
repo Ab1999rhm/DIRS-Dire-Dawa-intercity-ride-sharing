@@ -214,7 +214,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const markTripRead = (tripId) => {
+  const markTripRead = useCallback((tripId) => {
     if (!tripId) return;
     setChatUnread(prev => {
       const next = { ...prev };
@@ -222,7 +222,7 @@ export const AuthProvider = ({ children }) => {
       return next;
     });
     chatAPI.markRead(tripId).catch(() => {});
-  };
+  }, []);
 
   const contextValue = useMemo(() => ({
     user, driverProfile, loading, serverWaking, socket,
