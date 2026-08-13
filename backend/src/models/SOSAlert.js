@@ -25,6 +25,11 @@ const sosAlertSchema = new mongoose.Schema({
     type: String,
     default: 'Emergency SOS Alert'
   },
+  type: {
+    type: String,
+    enum: ['accident', 'medical', 'harassment', 'theft', 'fire', 'breakdown', 'other', 'general'],
+    default: 'general'
+  },
   userName: {
     type: String,
     default: ''

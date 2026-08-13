@@ -168,6 +168,11 @@ const userSchema = new mongoose.Schema({
       coordinates: [Number]
     }
   }],
+  favorites: [{
+    name: String,
+    address: String,
+    iconType: String
+  }],
   preferredLanguage: {
     type: String,
     enum: ['en', 'am', 'om', 'so'],

@@ -181,6 +181,12 @@ const AdminSOS = () => {
                     </Badge>
                   </div>
 
+                  {alert.type && (
+                    <Badge variant="danger" style={{ marginTop: 8 }}>
+                      {alert.type.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  )}
+
                   {alert.location && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', margin: '10px 0' }}>
                       <FaMapMarkerAlt style={{ color: '#dc2626' }} />
@@ -188,8 +194,8 @@ const AdminSOS = () => {
                     </div>
                   )}
 
-                  {alert.description && (
-                    <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>{alert.description}</p>
+                  {(alert.message || alert.description) && (
+                    <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>{alert.message || alert.description}</p>
                   )}
 
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>

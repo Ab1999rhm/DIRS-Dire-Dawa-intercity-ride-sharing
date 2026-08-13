@@ -10,7 +10,7 @@ const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
 
 exports.triggerSOS = asyncHandler(async (req, res) => {
-  const { tripId, message, coordinates } = req.body;
+  const { tripId, message, coordinates, type, description, location } = req.body;
 
   const user = await User.findById(req.user._id);
   if (!user) {
@@ -22,16 +22,25 @@ exports.triggerSOS = asyncHandler(async (req, res) => {
     trip = await Trip.findById(tripId);
   }
 
+  const sosCoordinates = coordinates
+    || location?.coordinates
+    || user.currentLocation?.coordinates
+    || [0, 0];
+  const sosAddress = location?.address
+    || (sosCoordinates && sosCoordinates[1] !== 0 ? `${sosCoordinates[1]}, ${sosCoordinates[0]}` : 'Current Location');
+  const sosMessage = message || description || 'Emergency SOS Alert';
+
   const sosAlert = await SOSAlert.create({
     user: req.user._id,
     trip: tripId || null,
-    message: message || 'Emergency SOS Alert',
+    message: sosMessage,
+    type: type || 'general',
     userName: `${user.firstName} ${user.lastName}`.trim(),
     userPhone: user.phoneNumber,
     location: {
       type: 'Point',
-      coordinates: coordinates || user.currentLocation.coordinates,
-      address: 'Current Location'
+      coordinates: sosCoordinates,
+      address: sosAddress
     }
   });
 
@@ -41,7 +50,8 @@ exports.triggerSOS = asyncHandler(async (req, res) => {
     userId: req.user._id,
     userName: `${user.firstName} ${user.lastName}`,
     phoneNumber: user.phoneNumber,
-    location: coordinates || user.currentLocation.coordinates,
+    location: sosCoordinates,
+    type: sosAlert.type,
     message: sosAlert.message,
     tripId: tripId || null,
     timestamp: new Date()
@@ -51,8 +61,8 @@ exports.triggerSOS = asyncHandler(async (req, res) => {
     for (const contact of user.emergencyContacts) {
       await sendRideNotification(contact.phoneNumber, 'sos_alert', {
         userName: `${user.firstName} ${user.lastName}`,
-        location: 'Current Location',
-        message: sosAlert.message
+        location: sosAddress,
+        message: sosMessage
       });
 
       sosAlert.notifiedContacts.push({

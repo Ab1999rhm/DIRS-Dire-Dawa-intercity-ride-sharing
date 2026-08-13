@@ -15,7 +15,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, ratingsAPI, sosAPI, paymentsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
-import { ConfirmModal } from '../../components/common/Modal';
+import Modal, { ConfirmModal } from '../../components/common/Modal';
 import VehicleCategorySelector from '../../components/passenger/VehicleCategorySelector';
 import SeatPickerModal from '../../components/passenger/SeatPickerModal';
 import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
@@ -23,6 +23,16 @@ import InAppChat from '../../components/passenger/InAppChat';
 import FareBreakdownModal from '../../components/passenger/FareBreakdownModal';
 import WalletTopupModal from '../../components/passenger/WalletTopupModal';
 import './Passenger.css';
+
+const SOS_TYPES = [
+  { type: 'accident', label: '🚗 Accident' },
+  { type: 'medical', label: '🚑 Medical Emergency' },
+  { type: 'harassment', label: '👮 Harassment / Security' },
+  { type: 'theft', label: '💰 Theft' },
+  { type: 'fire', label: '🔥 Fire' },
+  { type: 'breakdown', label: '⚙️ Vehicle Breakdown' },
+  { type: 'other', label: '⚠️ Other Emergency' },
+];
 
 // Import VEHICLE_CATEGORIES as the single source of truth for vehicle data
 import { VEHICLE_CATEGORIES } from '../../components/passenger/VehicleCategorySelector';
@@ -218,6 +228,9 @@ const PassengerHome = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [sosModalOpen, setSosModalOpen] = useState(false);
+  const [sosLocation, setSosLocation] = useState(null);
+  const [sosSending, setSosSending] = useState(false);
 
   useEffect(() => {
     if (dropoff) {
@@ -712,18 +725,37 @@ const PassengerHome = () => {
   };
 
   const handleSOS = async () => {
+    if (sosSending) return;
+    setSosLocation(null);
     try {
-      let location = null;
-      try {
-        const pos = await new Promise((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-        );
-        location = { coordinates: [pos.coords.longitude, pos.coords.latitude], address: '' };
-      } catch (_) {}
-      await sosAPI.trigger({ location, description: 'SOS triggered by passenger' });
-      toast.warning('SOS alert sent!');
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
+      );
+      if (pos && pos.coords) {
+        setSosLocation({
+          coordinates: [pos.coords.longitude, pos.coords.latitude],
+          address: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`
+        });
+      }
+    } catch (_) {}
+    setSosModalOpen(true);
+  };
+
+  const handleSOSSelect = async (item) => {
+    setSosSending(true);
+    try {
+      await sosAPI.trigger({
+        type: item.type,
+        description: item.label,
+        location: sosLocation || null,
+      });
+      const locTxt = sosLocation ? ` at ${sosLocation.address}` : '';
+      toast.warning(`🚨 SOS alert sent — ${item.label}${locTxt}!`);
+      setSosModalOpen(false);
     } catch (err) {
       toast.error('Failed to send SOS alert');
+    } finally {
+      setSosSending(false);
     }
   };
 
@@ -1836,6 +1868,37 @@ const PassengerHome = () => {
           toast.success(`Successfully topped up ${amt} ETB to App Wallet!`);
         }}
       />
+
+      <Modal isOpen={sosModalOpen} onClose={() => !sosSending && setSosModalOpen(false)} title="🚨 Emergency SOS" size="sm">
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Select the type of emergency. Your live location is sent to the admin command center and your emergency contacts.
+        </p>
+        {sosLocation ? (
+          <p style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <FaMapMarkerAlt /> {sosLocation.address}
+          </p>
+        ) : (
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>⏳ Locating your position…</p>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {SOS_TYPES.map(item => (
+            <button
+              key={item.type}
+              type="button"
+              disabled={sosSending}
+              onClick={() => handleSOSSelect(item)}
+              style={{
+                padding: '12px 8px', borderRadius: 10, border: '1px solid var(--border-light)',
+                background: 'var(--card)', color: 'var(--text)', cursor: 'pointer',
+                fontWeight: 600, fontSize: 13, transition: 'all 0.15s',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        {sosSending && <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--text-muted)' }}>Sending alert…</p>}
+      </Modal>
     </div>
   );
 };
