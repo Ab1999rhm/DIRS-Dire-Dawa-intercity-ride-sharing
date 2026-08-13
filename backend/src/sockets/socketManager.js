@@ -273,10 +273,16 @@ const initializeSocket = (server) => {
           'currentLocation.updatedAt': new Date()
         });
         if (socket.userRole === 'driver') {
-          await Driver.updateOne(
-            { user: socket.userId },
-            { isOnline: false, isAvailable: false, currentTrip: null }
-          );
+          const driver = await Driver.findOne({ user: socket.userId });
+          const activeTrip = driver?.currentTrip
+            ? await Trip.findOne({
+                _id: driver.currentTrip,
+                status: { $in: ['driver_arriving', 'driver_arrived', 'in_progress'] }
+              })
+            : null;
+          const update = { isOnline: false, isAvailable: false };
+          if (!activeTrip) update.currentTrip = null;
+          await Driver.updateOne({ user: socket.userId }, update);
         }
       } catch (error) {
         logger.error('Disconnect update error', { error: error.message, socketId: socket.id });

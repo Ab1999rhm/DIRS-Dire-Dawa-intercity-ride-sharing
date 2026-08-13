@@ -641,8 +641,13 @@ exports.updateDriverStatus = asyncHandler(async (req, res) => {
 
   driver.isAvailable = isOnline;
   driver.isOnline = isOnline;
-  if (!isOnline) {
-    driver.currentTrip = null;
+  if (!isOnline && driver.currentTrip) {
+    const Trip = require('../../models/Trip');
+    const activeTrip = await Trip.findOne({
+      _id: driver.currentTrip,
+      status: { $in: ['driver_arriving', 'driver_arrived', 'in_progress'] }
+    });
+    if (!activeTrip) driver.currentTrip = null;
   }
   await driver.save();
 
