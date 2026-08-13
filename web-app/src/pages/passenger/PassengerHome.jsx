@@ -1942,9 +1942,24 @@ const PassengerHome = () => {
               }}
             />
             <div style={{ display: 'flex', gap: 10 }}>
-              <Button variant="danger" fullWidth loading={sosSending} onClick={handleSendSOS} style={{ flex: 1 }}>
+              <button
+                type="button"
+                disabled={sosSending}
+                onClick={handleSendSOS}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: '#dc2626',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                }}
+              >
                 {sosSending ? 'Sending…' : '🚨 Send SOS Alert'}
-              </Button>
+              </button>
             </div>
           </div>
         )}
