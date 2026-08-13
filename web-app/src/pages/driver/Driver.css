@@ -1215,10 +1215,11 @@
 /* === Bottom Navigation === */
 .driver-bottom-nav {
   position: static;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 10px 0 env(safe-area-inset-bottom, 8px);
+  padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
