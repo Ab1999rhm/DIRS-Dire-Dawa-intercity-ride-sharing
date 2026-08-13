@@ -2,6 +2,7 @@ const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Driver = require('../models/Driver');
+const Trip = require('../models/Trip');
 const SuspiciousActivity = require('../models/SuspiciousActivity');
 const logger = require('../config/logger');
 
@@ -63,6 +64,52 @@ const initializeSocket = (server) => {
     socket.on('leave_trip', (tripId) => {
       socket.leave(`trip_${tripId}`);
     });
+
+    // Unified chat router: passenger web sends `send_chat`, passenger app sends
+    // `send_chat_message`, driver app sends `trip_message`. All route by tripId to the
+    // ACTUAL driver and passenger of that trip (never a default/other driver).
+    const routeChatMessage = async (data) => {
+      try {
+        const tripId = data?.tripId;
+        const text = String(data?.message || data?.text || '').trim();
+        if (!tripId || !text) return;
+
+        const trip = await Trip.findById(tripId).populate('driver', 'user').lean();
+        if (!trip) return;
+
+        const passengerUserId = trip.passenger?.toString();
+        const driverUserId = trip.driver?.user?.toString();
+
+        const msg = {
+          tripId,
+          text,
+          senderId: socket.userId,
+          senderRole: socket.userRole,
+          timestamp: new Date().toISOString()
+        };
+
+        const toDriver = driverUserId && driverUserId !== socket.userId;
+        const toPassenger = passengerUserId && passengerUserId !== socket.userId;
+
+        // Driver app listens on `trip_message`; passenger apps listen on `chat_message`.
+        if (toDriver) io.to(`user_${driverUserId}`).emit('trip_message', msg);
+        if (toPassenger) io.to(`user_${passengerUserId}`).emit('chat_message', msg);
+
+        logger.info('Chat message routed', {
+          tripId,
+          from: socket.userId,
+          role: socket.userRole,
+          toDriver: driverUserId,
+          toPassenger: passengerUserId
+        });
+      } catch (error) {
+        logger.error('Chat routing error', { error: error.message });
+      }
+    };
+
+    socket.on('send_chat', routeChatMessage);
+    socket.on('send_chat_message', routeChatMessage);
+    socket.on('trip_message', routeChatMessage);
 
     socket.on('driver_location_update', async (data) => {
       try {

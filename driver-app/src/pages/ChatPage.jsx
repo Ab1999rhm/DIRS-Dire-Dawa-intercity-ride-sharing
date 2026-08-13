@@ -7,7 +7,7 @@ import './Pages.css';
 
 const ChatPage = () => {
   const navigate = useNavigate();
-  const { socket } = useAuth();
+  const { socket, user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
@@ -22,6 +22,7 @@ const ChatPage = () => {
       socket.emit('join_trip', tripId);
 
       socket.on('trip_message', (data) => {
+        if (data.senderId && user?._id && data.senderId === user._id) return;
         setMessages(prev => [...prev, { ...data, isOwn: false }]);
       });
 
@@ -38,7 +39,7 @@ const ChatPage = () => {
         socket.emit('leave_trip', tripId);
       };
     }
-  }, [socket, tripId]);
+  }, [socket, tripId, user?._id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -17,10 +17,20 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket }) => {
 
   useEffect(() => {
     if (socket && tripId) {
-      socket.on('chat_message', (msg) => {
-        setMessages((prev) => [...prev, msg]);
-      });
-      return () => socket.off('chat_message');
+      const handleChatMessage = (msg) => {
+        if (msg.tripId && msg.tripId !== tripId) return;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: msg.id || Date.now() + Math.random(),
+            sender: msg.senderRole === 'driver' ? 'driver' : 'passenger',
+            text: msg.text,
+            time: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
+          }
+        ]);
+      };
+      socket.on('chat_message', handleChatMessage);
+      return () => socket.off('chat_message', handleChatMessage);
     }
   }, [socket, tripId]);
 
