@@ -5,7 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 
 const tabs = [
   { labelKey: 'passenger.home', path: '/passenger', icon: FaHome, matchExact: true },
-  { labelKey: 'passenger.history', path: '/passenger/history', icon: FaListUl, matchExact: false },
+  { labelKey: 'passenger.trips', path: '/passenger/history', icon: FaListUl, matchExact: false },
   { labelKey: 'passenger.wallet', path: '/passenger/wallet', icon: FaWallet, matchExact: false },
   { labelKey: 'passenger.settings', path: '/passenger/profile', icon: FaCog, matchExact: false },
 ];
