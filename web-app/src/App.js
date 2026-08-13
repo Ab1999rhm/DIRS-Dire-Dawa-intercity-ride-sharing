@@ -137,7 +137,7 @@ const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
           <AdminMobileHeader onMenuClick={() => setSidebarOpen(true)} />
         </Suspense>
       )}
-      <div className="app-body">
+      <div className={adminNav ? 'app-body' : 'app-body app-body-flush'}>
         <main className={(bottomNav || adminNav) ? 'app-main has-bottom-nav' : 'app-main'} style={(bottomNav || adminNav) ? { marginLeft: 0 } : {}}>
           <Suspense fallback={<LoadingSpinner />}>
             {children}

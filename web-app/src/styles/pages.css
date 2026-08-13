@@ -469,6 +469,9 @@
 .app-main.has-bottom-nav {
   padding-bottom: 70px;
 }
+.app-body-flush {
+  padding-top: 0;
+}
 
 /* Dark Mode - Persistent Bottom Nav */
 [data-theme="dark"] .passenger-bottom-nav {

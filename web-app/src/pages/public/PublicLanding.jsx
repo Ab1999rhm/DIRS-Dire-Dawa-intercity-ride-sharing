@@ -357,7 +357,7 @@ const PublicLanding = () => {
             </div>
             <p>{t('landing.footer.tagline')}</p>
             <div className="public-footer-social">
-              <a href="#fb"><FaFacebook /></a>
+              <a href="https://www.facebook.com/abbaasabbaayyee.eeyyamaa" target="_blank" rel="noopener noreferrer"><FaFacebook /></a>
               <a href="#tw"><FaTwitter /></a>
               <a href="#ig"><FaInstagram /></a>
             </div>
