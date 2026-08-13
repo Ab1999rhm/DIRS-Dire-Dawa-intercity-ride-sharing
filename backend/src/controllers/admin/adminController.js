@@ -629,26 +629,6 @@ exports.generateReport = asyncHandler(async (req, res) => {
   res.json({ report: reportData, type, dateFrom, dateTo });
 });
 
-exports.getSOSAlerts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 20, status } = req.query;
-
-  const query = {};
-  if (status) query.status = status;
-
-  const alerts = await SOSAlert.find(query)
-    .populate('user', 'firstName lastName phoneNumber')
-    .populate('trip')
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(parseInt(limit));
-
-  const total = await SOSAlert.countDocuments(query);
-
-  const linkedAlerts = alerts.filter(a => a.user || a.userName);
-
-  res.json({ alerts: linkedAlerts, total, page: parseInt(page), pages: Math.ceil(total / limit) });
-});
-
 const convertToCSV = (data) => {
   if (!data || data.length === 0) return '';
   const headers = Object.keys(data[0]).join(',');

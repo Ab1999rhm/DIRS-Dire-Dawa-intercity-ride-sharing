@@ -38,8 +38,8 @@ const AdminSOS = () => {
       setLoading(true);
       const res = await adminAPI.sosAlerts();
       const d = res.data; const allAlerts = Array.isArray(d) ? d : (d?.data || d?.alerts || []);
-      setAlerts(allAlerts.filter(a => a.status !== 'resolved'));
-      setResolvedAlerts(allAlerts.filter(a => a.status === 'resolved'));
+      setAlerts(allAlerts.filter(a => a.status === 'active'));
+      setResolvedAlerts(allAlerts.filter(a => a.status === 'resolved' || a.status === 'false_alarm'));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load SOS alerts');
     } finally {
