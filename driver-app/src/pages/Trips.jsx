@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { driverAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { FaMapMarkerAlt, FaHome, FaListUl, FaWallet, FaUser } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import { FaMapMarkerAlt, FaHome, FaListUl, FaWallet, FaUser, FaComment } from 'react-icons/fa';
 import './Pages.css';
 
 const TripsPage = () => {
   const navigate = useNavigate();
+  const { chatUnread } = useAuth();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -116,6 +118,22 @@ const TripsPage = () => {
                     {trip.passenger?.firstName} {trip.passenger?.lastName}
                   </span>
                   <span className="trip-fare">{trip.fare?.totalFare || 0} ETB</span>
+                </div>
+                <div className="trip-item-actions">
+                  <button
+                    className="trip-chat-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sessionStorage.setItem('activeTripId', trip._id);
+                      sessionStorage.setItem('chatPassengerName', trip.passenger?.firstName || 'Passenger');
+                      navigate('/chat');
+                    }}
+                  >
+                    <FaComment /> Chat
+                    {chatUnread[trip._id] > 0 && (
+                      <span className="chat-unread-badge">{chatUnread[trip._id]}</span>
+                    )}
+                  </button>
                 </div>
                 <div className="trip-time">{formatTime(trip.createdAt)}</div>
               </div>

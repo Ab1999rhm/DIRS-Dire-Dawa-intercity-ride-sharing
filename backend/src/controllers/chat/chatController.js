@@ -65,8 +65,8 @@ exports.getUnread = asyncHandler(async (req, res) => {
     : null;
 
   const tripQuery = req.user.role === 'driver'
-    ? { driver: driver?._id, status: { $nin: ['completed', 'cancelled'] } }
-    : { passenger: req.user._id, status: { $nin: ['completed', 'cancelled'] } };
+    ? { driver: driver?._id }
+    : { passenger: req.user._id };
 
   const trips = await Trip.find(tripQuery).select('_id status').lean();
 
