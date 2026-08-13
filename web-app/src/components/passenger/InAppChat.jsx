@@ -36,12 +36,21 @@ const mergeMessages = (prev, incoming) => {
   return result;
 };
 
-const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passenger' }) => {
+const STATUS_LABELS = {
+  in_progress: 'Trip in progress',
+  driver_arriving: 'Driver arriving',
+  driver_arrived: 'Driver arrived',
+  completed: 'Trip completed',
+  cancelled: 'Trip cancelled'
+};
+
+const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passenger', tripStatus, route }) => {
   const { markTripRead } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const QUICK_CHIPS = role === 'driver' ? DRIVER_CHIPS : PASSENGER_CHIPS;
   const isLive = !!socket?.connected;
+  const statusLabel = tripStatus ? (STATUS_LABELS[tripStatus] || tripStatus) : '';
 
   // Load persisted chat history each time the modal opens for a trip
   useEffect(() => {
@@ -121,6 +130,10 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
             <FaUser className="user-icon" />
             <div>
               <strong>{driverName || 'Driver'}</strong>
+              <div className="chat-trip-line">
+                {statusLabel && <span className={`trip-status trip-status-${tripStatus}`}>{statusLabel}</span>}
+                {route && <span className="trip-route">{route}</span>}
+              </div>
               <span className="privacy-badge"><FaLock /> Phone Number Masked</span>
               <span className={`chat-conn ${isLive ? 'chat-conn-on' : 'chat-conn-off'}`}>
                 {isLive ? 'Live' : 'Reconnecting…'}

@@ -1877,6 +1877,8 @@ const PassengerHome = () => {
         tripId={activeRide?._id}
         driverName={foundDriverInfo?.name}
         socket={socket}
+        tripStatus={activeRide?.status}
+        route={activeRide?.pickup?.address && activeRide?.dropoff?.address ? `${activeRide.pickup.address} → ${activeRide.dropoff.address}` : ''}
       />
 
       <WalletTopupModal

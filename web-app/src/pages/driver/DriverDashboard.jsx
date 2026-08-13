@@ -638,6 +638,8 @@ const DriverDashboard = () => {
           driverName={`${activeTrip.passenger?.firstName || ''} ${activeTrip.passenger?.lastName || ''}`.trim() || 'Passenger'}
           socket={socket}
           role="driver"
+          tripStatus={activeTrip.status}
+          route={activeTrip.pickup?.address && activeTrip.dropoff?.address ? `${activeTrip.pickup.address} → ${activeTrip.dropoff.address}` : ''}
         />
       )}
 

@@ -95,6 +95,46 @@
   border: 1px solid #bbf7d0;
 }
 
+.chat-trip-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.trip-status {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.trip-status-in_progress,
+.trip-status-driver_arriving,
+.trip-status-driver_arrived {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+}
+
+.trip-status-completed {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+}
+
+.trip-status-cancelled {
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+}
+
+.trip-route {
+  font-size: 10px;
+  color: #64748b;
+}
+
 .close-btn {
   width: 34px;
   height: 34px;

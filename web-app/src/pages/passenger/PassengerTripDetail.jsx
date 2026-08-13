@@ -593,6 +593,8 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
         tripId={tripId}
         driverName={trip?.driver?.user?.firstName ? `${trip.driver.user.firstName} ${trip.driver.user.lastName || ''}` : 'Driver'}
         socket={socket}
+        tripStatus={trip?.status}
+        route={trip?.pickup?.address && trip?.dropoff?.address ? `${trip.pickup.address} → ${trip.dropoff.address}` : ''}
       />
 
       <DigitalTicketModal

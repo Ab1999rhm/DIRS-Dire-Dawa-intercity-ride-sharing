@@ -771,6 +771,11 @@
   color: #4338ca;
 }
 
+.driver-trip-meta .status-badge {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
 /* === Earnings Page === */
 .earnings-section {
   margin-bottom: 24px;

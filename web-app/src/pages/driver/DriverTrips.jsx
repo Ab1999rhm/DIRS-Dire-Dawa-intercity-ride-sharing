@@ -52,6 +52,13 @@ const DriverTrips = () => {
     });
   };
 
+  const ACTIVE_STATUSES = ['driver_arriving', 'driver_arrived', 'in_progress'];
+  const sortedTrips = [...trips].sort((a, b) => {
+    const aActive = ACTIVE_STATUSES.includes(a.status) ? 0 : 1;
+    const bActive = ACTIVE_STATUSES.includes(b.status) ? 0 : 1;
+    return aActive - bActive || new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   if (loading) {
     return (
       <div className="driver-page">
@@ -91,7 +98,7 @@ const DriverTrips = () => {
         />
       ) : (
         <div className="driver-trips-list">
-          {trips.map(trip => (
+          {sortedTrips.map(trip => (
             <Card key={trip._id} className="driver-trip-item" padding="md">
               <div className="driver-trip-route">
                 <div className="trip-point">
@@ -112,6 +119,9 @@ const DriverTrips = () => {
                   <span className="driver-trip-rating">
                     <FaStar /> {trip.rating.driver}
                   </span>
+                )}
+                {ACTIVE_STATUSES.includes(trip.status) && (
+                  <span className="status-badge ongoing-badge">ONGOING</span>
                 )}
                 <span className={`status-badge ${trip.status}`}>
                   {trip.status}
@@ -140,6 +150,8 @@ const DriverTrips = () => {
           driverName={`${chatTrip.passenger?.firstName || ''} ${chatTrip.passenger?.lastName || ''}`.trim() || 'Passenger'}
           socket={socket}
           role="driver"
+          tripStatus={chatTrip.status}
+          route={chatTrip.pickup?.address && chatTrip.dropoff?.address ? `${chatTrip.pickup.address} → ${chatTrip.dropoff.address}` : ''}
         />
       )}
     </div>
