@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaPaperPlane, FaLock, FaUser } from 'react-icons/fa';
+import { FaTimes, FaPaperPlane, FaLock, FaUser, FaEdit, FaTrashAlt, FaCheck, FaTimes as FaCancel } from 'react-icons/fa';
 import { chatAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import './InAppChat.css';
@@ -22,16 +22,23 @@ const toViewItem = (m) => ({
   id: m.id,
   sender: m.senderRole === 'driver' ? 'driver' : 'passenger',
   text: m.text,
+  edited: Boolean(m.edited),
+  deleted: Boolean(m.deleted),
   time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
 });
 
 const mergeMessages = (prev, incoming) => {
   const result = [...prev];
   for (const item of incoming) {
-    const duplicate = result.some(
-      (p) => p.id === item.id || (p.text === item.text && p.sender === item.sender)
-    );
-    if (!duplicate) result.push(item);
+    const idx = result.findIndex((p) => p.id === item.id);
+    if (idx >= 0) {
+      result[idx] = item;
+    } else {
+      const duplicate = result.some(
+        (p) => p.text === item.text && p.sender === item.sender
+      );
+      if (!duplicate) result.push(item);
+    }
   }
   return result;
 };
@@ -48,6 +55,8 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
   const { markTripRead } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
   const QUICK_CHIPS = role === 'driver' ? DRIVER_CHIPS : PASSENGER_CHIPS;
   const isLive = !!socket?.connected;
   const statusLabel = tripStatus ? (STATUS_LABELS[tripStatus] || tripStatus) : '';
@@ -56,6 +65,7 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
   useEffect(() => {
     if (isOpen && tripId) {
       setMessages([]);
+      setEditingId(null);
       chatAPI.getMessages(tripId, { limit: 200 })
         .then((res) => setMessages((res.data?.messages || []).map(toViewItem)))
         .catch(() => {});
@@ -86,8 +96,18 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
         if (msg.tripId && msg.tripId !== tripId) return;
         setMessages((prev) => mergeMessages(prev, [toViewItem(msg)]));
       };
+      const handleChatEdited = (msg) => {
+        if (msg.tripId && msg.tripId !== tripId) return;
+        setMessages((prev) => mergeMessages(prev, [toViewItem(msg)]));
+      };
       socket.on(eventName, handleChatMessage);
-      return () => socket.off(eventName, handleChatMessage);
+      socket.on('chat_edited', handleChatEdited);
+      socket.on('chat_deleted', handleChatEdited);
+      return () => {
+        socket.off(eventName, handleChatMessage);
+        socket.off('chat_edited', handleChatEdited);
+        socket.off('chat_deleted', handleChatEdited);
+      };
     }
   }, [socket, tripId, role]);
 
@@ -102,6 +122,8 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
         id: Date.now(),
         sender: role,
         text,
+        edited: false,
+        deleted: false,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
       socket.emit('send_chat', { tripId, message: text });
@@ -114,12 +136,43 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
           id: Date.now(),
           sender: role,
           text,
+          edited: false,
+          deleted: false,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }]));
       }
     }
 
     if (!textToSend) setInputText('');
+  };
+
+  const handleEdit = (m) => {
+    if (m.sender !== role || m.deleted) return;
+    setEditingId(m.id);
+    setEditText(m.text);
+  };
+
+  const saveEdit = async () => {
+    const text = editText.trim();
+    if (!text) return;
+    try {
+      const res = await chatAPI.editMessage(editingId, text);
+      if (res.data?.message) setMessages((prev) => mergeMessages(prev, [toViewItem(res.data.message)]));
+      setEditingId(null);
+    } catch (error) {
+      window.alert('Could not edit the message. Please try again.');
+    }
+  };
+
+  const handleDelete = async (m) => {
+    if (m.sender !== role || m.deleted) return;
+    if (!window.confirm('Delete this message?')) return;
+    try {
+      const res = await chatAPI.deleteMessage(m.id);
+      if (res.data?.message) setMessages((prev) => mergeMessages(prev, [toViewItem(res.data.message)]));
+    } catch (error) {
+      window.alert('Could not delete the message. Please try again.');
+    }
   };
 
   return (
@@ -145,9 +198,37 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
 
         <div className="chat-body">
           {messages.map((m) => (
-            <div key={m.id} className={`chat-bubble ${m.sender}`}>
-              <p>{m.text}</p>
-              <span className="chat-time">{m.time}</span>
+            <div key={m.id} className={`chat-bubble ${m.sender} ${m.deleted ? 'chat-deleted' : ''}`}>
+              {editingId === m.id ? (
+                <div className="chat-edit-row">
+                  <input
+                    autoFocus
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit();
+                      if (e.key === 'Escape') setEditingId(null);
+                    }}
+                  />
+                  <button className="chat-edit-save" onClick={saveEdit} title="Save"><FaCheck /></button>
+                  <button className="chat-edit-cancel" onClick={() => setEditingId(null)} title="Cancel"><FaCancel /></button>
+                </div>
+              ) : m.deleted ? (
+                <p className="chat-deleted-msg">This message was deleted</p>
+              ) : (
+                <>
+                  <p>{m.text}</p>
+                  <span className="chat-time">
+                    {m.time}{m.edited ? ' • edited' : ''}
+                  </span>
+                </>
+              )}
+              {!m.deleted && m.sender === role && editingId !== m.id && (
+                <div className="chat-msg-actions">
+                  <button onClick={() => handleEdit(m)} title="Edit"><FaEdit /></button>
+                  <button onClick={() => handleDelete(m)} title="Delete"><FaTrashAlt /></button>
+                </div>
+              )}
             </div>
           ))}
         </div>

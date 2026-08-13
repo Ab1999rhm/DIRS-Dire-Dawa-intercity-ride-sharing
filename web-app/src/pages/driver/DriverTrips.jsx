@@ -18,6 +18,8 @@ const DriverTrips = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [chatTrip, setChatTrip] = useState(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   const tabs = [
     { id: 'all', label: t('driver.all') },
@@ -26,6 +28,7 @@ const DriverTrips = () => {
   ];
 
   useEffect(() => {
+    setPage(1);
     fetchTrips();
   }, [activeTab]);
 
@@ -58,6 +61,8 @@ const DriverTrips = () => {
     const bActive = ACTIVE_STATUSES.includes(b.status) ? 0 : 1;
     return aActive - bActive || new Date(b.createdAt) - new Date(a.createdAt);
   });
+  const totalPages = Math.max(1, Math.ceil(sortedTrips.length / PAGE_SIZE));
+  const pagedTrips = sortedTrips.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (loading) {
     return (
@@ -98,7 +103,7 @@ const DriverTrips = () => {
         />
       ) : (
         <div className="driver-trips-list">
-          {sortedTrips.map(trip => (
+          {pagedTrips.map(trip => (
             <Card key={trip._id} className="driver-trip-item" padding="md">
               <div className="driver-trip-route">
                 <div className="trip-point">
@@ -139,6 +144,26 @@ const DriverTrips = () => {
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="driver-pagination" aria-label="Pagination">
+          <button
+            className="pagination-btn"
+            disabled={page <= 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            {t('common.previous') || 'Previous'}
+          </button>
+          <span className="pagination-info">{t('passenger.pageOf', { current: page, total: totalPages })}</span>
+          <button
+            className="pagination-btn"
+            disabled={page >= totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            {t('common.next') || 'Next'}
+          </button>
         </div>
       )}
 

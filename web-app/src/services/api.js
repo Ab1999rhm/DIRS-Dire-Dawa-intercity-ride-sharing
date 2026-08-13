@@ -161,6 +161,8 @@ export const ridesAPI = {
 export const chatAPI = {
   getMessages: (tripId, params) => api.get(`/chat/${tripId}/messages`, { params }),
   sendMessage: (tripId, text) => api.post(`/chat/${tripId}/messages`, { text }),
+  editMessage: (messageId, text) => api.put(`/chat/messages/${messageId}`, { text }),
+  deleteMessage: (messageId) => api.delete(`/chat/messages/${messageId}`),
   markRead: (tripId) => api.post(`/chat/${tripId}/read`),
   getUnread: (params) => api.get('/chat/unread', { params }),
 };

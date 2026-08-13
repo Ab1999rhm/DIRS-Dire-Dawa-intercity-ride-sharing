@@ -34,10 +34,107 @@ exports.getMessages = asyncHandler(async (req, res) => {
       tripId: m.trip,
       senderId: m.sender,
       senderRole: m.senderRole,
-      text: m.text,
+      text: m.deleted ? '' : m.text,
+      edited: Boolean(m.edited),
+      deleted: Boolean(m.deleted),
       timestamp: m.createdAt
     }))
   });
+});
+
+const emitChatUpdate = async (event, message) => {
+  try {
+    const trip = await Trip.findById(message.trip).populate('driver', 'user').lean();
+    if (!trip) return;
+    const { getIO } = require('../../sockets/socketManager');
+    const io = getIO();
+    const payload = {
+      id: message._id,
+      tripId: message.trip,
+      senderId: message.sender,
+      senderRole: message.senderRole,
+      text: message.deleted ? '' : message.text,
+      edited: Boolean(message.edited),
+      deleted: Boolean(message.deleted),
+      timestamp: message.createdAt
+    };
+    const driverUserId = trip.driver?.user?.toString();
+    const passengerUserId = trip.passenger?.toString();
+    if (driverUserId) io.to(`user_${driverUserId}`).emit(event, payload);
+    if (passengerUserId) io.to(`user_${passengerUserId}`).emit(event, payload);
+  } catch (socketError) {
+    // Socket layer is optional; polling will pick up the change.
+  }
+};
+
+exports.editMessage = asyncHandler(async (req, res) => {
+  const { messageId } = req.params;
+  const text = String(req.body?.text || '').trim();
+  if (!text) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  const message = await ChatMessage.findById(messageId);
+  if (!message) {
+    return res.status(404).json({ error: 'Message not found' });
+  }
+  if (message.sender.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ error: 'You can only edit your own messages' });
+  }
+  const trip = await findParticipantTrip(message.trip.toString(), req.user._id.toString());
+  if (!trip) {
+    return res.status(403).json({ error: 'Not authorized for this trip chat' });
+  }
+
+  message.text = text;
+  message.edited = true;
+  message.deleted = false;
+  await message.save();
+
+  await emitChatUpdate('chat_edited', message);
+  res.json({ message: {
+    id: message._id,
+    tripId: message.trip,
+    senderId: message.sender,
+    senderRole: message.senderRole,
+    text,
+    edited: true,
+    deleted: false,
+    timestamp: message.createdAt
+  } });
+});
+
+exports.deleteMessage = asyncHandler(async (req, res) => {
+  const { messageId } = req.params;
+
+  const message = await ChatMessage.findById(messageId);
+  if (!message) {
+    return res.status(404).json({ error: 'Message not found' });
+  }
+  if (message.sender.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ error: 'You can only delete your own messages' });
+  }
+  const trip = await findParticipantTrip(message.trip.toString(), req.user._id.toString());
+  if (!trip) {
+    return res.status(403).json({ error: 'Not authorized for this trip chat' });
+  }
+
+  message.deleted = true;
+  message.text = '';
+  message.edited = false;
+  await message.save();
+
+  await emitChatUpdate('chat_deleted', message);
+  res.json({ message: {
+    id: message._id,
+    tripId: message.trip,
+    senderId: message.sender,
+    senderRole: message.senderRole,
+    text: '',
+    edited: false,
+    deleted: true,
+    timestamp: message.createdAt
+  } });
 });
 
 exports.sendMessage = asyncHandler(async (req, res) => {

@@ -18,8 +18,11 @@ const PassengerTrips = () => {
   const [activeTab, setActiveTab] = useState('active');
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   useEffect(() => {
+    setPage(1);
     fetchTrips();
   }, [activeTab]);
 
@@ -81,6 +84,9 @@ const PassengerTrips = () => {
     { id: 'completed', label: t('passenger.completed') || 'Completed' },
   ];
 
+  const totalPages = Math.max(1, Math.ceil(trips.length / PAGE_SIZE));
+  const pagedTrips = trips.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="passenger-page">
       <div className="page-header">
@@ -116,7 +122,7 @@ const PassengerTrips = () => {
         </Card>
       ) : (
         <div className="trips-list">
-          {trips.map(trip => (
+          {pagedTrips.map(trip => (
             <Card key={trip._id} className="trip-list-item" hover>
               <div className="trip-item-header">
                 <div className="trip-item-date">
@@ -166,6 +172,26 @@ const PassengerTrips = () => {
               )}
             </Card>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="history-pagination" aria-label="Pagination">
+          <button
+            className="pagination-btn"
+            disabled={page <= 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            {t('common.previous')}
+          </button>
+          <span className="pagination-info">{t('passenger.pageOf', { current: page, total: totalPages })}</span>
+          <button
+            className="pagination-btn"
+            disabled={page >= totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            {t('common.next')}
+          </button>
         </div>
       )}
     </div>

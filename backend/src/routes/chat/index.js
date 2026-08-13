@@ -7,5 +7,7 @@ router.get('/unread', protect, chatController.getUnread);
 router.get('/:tripId/messages', protect, chatController.getMessages);
 router.post('/:tripId/messages', protect, chatController.sendMessage);
 router.post('/:tripId/read', protect, chatController.markRead);
+router.put('/messages/:messageId', protect, chatController.editMessage);
+router.delete('/messages/:messageId', protect, chatController.deleteMessage);
 
 module.exports = router;

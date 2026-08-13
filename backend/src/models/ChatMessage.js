@@ -20,6 +20,14 @@ const chatMessageSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  edited: {
+    type: Boolean,
+    default: false
+  },
+  deleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: { createdAt: 'createdAt', updatedAt: false }

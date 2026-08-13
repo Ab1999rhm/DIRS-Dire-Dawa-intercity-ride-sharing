@@ -228,6 +228,129 @@
   color: #94a3b8;
 }
 
+.chat-msg-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.chat-bubble:hover .chat-msg-actions {
+  opacity: 1;
+}
+
+.chat-msg-actions button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.chat-msg-actions button:hover {
+  color: #2563eb;
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.chat-msg-actions button:last-child:hover {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.chat-deleted-msg {
+  font-style: italic;
+  color: #94a3b8;
+}
+
+.chat-deleted {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.chat-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-edit-row input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 13px;
+  outline: none;
+  min-width: 0;
+}
+
+.chat-edit-row input:focus {
+  border-color: #2563eb;
+}
+
+.chat-edit-save,
+.chat-edit-cancel {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-edit-save {
+  color: #15803d;
+}
+
+.chat-edit-save:hover {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+}
+
+.chat-edit-cancel {
+  color: #dc2626;
+}
+
+.chat-edit-cancel:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.chat-bubble.passenger .chat-msg-actions button {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.chat-bubble.passenger .chat-msg-actions button:hover {
+  background: #fff;
+  color: #2563eb;
+}
+
+.chat-bubble.passenger .chat-edit-row input {
+  background: #fff;
+  color: #0f172a;
+}
+
+.chat-bubble.passenger .chat-deleted-msg {
+  color: #dbeafe;
+}
+
 .quick-chips {
   padding: 10px 12px;
   display: flex;
