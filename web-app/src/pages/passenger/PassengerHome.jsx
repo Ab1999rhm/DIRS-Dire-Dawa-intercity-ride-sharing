@@ -1027,6 +1027,9 @@ const PassengerHome = () => {
                 <FaPhone /> {t('passenger.callDriver') || 'Call'}
               </button>
             )}
+            <button className="passenger-action-btn" onClick={() => setShowChat(true)}>
+              <FaComments /> {t('passenger.chatDriver') || 'Chat'}
+            </button>
             <button className="passenger-action-btn" onClick={handleShareTrip}>
               <FaShareAlt /> Share Trip
             </button>
@@ -1048,6 +1051,16 @@ const PassengerHome = () => {
           message="Are you sure you want to cancel this ride? A cancellation fee may apply."
           confirmText="Cancel Ride"
           danger
+        />
+
+        <InAppChat
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
+          tripId={activeRide?._id}
+          driverName={foundDriverInfo?.name}
+          socket={socket}
+          tripStatus={activeRide?.status}
+          route={activeRide?.pickupLocation?.address && activeRide?.dropoffLocation?.address ? `${activeRide.pickupLocation.address} → ${activeRide.dropoffLocation.address}` : ''}
         />
       </div>
     );
@@ -1139,6 +1152,9 @@ const PassengerHome = () => {
                 <FaPhone /> {t('passenger.callDriver') || 'Call'}
               </button>
             )}
+            <button className="passenger-action-btn" onClick={() => setShowChat(true)}>
+              <FaComments /> {t('passenger.chatDriver') || 'Chat'}
+            </button>
             <button className="passenger-action-btn" onClick={handleShareTrip}>
               <FaShareAlt /> Share Trip
             </button>
@@ -1147,6 +1163,16 @@ const PassengerHome = () => {
             </button>
           </div>
         </div>
+
+        <InAppChat
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
+          tripId={activeRide?._id}
+          driverName={foundDriverInfo?.name}
+          socket={socket}
+          tripStatus={activeRide?.status}
+          route={activeRide?.pickupLocation?.address && activeRide?.dropoffLocation?.address ? `${activeRide.pickupLocation.address} → ${activeRide.dropoffLocation.address}` : ''}
+        />
       </div>
     );
   }
@@ -1878,7 +1904,7 @@ const PassengerHome = () => {
         driverName={foundDriverInfo?.name}
         socket={socket}
         tripStatus={activeRide?.status}
-        route={activeRide?.pickup?.address && activeRide?.dropoff?.address ? `${activeRide.pickup.address} → ${activeRide.dropoff.address}` : ''}
+        route={activeRide?.pickupLocation?.address && activeRide?.dropoffLocation?.address ? `${activeRide.pickupLocation.address} → ${activeRide.dropoffLocation.address}` : ''}
       />
 
       <WalletTopupModal
