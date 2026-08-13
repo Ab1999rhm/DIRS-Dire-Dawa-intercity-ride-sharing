@@ -73,6 +73,28 @@
   margin-top: 3px;
 }
 
+.chat-conn {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-conn-off {
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+}
+
+.chat-conn-on {
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+}
+
 .close-btn {
   width: 34px;
   height: 34px;

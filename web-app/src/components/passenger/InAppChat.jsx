@@ -18,45 +18,64 @@ const DRIVER_CHIPS = [
   "On my way now"
 ];
 
+const toViewItem = (m) => ({
+  id: m.id,
+  sender: m.senderRole === 'driver' ? 'driver' : 'passenger',
+  text: m.text,
+  time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
+});
+
+const mergeMessages = (prev, incoming) => {
+  const result = [...prev];
+  for (const item of incoming) {
+    const duplicate = result.some(
+      (p) => p.id === item.id || (p.text === item.text && p.sender === item.sender)
+    );
+    if (!duplicate) result.push(item);
+  }
+  return result;
+};
+
 const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passenger' }) => {
   const { markTripRead } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const QUICK_CHIPS = role === 'driver' ? DRIVER_CHIPS : PASSENGER_CHIPS;
+  const isLive = !!socket?.connected;
 
   // Load persisted chat history each time the modal opens for a trip
   useEffect(() => {
     if (isOpen && tripId) {
       setMessages([]);
       chatAPI.getMessages(tripId, { limit: 200 })
-        .then((res) => {
-          const history = (res.data?.messages || []).map((m) => ({
-            id: m.id,
-            sender: m.senderRole === 'driver' ? 'driver' : 'passenger',
-            text: m.text,
-            time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
-          }));
-          setMessages(history);
-        })
+        .then((res) => setMessages((res.data?.messages || []).map(toViewItem)))
         .catch(() => {});
       markTripRead(tripId);
     }
   }, [isOpen, tripId, markTripRead]);
+
+  // Fallback polling so messages still appear when the WebSocket is unavailable
+  useEffect(() => {
+    if (!isOpen || !tripId) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await chatAPI.getMessages(tripId, { limit: 200 });
+        if (!cancelled) {
+          setMessages((prev) => mergeMessages(prev, (res.data?.messages || []).map(toViewItem)));
+        }
+      } catch (error) { /* ignore */ }
+    };
+    const timer = setInterval(poll, 4000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [isOpen, tripId]);
 
   useEffect(() => {
     if (socket && tripId) {
       const eventName = role === 'driver' ? 'trip_message' : 'chat_message';
       const handleChatMessage = (msg) => {
         if (msg.tripId && msg.tripId !== tripId) return;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: msg.id || Date.now() + Math.random(),
-            sender: msg.senderRole === 'driver' ? 'driver' : 'passenger',
-            text: msg.text,
-            time: msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
-          }
-        ]);
+        setMessages((prev) => mergeMessages(prev, [toViewItem(msg)]));
       };
       socket.on(eventName, handleChatMessage);
       return () => socket.off(eventName, handleChatMessage);
@@ -65,21 +84,32 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
 
   if (!isOpen) return null;
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const text = textToSend || inputText;
     if (!text.trim()) return;
 
-    const newMsg = {
-      id: Date.now(),
-      sender: role,
-      text: text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages((prev) => [...prev, newMsg]);
-    if (socket && tripId) {
+    if (socket?.connected && tripId) {
+      setMessages((prev) => [...prev, {
+        id: Date.now(),
+        sender: role,
+        text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
       socket.emit('send_chat', { tripId, message: text });
+    } else if (tripId) {
+      try {
+        const res = await chatAPI.sendMessage(tripId, text);
+        if (res.data?.message) setMessages((prev) => mergeMessages(prev, [toViewItem(res.data.message)]));
+      } catch (error) {
+        setMessages((prev) => mergeMessages(prev, [{
+          id: Date.now(),
+          sender: role,
+          text,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }]));
+      }
     }
+
     if (!textToSend) setInputText('');
   };
 
@@ -92,6 +122,9 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passen
             <div>
               <strong>{driverName || 'Driver'}</strong>
               <span className="privacy-badge"><FaLock /> Phone Number Masked</span>
+              <span className={`chat-conn ${isLive ? 'chat-conn-on' : 'chat-conn-off'}`}>
+                {isLive ? 'Live' : 'Reconnecting…'}
+              </span>
             </div>
           </div>
           <button className="close-btn" onClick={onClose}><FaTimes /></button>

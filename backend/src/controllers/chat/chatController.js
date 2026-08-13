@@ -40,6 +40,52 @@ exports.getMessages = asyncHandler(async (req, res) => {
   });
 });
 
+exports.sendMessage = asyncHandler(async (req, res) => {
+  const { tripId } = req.params;
+  const text = String(req.body?.text || '').trim();
+  if (!text) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  const trip = await findParticipantTrip(tripId, req.user._id.toString());
+  if (!trip || !trip._id) {
+    return res.status(403).json({ error: 'Not authorized for this trip chat' });
+  }
+
+  const message = await ChatMessage.create({
+    trip: trip._id,
+    sender: req.user._id,
+    senderRole: req.user.role,
+    text
+  });
+
+  const payload = {
+    id: message._id,
+    tripId,
+    senderId: req.user._id.toString(),
+    senderRole: req.user.role,
+    text,
+    timestamp: message.createdAt ? new Date(message.createdAt).toISOString() : new Date().toISOString()
+  };
+
+  const driverUserId = trip.driver?.user?.toString();
+  const passengerUserId = trip.passenger?.toString();
+  const fromId = req.user._id.toString();
+  const toDriver = driverUserId && driverUserId !== fromId;
+  const toPassenger = passengerUserId && passengerUserId !== fromId;
+
+  try {
+    const { getIO } = require('../../sockets/socketManager');
+    const io = getIO();
+    if (toDriver) io.to(`user_${driverUserId}`).emit('trip_message', payload);
+    if (toPassenger) io.to(`user_${passengerUserId}`).emit('chat_message', payload);
+  } catch (socketError) {
+    // Socket layer is optional; the message is already persisted for REST polling.
+  }
+
+  res.status(201).json({ message: payload });
+});
+
 exports.markRead = asyncHandler(async (req, res) => {
   const { tripId } = req.params;
 
