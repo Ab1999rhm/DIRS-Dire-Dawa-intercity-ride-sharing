@@ -310,6 +310,51 @@ const PassengerHome = () => {
     }
   }, [rideAccepted, activeRide, rideState, socket]);
 
+  // Restore an existing active trip on mount so the passenger always sees
+  // the live ride card (with Call / Chat / Share / SOS) after a reload.
+  useEffect(() => {
+    let cancelled = false;
+    const restoreActiveRide = async () => {
+      try {
+        const res = await ridesAPI.passengerTrips({ limit: 100 });
+        if (cancelled) return;
+        const trips = res.data?.trips || [];
+        const active = trips.find((t) => ['driver_arriving', 'driver_arrived', 'in_progress'].includes(t.status));
+        if (!active) return;
+
+        const rawDriver = active.driver || {};
+        const du = rawDriver.user || {};
+        setActiveRide(active);
+        setFoundDriverInfo({
+          id: rawDriver._id,
+          name: (du.firstName ? `${du.firstName} ${du.lastName || ''}`.trim() : 'Driver'),
+          phone: rawDriver.phoneNumber || du.phoneNumber || '',
+          rating: rawDriver.rating?.average ?? rawDriver.rating ?? '4.5',
+          profilePhoto: du.profilePhoto || '',
+          vehicle: {
+            make: rawDriver.vehicle?.make || 'Car',
+            model: rawDriver.vehicle?.model || '',
+            color: rawDriver.vehicle?.color || 'White',
+            plateNumber: rawDriver.vehicle?.plateNumber || '--'
+          }
+        });
+
+        if (active.status === 'driver_arriving') {
+          setRideState('driver_arriving');
+        } else {
+          if (active.status === 'driver_arrived') setDriverArrived(true);
+          setRideState('in_trip');
+        }
+        const fareVal = Number(active.fare?.totalFare) || Number(active.fare?.total) || Number(active.estimatedFare) || 0;
+        if (fareVal) setLiveFare(fareVal);
+      } catch (err) {
+        console.error('Failed to restore active ride:', err);
+      }
+    };
+    restoreActiveRide();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     if (driverLocation && rideState === 'driver_found') {
       setDriverLocationState(driverLocation);
