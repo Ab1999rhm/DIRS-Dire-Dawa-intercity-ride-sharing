@@ -161,6 +161,7 @@ export const ridesAPI = {
 export const chatAPI = {
   getMessages: (tripId, params) => api.get(`/chat/${tripId}/messages`, { params }),
   markRead: (tripId) => api.post(`/chat/${tripId}/read`),
+  getUnread: (params) => api.get('/chat/unread', { params }),
 };
 
 export const paymentsAPI = {

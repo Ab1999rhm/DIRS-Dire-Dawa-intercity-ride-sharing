@@ -1,26 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes, FaPaperPlane, FaLock, FaUser } from 'react-icons/fa';
 import { chatAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import './InAppChat.css';
 
-const QUICK_CHIPS = [
+const PASSENGER_CHIPS = [
   "I'm at the entrance",
   "Wearing a blue jacket",
   "Where are you?",
   "Wait 2 minutes please"
 ];
 
-const InAppChat = ({ isOpen, onClose, tripId, driverName, socket }) => {
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'driver', text: `Hello! I'm on my way to pick you up.`, time: 'Just now' }
-  ]);
-  const [inputText, setInputText] = useState('');
-  const historyLoadedRef = useRef(false);
+const DRIVER_CHIPS = [
+  "I'm at the pickup location",
+  "How will I recognize you?",
+  "I've arrived",
+  "On my way now"
+];
 
-  // Load persisted chat history once when the modal opens
+const InAppChat = ({ isOpen, onClose, tripId, driverName, socket, role = 'passenger' }) => {
+  const { markTripRead } = useAuth();
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const QUICK_CHIPS = role === 'driver' ? DRIVER_CHIPS : PASSENGER_CHIPS;
+
+  // Load persisted chat history each time the modal opens for a trip
   useEffect(() => {
-    if (isOpen && tripId && !historyLoadedRef.current) {
-      historyLoadedRef.current = true;
+    if (isOpen && tripId) {
+      setMessages([]);
       chatAPI.getMessages(tripId, { limit: 200 })
         .then((res) => {
           const history = (res.data?.messages || []).map((m) => ({
@@ -29,17 +36,16 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket }) => {
             text: m.text,
             time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
           }));
-          if (history.length) {
-            setMessages(history);
-          }
+          setMessages(history);
         })
         .catch(() => {});
-      chatAPI.markRead(tripId).catch(() => {});
+      markTripRead(tripId);
     }
-  }, [isOpen, tripId]);
+  }, [isOpen, tripId, markTripRead]);
 
   useEffect(() => {
     if (socket && tripId) {
+      const eventName = role === 'driver' ? 'trip_message' : 'chat_message';
       const handleChatMessage = (msg) => {
         if (msg.tripId && msg.tripId !== tripId) return;
         setMessages((prev) => [
@@ -52,10 +58,10 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket }) => {
           }
         ]);
       };
-      socket.on('chat_message', handleChatMessage);
-      return () => socket.off('chat_message', handleChatMessage);
+      socket.on(eventName, handleChatMessage);
+      return () => socket.off(eventName, handleChatMessage);
     }
-  }, [socket, tripId]);
+  }, [socket, tripId, role]);
 
   if (!isOpen) return null;
 
@@ -65,7 +71,7 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket }) => {
 
     const newMsg = {
       id: Date.now(),
-      sender: 'passenger',
+      sender: role,
       text: text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };

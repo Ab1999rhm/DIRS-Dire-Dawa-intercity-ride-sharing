@@ -11,9 +11,11 @@ import {
   FaStar, FaMoneyBillWave, FaClock, FaRoad, FaBell,
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
   FaHome, FaListUl, FaWallet, FaCog, FaChevronRight,
-  FaExclamationTriangle, FaFlag, FaShieldAlt, FaUserSlash, FaEllipsisH
+  FaExclamationTriangle, FaFlag, FaShieldAlt, FaUserSlash, FaEllipsisH,
+  FaComment
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
+import InAppChat from '../../components/passenger/InAppChat';
 import './Driver.css';
 
 const INTERCITY_DESTINATIONS = [
@@ -64,13 +66,13 @@ const getGreeting = () => {
 
 const DriverDashboard = () => {
   const { t } = useLanguage();
-  const { user, setUser, emitLocationUpdate, newRideRequest, clearNewRideRequest, rideAccepted, clearRideAccepted, tripStatusUpdate } = useAuth();
+  const { user, setUser, emitLocationUpdate, newRideRequest, clearNewRideRequest, rideAccepted, clearRideAccepted, tripStatusUpdate, socket, chatUnread } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [isOnline, setIsOnline] = useState(user?.isOnline || false);
-  const [rideRequests, setRideRequests] = useState([]);
   const [activeTrip, setActiveTrip] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
   const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0 });
   const [stats, setStats] = useState({ totalTrips: 0, rating: 0, todayEarnings: 0 });
   const [loading, setLoading] = useState(true);
@@ -460,7 +462,20 @@ const DriverDashboard = () => {
                 <h4>{activeTrip.passenger?.firstName} {activeTrip.passenger?.lastName}</h4>
                 <div className="passenger-rating"><FaStar /> {activeTrip.passenger?.rating?.average?.toFixed(1) || 'N/A'}</div>
               </div>
-              <a href={`tel:${activeTrip.passenger?.phoneNumber}`} className="call-btn"><FaPhone /></a>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  className="call-btn"
+                  style={{ position: 'relative' }}
+                  onClick={() => setChatOpen(true)}
+                  title="Chat with passenger"
+                >
+                  <FaComment />
+                  {chatUnread[activeTrip._id] > 0 && (
+                    <span className="chat-unread-badge" style={{ position: 'absolute', top: -6, right: -6 }}>{chatUnread[activeTrip._id]}</span>
+                  )}
+                </button>
+                <a href={`tel:${activeTrip.passenger?.phoneNumber}`} className="call-btn"><FaPhone /></a>
+              </div>
             </div>
             <div className="trip-route-display">
               <div className="route-point"><div className="route-dot pickup" /><span>{activeTrip.pickup?.address || 'Pickup'}</span></div>
@@ -613,6 +628,17 @@ const DriverDashboard = () => {
           </div>
         </div>
       </div>
+
+      {activeTrip && (
+        <InAppChat
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          tripId={activeTrip._id}
+          driverName={`${activeTrip.passenger?.firstName || ''} ${activeTrip.passenger?.lastName || ''}`.trim() || 'Passenger'}
+          socket={socket}
+          role="driver"
+        />
+      )}
 
     </div>
   );

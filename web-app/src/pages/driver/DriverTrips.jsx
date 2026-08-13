@@ -5,17 +5,19 @@ import { ridesAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import EmptyState from '../../components/common/EmptyState';
-import { FaCar, FaStar, FaMapMarkerAlt, FaCalendar, FaFilter } from 'react-icons/fa';
+import InAppChat from '../../components/passenger/InAppChat';
+import { FaCar, FaStar, FaMapMarkerAlt, FaCalendar, FaFilter, FaComment } from 'react-icons/fa';
 import './Driver.css';
 
 const DriverTrips = () => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, socket, chatUnread } = useAuth();
 
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [chatTrip, setChatTrip] = useState(null);
 
   const tabs = [
     { id: 'all', label: t('driver.all') },
@@ -114,10 +116,31 @@ const DriverTrips = () => {
                 <span className={`status-badge ${trip.status}`}>
                   {trip.status}
                 </span>
+                <button
+                  className="driver-chat-btn"
+                  onClick={() => setChatTrip(trip)}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  <FaComment /> Chat
+                  {chatUnread[trip._id] > 0 && (
+                    <span className="chat-unread-badge" style={{ position: 'absolute', top: -6, right: -6 }}>{chatUnread[trip._id]}</span>
+                  )}
+                </button>
               </div>
             </Card>
           ))}
         </div>
+      )}
+
+      {chatTrip && (
+        <InAppChat
+          isOpen={!!chatTrip}
+          onClose={() => setChatTrip(null)}
+          tripId={chatTrip._id}
+          driverName={`${chatTrip.passenger?.firstName || ''} ${chatTrip.passenger?.lastName || ''}`.trim() || 'Passenger'}
+          socket={socket}
+          role="driver"
+        />
       )}
     </div>
   );

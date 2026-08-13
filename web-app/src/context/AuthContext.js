@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef, useMemo } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, chatAPI } from '../services/api';
 import { io } from 'socket.io-client';
 
 const AuthContext = createContext(null);
@@ -17,8 +17,19 @@ export const AuthProvider = ({ children }) => {
   const [driverLocation, setDriverLocation] = useState(null);
   const [tripStatusUpdate, setTripStatusUpdate] = useState(null);
   const [sosAlert, setSosAlert] = useState(null);
+  const [chatUnread, setChatUnread] = useState({});
 
   const socketRef = useRef(null);
+
+  const loadChatUnread = useCallback(() => {
+    if (!localStorage.getItem('accessToken')) return;
+    chatAPI.getUnread().then((res) => {
+      const trips = res.data?.trips || [];
+      const map = {};
+      trips.forEach(t => { if (t.unread > 0) map[t.tripId] = t.unread; });
+      setChatUnread(map);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const api = authAPI;
@@ -107,10 +118,21 @@ export const AuthProvider = ({ children }) => {
       setSosAlert(data);
     });
 
+    const handleIncomingMessage = (msg) => {
+      if (!msg?.tripId) return;
+      setChatUnread(prev => ({ ...prev, [msg.tripId]: (prev[msg.tripId] || 0) + 1 }));
+      window.dispatchEvent(new CustomEvent('app-toast', {
+        detail: { message: `New message from ${msg.senderRole === 'driver' ? 'your driver' : 'your passenger'}`, type: 'info' }
+      }));
+    };
+    newSocket.on('chat_message', handleIncomingMessage);
+    newSocket.on('trip_message', handleIncomingMessage);
+
     socketRef.current = newSocket;
     setSocket(newSocket);
+    loadChatUnread();
     return newSocket;
-  }, [user]);
+  }, [user, loadChatUnread]);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -192,6 +214,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const markTripRead = (tripId) => {
+    if (!tripId) return;
+    setChatUnread(prev => {
+      const next = { ...prev };
+      delete next[tripId];
+      return next;
+    });
+    chatAPI.markRead(tripId).catch(() => {});
+  };
+
   const contextValue = useMemo(() => ({
     user, driverProfile, loading, serverWaking, socket,
     login, register, completeRegistration, logout, setUser, setDriverProfile,
@@ -201,11 +233,13 @@ export const AuthProvider = ({ children }) => {
     driverLocation, tripStatusUpdate,
     sosAlert, clearSosAlert,
     emitLocationUpdate,
+    chatUnread, markTripRead,
   }), [
     user, driverProfile, loading, serverWaking, socket,
     notifications, unreadCount,
     newRideRequest, rideAccepted,
     driverLocation, tripStatusUpdate, sosAlert,
+    chatUnread,
   ]);
 
   return (
