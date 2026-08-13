@@ -165,11 +165,22 @@ exports.login = asyncHandler(async (req, res) => {
 
   logger.info('User logged in', { userId: user._id, role: user.role });
 
+  let driverProfile = null;
+  let vehicle = null;
+  if (user.role === 'driver') {
+    driverProfile = await Driver.findOne({ user: user._id });
+    if (driverProfile) {
+      vehicle = await Vehicle.findOne({ driver: driverProfile._id });
+    }
+  }
+
   res.json({
     message: 'Login successful',
     user,
     accessToken,
-    refreshToken
+    refreshToken,
+    driverProfile,
+    vehicle
   });
 });
 
