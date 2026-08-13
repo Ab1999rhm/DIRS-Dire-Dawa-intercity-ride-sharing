@@ -109,7 +109,7 @@ exports.register = asyncHandler(async (req, res) => {
     message: 'Registration successful',
     accessToken,
     refreshToken,
-    user: { _id: user._id, email: user.email, role: user.role },
+    user,
     driverProfile
   });
 });
@@ -332,41 +332,52 @@ exports.verifyEmailOTP = asyncHandler(async (req, res) => {
 });
 
 exports.forgotPassword = asyncHandler(async (req, res) => {
-  const { phoneNumber } = req.body;
+  const { email } = req.body;
 
-  const user = await User.findOne({ phoneNumber });
+  const user = await User.findOne({ email });
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
 
   const otp = generateOTP();
-  otpStore.set(`reset_${phoneNumber}`, {
+  otpStore.set(`reset_${email}`, {
     otp,
     userId: user._id,
     expiresAt: Date.now() + 5 * 60 * 1000,
     [OTP_ATTEMPTS_KEY]: 0
   });
 
-  await sendOTPSms(phoneNumber, otp);
+  const result = await sendEmailOTP(email, otp);
+
+  if (!result.success) {
+    otpStore.delete(`reset_${email}`);
+    return res.status(500).json({ error: 'Failed to send OTP email', reason: result.error || 'Unknown error' });
+  }
+
+  const response = { message: 'Password reset OTP sent' };
+  if (process.env.NODE_ENV !== 'production' && result.otpCode) {
+    response.otpCode = result.otpCode;
+  }
+
   logger.info('Password reset OTP sent', { userId: user._id });
-  res.json({ message: 'Password reset OTP sent' });
+  res.json(response);
 });
 
 exports.resetPassword = asyncHandler(async (req, res) => {
-  const { phoneNumber, otp, newPassword } = req.body;
+  const { email, otp, newPassword } = req.body;
 
-  const storedData = otpStore.get(`reset_${phoneNumber}`);
+  const storedData = otpStore.get(`reset_${email}`);
   if (!storedData) {
     return res.status(400).json({ error: 'Reset OTP not found' });
   }
 
   if (storedData.expiresAt < Date.now()) {
-    otpStore.delete(`reset_${phoneNumber}`);
+    otpStore.delete(`reset_${email}`);
     return res.status(400).json({ error: 'OTP expired' });
   }
 
   if (storedData.otp !== otp) {
-    incrementOTPAttempts(`reset_${phoneNumber}`);
+    incrementOTPAttempts(`reset_${email}`);
     return res.status(400).json({ error: 'Invalid OTP' });
   }
 
@@ -374,7 +385,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   user.password = newPassword;
   await user.save();
 
-  otpStore.delete(`reset_${phoneNumber}`);
+  otpStore.delete(`reset_${email}`);
   logger.info('Password reset completed', { userId: user._id });
   res.json({ message: 'Password reset successful' });
 });

@@ -92,12 +92,12 @@ const validateUpdateLocation = [
 ];
 
 const validateForgotPassword = [
-  body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid phone number required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   handleValidation
 ];
 
 const validateResetPassword = [
-  body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid phone number required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   body('otp').isLength({ min: 4, max: 6 }).withMessage('OTP must be 4-6 digits'),
   body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   handleValidation

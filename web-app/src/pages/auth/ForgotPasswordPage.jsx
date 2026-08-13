@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPhone, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { authAPI } from '../../services/api';
 import safeErrorMessage from '../../utils/safeErrorMessage';
@@ -14,7 +14,7 @@ const ForgotPasswordPage = () => {
   const toast = useToast();
 
   const [step, setStep] = useState(1);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,13 +27,17 @@ const ForgotPasswordPage = () => {
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError('');
-    if (!phoneNumber.trim()) {
-      setError(t('auth.phoneRequired') || 'Phone number is required');
+    if (!email.trim()) {
+      setError(t('auth.emailRequired') || 'Email is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(t('auth.validEmailRequired') || 'Enter a valid email address');
       return;
     }
     setLoading(true);
     try {
-      await authAPI.forgotPassword(phoneNumber);
+      await authAPI.forgotPassword(email);
       toast.success(t('auth.otpSent'));
       setStep(2);
       setResendTimer(60);
@@ -52,7 +56,7 @@ const ForgotPasswordPage = () => {
 
   const handleResendOTP = async () => {
     try {
-      await authAPI.forgotPassword(phoneNumber);
+      await authAPI.forgotPassword(email);
       toast.success(t('auth.otpResent'));
       setResendTimer(60);
       const interval = setInterval(() => {
@@ -83,28 +87,14 @@ const ForgotPasswordPage = () => {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
     const code = otpDigits.join('');
     if (code.length !== 6) {
       setError('Please enter the 6-digit code');
       return;
     }
-    setLoading(true);
-    setError('');
-    try {
-      await authAPI.verifyOTP(phoneNumber, code);
-      toast.success('OTP verified!');
-      setStep(3);
-    } catch (err) {
-      setError(safeErrorMessage(err, 'Invalid OTP'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    setError('');
     if (!password) {
       setError('Password is required');
       return;
@@ -119,9 +109,9 @@ const ForgotPasswordPage = () => {
     }
     setLoading(true);
     try {
-      await authAPI.resetPassword({ phoneNumber, password });
+      await authAPI.resetPassword({ email, otp: code, newPassword: password });
       toast.success(t('auth.passwordReset') || 'Password reset successfully!');
-      setStep(4);
+      setStep(3);
     } catch (err) {
       setError(safeErrorMessage(err, 'Failed to reset password'));
     } finally {
@@ -130,10 +120,9 @@ const ForgotPasswordPage = () => {
   };
 
   const stepLabels = [
-    { num: 1, labelKey: 'auth.phoneNumber' },
+    { num: 1, labelKey: 'auth.emailAddress' },
     { num: 2, labelKey: 'auth.stepOtp' },
-    { num: 3, labelKey: 'auth.resetPassword' },
-    { num: 4, labelKey: 'common.confirm' },
+    { num: 3, labelKey: 'common.confirm' },
   ];
 
   return (
@@ -146,22 +135,21 @@ const ForgotPasswordPage = () => {
               <DireDawaLogo />
             </div>
             <h2>
-              {step === 4
+              {step === 3
                 ? (t('auth.passwordResetDone'))
                 : (t('auth.forgotPasswordTitle'))
               }
             </h2>
             <p>
               {step === 1 && (t('auth.forgotPasswordSubtitle'))}
-              {step === 2 && (t('auth.enterOtp'))}
-              {step === 3 && (t('auth.createNewPassword'))}
-              {step === 4 && (t('auth.loginAgain'))}
+              {step === 2 && (`Enter the code sent to ${email} and create a new password`)}
+              {step === 3 && (t('auth.loginAgain'))}
             </p>
           </div>
 
           {/* Step Indicator */}
           <div className="step-indicator">
-            {stepLabels.slice(0, 3).map((s) => (
+            {stepLabels.slice(0, 2).map((s) => (
               <div key={s.num} className={`step ${step === s.num ? 'active' : step > s.num ? 'completed' : ''}`}>
                 <div className="step-number">{step > s.num ? <FaCheckCircle /> : s.num}</div>
                 <span>{t(s.labelKey)}</span>
@@ -171,18 +159,18 @@ const ForgotPasswordPage = () => {
 
           {error && <div className="error-message">{error}</div>}
 
-          {/* Step 1: Phone Number */}
+          {/* Step 1: Email */}
           {step === 1 && (
             <form className="auth-form" onSubmit={handleSendOTP}>
               <div className="input-group">
-                <label>{t('auth.phoneNumber')}</label>
+                <label>{t('auth.emailAddress')}</label>
                 <div className="input-wrapper">
-                  <FaPhone className="input-icon" />
+                  <FaEnvelope className="input-icon" />
                   <input
-                    type="tel"
-                    placeholder="+251 9XX XXX XXX"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -196,9 +184,9 @@ const ForgotPasswordPage = () => {
             </form>
           )}
 
-          {/* Step 2: OTP Verification */}
+          {/* Step 2: OTP + New Password */}
           {step === 2 && (
-            <div className="auth-form">
+            <form className="auth-form" onSubmit={handleResetPassword}>
               <div className="otp-inputs" style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
                 {otpDigits.map((digit, i) => (
                   <input
@@ -220,41 +208,6 @@ const ForgotPasswordPage = () => {
                   />
                 ))}
               </div>
-              <button className="auth-submit" onClick={handleVerifyOTP} disabled={loading} style={{ width: '100%' }}>
-                {loading ? (
-                  <span className="loading-dots"><span></span><span></span><span></span></span>
-                ) : (
-                  t('auth.verifyOtp')
-                )}
-              </button>
-              <div style={{ textAlign: 'center', marginTop: 16 }}>
-                {resendTimer > 0 ? (
-                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('auth.resendIn', { seconds: resendTimer })}</span>
-                ) : (
-                  <button
-                    onClick={handleResendOTP}
-                    style={{
-                      background: 'none', border: 'none', color: 'var(--primary)',
-                      fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                    }}
-                  >
-                    {t('auth.resendCode')}
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => { setStep(1); setOtpDigits(['', '', '', '', '', '']); setError(''); }}
-                className="btn-back"
-                style={{ marginTop: 12 }}
-              >
-                <FaArrowLeft /> {t('auth.back')}
-              </button>
-            </div>
-          )}
-
-          {/* Step 3: New Password */}
-          {step === 3 && (
-            <form className="auth-form" onSubmit={handleResetPassword}>
               <div className="input-group">
                 <label>{t('auth.newPassword')}</label>
                 <div className="input-wrapper">
@@ -300,11 +253,35 @@ const ForgotPasswordPage = () => {
                   t('auth.resetPassword')
                 )}
               </button>
+              <div style={{ textAlign: 'center', marginTop: 16 }}>
+                {resendTimer > 0 ? (
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('auth.resendIn', { seconds: resendTimer })}</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--primary)',
+                      fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                    }}
+                  >
+                    {t('auth.resendCode')}
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setStep(1); setOtpDigits(['', '', '', '', '', '']); setError(''); }}
+                className="btn-back"
+                style={{ marginTop: 12 }}
+              >
+                <FaArrowLeft /> {t('auth.back')}
+              </button>
             </form>
           )}
 
-          {/* Step 4: Success */}
-          {step === 4 && (
+          {/* Step 3: Success */}
+          {step === 3 && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div style={{
                 width: 80, height: 80, borderRadius: '50%',
@@ -324,7 +301,7 @@ const ForgotPasswordPage = () => {
           )}
 
           <div className="auth-footer">
-            {step < 4 && (
+            {step < 3 && (
               <p>
                 {t('auth.rememberPassword')}{' '}
                 <Link to="/login">{t('auth.login')}</Link>
