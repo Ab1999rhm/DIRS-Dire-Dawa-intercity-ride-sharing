@@ -223,8 +223,8 @@ const AdminUsers = () => {
                     {t('admin.reactivate') || 'Reactivate'}
                   </button>
                 )}
-                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)}>
-                  <FaTrashAlt />
+                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <FaTrashAlt /> Delete
                 </button>
               </div>
             </div>

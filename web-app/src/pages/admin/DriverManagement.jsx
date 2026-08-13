@@ -235,6 +235,22 @@ const DriverManagement = () => {
       toast.error('Failed to ban driver');
     }
   };
+  const handleDeleteDriver = async (driver) => {
+    const userId = driver.user?._id || driver.userId;
+    if (!userId) {
+      toast.error('Driver account has no linked user to delete');
+      return;
+    }
+    if (!window.confirm(`Permanently delete ${driver.user?.firstName || driver.firstName} ${driver.user?.lastName || driver.lastName}'s account? This removes all of their data, driver profile, and vehicle, and cannot be undone. They will not be able to log in again.`)) return;
+    try {
+      await adminAPI.deleteUser(userId);
+      toast.success('Driver permanently deleted');
+      setSelectedDriver(null);
+      fetchDrivers();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete driver');
+    }
+  };
   const handleSendMessage = async (id) => {
     try {
       await adminAPI.sendDriverMessage(id, messageText);
@@ -592,6 +608,7 @@ const DriverManagement = () => {
                   <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedDriver(driver); setShowWarnModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 10 }} /> Warn</button>
                   {driver.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedDriver(driver); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
                   {driver.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedDriver(driver); setShowBanModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Ban</button>}
+                  <button className="driver-action-btn" onClick={() => handleDeleteDriver(driver)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#7f1d1d', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Delete</button>
                   {(driver.status === 'suspended' || driver.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivate(driver._id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 10 }} /> Reactivate</button>}
                 </div>
               </div>
@@ -1031,6 +1048,7 @@ const DriverManagement = () => {
                   <button className="btn" style={{ background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => setShowWarnModal(true)}><FaExclamationTriangle /> Issue Warning</button>
                   <button className="btn" style={{ background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => setShowSuspendModal(true)}><FaBan /> Suspend Driver</button>
                   <button className="btn" style={{ background: '#7f1d1d15', color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => setShowBanModal(true)}><FaBan /> Permanently Ban</button>
+                  <button className="btn" style={{ background: '#7f1d1d', color: 'white', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => handleDeleteDriver(selectedDriver)}><FaTrash /> Permanently Delete Account</button>
                   {(selectedDriver.status === 'suspended' || selectedDriver.status === 'banned') && <button className="btn" style={{ background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', gap: 8, padding: 12 }} onClick={() => handleReactivate(selectedDriver._id)}><FaCheck /> Reactivate Driver</button>}
                 </div>
               </div>

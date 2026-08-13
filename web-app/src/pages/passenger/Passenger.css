@@ -982,7 +982,7 @@
 [data-theme="dark"] .confirm-detail-row.total { background: rgba(59, 130, 246, 0.1); }
 
 /* Flexible Map Controls */
-.flexible-map-wrapper { position: relative; }
+.flexible-map-wrapper { position: relative; z-index: 1; }
 .flexible-map-wrapper.expanded { position: fixed; inset: 0; z-index: 9999; border-radius: 0 !important; }
 .flexible-map-wrapper.expanded .leaflet-container { border-radius: 0 !important; height: 100% !important; }
 

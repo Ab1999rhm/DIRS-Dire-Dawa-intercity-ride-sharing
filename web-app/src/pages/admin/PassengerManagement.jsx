@@ -91,6 +91,18 @@ const PassengerManagement = () => {
     }
   };
 
+  const handleDeletePassenger = async (passenger) => {
+    if (!window.confirm(`Permanently delete ${passenger.firstName} ${passenger.lastName}'s account? This removes all of their data and cannot be undone. They will not be able to log in again.`)) return;
+    try {
+      await adminAPI.deleteUser(passenger._id || passenger.id);
+      toast.success('Passenger permanently deleted');
+      setSelectedPassenger(null);
+      fetchPassengers();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete passenger');
+    }
+  };
+
   const handleProcessRefund = async () => {
     if (!refundAmount || !refundReason) {
       toast.error('Please provide amount and reason');
@@ -358,6 +370,7 @@ const PassengerManagement = () => {
               <button className="driver-action-btn driver-btn-warn" onClick={() => { setSelectedPassenger(passenger); setShowMessageModal(true); setMessageMode('warning'); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f59e0b', color: 'white', fontWeight: 600 }}><FaExclamationTriangle style={{ fontSize: 10 }} /> Warn</button>
               {passenger.status === 'active' && <button className="driver-action-btn driver-btn-suspend" onClick={() => { setSelectedPassenger(passenger); setShowSuspendModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}><FaBan style={{ fontSize: 10 }} /> Suspend</button>}
               {passenger.status !== 'banned' && <button className="driver-action-btn driver-btn-ban" onClick={() => { setSelectedPassenger(passenger); setShowBanModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Ban</button>}
+              <button className="driver-action-btn" onClick={() => handleDeletePassenger(passenger)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#7f1d1d', color: 'white', fontWeight: 600 }}><FaTrash style={{ fontSize: 10 }} /> Delete</button>
               {(passenger.status === 'suspended' || passenger.status === 'banned') && <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleReactivatePassenger(passenger._id || passenger.id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaCheck style={{ fontSize: 10 }} /> Reactivate</button>}
             </div>
           </div>
@@ -569,6 +582,7 @@ const PassengerManagement = () => {
                 <button className="driver-action-btn driver-btn-warn" onClick={() => { setShowMessageModal(true); setMessageMode('warning'); setMessageText(''); }} style={{ background: '#f59e0b', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaExclamationTriangle /> Issue Warning</button>
                 <button className="driver-action-btn driver-btn-suspend" onClick={() => setShowSuspendModal(true)} style={{ background: '#6b7280', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaBan /> Suspend Account</button>
                 <button className="driver-action-btn driver-btn-ban" onClick={() => setShowBanModal(true)} style={{ background: '#ef4444', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaUserSlash /> Permanently Ban</button>
+                <button className="driver-action-btn" onClick={() => handleDeletePassenger(selectedPassenger)} style={{ background: '#7f1d1d', color: 'white', display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><FaTrash /> Permanently Delete Account</button>
               </div>
             )}
           </div>

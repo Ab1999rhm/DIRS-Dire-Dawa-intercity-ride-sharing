@@ -8,6 +8,9 @@ const SOSAlert = require('../../models/SOSAlert');
 const Incident = require('../../models/Incident');
 const FraudDetection = require('../../models/FraudDetection');
 const SuspiciousActivity = require('../../models/SuspiciousActivity');
+const Referral = require('../../models/Referral');
+const RideRequest = require('../../models/RideRequest');
+const Notification = require('../../models/Notification');
 
 const buildDateFilter = (startDate, endDate) => {
   const f = {};
@@ -307,18 +310,52 @@ exports.verifyUser = asyncHandler(async (req, res) => {
 exports.deleteUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
-  const user = await User.findByIdAndDelete(userId);
+  const user = await User.findById(userId);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  const driverProfile = await Driver.findOneAndDelete({ user: userId });
-  if (driverProfile) {
-    await Vehicle.deleteMany({ driver: driverProfile._id });
+  if (user.role === 'admin') {
+    return res.status(400).json({ error: 'Admin accounts cannot be deleted' });
   }
 
-  logger.warn('User deleted by admin', { userId });
-  res.json({ message: 'User deleted', userId });
+  // Remove refresh token + any sessions before permanent deletion so the
+  // account cannot log in again until it is re-registered.
+  await User.findByIdAndUpdate(userId, { refreshToken: null, isActive: false });
+
+  const driverProfile = await Driver.findOne({ user: userId });
+  const driverId = driverProfile ? driverProfile._id : null;
+
+  await User.findByIdAndDelete(userId);
+
+  if (driverId) {
+    await Driver.findByIdAndDelete(driverId);
+    await Vehicle.deleteMany({ driver: driverId });
+  }
+
+  const orFilters = [
+    { passenger: userId },
+    { user: userId },
+    { rater: userId },
+    { ratee: userId },
+    ...(driverId ? [{ driver: driverId }] : [])
+  ];
+
+  await Trip.deleteMany({ $or: [{ passenger: userId }, ...(driverId ? [{ driver: driverId }] : [])] });
+  await Payment.deleteMany({ $or: [{ passenger: userId }, { user: userId }, ...(driverId ? [{ driver: driverId }] : [])] });
+  await Rating.deleteMany({ $or: [{ rater: userId }, { ratee: userId }, ...(driverId ? [{ driver: driverId }] : [])] });
+  await Notification.deleteMany({ recipient: userId });
+  await SOSAlert.deleteMany({ user: userId });
+  await Incident.deleteMany({ reportedBy: userId });
+  await FraudDetection.deleteMany({ user: userId });
+  await SuspiciousActivity.deleteMany({ user: userId });
+  await Referral.deleteMany({ $or: [{ referrer: userId }, { referredUser: userId }] });
+  await RideRequest.deleteMany({ $or: [{ passenger: userId }, ...(driverId ? [{ driver: driverId }] : [])] });
+  await Ticket.deleteMany({ user: userId });
+  await SupportChat.deleteMany({ 'participants.user': userId });
+
+  logger.warn('User permanently deleted by admin', { userId, role: user.role, driverId });
+  res.json({ message: 'User permanently deleted', userId, role: user.role });
 });
 
 exports.deleteUnverifiedUsers = asyncHandler(async (req, res) => {

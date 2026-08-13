@@ -1,5 +1,6 @@
 .flexible-map-wrapper {
   position: relative;
+  z-index: 1;
   width: 100%;
   border-radius: 14px;
   overflow: hidden;
