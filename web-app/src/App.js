@@ -46,6 +46,7 @@ const PassengerManagement = React.lazy(() => import('./pages/admin/PassengerMana
 const TripManagement = React.lazy(() => import('./pages/admin/TripManagement'));
 const FinancialManagement = React.lazy(() => import('./pages/admin/FinancialManagement'));
 const SafetySecurity = React.lazy(() => import('./pages/admin/SafetyDashboard'));
+const DispatchContacts = React.lazy(() => import('./pages/admin/DispatchContacts'));
 const SupportSystem = React.lazy(() => import('./pages/admin/SupportDashboard'));
 const AnalyticsReporting = React.lazy(() => import('./pages/admin/AnalyticsReporting'));
 const ContentNotifications = React.lazy(() => import('./pages/admin/ContentNotifications'));
@@ -208,6 +209,7 @@ const AdminRoutes = React.memo(() => (
       <Route path="trip-management" element={<TripManagement />} />
       <Route path="financials" element={<FinancialManagement />} />
       <Route path="safety" element={<SafetySecurity />} />
+      <Route path="dispatch-contacts" element={<DispatchContacts />} />
       <Route path="support" element={<SupportSystem />} />
       <Route path="analytics" element={<AnalyticsReporting />} />
       <Route path="content" element={<ContentNotifications />} />

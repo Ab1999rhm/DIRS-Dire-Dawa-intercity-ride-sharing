@@ -11,6 +11,8 @@ const SuspiciousActivity = require('../../models/SuspiciousActivity');
 const Referral = require('../../models/Referral');
 const RideRequest = require('../../models/RideRequest');
 const Notification = require('../../models/Notification');
+const DispatchContact = require('../../models/DispatchContact');
+const { dispatchToContacts } = require('../../services/dispatchService');
 
 const buildDateFilter = (startDate, endDate) => {
   const f = {};
@@ -2237,37 +2239,129 @@ exports.rejectDriverVerification = asyncHandler(async (req, res) => {
 // Emergency Services Integration
 exports.notifyPolice = asyncHandler(async (req, res) => {
   const { incidentId } = req.params;
-  const { policeReportNumber } = req.body;
-  
-  const incident = await Incident.findByIdAndUpdate(
-    incidentId,
-    {
-      policeNotified: true,
-      policeReportNumber
-    },
-    { new: true }
-  );
-  
-  logger.info('Police notified', { incidentId, policeReportNumber });
-  res.json({ message: 'Police notified successfully', incident });
+  const { policeReportNumber, recipientIds = [] } = req.body;
+
+  const incident = await Incident.findById(incidentId)
+    .populate('reportedBy', 'firstName lastName phoneNumber')
+    .populate('trip');
+
+  if (!incident) {
+    return res.status(404).json({ message: 'Incident not found' });
+  }
+
+  incident.policeNotified = true;
+  if (policeReportNumber) incident.policeReportNumber = policeReportNumber;
+  await incident.save();
+
+  const contacts = recipientIds.length
+    ? await DispatchContact.find({ _id: { $in: recipientIds }, type: 'police', active: true })
+    : await DispatchContact.find({ type: 'police', active: true });
+
+  const dispatch = await dispatchToContacts({
+    contacts,
+    incident,
+    reporter: incident.reportedBy,
+    trip: incident.trip,
+    extra: { policeReportNumber: incident.policeReportNumber }
+  });
+
+  logger.info('Police notified', { incidentId, policeReportNumber, emailed: dispatch.dispatched });
+  res.json({
+    message: dispatch.dispatched > 0 ? 'Police notified and dispatched successfully' : 'Police notified (no email recipients set)',
+    incident,
+    dispatch
+  });
 });
 
 exports.dispatchAmbulance = asyncHandler(async (req, res) => {
   const { incidentId } = req.params;
-  const { hospitalName, hospitalLocation } = req.body;
-  
-  const incident = await Incident.findByIdAndUpdate(
-    incidentId,
-    {
-      ambulanceDispatched: true,
-      hospitalName,
-      hospitalLocation
-    },
-    { new: true }
-  );
-  
-  logger.info('Ambulance dispatched', { incidentId, hospitalName });
-  res.json({ message: 'Ambulance dispatched successfully', incident });
+  const { hospitalName, hospitalLocation, recipientIds = [] } = req.body;
+
+  const incident = await Incident.findById(incidentId)
+    .populate('reportedBy', 'firstName lastName phoneNumber')
+    .populate('trip');
+
+  if (!incident) {
+    return res.status(404).json({ message: 'Incident not found' });
+  }
+
+  incident.ambulanceDispatched = true;
+  if (hospitalName) incident.hospitalName = hospitalName;
+  if (hospitalLocation) {
+    if (typeof hospitalLocation === 'string') {
+      incident.hospitalLocation = { address: hospitalLocation };
+    } else if (typeof hospitalLocation === 'object') {
+      incident.hospitalLocation = hospitalLocation;
+    }
+  }
+  await incident.save();
+
+  const contacts = recipientIds.length
+    ? await DispatchContact.find({ _id: { $in: recipientIds }, type: 'hospital', active: true })
+    : await DispatchContact.find({ type: 'hospital', active: true });
+
+  const dispatch = await dispatchToContacts({
+    contacts,
+    incident,
+    reporter: incident.reportedBy,
+    trip: incident.trip,
+    extra: { hospitalName: incident.hospitalName }
+  });
+
+  logger.info('Ambulance dispatched', { incidentId, hospitalName, emailed: dispatch.dispatched });
+  res.json({
+    message: dispatch.dispatched > 0 ? 'Ambulance dispatched successfully' : 'Ambulance dispatched (no email recipients set)',
+    incident,
+    dispatch
+  });
+});
+
+// Dispatch Contact Registry (police / hospital)
+exports.getDispatchContacts = asyncHandler(async (req, res) => {
+  const { type } = req.query;
+  const filter = {};
+  if (type && ['police', 'hospital'].includes(type)) filter.type = type;
+  const contacts = await DispatchContact.find(filter).sort({ type: 1, name: 1 });
+  res.json({ contacts });
+});
+
+exports.createDispatchContact = asyncHandler(async (req, res) => {
+  const { type, name, phoneNumber, email, city, active } = req.body;
+  if (!type || !['police', 'hospital'].includes(type)) {
+    return res.status(400).json({ message: 'type must be police or hospital' });
+  }
+  if (!name || !name.trim()) {
+    return res.status(400).json({ message: 'name is required' });
+  }
+  if (!email && !phoneNumber) {
+    return res.status(400).json({ message: 'Provide at least an email or phone number' });
+  }
+  const contact = await DispatchContact.create({ type, name, phoneNumber, email, city, active });
+  logger.info('Dispatch contact created', { id: contact._id, type, name });
+  res.status(201).json({ contact });
+});
+
+exports.updateDispatchContact = asyncHandler(async (req, res) => {
+  const { contactId } = req.params;
+  const updates = {};
+  for (const key of ['type', 'name', 'phoneNumber', 'email', 'city', 'active']) {
+    if (req.body[key] !== undefined) updates[key] = req.body[key];
+  }
+  if (updates.type && !['police', 'hospital'].includes(updates.type)) {
+    return res.status(400).json({ message: 'type must be police or hospital' });
+  }
+  const contact = await DispatchContact.findByIdAndUpdate(contactId, updates, { new: true });
+  if (!contact) return res.status(404).json({ message: 'Dispatch contact not found' });
+  logger.info('Dispatch contact updated', { id: contact._id });
+  res.json({ contact });
+});
+
+exports.deleteDispatchContact = asyncHandler(async (req, res) => {
+  const { contactId } = req.params;
+  const contact = await DispatchContact.findByIdAndDelete(contactId);
+  if (!contact) return res.status(404).json({ message: 'Dispatch contact not found' });
+  logger.info('Dispatch contact deleted', { id: contactId });
+  res.json({ message: 'Dispatch contact deleted successfully' });
 });
 
 exports.getEmergencyContacts = asyncHandler(async (req, res) => {

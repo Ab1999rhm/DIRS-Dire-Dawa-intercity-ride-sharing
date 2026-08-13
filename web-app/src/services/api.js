@@ -358,9 +358,14 @@ export const adminAPI = {
   approveDriverVerification: (driverId, notes) => api.put(`/admin/safety/drivers/${driverId}/approve`, { notes }),
   rejectDriverVerification: (driverId, reason) => api.put(`/admin/safety/drivers/${driverId}/reject`, { reason }),
   // Emergency Services Integration
-  notifyPolice: (incidentId, policeReportNumber) => api.put(`/admin/safety/incidents/${incidentId}/police`, { policeReportNumber }),
-  dispatchAmbulance: (incidentId, hospitalName, hospitalLocation) => api.put(`/admin/safety/incidents/${incidentId}/ambulance`, { hospitalName, hospitalLocation }),
+  notifyPolice: (incidentId, policeReportNumber, recipientIds = []) => api.put(`/admin/safety/incidents/${incidentId}/police`, { policeReportNumber, recipientIds }),
+  dispatchAmbulance: (incidentId, hospitalName, hospitalLocation, recipientIds = []) => api.put(`/admin/safety/incidents/${incidentId}/ambulance`, { hospitalName, hospitalLocation, recipientIds }),
   getEmergencyContacts: (userId) => api.get(`/admin/safety/users/${userId}/emergency-contacts`),
+  // Dispatch Contact Registry
+  getDispatchContacts: (params) => api.get('/admin/safety/dispatch-contacts', { params }),
+  createDispatchContact: (contactData) => api.post('/admin/safety/dispatch-contacts', contactData),
+  updateDispatchContact: (contactId, contactData) => api.put(`/admin/safety/dispatch-contacts/${contactId}`, contactData),
+  deleteDispatchContact: (contactId) => api.delete(`/admin/safety/dispatch-contacts/${contactId}`),
   // Safety Analytics & Reports
   getSafetyAnalytics: (params) => api.get('/admin/safety/analytics', { params }),
   // Driver Behavior Monitoring

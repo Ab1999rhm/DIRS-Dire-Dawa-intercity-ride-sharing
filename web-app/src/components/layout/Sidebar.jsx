@@ -9,7 +9,7 @@ import {
   FaSiren, FaNewspaper, FaWrench, FaChartBar, FaChartPie,
   FaUserShield, FaUserTie, FaUserGraduate, FaCarSide, FaCarCrash,
   FaBullseye, FaFlag, FaGlobe, FaCheckCircle, FaDatabase,
-  FaTools, FaServer, FaLock, FaPalette
+  FaTools, FaServer, FaLock, FaPalette, FaPhone
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -90,6 +90,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       color: '#dc2626',
       items: [
         { path: '/admin/safety', icon: <FaShieldAlt />, label: t('admin.safetySecurity'), badge: null },
+        { path: '/admin/dispatch-contacts', icon: <FaPhone />, label: 'Dispatch Contacts', badge: null },
         { path: '/admin/support', icon: <FaHeadset />, label: t('admin.supportSystem'), badge: null },
       ]
     },

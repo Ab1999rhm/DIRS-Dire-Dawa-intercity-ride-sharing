@@ -77,7 +77,7 @@ const parseSender = (from) => {
   return { name, email };
 };
 
-const sendEmailOTPviaBrevoApi = async (email, otp) => {
+const sendBrevoEmail = async ({ to, subject, htmlContent, textContent }) => {
   const attempts = 3;
   let lastError = null;
 
@@ -96,9 +96,10 @@ const sendEmailOTPviaBrevoApi = async (email, otp) => {
         },
         body: JSON.stringify({
           sender: parseSender(EMAIL_FROM),
-          to: [{ email }],
-          subject: 'Your DIRS Verification Code',
-          htmlContent: buildOtpHtml(otp)
+          to: [{ email: to }],
+          subject,
+          htmlContent,
+          ...(textContent ? { textContent } : {})
         })
       });
 
@@ -108,8 +109,8 @@ const sendEmailOTPviaBrevoApi = async (email, otp) => {
         throw lastError;
       }
 
-      logger.info('Email OTP sent via Brevo API', { email: email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), otp });
-      return { success: true, otpCode: otp };
+      logger.info('Email sent via Brevo API', { to: to.replace(/(.{2})(.*)(@.*)/, '$1***$3'), subject });
+      return { success: true };
     } catch (error) {
       lastError = error;
       logger.warn(`Brevo API attempt ${attempt}/${attempts} failed: ${error.message}`);
@@ -118,6 +119,52 @@ const sendEmailOTPviaBrevoApi = async (email, otp) => {
 
   logger.error('Email sending failed via Brevo API', { error: lastError?.message });
   return { success: false, error: lastError?.message || 'Unknown error' };
+};
+
+const sendEmail = async ({ to, subject, htmlContent, textContent }) => {
+  if (process.env.BREVO_API_KEY) {
+    return sendBrevoEmail({ to, subject, htmlContent, textContent });
+  }
+
+  const attempts = 3;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    if (attempt > 1) {
+      await new Promise(r => setTimeout(r, 1500));
+    }
+
+    try {
+      const transport = await getTransporter();
+      const info = await transport.sendMail({
+        from: EMAIL_FROM,
+        to,
+        subject,
+        html: htmlContent,
+        ...(textContent ? { text: textContent } : {})
+      });
+
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      logger.info('Email sent', { to: to.replace(/(.{2})(.*)(@.*)/, '$1***$3'), subject, previewUrl: previewUrl || null });
+      return { success: true, previewUrl: previewUrl || null };
+    } catch (error) {
+      lastError = error;
+      logger.warn(`Email attempt ${attempt}/${attempts} failed: ${error.message}`);
+      try { transporter?.close?.(); } catch (e) {}
+      transporter = null;
+    }
+  }
+
+  logger.error('Email sending failed', { error: lastError?.message });
+  return { success: false, error: lastError?.message || 'Unknown error' };
+};
+
+const sendEmailOTPviaBrevoApi = async (email, otp) => {
+  return sendBrevoEmail({
+    to: email,
+    subject: 'Your DIRS Verification Code',
+    htmlContent: buildOtpHtml(otp)
+  }).then(res => ({ ...res, otpCode: otp }));
 };
 
 const sendEmailOTP = async (email, otp) => {
@@ -206,4 +253,4 @@ const formatEthiopianPhone = (phone) => {
   return `+251${cleaned}`;
 };
 
-module.exports = { generateOTP, sendOTP, sendEmailOTP, sendRideNotification, formatEthiopianPhone };
+module.exports = { generateOTP, sendOTP, sendEmailOTP, sendRideNotification, sendBrevoEmail, sendEmail, formatEthiopianPhone };

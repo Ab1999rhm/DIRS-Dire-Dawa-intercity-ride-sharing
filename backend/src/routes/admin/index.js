@@ -68,6 +68,10 @@ router.put('/safety/drivers/:driverId/reject', protect, authorize('admin'), admi
 router.put('/safety/incidents/:incidentId/police', protect, authorize('admin'), adminController.notifyPolice);
 router.put('/safety/incidents/:incidentId/ambulance', protect, authorize('admin'), adminController.dispatchAmbulance);
 router.get('/safety/users/:userId/emergency-contacts', protect, authorize('admin'), adminController.getEmergencyContacts);
+router.get('/safety/dispatch-contacts', protect, authorize('admin'), adminController.getDispatchContacts);
+router.post('/safety/dispatch-contacts', protect, authorize('admin'), adminController.createDispatchContact);
+router.put('/safety/dispatch-contacts/:contactId', protect, authorize('admin'), adminController.updateDispatchContact);
+router.delete('/safety/dispatch-contacts/:contactId', protect, authorize('admin'), adminController.deleteDispatchContact);
 
 // Safety Analytics & Reports
 router.get('/safety/analytics', protect, authorize('admin'), adminController.getSafetyAnalytics);

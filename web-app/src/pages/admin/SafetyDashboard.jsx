@@ -42,6 +42,11 @@ const SafetyDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dispatchModal, setDispatchModal] = useState(null);
+  const [dispatchContacts, setDispatchContacts] = useState([]);
+  const [dispatchRecipients, setDispatchRecipients] = useState([]);
+  const [dispatchInput, setDispatchInput] = useState('');
+  const [dispatchSending, setDispatchSending] = useState(false);
 
   useEffect(() => {
     fetchSafetyData();
@@ -208,28 +213,65 @@ const SafetyDashboard = () => {
 
   const handleNotifyPolice = async (incidentId) => {
     try {
-      const policeReportNumber = prompt('Enter police report number:');
-      if (policeReportNumber) {
-        await adminAPI.notifyPolice(incidentId, policeReportNumber);
-        toast.success('Police notified');
-        fetchSafetyData();
-      }
+      const incident = incidents.find(i => i._id === incidentId);
+      if (!incident) return;
+      const res = await adminAPI.getDispatchContacts({ type: 'police' });
+      const d = res.data;
+      const contacts = Array.isArray(d) ? d : (d?.contacts || []);
+      setDispatchContacts(contacts.filter(c => c.active !== false));
+      setDispatchRecipients([]);
+      setDispatchInput(incident.policeReportNumber || '');
+      setDispatchModal({ incident, type: 'police' });
     } catch (err) {
-      toast.error('Failed to notify police');
+      toast.error('Failed to load police contacts');
     }
   };
 
   const handleDispatchAmbulance = async (incidentId) => {
     try {
-      const hospitalName = prompt('Enter hospital name:');
-      if (hospitalName) {
-        await adminAPI.dispatchAmbulance(incidentId, hospitalName, '');
-        toast.success('Ambulance dispatched');
-        fetchSafetyData();
-      }
+      const incident = incidents.find(i => i._id === incidentId);
+      if (!incident) return;
+      const res = await adminAPI.getDispatchContacts({ type: 'hospital' });
+      const d = res.data;
+      const contacts = Array.isArray(d) ? d : (d?.contacts || []);
+      setDispatchContacts(contacts.filter(c => c.active !== false));
+      setDispatchRecipients([]);
+      setDispatchInput(incident.hospitalName || '');
+      setDispatchModal({ incident, type: 'hospital' });
     } catch (err) {
-      toast.error('Failed to dispatch ambulance');
+      toast.error('Failed to load hospital contacts');
     }
+  };
+
+  const handleSendDispatch = async () => {
+    if (!dispatchModal) return;
+    const { incident, type } = dispatchModal;
+    if (type === 'police' && !dispatchInput.trim()) {
+      toast.error('Enter the police report number');
+      return;
+    }
+    setDispatchSending(true);
+    try {
+      if (type === 'police') {
+        await adminAPI.notifyPolice(incident._id, dispatchInput.trim(), dispatchRecipients);
+      } else {
+        await adminAPI.dispatchAmbulance(incident._id, dispatchInput.trim() || 'Assigned hospital', '', dispatchRecipients);
+      }
+      const count = dispatchRecipients.length;
+      toast.success(type === 'police'
+        ? `Police notified${count ? `, dispatched to ${count} station${count > 1 ? 's' : ''}` : ` (no recipients)`}`
+        : `Ambulance dispatched${count ? `, sent to ${count} hospital${count > 1 ? 's' : ''}` : ` (no recipients)`}`);
+      setDispatchModal(null);
+      fetchSafetyData();
+    } catch (err) {
+      toast.error('Failed to send dispatch');
+    } finally {
+      setDispatchSending(false);
+    }
+  };
+
+  const toggleRecipient = (id) => {
+    setDispatchRecipients(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
   };
 
   const INCIDENT_TYPE_LABELS = {
@@ -782,6 +824,62 @@ const SafetyDashboard = () => {
                   <FaTimes /> Reject
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+    {/* ===== DISPATCH MODAL ===== */}
+      {dispatchModal && (
+        <div className="modal-overlay" onClick={() => setDispatchModal(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{dispatchModal.type === 'police' ? '🚔 Dispatch to Police' : '🚑 Dispatch Ambulance to Hospital'}</h3>
+              <button className="modal-close" onClick={() => setDispatchModal(null)}><FaTimes /></button>
+            </div>
+            <div className="driver-detail">
+              <div style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)', borderRadius: 10, padding: 10, marginTop: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', textTransform: 'capitalize' }}>{INCIDENT_TYPE_LABELS[dispatchModal.incident.category] || (dispatchModal.incident.category?.replace(/_/g, ' ') || 'Incident')}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{dispatchModal.incident.description || 'No description'}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  Severity: <span style={{ textTransform: 'capitalize' }}>{dispatchModal.incident.severity}</span>
+                  {dispatchModal.incident.location?.address ? ` • ${dispatchModal.incident.location.address}` : ''}
+                </div>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                  {dispatchModal.type === 'police' ? 'Police Report Number' : 'Hospital Name'}
+                </label>
+                <input
+                  value={dispatchInput}
+                  onChange={(e) => setDispatchInput(e.target.value)}
+                  placeholder={dispatchModal.type === 'police' ? 'e.g. PR-2026-0042' : 'e.g. Dil Chora Hospital'}
+                  style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary, #f9fafb)', color: 'var(--text)', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600 }}>Send dispatch to ({dispatchRecipients.length} selected)</label>
+                  <button onClick={() => setDispatchRecipients(dispatchContacts.length ? dispatchContacts.map(c => c._id) : [])} style={{ fontSize: 11, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Select all</button>
+                </div>
+                {dispatchContacts.length === 0 ? (
+                  <div style={{ padding: 12, background: 'var(--bg-secondary, #f9fafb)', borderRadius: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+                    No active {dispatchModal.type === 'police' ? 'police stations' : 'hospitals'} registered. Add them on the <strong>Dispatch Contacts</strong> page. Dispatch will be saved but no email sent.
+                  </div>
+                ) : (
+                  <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid var(--border-light)', borderRadius: 10 }}>
+                    {dispatchContacts.map((contact) => (
+                      <label key={contact._id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)', fontSize: 13 }}>
+                        <input type="checkbox" checked={dispatchRecipients.includes(contact._id)} onChange={() => toggleRecipient(contact._id)} />
+                        <span style={{ fontWeight: 600, color: 'var(--text)', flex: 1 }}>{contact.name}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{contact.email || contact.phoneNumber || ''}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button className="driver-action-btn driver-btn-ban" onClick={handleSendDispatch} disabled={dispatchSending} style={{ marginTop: 16, width: '100%', padding: 10, fontSize: 13, borderRadius: 8, border: 'none', cursor: dispatchSending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: 'white', fontWeight: 600, opacity: dispatchSending ? 0.6 : 1 }}>
+                {dispatchSending ? 'Sending...' : `Send Dispatch to ${dispatchRecipients.length} ${dispatchRecipients.length === 1 ? 'recipient' : 'recipients'}`}
+              </button>
             </div>
           </div>
         </div>
