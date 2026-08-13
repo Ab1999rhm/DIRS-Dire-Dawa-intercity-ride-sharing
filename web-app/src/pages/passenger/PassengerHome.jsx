@@ -231,6 +231,8 @@ const PassengerHome = () => {
   const [sosModalOpen, setSosModalOpen] = useState(false);
   const [sosLocation, setSosLocation] = useState(null);
   const [sosSending, setSosSending] = useState(false);
+  const [sosType, setSosType] = useState(null);
+  const [sosDescription, setSosDescription] = useState('');
 
   useEffect(() => {
     if (dropoff) {
@@ -727,6 +729,8 @@ const PassengerHome = () => {
   const handleSOS = async () => {
     if (sosSending) return;
     setSosLocation(null);
+    setSosType(null);
+    setSosDescription('');
     try {
       const pos = await new Promise((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
@@ -741,17 +745,32 @@ const PassengerHome = () => {
     setSosModalOpen(true);
   };
 
-  const handleSOSSelect = async (item) => {
+  const handleSOSTypeSelect = (item) => {
+    setSosType(item);
+    setSosDescription('');
+  };
+
+  const handleSOSClose = () => {
+    if (sosSending) return;
+    setSosModalOpen(false);
+    setSosType(null);
+    setSosDescription('');
+  };
+
+  const handleSendSOS = async () => {
     setSosSending(true);
     try {
+      const desc = sosDescription.trim() || sosType.label;
       await sosAPI.trigger({
-        type: item.type,
-        description: item.label,
+        type: sosType.type,
+        description: desc,
         location: sosLocation || null,
       });
       const locTxt = sosLocation ? ` at ${sosLocation.address}` : '';
-      toast.warning(`🚨 SOS alert sent — ${item.label}${locTxt}!`);
+      toast.warning(`🚨 SOS alert sent — ${sosType.label}: "${desc}"${locTxt}!`);
       setSosModalOpen(false);
+      setSosType(null);
+      setSosDescription('');
     } catch (err) {
       toast.error('Failed to send SOS alert');
     } finally {
@@ -1869,34 +1888,66 @@ const PassengerHome = () => {
         }}
       />
 
-      <Modal isOpen={sosModalOpen} onClose={() => !sosSending && setSosModalOpen(false)} title="🚨 Emergency SOS" size="sm">
+      <Modal isOpen={sosModalOpen} onClose={handleSOSClose} title="🚨 Emergency SOS" size="sm">
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
           Select the type of emergency. Your live location is sent to the admin command center and your emergency contacts.
         </p>
         {sosLocation ? (
           <p style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FaMapMarkerAlt /> {sosLocation.address}
+            <FaMapMarkerAlt /> 📍 {sosLocation.address}
           </p>
         ) : (
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>⏳ Locating your position…</p>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {SOS_TYPES.map(item => (
-            <button
-              key={item.type}
-              type="button"
-              disabled={sosSending}
-              onClick={() => handleSOSSelect(item)}
+
+        {!sosType ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {SOS_TYPES.map(item => (
+              <button
+                key={item.type}
+                type="button"
+                disabled={sosSending}
+                onClick={() => handleSOSTypeSelect(item)}
+                style={{
+                  padding: '12px 8px', borderRadius: 10, border: '1px solid var(--border-light)',
+                  background: 'var(--card)', color: 'var(--text)', cursor: 'pointer',
+                  fontWeight: 600, fontSize: 13, transition: 'all 0.15s',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <strong style={{ fontSize: 14, color: '#dc2626' }}>{sosType.label}</strong>
+              <button type="button" onClick={() => setSosType(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+                ← Change type
+              </button>
+            </div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
+              Describe your location / situation (e.g. "Near Bole Bridge, red building")
+            </label>
+            <textarea
+              value={sosDescription}
+              onChange={e => setSosDescription(e.target.value)}
+              placeholder="Write a short description so responders can find you…"
+              rows={3}
+              maxLength={300}
               style={{
-                padding: '12px 8px', borderRadius: 10, border: '1px solid var(--border-light)',
-                background: 'var(--card)', color: 'var(--text)', cursor: 'pointer',
-                fontWeight: 600, fontSize: 13, transition: 'all 0.15s',
+                width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10,
+                border: '1px solid var(--border)', background: 'var(--bg-secondary, #fff)', color: 'var(--text)',
+                fontSize: 14, resize: 'vertical', marginBottom: 12,
               }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Button variant="danger" fullWidth loading={sosSending} onClick={handleSendSOS} style={{ flex: 1 }}>
+                {sosSending ? 'Sending…' : '🚨 Send SOS Alert'}
+              </Button>
+            </div>
+          </div>
+        )}
         {sosSending && <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--text-muted)' }}>Sending alert…</p>}
       </Modal>
     </div>

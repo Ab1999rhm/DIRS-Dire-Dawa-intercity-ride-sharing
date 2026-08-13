@@ -18,7 +18,7 @@ import './Admin.css';
 const AdminDashboard = () => {
   const { t, language, setLanguage, availableLanguages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, sosAlert, clearSosAlert } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const [stats, setStats] = useState(null);
@@ -34,6 +34,15 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchDashboard(true);
   }, []);
+
+  // Refetch + notify when a new SOS alert arrives over the socket
+  useEffect(() => {
+    if (sosAlert) {
+      toast.error(`🚨 NEW SOS ALERT — ${sosAlert.type ? sosAlert.type.replace('_', ' ') : 'Emergency'}`);
+      fetchDashboard(false);
+      clearSosAlert();
+    }
+  }, [sosAlert]);
 
   const fetchDashboard = async (showLoading = false) => {
     try {
@@ -74,7 +83,7 @@ const AdminDashboard = () => {
   const quickActions = [
     { icon: <FaMap />, label: 'Live Map', path: '/admin/monitoring', color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', priority: 'high' },
     { icon: <FaRoute />, label: 'Active Trips', path: '/admin/trip-management', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', priority: 'high' },
-    { icon: <FaShieldAlt />, label: 'SOS Alerts', path: '/admin/safety', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', priority: 'critical' },
+    { icon: <FaShieldAlt />, label: 'SOS Alerts', path: '/admin/sos', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', priority: 'critical' },
     { icon: <FaUserCheck />, label: 'Driver Approvals', path: '/admin/driver-management', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', priority: 'high' },
     { icon: <FaCreditCard />, label: 'Financial Summary', path: '/admin/financials', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', priority: 'medium' },
     { icon: <FaHeadset />, label: 'Support Tickets', path: '/admin/support', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', priority: 'medium' },
@@ -467,6 +476,12 @@ const AdminDashboard = () => {
             >
               {recentSOS.length}
             </span>
+            <span
+              onClick={() => navigate('/admin/sos')}
+              style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#2563eb', cursor: 'pointer' }}
+            >
+              View All →
+            </span>
           </div>
           {recentSOS.length === 0 ? (
             <div
@@ -481,54 +496,72 @@ const AdminDashboard = () => {
               {recentSOS.slice(0, 5).map((sos, idx) => (
                 <div
                   key={sos._id}
+                  onClick={() => navigate('/admin/sos')}
                   style={{
-                    padding: '8px 10px',
+                    padding: '10px 10px',
                     borderBottom: idx < Math.min(recentSOS.length, 5) - 1 ? '1px solid var(--border-light)' : 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    cursor: 'pointer',
                     background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
                     borderRadius: 4,
                   }}
                 >
-                  <span style={{ fontSize: 13, fontWeight: 500 }}>
-                    {sos.user?.firstName && sos.user?.lastName
-                      ? `${sos.user.firstName} ${sos.user.lastName}`
-                      : sos.userName || 'Unknown user'}
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: sos.status === 'active' ? '#dc2626' : '#10b981',
-                        background: sos.status === 'active' ? 'rgba(220,38,38,0.1)' : 'rgba(16,185,129,0.1)',
-                        padding: '2px 8px',
-                        borderRadius: 8,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}
-                    >
-                      {sos.status}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>
+                      {sos.user?.firstName && sos.user?.lastName
+                        ? `${sos.user.firstName} ${sos.user.lastName}`
+                        : sos.userName || 'Unknown user'}
                     </span>
-                    {sos.status === 'active' && (
-                      <button
-                        className="btn btn-sm"
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {sos.type && (
+                        <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(220,38,38,0.1)', color: '#dc2626', padding: '2px 8px', borderRadius: 8, textTransform: 'uppercase' }}>
+                          {sos.type.replace('_', ' ')}
+                        </span>
+                      )}
+                      <span
                         style={{
-                          padding: '2px 8px',
                           fontSize: 10,
-                          background: '#10b981',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 6,
-                          cursor: 'pointer',
+                          fontWeight: 700,
+                          color: sos.status === 'active' ? '#dc2626' : '#10b981',
+                          background: sos.status === 'active' ? 'rgba(220,38,38,0.1)' : 'rgba(16,185,129,0.1)',
+                          padding: '2px 8px',
+                          borderRadius: 8,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
                         }}
-                        onClick={() => handleResolveSOS(sos._id)}
                       >
-                        Resolve
-                      </button>
-                    )}
+                        {sos.status}
+                      </span>
+                      {sos.status === 'active' && (
+                        <button
+                          className="btn btn-sm"
+                          style={{
+                            padding: '2px 8px',
+                            fontSize: 10,
+                            background: '#10b981',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                          }}
+                          onClick={(e) => { e.stopPropagation(); handleResolveSOS(sos._id); }}
+                        >
+                          Resolve
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {(sos.message || sos.description) && (
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 3 }}>
+                      💬 {(sos.message || sos.description).length > 70 ? `${(sos.message || sos.description).slice(0, 70)}…` : (sos.message || sos.description)}
+                    </div>
+                  )}
+                  {sos.location && (
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <FaMapMarkerAlt style={{ color: '#dc2626' }} />
+                      {sos.location.address || `${sos.location.coordinates?.[1]?.toFixed(4)}, ${sos.location.coordinates?.[0]?.toFixed(4)}`}
+                      <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontStyle: 'italic' }}>view →</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
