@@ -1,7 +1,7 @@
 /* Shared Page Styles */
 .gradient-text { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.app-layout { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
-.app-body { display: flex; padding-top: 64px; overflow-x: hidden; }
+.app-layout { min-height: 100vh; background: var(--bg); overflow-x: hidden; display: flex; flex-direction: column; }
+.app-body { display: flex; padding-top: 64px; overflow-x: hidden; flex: 1; }
 .app-main { flex: 1; margin-left: 242px; min-height: calc(100vh - 64px); min-width: 0; overflow-x: hidden; }
 .page-container { max-width: 1000px; margin: 0 auto; padding: 24px 20px; }
 
@@ -393,13 +393,9 @@
   .trip-item-footer { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
-/* Persistent Passenger Bottom Navigation */
+/* Persistent Passenger Bottom Navigation (in flow — not overlay) */
 .passenger-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
+  position: static;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -409,7 +405,7 @@
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-light, #e5e7eb);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-  z-index: 1000;
+  flex-shrink: 0;
 }
 .bottom-nav-item {
   display: flex;
@@ -465,9 +461,6 @@
 }
 .bottom-nav-item:active {
   transform: scale(0.92);
-}
-.app-main.has-bottom-nav {
-  padding-bottom: 70px;
 }
 .app-body-flush {
   padding-top: 0;

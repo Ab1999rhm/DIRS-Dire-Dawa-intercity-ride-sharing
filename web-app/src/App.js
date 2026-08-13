@@ -172,7 +172,7 @@ const PassengerRoutes = React.memo(() => (
 const DriverRoutes = React.memo(() => (
   <div className="app-layout">
     <div className="app-body">
-      <main className="app-main" style={{ marginLeft: 0, paddingBottom: '70px' }}>
+      <main className="app-main" style={{ marginLeft: 0 }}>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route index element={<DriverDashboard />} />
