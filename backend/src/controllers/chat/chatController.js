@@ -120,7 +120,6 @@ exports.deleteMessage = asyncHandler(async (req, res) => {
   }
 
   message.deleted = true;
-  message.text = '';
   message.edited = false;
   await message.save();
 
