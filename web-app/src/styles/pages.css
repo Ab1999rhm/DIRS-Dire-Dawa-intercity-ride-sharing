@@ -2,6 +2,9 @@
 .gradient-text { background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .app-layout { min-height: 100vh; background: var(--bg); overflow-x: clip; display: flex; flex-direction: column; }
 .app-body { display: flex; padding-top: 64px; overflow-x: hidden; flex: 1; }
+.app-shell { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+.app-shell .app-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.app-shell .app-main { min-height: 0; margin-left: 0 !important; }
 .app-main { flex: 1; margin-left: 242px; min-height: calc(100vh - 64px); min-width: 0; overflow-x: hidden; }
 .page-container { max-width: 1000px; margin: 0 auto; padding: 24px 20px; }
 
@@ -395,8 +398,7 @@
 
 /* Persistent Passenger Bottom Navigation (in flow — not overlay) */
 .passenger-bottom-nav {
-  position: sticky;
-  bottom: 0;
+  position: static;
   display: flex;
   align-items: center;
   justify-content: space-around;

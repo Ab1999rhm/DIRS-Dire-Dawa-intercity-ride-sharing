@@ -1214,8 +1214,7 @@
 
 /* === Bottom Navigation === */
 .driver-bottom-nav {
-  position: sticky;
-  bottom: 0;
+  position: static;
   display: flex;
   align-items: center;
   justify-content: space-around;

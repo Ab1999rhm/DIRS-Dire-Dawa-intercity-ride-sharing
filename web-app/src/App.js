@@ -128,16 +128,26 @@ const PublicRoute = React.memo(({ children }) => {
   return children;
 });
 
+const ShellScrollReset = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const scroller = document.querySelector('.app-shell .app-body');
+    if (scroller) scroller.scrollTop = 0;
+  }, [pathname]);
+  return null;
+};
+
 const AppLayout = React.memo(({ children, bottomNav, adminNav }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   return (
-    <div className={`app-layout ${sidebarOpen ? 'sidebar-open' : ''}`}>
+    <div className={`app-layout ${bottomNav ? 'app-shell' : ''} ${sidebarOpen ? 'sidebar-open' : ''}`}>
       {adminNav && (
         <Suspense fallback={null}>
           <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <AdminMobileHeader onMenuClick={() => setSidebarOpen(true)} />
         </Suspense>
       )}
+      <ShellScrollReset />
       <div className={adminNav ? 'app-body' : 'app-body app-body-flush'}>
         <main className={(bottomNav || adminNav) ? 'app-main has-bottom-nav' : 'app-main'} style={(bottomNav || adminNav) ? { marginLeft: 0 } : {}}>
           <Suspense fallback={<LoadingSpinner />}>
@@ -170,8 +180,9 @@ const PassengerRoutes = React.memo(() => (
 ));
 
 const DriverRoutes = React.memo(() => (
-  <div className="app-layout">
+  <div className="app-layout app-shell">
     <div className="app-body">
+      <ShellScrollReset />
       <main className="app-main" style={{ marginLeft: 0 }}>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
