@@ -15,6 +15,7 @@ const ForgotPasswordPage = () => {
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
+  const [sentEmail, setSentEmail] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,29 +25,35 @@ const ForgotPasswordPage = () => {
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(60);
 
+  const startResendTimer = () => {
+    setResendTimer(60);
+    const interval = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 0) { clearInterval(interval); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError('');
     if (!email.trim()) {
-      setError(t('auth.emailRequired') || 'Email is required');
+      setError(t('auth.emailRequired'));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(t('auth.validEmailRequired') || 'Enter a valid email address');
+      setError(t('auth.validEmailRequired'));
       return;
     }
     setLoading(true);
     try {
-      await authAPI.forgotPassword(email);
-      toast.success(t('auth.otpSent'));
+      const res = await authAPI.forgotPassword(email.trim());
+      setSentEmail(res.data?.email || '');
+      toast.success('We sent a password reset OTP to your registered email.');
       setStep(2);
-      setResendTimer(60);
-      const interval = setInterval(() => {
-        setResendTimer(prev => {
-          if (prev <= 0) { clearInterval(interval); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
+      setOtpDigits(['', '', '', '', '', '']);
+      startResendTimer();
     } catch (err) {
       setError(safeErrorMessage(err, 'Failed to send OTP'));
     } finally {
@@ -56,15 +63,10 @@ const ForgotPasswordPage = () => {
 
   const handleResendOTP = async () => {
     try {
-      await authAPI.forgotPassword(email);
-      toast.success(t('auth.otpResent'));
-      setResendTimer(60);
-      const interval = setInterval(() => {
-        setResendTimer(prev => {
-          if (prev <= 0) { clearInterval(interval); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
+      const res = await authAPI.forgotPassword(email.trim());
+      setSentEmail(res.data?.email || '');
+      toast.success('We resent the reset OTP to your email.');
+      startResendTimer();
     } catch (err) {
       toast.error('Failed to resend OTP');
     }
@@ -109,7 +111,7 @@ const ForgotPasswordPage = () => {
     }
     setLoading(true);
     try {
-      await authAPI.resetPassword({ email, otp: code, newPassword: password });
+      await authAPI.resetPassword({ email: email.trim(), otp: code, newPassword: password });
       toast.success(t('auth.passwordReset') || 'Password reset successfully!');
       setStep(3);
     } catch (err) {
@@ -142,7 +144,9 @@ const ForgotPasswordPage = () => {
             </h2>
             <p>
               {step === 1 && (t('auth.forgotPasswordSubtitle'))}
-              {step === 2 && (`Enter the code sent to ${email} and create a new password`)}
+              {step === 2 && (sentEmail
+                ? `Enter the OTP number sent to ${sentEmail} to reset your password`
+                : 'Enter your OTP number to reset your password (sent to the email you registered with)')}
               {step === 3 && (t('auth.loginAgain'))}
             </p>
           </div>
@@ -159,7 +163,7 @@ const ForgotPasswordPage = () => {
 
           {error && <div className="error-message">{error}</div>}
 
-          {/* Step 1: Email */}
+          {/* Step 1: Registered Email */}
           {step === 1 && (
             <form className="auth-form" onSubmit={handleSendOTP}>
               <div className="input-group">
@@ -174,6 +178,9 @@ const ForgotPasswordPage = () => {
                   />
                 </div>
               </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: -8, marginBottom: 12 }}>
+                We'll send a password reset OTP to this email.
+              </p>
               <button type="submit" className="auth-submit" disabled={loading}>
                 {loading ? (
                   <span className="loading-dots"><span></span><span></span><span></span></span>

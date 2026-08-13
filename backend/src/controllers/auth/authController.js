@@ -34,6 +34,12 @@ function incrementOTPAttempts(key) {
   }
 }
 
+function maskEmail(email = '') {
+  const at = email.indexOf('@');
+  if (at <= 1) return email;
+  return `${email[0]}${'*'.repeat(Math.min(4, at - 1))}@${email.slice(at + 1)}`;
+}
+
 exports.register = asyncHandler(async (req, res) => {
   const { firstName, lastName, phoneNumber, email, password, role, referralCode, otp } = req.body;
 
@@ -336,7 +342,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ error: 'No account found with this email' });
   }
 
   const otp = generateOTP();
@@ -354,7 +360,10 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     return res.status(500).json({ error: 'Failed to send OTP email', reason: result.error || 'Unknown error' });
   }
 
-  const response = { message: 'Password reset OTP sent' };
+  const response = {
+    message: 'Password reset OTP sent to your email',
+    email: maskEmail(email)
+  };
   if (process.env.NODE_ENV !== 'production' && result.otpCode) {
     response.otpCode = result.otpCode;
   }
@@ -382,6 +391,11 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(storedData.userId);
+  if (!user) {
+    otpStore.delete(`reset_${email}`);
+    return res.status(404).json({ error: 'User not found' });
+  }
+
   user.password = newPassword;
   await user.save();
 
