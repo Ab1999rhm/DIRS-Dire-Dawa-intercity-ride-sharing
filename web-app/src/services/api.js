@@ -158,6 +158,11 @@ export const ridesAPI = {
   available: (params) => api.get('/rides/available', { params }),
 };
 
+export const chatAPI = {
+  getMessages: (tripId, params) => api.get(`/chat/${tripId}/messages`, { params }),
+  markRead: (tripId) => api.post(`/chat/${tripId}/read`),
+};
+
 export const paymentsAPI = {
   process: (tripId, data) => api.post(`/payments/trip/${tripId}`, data),
   history: (params) => offlineFirst(

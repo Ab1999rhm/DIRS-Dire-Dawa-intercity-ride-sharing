@@ -5,13 +5,13 @@ const SOSAlert = require('./models/SOSAlert');
 
 const connectDB = async () => {
   const uri = process.env.MONGODB_URI;
+  const isAtlas = uri.includes('mongodb.net') || uri.includes('mongodb+srv');
   await mongoose.connect(uri, {
     serverSelectionTimeoutMS: 30000,
     socketTimeoutMS: 45000,
-    tls: true,
-    tlsAllowInvalidCertificates: true,
+    ...(isAtlas ? { tls: true, tlsAllowInvalidCertificates: true } : {})
   });
-  console.log('Connected to MongoDB Atlas');
+  console.log(`Connected to MongoDB ${isAtlas ? 'Atlas' : ''}`);
 };
 
 const userSchema = new mongoose.Schema({

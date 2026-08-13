@@ -22,7 +22,7 @@ const REQUEST_TIMEOUT = 15;
 const GPS_INTERVAL = 10000;
 
 const DriverDashboard = () => {
-  const { user, driverProfile, socket, updateDriverProfile } = useAuth();
+  const { user, driverProfile, socket, updateDriverProfile, chatUnread } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
@@ -743,6 +743,9 @@ const DriverDashboard = () => {
                     navigate('/chat');
                   }}>
                     <FaComment /> Chat
+                    {chatUnread[currentTrip._id] > 0 && (
+                      <span className="chat-unread-badge">{chatUnread[currentTrip._id]}</span>
+                    )}
                   </button>
                   <button className="btn-share" onClick={() => handleShareTrip()}>
                     <FaShareAlt /> Share

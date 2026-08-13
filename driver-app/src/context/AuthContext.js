@@ -1,7 +1,9 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { authAPI } from '../services/api';
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
+import { authAPI, chatAPI } from '../services/api';
 import { unregisterPush } from '../services/pushService';
 import { io } from 'socket.io-client';
+import { toast } from 'react-toastify';
+import { playMessageSound } from '../utils/sound';
 
 const AuthContext = createContext(null);
 
@@ -10,9 +12,39 @@ export const AuthProvider = ({ children }) => {
   const [driverProfile, setDriverProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [socket, setSocket] = useState(null);
+  const [chatMessages, setChatMessages] = useState({});
+  const [chatUnread, setChatUnread] = useState({});
+  const userIdRef = useRef(null);
+
+  useEffect(() => {
+    userIdRef.current = user?._id || null;
+  }, [user]);
+
+  const handleIncomingMessage = useCallback((data) => {
+    const tripId = data?.tripId;
+    const text = data?.text;
+    if (!tripId || !text) return;
+
+    if (data.senderId && userIdRef.current && String(data.senderId) === String(userIdRef.current)) {
+      return;
+    }
+
+    setChatMessages((prev) => {
+      const list = prev[tripId] || [];
+      const exists = list.some((m) =>
+        (m.id && m.id === data.id) || (m.timestamp === data.timestamp && m.text === text && m.senderRole === data.senderRole)
+      );
+      if (exists) return prev;
+      return { ...prev, [tripId]: [...list, { ...data, isOwn: false }] };
+    });
+
+    setChatUnread((prev) => ({ ...prev, [tripId]: (prev[tripId] || 0) + 1 }));
+    playMessageSound();
+    toast.info(`New message: ${text}`, { position: 'top-center', autoClose: 4000 });
+  }, []);
 
   const connectSocket = useCallback((token) => {
-    const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+    const newSocket = io(process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, '') || 'http://localhost:5000', {
       auth: { token },
       reconnection: true,
       reconnectionAttempts: 10,
@@ -22,6 +54,15 @@ export const AuthProvider = ({ children }) => {
 
     newSocket.on('connect', () => {
       console.log('Driver socket connected');
+      chatAPI.getUnread()
+        .then((res) => {
+          const map = {};
+          (res.data?.trips || []).forEach((t) => {
+            if (t.unread > 0) map[t.tripId] = t.unread;
+          });
+          setChatUnread(map);
+        })
+        .catch(() => {});
     });
 
     newSocket.on('connect_error', (err) => {
@@ -60,9 +101,12 @@ export const AuthProvider = ({ children }) => {
       console.log('Trip status:', data);
     });
 
+    newSocket.on('trip_message', handleIncomingMessage);
+    newSocket.on('chat_message', handleIncomingMessage);
+
     setSocket(newSocket);
     return newSocket;
-  }, []);
+  }, [handleIncomingMessage]);
 
   useEffect(() => {
     const token = localStorage.getItem('driverAccessToken');
@@ -99,12 +143,26 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
+  const markTripRead = useCallback((tripId) => {
+    setChatUnread((prev) => ({ ...prev, [tripId]: 0 }));
+    chatAPI.markRead(tripId).catch(() => {});
+  }, []);
+
+  const loadTripMessages = useCallback(async (tripId) => {
+    const res = await chatAPI.getMessages(tripId, { limit: 200 });
+    const loaded = (res.data?.messages || []).map((m) => ({ ...m, isOwn: false }));
+    setChatMessages((prev) => ({ ...prev, [tripId]: loaded }));
+    return res.data?.messages || [];
+  }, []);
+
   const logout = async () => {
     await unregisterPush();
     localStorage.removeItem('driverAccessToken');
     localStorage.removeItem('driverRefreshToken');
     setUser(null);
     setDriverProfile(null);
+    setChatMessages({});
+    setChatUnread({});
     if (socket) {
       socket.disconnect();
     }
@@ -120,6 +178,10 @@ export const AuthProvider = ({ children }) => {
       driverProfile,
       loading,
       socket,
+      chatMessages,
+      chatUnread,
+      loadTripMessages,
+      markTripRead,
       login,
       register,
       logout,

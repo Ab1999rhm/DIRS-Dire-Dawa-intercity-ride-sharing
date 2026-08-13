@@ -102,8 +102,9 @@ export const ratingsAPI = {
 };
 
 export const chatAPI = {
-  sendMessage: (tripId, data) => api.post(`/rides/trip/${tripId}/message`, data),
-  getMessages: (tripId, params) => api.get(`/rides/trip/${tripId}/messages`, { params })
+  getMessages: (tripId, params) => api.get(`/chat/${tripId}/messages`, { params }),
+  getUnread: () => api.get('/chat/unread'),
+  markRead: (tripId) => api.post(`/chat/${tripId}/read`)
 };
 
 export const tippingAPI = {

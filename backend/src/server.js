@@ -101,6 +101,7 @@ app.use('/api/ratings', require('./routes/ratings'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/sos', require('./routes/sos'));
 app.use('/api/safety', require('./routes/safety'));
+app.use('/api/chat', require('./routes/chat'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/referrals', require('./routes/referrals'));
 app.use('/uploads', express.static(uploadsDir));

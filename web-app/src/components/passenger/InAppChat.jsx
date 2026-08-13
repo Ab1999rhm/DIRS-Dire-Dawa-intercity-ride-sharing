@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaPaperPlane, FaLock, FaUser } from 'react-icons/fa';
+import { chatAPI } from '../../services/api';
 import './InAppChat.css';
 
 const QUICK_CHIPS = [
@@ -14,6 +15,28 @@ const InAppChat = ({ isOpen, onClose, tripId, driverName, socket }) => {
     { id: 1, sender: 'driver', text: `Hello! I'm on my way to pick you up.`, time: 'Just now' }
   ]);
   const [inputText, setInputText] = useState('');
+  const historyLoadedRef = useRef(false);
+
+  // Load persisted chat history once when the modal opens
+  useEffect(() => {
+    if (isOpen && tripId && !historyLoadedRef.current) {
+      historyLoadedRef.current = true;
+      chatAPI.getMessages(tripId, { limit: 200 })
+        .then((res) => {
+          const history = (res.data?.messages || []).map((m) => ({
+            id: m.id,
+            sender: m.senderRole === 'driver' ? 'driver' : 'passenger',
+            text: m.text,
+            time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'
+          }));
+          if (history.length) {
+            setMessages(history);
+          }
+        })
+        .catch(() => {});
+      chatAPI.markRead(tripId).catch(() => {});
+    }
+  }, [isOpen, tripId]);
 
   useEffect(() => {
     if (socket && tripId) {

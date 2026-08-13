@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Driver = require('../models/Driver');
 const Trip = require('../models/Trip');
+const ChatMessage = require('../models/ChatMessage');
 const SuspiciousActivity = require('../models/SuspiciousActivity');
 const logger = require('../config/logger');
 
@@ -12,6 +13,10 @@ const initializeSocket = (server) => {
   io = socketIo(server, {
     cors: {
       origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'http://localhost:3003',
         process.env.PASSENGER_APP_URL,
         process.env.DRIVER_APP_URL,
         process.env.ADMIN_APP_URL
@@ -94,6 +99,18 @@ const initializeSocket = (server) => {
         // Driver app listens on `trip_message`; passenger apps listen on `chat_message`.
         if (toDriver) io.to(`user_${driverUserId}`).emit('trip_message', msg);
         if (toPassenger) io.to(`user_${passengerUserId}`).emit('chat_message', msg);
+
+        // Persist so history survives page switches / reloads.
+        try {
+          await ChatMessage.create({
+            trip: trip._id,
+            sender: socket.userId,
+            senderRole: socket.userRole,
+            text
+          });
+        } catch (saveError) {
+          logger.error('Chat persistence error', { error: saveError.message });
+        }
 
         logger.info('Chat message routed', {
           tripId,
