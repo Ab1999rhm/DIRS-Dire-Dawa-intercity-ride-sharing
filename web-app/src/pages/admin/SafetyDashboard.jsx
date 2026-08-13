@@ -232,6 +232,21 @@ const SafetyDashboard = () => {
     }
   };
 
+  const INCIDENT_TYPE_LABELS = {
+    vehicle_damage: 'Lost Item',
+    payment_evasion: 'Fare Dispute',
+    harassment: 'Safety Concern',
+    reckless_driving: 'Driver Behavior',
+    assault: 'Assault',
+    theft: 'Theft',
+    accident: 'Accident',
+    substance_abuse: 'Substance Abuse',
+    vehicle_safety: 'Vehicle Safety',
+    passenger_misbehavior: 'Passenger Misbehavior',
+    fake_emergency: 'Fake Emergency',
+    other: 'Other',
+  };
+
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'critical': return '#dc2626';
@@ -504,8 +519,11 @@ const SafetyDashboard = () => {
                       <FaFlag style={{ fontSize: 14 }} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', textTransform: 'capitalize' }}>{incident.category?.replace(/_/g, ' ') || 'Incident'}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', textTransform: 'capitalize' }}>{INCIDENT_TYPE_LABELS[incident.category] || (incident.category?.replace(/_/g, ' ') || 'Incident')}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{incident.description?.slice(0, 60) || 'No description'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                        Reported by {incident.reportedBy?.firstName ? `${incident.reportedBy.firstName} ${incident.reportedBy.lastName}` : 'User'}{incident.reportedBy?.phoneNumber ? ` • ${incident.reportedBy.phoneNumber}` : ''} • {new Date(incident.createdAt).toLocaleString()}
+                      </div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>

@@ -2024,7 +2024,7 @@ exports.getIncidents = asyncHandler(async (req, res) => {
   if (severity) filter.severity = severity;
   
   const incidents = await Incident.find(filter)
-    .populate('reportedBy', 'firstName lastName')
+    .populate('reportedBy', 'firstName lastName phoneNumber')
     .populate('reportedUser', 'firstName lastName')
     .populate('reportedDriver')
     .populate('trip')
