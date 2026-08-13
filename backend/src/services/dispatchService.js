@@ -24,8 +24,13 @@ const buildMapsLink = (coordinates) => {
 };
 
 const buildIncidentSummary = ({ incident, reporter, trip }) => {
+  const tripRoute = trip
+    ? `${trip.pickupLocation?.address || 'N/A'} → ${trip.dropoffLocation?.address || 'N/A'}`
+    : null;
   const coords = incident.location?.coordinates;
-  const mapsLink = buildMapsLink(coords);
+  const locationText = incident.location?.address || (coords ? coords.join(', ') : incident.locationAddress || tripRoute || 'N/A');
+  const mapsLink = buildMapsLink(coords) || (trip?.pickupLocation?.coordinates?.coordinates || trip?.pickupLocation?.coordinates);
+  const finalMapsLink = Array.isArray(mapsLink) ? buildMapsLink(mapsLink) : mapsLink;
   const categoryLabel = TYPE_LABELS[incident.category] || (incident.category || 'Incident').replace(/_/g, ' ');
 
   const line = (label, value) => `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#475569;font-weight:600;white-space:nowrap;">${label}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#0f172a;">${value || 'N/A'}</td></tr>`;
@@ -41,10 +46,10 @@ const buildIncidentSummary = ({ incident, reporter, trip }) => {
     `Severity: ${incident.severity}`,
     `Status: ${incident.status}`,
     `Description: ${incident.description}`,
-    `Location: ${incident.location?.address || (coords ? coords.join(', ') : 'N/A')}`,
-    mapsLink ? `Map: ${mapsLink}` : '',
+    `Location: ${locationText}`,
+    finalMapsLink ? `Map: ${finalMapsLink}` : '',
     `Reported by: ${reporterName}${reporter?.phoneNumber ? ` (${reporter.phoneNumber})` : ''}`,
-    trip ? `Trip route: ${trip.pickupLocation?.address || 'N/A'} → ${trip.dropoffLocation?.address || 'N/A'}` : '',
+    tripRoute ? `Trip route: ${tripRoute}` : '',
     `Reported at: ${new Date(incident.createdAt).toLocaleString()}`,
     `Incident ID: ${incident._id}`
   ].filter(Boolean).join('\n');
@@ -59,11 +64,11 @@ const buildIncidentSummary = ({ incident, reporter, trip }) => {
         ${line('Severity', incident.severity)}
         ${line('Status', incident.status)}
         ${line('Description', incident.description)}
-        ${line('Location', incident.location?.address || (coords ? coords.join(', ') : 'N/A'))}
-        ${mapsLink ? line('Map', `<a href="${mapsLink}" style="color:#2563eb;">Open in Google Maps</a>`) : ''}
+        ${line('Location', locationText)}
+        ${finalMapsLink ? line('Map', `<a href="${finalMapsLink}" style="color:#2563eb;">Open in Google Maps</a>`) : ''}
         ${line('Reported by', reporterName)}
         ${line('Phone', reporter?.phoneNumber)}
-        ${trip ? line('Trip route', `${trip.pickupLocation?.address || 'N/A'} → ${trip.dropoffLocation?.address || 'N/A'}`) : ''}
+        ${tripRoute ? line('Trip route', tripRoute) : ''}
         ${line('Reported at', new Date(incident.createdAt).toLocaleString())}
         ${line('Incident ID', incident._id)}
       </table>
@@ -71,7 +76,7 @@ const buildIncidentSummary = ({ incident, reporter, trip }) => {
     </div>
   `;
 
-  return { categoryLabel, summaryText, summaryHtml, mapsLink };
+  return { categoryLabel, summaryText, summaryHtml, mapsLink: finalMapsLink };
 };
 
 const dispatchToContacts = async ({ contacts, incident, reporter, trip, extra = {} }) => {

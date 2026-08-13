@@ -40,6 +40,10 @@ const incidentSchema = new mongoose.Schema({
     coordinates: { type: [Number] },
     address: String
   },
+  locationAddress: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['reported', 'investigating', 'resolved', 'escalated', 'dismissed'],

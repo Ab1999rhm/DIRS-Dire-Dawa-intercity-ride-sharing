@@ -565,6 +565,7 @@ const SafetyDashboard = () => {
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{incident.description?.slice(0, 60) || 'No description'}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                         Reported by {incident.reportedBy?.firstName ? `${incident.reportedBy.firstName} ${incident.reportedBy.lastName}` : 'User'}{incident.reportedBy?.phoneNumber ? ` • ${incident.reportedBy.phoneNumber}` : ''} • {new Date(incident.createdAt).toLocaleString()}
+                        {(incident.location?.address || incident.locationAddress) && <div style={{ marginTop: 2 }}><FaMapMarkerAlt style={{ fontSize: 9, marginRight: 3 }} />{incident.location?.address || incident.locationAddress}</div>}
                       </div>
                     </div>
                   </div>
@@ -842,7 +843,7 @@ const SafetyDashboard = () => {
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{dispatchModal.incident.description || 'No description'}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                   Severity: <span style={{ textTransform: 'capitalize' }}>{dispatchModal.incident.severity}</span>
-                  {dispatchModal.incident.location?.address ? ` • ${dispatchModal.incident.location.address}` : ''}
+                  {((dispatchModal.incident.location?.address) || dispatchModal.incident.locationAddress) ? ` • ${dispatchModal.incident.location?.address || dispatchModal.incident.locationAddress}` : ''}
                 </div>
               </div>
               <div style={{ marginTop: 16 }}>

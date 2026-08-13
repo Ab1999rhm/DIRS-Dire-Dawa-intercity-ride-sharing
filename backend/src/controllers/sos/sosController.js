@@ -198,12 +198,17 @@ exports.createUserIncident = asyncHandler(async (req, res) => {
     status: 'reported'
   };
 
-  if (location && location.coordinates) {
-    incidentData.location = {
-      type: 'Point',
-      coordinates: location.coordinates,
-      address: location.address || ''
-    };
+  if (location) {
+    if (location.address) {
+      incidentData.locationAddress = location.address;
+    }
+    if (Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
+      incidentData.location = {
+        type: 'Point',
+        coordinates: location.coordinates,
+        address: location.address || ''
+      };
+    }
   }
 
   if (tripId) {

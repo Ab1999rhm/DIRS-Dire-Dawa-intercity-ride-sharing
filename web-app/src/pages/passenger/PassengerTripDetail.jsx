@@ -124,11 +124,32 @@ const PassengerTripDetail = () => {
     setSubmittingReport(true);
     try {
       const categoryLabel = REPORT_OPTIONS.find(o => o.key === reportCategory)?.label || 'Issue';
+
+      let location = null;
+      try {
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true })
+        );
+        if (pos && pos.coords) {
+          location = {
+            coordinates: [pos.coords.longitude, pos.coords.latitude],
+            address: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`
+          };
+        }
+      } catch (_) {}
+      if (!location && (trip?.pickupLocation?.address || trip?.dropoffLocation?.address)) {
+        location = {
+          coordinates: trip?.pickupLocation?.coordinates?.coordinates || trip?.pickupLocation?.coordinates,
+          address: `${trip?.pickupLocation?.address || ''} → ${trip?.dropoffLocation?.address || ''}`.trim()
+        };
+      }
+
       await reportAPI.create({
         tripId,
         category: reportCategory,
         description: reportDescription.trim() || categoryLabel,
         severity: reportCategory === 'harassment' ? 'high' : 'medium',
+        location,
       });
       toast.success('Issue reported successfully. We will get back to you.');
       setReportCategory('');
