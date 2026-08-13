@@ -13,6 +13,7 @@ const {
   validateUpdateProfile,
   validateUpdateLocation,
   validateForgotPassword,
+  validateVerifyResetOTP,
   validateResetPassword
 } = require('../../middleware/validation');
 
@@ -242,6 +243,30 @@ router.post('/verify-email-otp', validateEmailOTP, authController.verifyEmailOTP
  *         description: Reset OTP sent
  */
 router.post('/forgot-password', validateForgotPassword, authController.forgotPassword);
+
+/**
+ * @swagger
+ * /auth/verify-reset-otp:
+ *   post:
+ *     summary: Verify password reset OTP before entering a new password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [phoneNumber, otp]
+ *             properties:
+ *               phoneNumber:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OTP verified
+ */
+router.post('/verify-reset-otp', validateVerifyResetOTP, authController.verifyResetOTP);
 
 /**
  * @swagger

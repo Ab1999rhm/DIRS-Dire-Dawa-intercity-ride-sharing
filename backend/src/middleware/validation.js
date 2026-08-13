@@ -92,12 +92,18 @@ const validateUpdateLocation = [
 ];
 
 const validateForgotPassword = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid Ethiopian phone number required'),
+  handleValidation
+];
+
+const validateVerifyResetOTP = [
+  body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid Ethiopian phone number required'),
+  body('otp').isLength({ min: 4, max: 6 }).withMessage('OTP must be 4-6 digits'),
   handleValidation
 ];
 
 const validateResetPassword = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid Ethiopian phone number required'),
   body('otp').isLength({ min: 4, max: 6 }).withMessage('OTP must be 4-6 digits'),
   body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   handleValidation
@@ -124,6 +130,7 @@ module.exports = {
   validateUpdateProfile,
   validateUpdateLocation,
   validateForgotPassword,
+  validateVerifyResetOTP,
   validateResetPassword,
   validateWithdrawal
 };

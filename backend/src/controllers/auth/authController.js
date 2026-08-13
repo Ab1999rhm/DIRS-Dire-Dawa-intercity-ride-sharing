@@ -338,31 +338,31 @@ exports.verifyEmailOTP = asyncHandler(async (req, res) => {
 });
 
 exports.forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
+  const { phoneNumber } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ phoneNumber });
   if (!user) {
-    return res.status(404).json({ error: 'No account found with this email' });
+    return res.status(404).json({ error: 'No account found with this phone number' });
   }
 
   const otp = generateOTP();
-  otpStore.set(`reset_${email}`, {
+  otpStore.set(`reset_${phoneNumber}`, {
     otp,
     userId: user._id,
     expiresAt: Date.now() + 5 * 60 * 1000,
     [OTP_ATTEMPTS_KEY]: 0
   });
 
-  const result = await sendEmailOTP(email, otp);
+  const result = await sendEmailOTP(user.email, otp);
 
   if (!result.success) {
-    otpStore.delete(`reset_${email}`);
+    otpStore.delete(`reset_${phoneNumber}`);
     return res.status(500).json({ error: 'Failed to send OTP email', reason: result.error || 'Unknown error' });
   }
 
   const response = {
-    message: 'Password reset OTP sent to your email',
-    email: maskEmail(email)
+    message: 'We have sent an OTP to the email you registered with',
+    email: maskEmail(user.email)
   };
   if (process.env.NODE_ENV !== 'production' && result.otpCode) {
     response.otpCode = result.otpCode;
@@ -372,34 +372,56 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   res.json(response);
 });
 
-exports.resetPassword = asyncHandler(async (req, res) => {
-  const { email, otp, newPassword } = req.body;
+exports.verifyResetOTP = asyncHandler(async (req, res) => {
+  const { phoneNumber, otp } = req.body;
 
-  const storedData = otpStore.get(`reset_${email}`);
+  const storedData = otpStore.get(`reset_${phoneNumber}`);
+  if (!storedData) {
+    return res.status(400).json({ error: 'Reset OTP not found. Request a new code.' });
+  }
+
+  if (storedData.expiresAt < Date.now()) {
+    otpStore.delete(`reset_${phoneNumber}`);
+    return res.status(400).json({ error: 'OTP expired. Request a new code.' });
+  }
+
+  if (storedData.otp !== otp) {
+    incrementOTPAttempts(`reset_${phoneNumber}`);
+    return res.status(400).json({ error: 'Invalid OTP' });
+  }
+
+  logger.info('Password reset OTP verified', { userId: storedData.userId });
+  res.json({ message: 'OTP verified' });
+});
+
+exports.resetPassword = asyncHandler(async (req, res) => {
+  const { phoneNumber, otp, newPassword } = req.body;
+
+  const storedData = otpStore.get(`reset_${phoneNumber}`);
   if (!storedData) {
     return res.status(400).json({ error: 'Reset OTP not found' });
   }
 
   if (storedData.expiresAt < Date.now()) {
-    otpStore.delete(`reset_${email}`);
+    otpStore.delete(`reset_${phoneNumber}`);
     return res.status(400).json({ error: 'OTP expired' });
   }
 
   if (storedData.otp !== otp) {
-    incrementOTPAttempts(`reset_${email}`);
+    incrementOTPAttempts(`reset_${phoneNumber}`);
     return res.status(400).json({ error: 'Invalid OTP' });
   }
 
   const user = await User.findById(storedData.userId);
   if (!user) {
-    otpStore.delete(`reset_${email}`);
+    otpStore.delete(`reset_${phoneNumber}`);
     return res.status(404).json({ error: 'User not found' });
   }
 
   user.password = newPassword;
   await user.save();
 
-  otpStore.delete(`reset_${email}`);
+  otpStore.delete(`reset_${phoneNumber}`);
   logger.info('Password reset completed', { userId: user._id });
   res.json({ message: 'Password reset successful' });
 });
