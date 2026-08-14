@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, referralAPI, documentsAPI } from '../../services/api';
+import { authAPI, referralAPI, documentsAPI, paymentsAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, ToggleButton, ConfirmModal } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
@@ -81,12 +81,13 @@ const PassengerProfile = () => {
   useEffect(() => {
     const loadReferralData = async () => {
       try {
-        const [codeRes, listRes] = await Promise.all([
+        const [codeRes, listRes, walletRes] = await Promise.all([
           referralAPI.getMyCode(),
-          referralAPI.getMyReferrals()
+          referralAPI.getMyReferrals(),
+          paymentsAPI.wallet({ limit: 5 }).catch(() => ({ data: {} }))
         ]);
         setReferralCode(codeRes.data.referralCode || '');
-        setWalletBalance(codeRes.data.credits || 0);
+        setWalletBalance(walletRes.data.balance ?? codeRes.data.credits ?? 0);
         setReferralStats(listRes.data.stats || {});
         setReferralList(listRes.data.referrals || []);
       } catch (err) {
