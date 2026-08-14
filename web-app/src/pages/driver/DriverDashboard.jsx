@@ -82,6 +82,7 @@ const DriverDashboard = () => {
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [vehicleType, setVehicleType] = useState(null);
   const [vehicle, setVehicle] = useState(null);
+  const [serviceType, setServiceType] = useState('intra_city'); // 'intra_city' or 'intercity'
   const [intendedDestination, setIntendedDestination] = useState(user?.intendedDestination?.city || null);
   const [showReportSection, setShowReportSection] = useState(false);
   const [reportCategory, setReportCategory] = useState('');
@@ -199,16 +200,16 @@ const DriverDashboard = () => {
 
   const toggleOnline = useCallback(() => {
     const newStatus = !isOnline;
-    if (newStatus && vehicleType === 'intercity' && !intendedDestination) {
+    if (newStatus && serviceType === 'intercity' && !intendedDestination) {
       toast.error('Please select a destination city before going online for intercity');
       return;
     }
     setIsOnline(newStatus);
     setUser(prev => prev ? { ...prev, isOnline: newStatus } : prev);
     const coords = mapCenter;
-    authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]]).catch(() => {});
+    authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]], serviceType, intendedDestination).catch(() => {});
     if (newStatus) {
-      toast.success('You are now ONLINE — receiving nearby ride requests!');
+      toast.success(`You are now ONLINE for ${serviceType === 'intra_city' ? 'Intra-City' : 'Intercity'} rides!`);
       // Load pending passenger orders
       fetchData();
       if (navigator.geolocation) {
@@ -223,7 +224,7 @@ const DriverDashboard = () => {
       toast.info('You are now OFFLINE');
       if (watchId) { navigator.geolocation.clearWatch(watchId); setWatchId(null); }
     }
-  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, vehicleType, intendedDestination, setUser]);
+  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, serviceType, intendedDestination, setUser]);
 
   const handleAcceptRide = async (rideId) => {
     try {
@@ -370,7 +371,31 @@ const DriverDashboard = () => {
         )}
       </div>
 
-      {isOnline && (vehicleType === 'intercity' || vehicleType === 'both') && (
+      {isOnline && (
+        <div className="driver-service-type-picker" style={{ marginBottom: 16 }}>
+          <p className="destination-label" style={{ marginBottom: 8 }}>
+            <FaCar /> Service Type
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className={`destination-chip ${serviceType === 'intra_city' ? 'active' : ''}`}
+              onClick={() => setServiceType('intra_city')}
+              style={{ flex: 1 }}
+            >
+              <span>Intra-City</span>
+            </button>
+            <button
+              className={`destination-chip ${serviceType === 'intercity' ? 'active' : ''}`}
+              onClick={() => setServiceType('intercity')}
+              style={{ flex: 1 }}
+            >
+              <span>Intercity</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isOnline && serviceType === 'intercity' && (
         <div className="driver-destination-picker">
           <p className="destination-label">
             <FaMapMarkerAlt /> Where are you heading? (Intercity)

@@ -61,6 +61,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  serviceType: {
+    type: String,
+    enum: ['intra_city', 'intercity', 'both'],
+    default: 'intra_city'
+  },
   isBookingBlocked: {
     type: Boolean,
     default: false

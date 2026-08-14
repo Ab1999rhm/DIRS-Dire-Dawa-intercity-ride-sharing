@@ -34,6 +34,13 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
     }
   };
 
+  // Filter by serviceType - driver must support the requested ride type
+  if (rideType === 'intra_city') {
+    query.serviceType = { $in: ['intra_city', 'both'] };
+  } else if (rideType === 'intercity') {
+    query.serviceType = { $in: ['intercity', 'both'] };
+  }
+
   // For intercity rides, only match drivers whose destination matches
   if (rideType === 'intercity' && dropoffInfo) {
     const destCity = matchDestinationCity(dropoffInfo.address);
