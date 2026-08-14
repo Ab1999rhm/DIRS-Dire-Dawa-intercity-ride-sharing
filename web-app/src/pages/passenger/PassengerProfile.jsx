@@ -3,7 +3,7 @@ import {
   FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe,
   FaBell, FaShieldAlt, FaCamera, FaHome, FaBuilding, FaSchool, FaMapMarkerAlt,
   FaCreditCard, FaMoneyBillWave, FaWallet, FaCheckCircle, FaExclamationTriangle,
-  FaToggleOn, FaToggleOff, FaUserFriends, FaGift, FaCopy
+  FaToggleOn, FaToggleOff, FaUserFriends, FaGift, FaCopy, FaMobileAlt
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
