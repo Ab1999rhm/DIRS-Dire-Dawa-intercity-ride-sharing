@@ -71,6 +71,19 @@ exports.processPayment = asyncHandler(async (req, res) => {
   if (method === 'cash') {
     paymentStatus = 'completed';
     transactionId = `CASH-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  } else if (method === 'wallet') {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+    const totalFare = trip.fare.totalFare;
+    if ((user.walletBalance || 0) < totalFare) {
+      return res.status(400).json({ error: 'Insufficient wallet balance' });
+    }
+    user.walletBalance = (user.walletBalance || 0) - totalFare;
+    await user.save();
+    paymentStatus = 'completed';
+    transactionId = `WALLET-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   } else if (method === 'telebirr') {
     const result = await processTelebirrPayment(trip.fare.totalFare, req.user.phoneNumber);
     paymentStatus = result.success ? 'completed' : 'failed';
@@ -111,6 +124,7 @@ exports.processPayment = asyncHandler(async (req, res) => {
   }
 
   const payment = await Payment.create({
+    type: 'trip_payment',
     trip: tripId,
     passenger: req.user._id,
     driver: trip.driver,
@@ -197,6 +211,126 @@ exports.getPaymentHistory = asyncHandler(async (req, res) => {
   const total = await Payment.countDocuments(query);
 
   res.json({ payments, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.getWallet = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const transactions = await Payment.find({ passenger: user._id })
+    .populate('trip', 'pickupLocation dropoffLocation createdAt')
+    .sort({ createdAt: -1 })
+    .limit(30);
+
+  res.json({
+    balance: user.walletBalance || 0,
+    currency: 'ETB',
+    transactions
+  });
+});
+
+exports.walletTopUp = asyncHandler(async (req, res) => {
+  const { amount, method } = req.body;
+
+  if (!amount || Number(amount) <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  let paymentStatus = 'pending';
+  let transactionId = null;
+  let gatewayResponse = null;
+
+  if (method === 'telebirr') {
+    transactionId = `TLB-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    gatewayResponse = { simulated: true };
+    paymentStatus = 'pending';
+  } else if (method === 'chapa') {
+    const result = await processChapaPayment(Number(amount), user.email);
+    transactionId = result.transactionId || `CHA-${Date.now()}`;
+    gatewayResponse = result;
+    paymentStatus = result.success ? 'pending' : 'failed';
+  } else {
+    transactionId = `WAL-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    paymentStatus = 'completed';
+  }
+
+  if (paymentStatus === 'failed') {
+    return res.status(400).json({ error: 'Payment gateway rejected the top-up' });
+  }
+
+  if (paymentStatus === 'completed') {
+    user.walletBalance = (user.walletBalance || 0) + Number(amount);
+    await user.save();
+  }
+
+  const payment = await Payment.create({
+    type: 'top_up',
+    passenger: user._id,
+    amount: Number(amount),
+    method: method || 'wallet',
+    status: paymentStatus,
+    transactionId,
+    paymentGatewayResponse: gatewayResponse,
+    paidAt: paymentStatus === 'completed' ? new Date() : null
+  });
+
+  res.json({ payment, balance: user.walletBalance, checkoutUrl: gatewayResponse?.checkoutUrl || null });
+});
+
+exports.walletWithdraw = asyncHandler(async (req, res) => {
+  const { amount, method = 'telebirr', accountDetails = null } = req.body;
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const withdrawAmount = Number(amount);
+  if (!withdrawAmount || withdrawAmount <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+
+  if (withdrawAmount < 100) {
+    return res.status(400).json({ error: 'Minimum withdrawal is 100 ETB' });
+  }
+
+  if (withdrawAmount > (user.walletBalance || 0)) {
+    return res.status(400).json({ error: 'Insufficient balance' });
+  }
+
+  user.walletBalance = (user.walletBalance || 0) - withdrawAmount;
+  await user.save();
+
+  const payment = await Payment.create({
+    type: 'withdrawal',
+    passenger: user._id,
+    amount: withdrawAmount,
+    method,
+    status: 'processing',
+    transactionId: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+    paymentGatewayResponse: accountDetails ? { accountDetails } : null
+  });
+
+  logger.info('Wallet withdrawal requested', { userId: user._id, amount: withdrawAmount, method });
+  await notifyRideUpdate(user._id, 'withdrawal_requested', {
+    amount: withdrawAmount,
+    method,
+    estimatedProcessing: '1-3 business days'
+  });
+
+  res.json({
+    message: 'Withdrawal request submitted',
+    payment,
+    balance: user.walletBalance,
+    estimatedProcessing: '1-3 business days'
+  });
 });
 
 exports.getDriverEarnings = asyncHandler(async (req, res) => {

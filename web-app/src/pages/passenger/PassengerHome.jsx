@@ -732,7 +732,20 @@ const PassengerHome = () => {
     }
     setPaymentProcessing(true);
     try {
-      if (paymentMethod === 'telebirr') {
+      if (paymentMethod === 'wallet') {
+        const res = await paymentsAPI.process(rideId, {
+          method: 'wallet',
+          amount: Number(completedRide.fare?.totalFare) || fare.total,
+        });
+        const data = res.data;
+        if (data.payment?.status === 'completed' || data.success) {
+          setPaymentStatus('processing');
+          toast.success('Payment successful from wallet balance');
+        } else {
+          toast.error(data.error || 'Payment failed. Please try again.');
+          setPaymentStatus('failed');
+        }
+      } else if (paymentMethod === 'telebirr') {
         const res = await paymentsAPI.process(rideId, {
           method: 'telebirr',
           amount: Number(completedRide.fare?.totalFare) || fare.total,
@@ -1254,6 +1267,8 @@ const PassengerHome = () => {
                 <><FaSpinner className="fa-spin" /> Processing...</>
               ) : paymentMethod === 'telebirr' ? (
                 <><FaMobileAlt /> Pay {rideFare} ETB with Telebirr</>
+              ) : paymentMethod === 'wallet' ? (
+                <><FaWallet /> Pay {rideFare} ETB with Wallet</>
               ) : (
                 <><FaCreditCard /> Pay {rideFare} ETB with Chapa</>
               )}
@@ -1267,7 +1282,9 @@ const PassengerHome = () => {
             }}>
               {paymentMethod === 'telebirr'
                 ? '✓ Payment request sent! Check your phone for the Telebirr USSD prompt.'
-                : '✓ Redirected to Chapa. Complete payment in the new tab.'}
+                : paymentMethod === 'wallet'
+                  ? '✓ Payment successful from your wallet balance.'
+                  : '✓ Redirected to Chapa. Complete payment in the new tab.'}
             </div>
           )}
 
@@ -1741,6 +1758,7 @@ const PassengerHome = () => {
                 { id: 'cash', icon: <FaMoneyBillWave />, label: t('passenger.cash') || 'Cash' },
                 { id: 'telebirr', icon: <FaMobileAlt />, label: t('passenger.telebirr') || 'Telebirr' },
                 { id: 'chapa', icon: <FaCreditCard />, label: t('passenger.chapa') || 'Chapa' },
+                { id: 'wallet', icon: <FaWallet />, label: 'Wallet' },
               ].map((p) => (
                 <div
                   key={p.id}

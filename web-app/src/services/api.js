@@ -173,6 +173,9 @@ export const paymentsAPI = {
     () => api.get('/payments/history', { params }),
     () => offlineService.getCachedPayments()
   ),
+  wallet: (params) => api.get('/payments/wallet', { params }),
+  topUp: (data) => api.post('/payments/wallet/topup', data),
+  walletWithdraw: (data) => api.post('/payments/wallet/withdraw', data),
   earnings: () => api.get('/payments/earnings'),
   withdraw: (data) => api.post('/payments/withdraw', data),
 };

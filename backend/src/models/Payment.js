@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['trip_payment', 'top_up', 'withdrawal', 'credit'],
+    default: 'trip_payment'
+  },
   trip: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Trip',
-    required: true
+    default: null
   },
   passenger: {
     type: mongoose.Schema.Types.ObjectId,
@@ -14,7 +19,7 @@ const paymentSchema = new mongoose.Schema({
   driver: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Driver',
-    required: true
+    default: null
   },
   amount: {
     type: Number,
@@ -26,7 +31,7 @@ const paymentSchema = new mongoose.Schema({
   },
   method: {
     type: String,
-    enum: ['cash', 'telebirr', 'chapa'],
+    enum: ['cash', 'telebirr', 'chapa', 'wallet'],
     required: true
   },
   status: {
@@ -67,6 +72,7 @@ const paymentSchema = new mongoose.Schema({
   }
 });
 
+paymentSchema.index({ type: 1 });
 paymentSchema.index({ trip: 1 });
 paymentSchema.index({ passenger: 1, createdAt: -1 });
 paymentSchema.index({ driver: 1, createdAt: -1 });

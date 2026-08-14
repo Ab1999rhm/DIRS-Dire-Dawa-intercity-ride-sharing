@@ -62,7 +62,7 @@ const validateVehicle = [
 ];
 
 const validatePayment = [
-  body('method').isIn(['cash', 'telebirr', 'chapa']).withMessage('Invalid payment method'),
+  body('method').isIn(['cash', 'telebirr', 'chapa', 'wallet']).withMessage('Invalid payment method'),
   handleValidation
 ];
 
@@ -74,6 +74,16 @@ const validateRating = [
 
 const validateObjectId = [
   param('id').isMongoId().withMessage('Invalid ID format'),
+  handleValidation
+];
+
+const validatePaymentRoute = [
+  param('tripId').isMongoId().withMessage('Invalid trip ID format'),
+  handleValidation
+];
+
+const validatePaymentDetailRoute = [
+  param('paymentId').isMongoId().withMessage('Invalid payment ID format'),
   handleValidation
 ];
 
@@ -128,6 +138,8 @@ module.exports = {
   validatePayment,
   validateRating,
   validateObjectId,
+  validatePaymentRoute,
+  validatePaymentDetailRoute,
   validateUpdateProfile,
   validateUpdateLocation,
   validateForgotPassword,

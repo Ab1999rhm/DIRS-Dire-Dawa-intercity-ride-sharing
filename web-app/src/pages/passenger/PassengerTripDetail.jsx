@@ -503,14 +503,14 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
 
       {/* Report Issue Section */}
       {(isHelpMode || showReportSection) && (
-        <div className="report-issue-section" style={{ background: '#fff', padding: 20, borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginTop: 16 }}>
+        <div className="report-issue-section" style={{ background: 'var(--card)', padding: 20, borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginTop: 16 }}>
           <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FaQuestionCircle style={{ color: 'var(--primary)' }} /> Report Issue
+            <span className="report-section-icon"><FaQuestionCircle /></span> Report Issue
           </h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 14px' }}>
             Select the issue you experienced with this trip
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, marginBottom: 14 }}>
+          <div className="report-options-grid">
             {REPORT_OPTIONS.map(opt => {
               const IconComp = opt.icon;
               const isSelected = reportCategory === opt.key;
@@ -518,25 +518,14 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
                 <button
                   key={opt.key}
                   type="button"
+                  className={`report-option-card ${isSelected ? 'selected' : ''}`}
                   onClick={() => setReportCategory(opt.key)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '10px 14px',
-                    borderRadius: 10,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    border: `1.5px solid ${isSelected ? '#2563eb' : '#e2e8f0'}`,
-                    background: isSelected ? '#eff6ff' : '#f8fafc',
-                    color: isSelected ? '#2563eb' : '#334155',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease'
-                  }}
                 >
-                  <IconComp size={15} style={{ color: isSelected ? '#2563eb' : '#64748b' }} />
-                  {opt.label}
+                  <span className="report-option-icon">
+                    <IconComp />
+                  </span>
+                  <span className="report-option-label">{opt.label}</span>
+                  {isSelected && <span className="report-option-check">✓</span>}
                 </button>
               );
             })}
@@ -548,7 +537,6 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
                 placeholder="Describe the issue in detail (optional)..."
                 value={reportDescription}
                 onChange={e => setReportDescription(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, minHeight: 80 }}
               />
               <Button
                 variant="primary"

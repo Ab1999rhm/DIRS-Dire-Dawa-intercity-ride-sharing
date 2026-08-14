@@ -35,15 +35,9 @@ const PassengerWallet = () => {
   const fetchWalletData = async () => {
     setLoading(true);
     try {
-      const res = await paymentsAPI.history({ limit: 20 });
-      const payments = res.data.payments || res.data || [];
-      setTransactions(payments);
-      const walletBalance = payments.reduce((sum, p) => {
-        if (p.type === 'top_up' || p.status === 'refunded') return sum + (p.amount || 0);
-        if (p.status === 'completed' || p.type === 'trip_payment') return sum - (p.amount || 0);
-        return sum;
-      }, 0);
-      setBalance(Math.max(0, walletBalance));
+      const res = await paymentsAPI.wallet({ limit: 30 });
+      setBalance(res.data.balance || 0);
+      setTransactions(res.data.transactions || []);
     } catch (err) {
       console.error('Failed to fetch wallet data:', err);
     } finally {
@@ -59,14 +53,17 @@ const PassengerWallet = () => {
     }
     setTopUpLoading(true);
     try {
-      await paymentsAPI.process(null, {
-        type: 'top_up',
+      const res = await paymentsAPI.topUp({
         amount,
         method: topUpMethod,
         currency: 'ETB',
       });
       toast.success(t('passenger.topUpSuccess'));
       setTopUpAmount('');
+      if (res.data?.checkoutUrl) {
+        setActiveSection('history');
+        window.open(res.data.checkoutUrl, '_blank');
+      }
       fetchWalletData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Top-up failed');
@@ -87,7 +84,12 @@ const PassengerWallet = () => {
     }
     setWithdrawLoading(true);
     try {
-      await paymentsAPI.withdraw({ amount, currency: 'ETB' });
+      await paymentsAPI.walletWithdraw({
+        amount,
+        currency: 'ETB',
+        method: 'telebirr',
+        accountDetails: user?.phoneNumber || user?.email || null,
+      });
       toast.success(t('passenger.withdrawSuccess'));
       setWithdrawAmount('');
       fetchWalletData();
@@ -99,10 +101,15 @@ const PassengerWallet = () => {
   };
 
   const formatTransaction = (tx) => {
-    const isCredit = tx.type === 'top_up' || tx.status === 'refunded';
+    const isCredit = tx.type === 'top_up' || tx.type === 'credit' || tx.status === 'refunded';
+    let label = tx.type === 'top_up' ? (t('passenger.topUp') || 'Top-up')
+      : tx.type === 'withdrawal' ? (t('passenger.withdraw') || 'Withdrawal')
+      : tx.type === 'credit' ? 'Wallet Credit'
+      : (t('passenger.tripPayments') || 'Trip Payment');
+    if (tx.paymentGatewayResponse?.reason) label = tx.paymentGatewayResponse.reason;
     return {
       icon: isCredit ? <FaArrowDown /> : <FaArrowUp />,
-      label: tx.description || (isCredit ? 'Top-up' : 'Trip Payment'),
+      label,
       amount: isCredit ? `+ETB ${tx.amount}` : `-ETB ${tx.amount}`,
       date: new Date(tx.createdAt || tx.date).toLocaleDateString('en-US', {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',

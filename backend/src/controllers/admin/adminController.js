@@ -1319,11 +1319,13 @@ exports.addPassengerFunds = asyncHandler(async (req, res) => {
   
   // Create transaction record
   await Payment.create({
-    user: user._id,
-    amount,
     type: 'credit',
+    passenger: user._id,
+    amount,
+    method: 'wallet',
     status: 'completed',
-    description: reason || 'Admin credit'
+    paidAt: new Date(),
+    paymentGatewayResponse: { reason: reason || 'Admin credit' }
   });
   
   await createNotification(user._id, 'wallet', 'Funds Added', `ETB ${amount} has been added to your wallet. ${reason ? `Reason: ${reason}` : ''}`);
@@ -1335,12 +1337,12 @@ exports.addPassengerFunds = asyncHandler(async (req, res) => {
 exports.getPassengerTransactions = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
   
-  const transactions = await Payment.find({ user: req.params.passengerId })
+  const transactions = await Payment.find({ passenger: req.params.passengerId })
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
   
-  const total = await Payment.countDocuments({ user: req.params.passengerId });
+  const total = await Payment.countDocuments({ passenger: req.params.passengerId });
   
   res.json({ transactions, total, page: parseInt(page), pages: Math.ceil(total / limit) });
 });
