@@ -689,8 +689,8 @@ const PassengerHome = () => {
   const handleCancelRide = async () => {
     if (activeRide?._id && activeRide._id !== 'demo') {
       try {
-        // Use POST to match backend route
-        await api.post(`/trips/trip/${activeRide._id}/cancel`, { reason: 'Cancelled by passenger', cancelledBy: 'passenger' });
+        // Use correct path: /rides/trip/:tripId/cancel
+        await api.post(`/rides/trip/${activeRide._id}/cancel`, { reason: 'Cancelled by passenger', cancelledBy: 'passenger' });
       } catch (err) {
         console.error('Cancel error:', err);
         toast.error('Failed to cancel ride');
