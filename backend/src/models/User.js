@@ -217,6 +217,11 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  nationalId: {
+    type: String,
+    trim: true,
+    default: null
+  },
   refreshToken: {
     type: String,
     select: false

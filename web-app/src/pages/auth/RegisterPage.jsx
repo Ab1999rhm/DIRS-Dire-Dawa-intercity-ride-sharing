@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaPhone, FaLock, FaEye, FaEyeSlash, FaUser, FaCheckCircle, FaEnvelope, FaExternalLinkAlt, FaGift } from 'react-icons/fa';
+import { FaPhone, FaLock, FaEye, FaEyeSlash, FaUser, FaCheckCircle, FaEnvelope, FaExternalLinkAlt, FaGift, FaIdCard, FaFileUpload, FaShieldAlt, FaCalendarAlt } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import safeErrorMessage from '../../utils/safeErrorMessage';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api';
+import { authAPI, documentsAPI } from '../../services/api';
+import { uploadToCloudinary } from '../../services/cloudinary';
 import { DireDawaLogo } from '../../components/common/Backgrounds';
 import { useToast } from '../../components/common/Toast';
 import './Auth.css';
@@ -25,7 +26,20 @@ const RegisterPage = () => {
     confirmPassword: '',
     role: 'passenger',
     referralCode: '',
+    nationalId: '',
   });
+  const [driverDocs, setDriverDocs] = useState({
+    licensePhoto: null,
+    nationalIdPhoto: null,
+    licenseNumber: '',
+    licenseExpiry: '',
+  });
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [docsSubmitting, setDocsSubmitting] = useState(false);
+  const driverDocRefs = {
+    licensePhoto: useRef(null),
+    nationalIdPhoto: useRef(null),
+  };
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -88,6 +102,7 @@ const RegisterPage = () => {
   const validate = () => {
     if (!formData.firstName.trim()) return t('auth.firstName') + ' is required';
     if (!formData.lastName.trim()) return t('auth.lastName') + ' is required';
+    if (!formData.nationalId.trim()) return 'FAN (National ID) number is required';
     if (!formData.phoneNumber.trim()) return t('auth.phoneRequired');
     if (!/^(\+251|0)?[97]\d{8}$/.test(formData.phoneNumber.trim())) return t('auth.validPhoneRequired');
     if (!formData.email.trim()) return t('auth.emailRequired');
@@ -180,17 +195,61 @@ const RegisterPage = () => {
         password: formData.password,
         role: formData.role,
         referralCode: formData.referralCode || undefined,
+        nationalId: formData.nationalId,
         otp: code,
       });
       const { accessToken, refreshToken, user: verifiedUser, driverProfile } = res.data;
       completeRegistration(accessToken, refreshToken, verifiedUser, driverProfile);
       toast.success('Email verified! Registration complete.');
-      if (formData.role === 'driver') navigate('/driver');
+      if (formData.role === 'driver') setStep(3);
       else navigate('/passenger');
     } catch (err) {
       toast.error(err?.response?.data?.error || safeErrorMessage(err, 'Invalid OTP'));
     }
     setOtpLoading(false);
+  };
+
+  const handleDriverDocUpload = async (docKey) => {
+    const file = driverDocRefs[docKey]?.current?.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+    try {
+      setUploadingDoc(docKey);
+      const url = await uploadToCloudinary(file, 'dirs-documents');
+      setDriverDocs(prev => ({ ...prev, [docKey]: url }));
+      toast.success('Document uploaded');
+    } catch (err) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  const handleSubmitDriverDocs = async (e) => {
+    e.preventDefault();
+    if (!driverDocs.licensePhoto || !driverDocs.nationalIdPhoto || !driverDocs.licenseNumber.trim()) {
+      toast.error('Please upload your license and National ID photos and enter your license number.');
+      return;
+    }
+    setDocsSubmitting(true);
+    try {
+      await documentsAPI.uploadDriver({
+        licensePhotoUrl: driverDocs.licensePhoto,
+        nationalIdPhotoUrl: driverDocs.nationalIdPhoto,
+        licenseNumber: driverDocs.licenseNumber,
+        licenseExpiry: driverDocs.licenseExpiry || undefined,
+        nationalId: formData.nationalId,
+      });
+      toast.success('Documents submitted! Your driver account is pending admin verification.');
+      navigate('/driver');
+    } catch (err) {
+      toast.error(err?.response?.data?.error || err.message || 'Failed to submit documents');
+    } finally {
+      setDocsSubmitting(false);
+    }
   };
 
   const userRole = formData.role;
@@ -206,19 +265,26 @@ const RegisterPage = () => {
             <div className="auth-logo-wrapper">
               <DireDawaLogo />
             </div>
-            <h2>{step === 1 ? (t('auth.registerTitle')) : t('auth.verifyEmail')}</h2>
-            <p>{step === 1 ? (t('auth.registerSubtitle')) : `Enter the code sent to ${formData.email}`}</p>
+            <h2>{step === 1 ? (t('auth.registerTitle')) : step === 3 ? 'Driver Documents' : t('auth.verifyEmail')}</h2>
+            <p>{step === 1 ? (t('auth.registerSubtitle')) : step === 3 ? 'Upload your driving license and National ID (FAN) so the admin can verify your driver account.' : `Enter the code sent to ${formData.email}`}</p>
           </div>
 
           <div className="step-indicator">
-            <div className={`step ${step === 1 ? 'active' : 'completed'}`}>
-              <div className="step-number">{step === 1 ? '1' : <FaCheckCircle />}</div>
+            <div className={`step ${step === 1 || step === 2 ? 'active' : 'completed'}`}>
+              <div className="step-number">{step === 1 || step === 2 ? '1' : <FaCheckCircle />}</div>
               <span>{t('auth.stepAccount') || 'Account'}</span>
             </div>
-            <div className={`step ${step === 2 ? 'active' : ''}`}>
-              <div className="step-number">2</div>
-              <span>{t('auth.stepOtp') || 'Verify'}</span>
-            </div>
+            {formData.role === 'driver' ? (
+              <div className={`step ${step === 3 ? 'active' : ''}`}>
+                <div className="step-number">2</div>
+                <span>{t('auth.stepDocuments') || 'Documents'}</span>
+              </div>
+            ) : (
+              <div className={`step ${step === 2 ? 'active' : ''}`}>
+                <div className="step-number">2</div>
+                <span>{t('auth.stepOtp') || 'Verify'}</span>
+              </div>
+            )}
           </div>
 
           {error && <div className="error-message">{error}</div>}
@@ -283,6 +349,23 @@ const RegisterPage = () => {
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+
+              <div className="input-group">
+                <label>{t('auth.fanNumber') || 'FAN (National ID) Number'}</label>
+                <div className="input-wrapper">
+                  <FaIdCard className="input-icon" />
+                  <input
+                    type="text"
+                    name="nationalId"
+                    placeholder="Enter your FAN / National ID number"
+                    value={formData.nationalId}
+                    onChange={handleChange}
+                  />
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  Your FAN (National ID) is required and will be verified by our team.
+                </span>
               </div>
 
               <div className="input-group">
@@ -482,6 +565,89 @@ const RegisterPage = () => {
                 ← {t('auth.back')}
               </button>
             </div>
+          ) : step === 3 ? (
+            <form className="auth-form" onSubmit={handleSubmitDriverDocs}>
+              <div style={{
+                padding: '12px 14px', background: 'var(--bg-info, #eff6ff)',
+                border: '1px solid var(--border-info, #bfdbfe)', borderRadius: 8,
+                marginBottom: 16, fontSize: 13, color: 'var(--primary, #2563eb)'
+              }}>
+                <FaShieldAlt style={{ marginRight: 6 }} />
+                Submit your driving license and National ID (FAN) photo. Our admin will review and verify your account.
+              </div>
+
+              {/* License Photo */}
+              <div className="input-group">
+                <label>Driving License Photo</label>
+                <input type="file" accept="image/*" ref={driverDocRefs.licensePhoto} style={{ display: 'none' }}
+                  onChange={() => handleDriverDocUpload('licensePhoto')} />
+                {driverDocs.licensePhoto ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                    <img src={driverDocs.licensePhoto} alt="License" style={{ width: 90, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-light)' }} />
+                    <span style={{ fontSize: 12, color: 'var(--success, #16a34a)' }}><FaCheckCircle /> Uploaded</span>
+                  </div>
+                ) : (
+                  <button type="button" className="doc-upload-btn" style={{ width: '100%' }}
+                    onClick={() => driverDocRefs.licensePhoto.current?.click()}>
+                    <FaFileUpload size={20} />
+                    <span>{uploadingDoc === 'licensePhoto' ? 'Uploading...' : 'Upload License Photo'}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* License details */}
+              <div className="input-group">
+                <label>License Number</label>
+                <div className="input-wrapper">
+                  <FaIdCard className="input-icon" />
+                  <input
+                    type="text"
+                    value={driverDocs.licenseNumber}
+                    onChange={e => setDriverDocs({ ...driverDocs, licenseNumber: e.target.value })}
+                    placeholder="e.g. DD-12345"
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>License Expiry Date</label>
+                <div className="input-wrapper">
+                  <FaCalendarAlt className="input-icon" />
+                  <input
+                    type="date"
+                    value={driverDocs.licenseExpiry}
+                    onChange={e => setDriverDocs({ ...driverDocs, licenseExpiry: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* National ID Photo */}
+              <div className="input-group">
+                <label>National ID (FAN) Photo</label>
+                <input type="file" accept="image/*" ref={driverDocRefs.nationalIdPhoto} style={{ display: 'none' }}
+                  onChange={() => handleDriverDocUpload('nationalIdPhoto')} />
+                {driverDocs.nationalIdPhoto ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                    <img src={driverDocs.nationalIdPhoto} alt="National ID" style={{ width: 90, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-light)' }} />
+                    <span style={{ fontSize: 12, color: 'var(--success, #16a34a)' }}><FaCheckCircle /> Uploaded</span>
+                  </div>
+                ) : (
+                  <button type="button" className="doc-upload-btn" style={{ width: '100%' }}
+                    onClick={() => driverDocRefs.nationalIdPhoto.current?.click()}>
+                    <FaShieldAlt size={20} />
+                    <span>{uploadingDoc === 'nationalIdPhoto' ? 'Uploading...' : 'Upload National ID Photo'}</span>
+                  </button>
+                )}
+              </div>
+
+              <button type="submit" className="auth-submit" disabled={docsSubmitting}>
+                {docsSubmitting ? (
+                  <span className="loading-dots"><span></span><span></span><span></span></span>
+                ) : (
+                  'Submit Documents & Finish'
+                )}
+              </button>
+            </form>
           ) : null}
 
           <div className="auth-footer">

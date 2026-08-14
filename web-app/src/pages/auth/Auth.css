@@ -314,6 +314,24 @@
 }
 .auth-footer a:hover { text-decoration: underline; }
 
+.doc-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: var(--bg-info, #eff6ff);
+  color: var(--primary, #2563eb);
+  border: 1px dashed var(--primary, #93c5fd);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: var(--transition);
+}
+.doc-upload-btn:hover { background: #dbeafe; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .auth-page { padding: 20px 16px; }

@@ -490,6 +490,7 @@ const PassengerManagement = () => {
                 <div className="detail-row"><span className="detail-key">Name</span><span className="detail-val">{selectedPassenger.firstName} {selectedPassenger.lastName}</span></div>
                 <div className="detail-row"><span className="detail-key">Phone</span><span className="detail-val">{selectedPassenger.phoneNumber}</span></div>
                 <div className="detail-row"><span className="detail-key">Email</span><span className="detail-val">{selectedPassenger.email || 'N/A'}</span></div>
+                <div className="detail-row"><span className="detail-key">FAN (National ID)</span><span className="detail-val">{selectedPassenger.nationalId || 'N/A'}</span></div>
                 <div className="detail-row"><span className="detail-key">Status</span><span className="detail-val" style={{ color: getPassengerStatusColor(selectedPassenger.status), fontWeight: 600 }}>{selectedPassenger.status}</span></div>
                 <div className="detail-row"><span className="detail-key">Rating</span><span className="detail-val">⭐ {getRating(selectedPassenger).toFixed(1)}</span></div>
                 <div className="detail-row"><span className="detail-key">Total Trips</span><span className="detail-val">{selectedPassenger.totalTrips || 0}</span></div>

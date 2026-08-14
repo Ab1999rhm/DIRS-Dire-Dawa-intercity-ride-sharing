@@ -398,7 +398,7 @@ exports.getPendingDriverVerifications = asyncHandler(async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
 
   const drivers = await Driver.find({ verificationStatus: { $in: ['pending', 'under_review'] } })
-    .populate('user', 'firstName lastName phoneNumber email profilePhoto')
+    .populate('user', 'firstName lastName phoneNumber email profilePhoto nationalId')
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
@@ -418,7 +418,7 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
   }
 
   const drivers = await Driver.find(filter)
-    .populate('user', 'firstName lastName phoneNumber email profilePhoto isOnline')
+    .populate('user', 'firstName lastName phoneNumber email profilePhoto isOnline nationalId')
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
@@ -810,9 +810,12 @@ exports.processRefund = asyncHandler(async (req, res) => {
 
 // Driver details
 exports.getDriverDocuments = asyncHandler(async (req, res) => {
-  const driver = await Driver.findById(req.params.driverId).populate('user');
+  const driver = await Driver.findById(req.params.driverId).populate('user', 'firstName lastName phoneNumber email profilePhoto nationalId createdAt');
   if (!driver) return res.status(404).json({ message: 'Driver not found' });
-  res.json(driver.documents || {});
+  res.json({
+    driver: driver.toObject({ virtuals: true }),
+    user: driver.user
+  });
 });
 
 exports.approveDriverDirect = asyncHandler(async (req, res) => {

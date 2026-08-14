@@ -198,7 +198,12 @@ const AdminUsers = () => {
                 </div>
               </div>
               <div>{u.phoneNumber}</div>
-              <div><Badge variant={u.role === 'driver' ? 'success' : u.role === 'admin' ? 'warning' : 'primary'}>{u.role}</Badge></div>
+              <div>
+                <Badge variant={u.role === 'driver' ? 'success' : u.role === 'admin' ? 'warning' : 'primary'}>{u.role}</Badge>
+                <div style={{ marginTop: 4, fontSize: 11, color: 'var(--text-muted)' }}>
+                  {u.nationalId ? `FAN: ${u.nationalId}` : 'No FAN'}
+                </div>
+              </div>
               <div>
                 <StatusBadge status={u.status || 'active'} />
                 <div style={{ marginTop: 4 }}>
@@ -241,6 +246,7 @@ const AdminUsers = () => {
             <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val">{selectedUser.status || 'active'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.verification') || 'Verification'}</span><span className="detail-val">{selectedUser.isVerified ? 'Verified' : 'Unverified'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.email') || 'Email'}</span><span className="detail-val">{selectedUser.email || 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">FAN (National ID)</span><span className="detail-val">{selectedUser.nationalId || 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.joined') || 'Joined'}</span><span className="detail-val">{new Date(selectedUser.createdAt).toLocaleDateString()}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.id') || 'ID'}</span><span className="detail-val" style={{ fontSize: 11 }}>{selectedUser._id}</span></div>
           </div>

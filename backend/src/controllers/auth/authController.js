@@ -41,7 +41,7 @@ function maskEmail(email = '') {
 }
 
 exports.register = asyncHandler(async (req, res) => {
-  const { firstName, lastName, phoneNumber, email, password, role, referralCode, otp } = req.body;
+  const { firstName, lastName, phoneNumber, email, password, role, referralCode, otp, nationalId } = req.body;
 
   const [existingByPhone, existingByEmail] = await Promise.all([
     User.findOne({ phoneNumber }),
@@ -77,7 +77,7 @@ exports.register = asyncHandler(async (req, res) => {
   const userReferralCode = generateReferralCode(firstName);
 
   const user = await User.create({
-    firstName, lastName, phoneNumber, email, password, role, isVerified: true, referralCode: userReferralCode
+    firstName, lastName, phoneNumber, email, password, role, isVerified: true, referralCode: userReferralCode, nationalId
   });
 
   if (role === 'driver') {
@@ -86,7 +86,7 @@ exports.register = asyncHandler(async (req, res) => {
       licenseNumber: `PENDING-${user._id}`,
       licenseExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       licensePhoto: 'pending',
-      nationalId: 'PENDING',
+      nationalId: nationalId || 'PENDING',
       nationalIdPhoto: 'pending'
     });
   }

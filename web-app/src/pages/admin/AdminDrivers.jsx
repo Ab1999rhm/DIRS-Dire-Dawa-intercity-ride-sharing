@@ -187,6 +187,9 @@ const AdminDrivers = () => {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{driver.firstName} {driver.lastName}</h4>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>{driver.phoneNumber}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
+                      {driver.nationalId || driver.user?.nationalId ? `FAN: ${driver.nationalId || driver.user?.nationalId}` : 'No FAN number'}
+                    </p>
                   </div>
                   <StatusBadge status={driver.verificationStatus || 'pending'} />
                 </div>
@@ -284,7 +287,7 @@ const AdminDrivers = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{t('admin.documentInspection') || '📋 Document Inspection'}</h3>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>{inspectDriver.firstName} {inspectDriver.lastName} · {inspectDriver.phoneNumber}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>{inspectDriver.firstName} {inspectDriver.lastName} · {inspectDriver.phoneNumber} · FAN: {inspectDriver.nationalId || inspectDriver.user?.nationalId || '—'}</p>
               </div>
               <StatusBadge status={inspectDriver.verificationStatus || 'pending'} />
             </div>

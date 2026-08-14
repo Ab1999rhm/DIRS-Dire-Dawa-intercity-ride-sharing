@@ -15,6 +15,7 @@ const validateRegistration = [
   body('phoneNumber').matches(/^(\+251|0)?[97]\d{8}$/).withMessage('Valid Ethiopian phone number required'),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('role').isIn(['passenger', 'driver']).withMessage('Role must be passenger or driver'),
+  body('nationalId').optional({ values: 'falsy' }).trim().notEmpty().withMessage('FAN (National ID) number is required'),
   handleValidation
 ];
 
