@@ -21,6 +21,6 @@ router.get('/:id', protect, rideController.getRideRequest);
 router.post('/trip/:tripId/start', protect, authorize('driver'), rideController.startTrip);
 router.post('/trip/:tripId/complete', protect, authorize('driver'), rideController.completeTrip);
 router.post('/trip/:tripId/arrival', protect, authorize('driver'), rideController.confirmArrival);
-router.post('/trip/:tripId/cancel', protect, authorize('driver'), rideController.cancelTrip);
+router.post('/trip/:tripId/cancel', protect, authorize('driver', 'passenger'), rideController.cancelTrip);
 
 module.exports = router;
