@@ -1648,7 +1648,13 @@ const PassengerHome = () => {
               </div>
             </div>
             {bookingStep === 3 && (
-              <button className="booking-continue-btn" onClick={() => setBookingStep(rideType === 'intercity' ? 4 : 5)}>
+              <button className="booking-continue-btn" onClick={() => {
+                if (rideType === 'intercity' && selectedVehicle?.id === 'minibus') {
+                  setBookingStep(4); // Go to seat picker for minibus
+                } else {
+                  setBookingStep(5); // Skip seat picker for cars
+                }
+              }}>
                 Continue <FaArrowRight />
               </button>
             )}
