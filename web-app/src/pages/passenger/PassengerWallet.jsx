@@ -155,10 +155,14 @@ const PassengerWallet = () => {
 
   const formatTransaction = (tx) => {
     const isCredit = tx.type === 'top_up' || tx.type === 'credit' || tx.status === 'refunded';
-    let label = tx.type === 'top_up' ? (t('passenger.topUp') || 'Top-up')
-      : tx.type === 'withdrawal' ? (t('passenger.withdraw') || 'Withdrawal')
+    const txLabel = (key, fallback) => {
+      const v = t(key);
+      return v && v !== key ? v : fallback;
+    };
+    let label = tx.type === 'top_up' ? txLabel('passenger.topUp', 'Top-up')
+      : tx.type === 'withdrawal' ? txLabel('passenger.withdraw', 'Withdrawal')
       : tx.type === 'credit' ? 'Wallet Credit'
-      : (t('passenger.tripPayments') || 'Trip Payment');
+      : txLabel('passenger.tripPayments', 'Trip Payment');
     if (tx.paymentGatewayResponse?.reason) label = tx.paymentGatewayResponse.reason;
     return {
       icon: isCredit ? <FaArrowDown /> : <FaArrowUp />,
@@ -282,7 +286,7 @@ const PassengerWallet = () => {
             <strong style={{ color: 'var(--primary)', fontSize: 18 }}>ETB {balance.toFixed(2)}</strong>
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{t('passenger.amount')} (ETB)</label>
+            <label>{t('passenger.amount')}</label>
             <div className="input-wrapper">
               <FaMoneyBillWave className="input-icon" />
               <input
@@ -313,7 +317,7 @@ const PassengerWallet = () => {
             ))}
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>Account Holder Name</label>
+            <label>{t('passenger.accountHolderName')}</label>
             <div className="input-wrapper">
               <FaUser className="input-icon" />
               <input
@@ -325,7 +329,7 @@ const PassengerWallet = () => {
             </div>
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : withdrawMethod === 'cbe_birr' ? 'CBE Birr Number' : 'Account Number'}</label>
+            <label>{withdrawMethod === 'telebirr' ? t('passenger.telebirrNumber') : withdrawMethod === 'cbe_birr' ? t('passenger.cbeBirrNumber') : t('passenger.accountNumber')}</label>
             <div className="input-wrapper">
               <FaMobileAlt className="input-icon" />
               <input
