@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   FaWallet, FaHistory, FaMoneyBillWave, FaMobileAlt, FaCreditCard,
   FaArrowUp, FaArrowDown, FaPlus,
-  FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle, FaTrashAlt, FaUser
+  FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle, FaTrashAlt
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { paymentsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
+import { Button } from '../../components/common';
 import './Passenger.css';
 
 const PassengerWallet = () => {
@@ -26,29 +27,15 @@ const PassengerWallet = () => {
   const [topUpMethod, setTopUpMethod] = useState('telebirr');
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
-  const [withdrawAccountName, setWithdrawAccountName] = useState('');
-  const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
-  const [withdrawBankCode, setWithdrawBankCode] = useState('');
-  const [banks, setBanks] = useState([]);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const withdrawalAccount = user?.withdrawalAccount;
 
   useEffect(() => {
     fetchWalletData();
-    loadBanks();
     const interval = setInterval(() => fetchWalletData(true), 20000);
     return () => clearInterval(interval);
   }, []);
-
-  const loadBanks = async () => {
-    try {
-      const res = await paymentsAPI.getBanks();
-      setBanks(res.data.banks || []);
-    } catch (err) {
-      console.error('Failed to fetch banks:', err);
-    }
-  };
 
   const handleDelete = async (tx) => {
     if (!window.confirm('Delete this transaction from your history?')) return;
@@ -118,14 +105,15 @@ const PassengerWallet = () => {
       toast.error(t('passenger.insufficientBalance'));
       return;
     }
-    const effectiveAccountName = withdrawAccountName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
-    const effectiveAccountNumber = withdrawAccountNumber || user?.phoneNumber || '';
-    if (!effectiveAccountName || !effectiveAccountNumber) {
-      toast.error('Enter an account holder name and number to withdraw');
+    const account = user?.withdrawalAccount;
+    if (!account || !account.accountName || !account.accountNumber) {
+      toast.error('Set up a withdrawal account in Settings first');
+      navigate('/passenger/profile');
       return;
     }
-    if (withdrawMethod === 'bank' && !withdrawBankCode) {
-      toast.error('Select a bank to withdraw');
+    if (account.method === 'bank' && !account.bankCode) {
+      toast.error('Set up your bank in Settings first');
+      navigate('/passenger/profile');
       return;
     }
     setWithdrawLoading(true);
@@ -133,18 +121,15 @@ const PassengerWallet = () => {
       await paymentsAPI.walletWithdraw({
         amount,
         currency: 'ETB',
-        method: withdrawMethod,
+        method: account.method,
         accountDetails: {
-          accountName: effectiveAccountName,
-          accountNumber: effectiveAccountNumber,
-          bankCode: withdrawBankCode,
+          accountName: account.accountName,
+          accountNumber: account.accountNumber,
+          bankCode: account.bankCode,
         },
       });
       toast.success('Withdrawal submitted for admin approval');
       setWithdrawAmount('');
-      setWithdrawAccountName('');
-      setWithdrawAccountNumber('');
-      setWithdrawBankCode('');
       fetchWalletData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Withdrawal failed');
@@ -299,69 +284,39 @@ const PassengerWallet = () => {
               />
             </div>
           </div>
-          <h3 className="passenger-subsection">{t('passenger.selectMethod')}</h3>
-          <div className="passenger-payment-grid" style={{ marginBottom: 16 }}>
-            {[
-              { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
-              { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
-              { id: 'bank', icon: <FaCreditCard />, label: 'Bank Transfer' },
-            ].map(m => (
-              <div
-                key={m.id}
-                className={`passenger-payment-option ${withdrawMethod === m.id ? 'selected' : ''}`}
-                onClick={() => setWithdrawMethod(m.id)}
+          {withdrawalAccount ? (
+            <div className="payment-method-item selected" style={{ marginBottom: 16 }}>
+              <div className={`payment-method-icon ${withdrawalAccount.method === 'bank' ? 'chapa' : 'telebirr'}`}>
+                {withdrawalAccount.method === 'bank' ? <FaCreditCard /> : <FaMobileAlt />}
+              </div>
+              <div className="payment-method-info">
+                <h4>
+                  {withdrawalAccount.method === 'bank' ? 'Bank Transfer'
+                    : withdrawalAccount.method === 'cbe_birr' ? 'CBE Birr' : 'Telebirr'}
+                </h4>
+                <p>{withdrawalAccount.accountName} · {withdrawalAccount.accountNumber}</p>
+              </div>
+              <button
+                style={{ border: 'none', background: 'transparent', color: 'var(--primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 6px' }}
+                onClick={() => navigate('/passenger/profile')}
               >
-                <div className="payment-icon">{m.icon}</div>
-                <span className="payment-label">{m.label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{t('passenger.accountHolderName')}</label>
-            <div className="input-wrapper">
-              <FaUser className="input-icon" />
-              <input
-                type="text"
-                placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Account holder name'}
-                value={withdrawAccountName}
-                onChange={e => setWithdrawAccountName(e.target.value)}
-              />
+                Change
+              </button>
             </div>
-          </div>
-          <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{withdrawMethod === 'telebirr' ? t('passenger.telebirrNumber') : withdrawMethod === 'cbe_birr' ? t('passenger.cbeBirrNumber') : t('passenger.accountNumber')}</label>
-            <div className="input-wrapper">
-              <FaMobileAlt className="input-icon" />
-              <input
-                type="text"
-                placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
-                value={withdrawAccountNumber}
-                onChange={e => setWithdrawAccountNumber(e.target.value)}
-              />
-            </div>
-          </div>
-          {withdrawMethod === 'bank' && (
-            <div className="input-group" style={{ marginBottom: 16 }}>
-              <label>Bank</label>
-              <div className="input-wrapper">
-                <FaCreditCard className="input-icon" />
-                <select
-                  style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
-                  value={withdrawBankCode}
-                  onChange={e => setWithdrawBankCode(e.target.value)}
-                >
-                  <option value="">Select bank</option>
-                  {banks.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
+          ) : (
+            <div className="input-group" style={{ marginBottom: 16, padding: 14, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 10px' }}>
+                Set up your withdrawal account in Settings to withdraw funds.
+              </p>
+              <Button variant="primary" size="sm" fullWidth onClick={() => navigate('/passenger/profile')}>
+                Set Up Withdrawal Account
+              </Button>
             </div>
           )}
           <div className="passenger-withdraw-note">
             <FaClock size={13} /> <span>Withdrawals are reviewed and approved by an admin before processing (1-3 business days).</span>
           </div>
-          <button className="passenger-primary-btn" disabled={withdrawLoading} onClick={handleWithdraw}>
+          <button className="passenger-primary-btn" disabled={withdrawLoading || !withdrawalAccount} onClick={handleWithdraw}>
             {withdrawLoading ? 'Processing...' : (t('passenger.withdrawNow'))}
           </button>
         </div>

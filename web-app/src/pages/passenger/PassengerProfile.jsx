@@ -53,6 +53,15 @@ const PassengerProfile = () => {
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState(user?.paymentMethod || 'cash');
 
+  // Withdrawal payout account (saved once, reused by wallet withdrawals)
+  const [withdrawalAccount, setWithdrawalAccount] = useState(null);
+  const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
+  const [withdrawAccountName, setWithdrawAccountName] = useState('');
+  const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
+  const [withdrawBankCode, setWithdrawBankCode] = useState('');
+  const [banks, setBanks] = useState([]);
+  const [savingWithdrawAccount, setSavingWithdrawAccount] = useState(false);
+
   // Notification preferences
   const [prefRideUpdates, setPrefRideUpdates] = useState(true);
   const [prefPromotions, setPrefPromotions] = useState(true);
@@ -117,6 +126,14 @@ const PassengerProfile = () => {
       setProfilePhoto(user.profilePhoto || '');
       setFavoriteLocations(user.favoriteLocations || []);
       setPaymentMethod(user.paymentMethod || 'cash');
+      const wa = user.withdrawalAccount || {};
+      if (Object.keys(wa).length) {
+        setWithdrawalAccount(wa);
+        setWithdrawMethod(wa.method || 'telebirr');
+        setWithdrawAccountName(wa.accountName || '');
+        setWithdrawAccountNumber(wa.accountNumber || '');
+        setWithdrawBankCode(wa.bankCode || '');
+      }
       const prefs = user.preferences || {};
       setPrefRideUpdates(prefs.rideUpdates !== false);
       setPrefPromotions(prefs.promotions !== false);
@@ -126,6 +143,41 @@ const PassengerProfile = () => {
       setAllowAnalytics(prefs.allowAnalytics === true);
     }
   }, [user]);
+
+  useEffect(() => {
+    paymentsAPI.getBanks()
+      .then(res => setBanks(res.data.banks || []))
+      .catch(() => {});
+  }, []);
+
+  const handleSaveWithdrawAccount = async () => {
+    if (!withdrawAccountName.trim() || !withdrawAccountNumber.trim()) {
+      toast.error('Please enter an account holder name and number');
+      return;
+    }
+    if (withdrawMethod === 'bank' && !withdrawBankCode) {
+      toast.error('Please select a bank for withdrawals');
+      return;
+    }
+    const account = {
+      method: withdrawMethod,
+      accountName: withdrawAccountName,
+      accountNumber: withdrawAccountNumber,
+      bankCode: withdrawMethod === 'bank' ? withdrawBankCode : '',
+    };
+    setSavingWithdrawAccount(true);
+    try {
+      const res = await authAPI.updateProfile({ withdrawalAccount: account });
+      const saved = res.data.user?.withdrawalAccount || account;
+      setWithdrawalAccount(saved);
+      if (!res.data.user) setUser({ ...user, withdrawalAccount: saved });
+      toast.success('Withdrawal account saved');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to save withdrawal account');
+    } finally {
+      setSavingWithdrawAccount(false);
+    }
+  };
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -646,6 +698,99 @@ const PassengerProfile = () => {
               onClick={() => navigate('/passenger/wallet')}
             >
               {t('passenger.walletTopUp') || 'Manage Wallet'}
+            </Button>
+          </div>
+
+          {/* Withdrawal Payout Account */}
+          <div style={{ borderTop: '1px solid var(--border-light)', marginTop: 24, paddingTop: 20 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FaMoneyBillWave /> {t('passenger.withdrawalAccount') || 'Withdrawal Account'}
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>
+              {t('passenger.withdrawalAccountDesc') || 'Set your preferred payout method and account once — wallet withdrawals will use it automatically, no need to re-enter details.'}
+            </p>
+
+            {withdrawalAccount && (
+              <div className="payment-method-item selected" style={{ marginBottom: 14 }}>
+                <div className={`payment-method-icon ${withdrawalAccount.method === 'bank' ? 'chapa' : 'telebirr'}`}>
+                  {withdrawalAccount.method === 'bank' ? <FaCreditCard /> : <FaMobileAlt />}
+                </div>
+                <div className="payment-method-info">
+                  <h4>
+                    {withdrawalAccount.method === 'bank' ? 'Bank Transfer'
+                      : withdrawalAccount.method === 'cbe_birr' ? 'CBE Birr' : 'Telebirr'}
+                  </h4>
+                  <p>{withdrawalAccount.accountName} · {withdrawalAccount.accountNumber}</p>
+                </div>
+                <span className="payment-default-badge">{t('passenger.default') || 'Default'}</span>
+              </div>
+            )}
+
+            <div className="passenger-payment-grid" style={{ marginBottom: 12 }}>
+              {[
+                { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
+                { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
+                { id: 'bank', icon: <FaCreditCard />, label: 'Bank Transfer' },
+              ].map(m => (
+                <div
+                  key={m.id}
+                  className={`passenger-payment-option ${withdrawMethod === m.id ? 'selected' : ''}`}
+                  onClick={() => setWithdrawMethod(m.id)}
+                >
+                  <div className="payment-icon">{m.icon}</div>
+                  <span className="payment-label">{m.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="input-group" style={{ marginBottom: 12 }}>
+              <label>{t('passenger.accountHolderName') || 'Account Holder Name'}</label>
+              <div className="input-wrapper">
+                <FaUser className="input-icon" />
+                <input
+                  type="text"
+                  placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Account holder name'}
+                  value={withdrawAccountName}
+                  onChange={e => setWithdrawAccountName(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="input-group" style={{ marginBottom: 12 }}>
+              <label>
+                {withdrawMethod === 'bank' ? (t('passenger.accountNumber') || 'Account Number')
+                  : withdrawMethod === 'cbe_birr' ? (t('passenger.cbeBirrNumber') || 'CBE Birr Number')
+                  : (t('passenger.telebirrNumber') || 'Telebirr Number')}
+              </label>
+              <div className="input-wrapper">
+                <FaMobileAlt className="input-icon" />
+                <input
+                  type="text"
+                  placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
+                  value={withdrawAccountNumber}
+                  onChange={e => setWithdrawAccountNumber(e.target.value)}
+                />
+              </div>
+            </div>
+            {withdrawMethod === 'bank' && (
+              <div className="input-group" style={{ marginBottom: 12 }}>
+                <label>Bank</label>
+                <div className="input-wrapper">
+                  <FaCreditCard className="input-icon" />
+                  <select
+                    style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+                    value={withdrawBankCode}
+                    onChange={e => setWithdrawBankCode(e.target.value)}
+                  >
+                    <option value="">Select bank</option>
+                    {banks.map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+            <Button variant="primary" fullWidth loading={savingWithdrawAccount} onClick={handleSaveWithdrawAccount}>
+              {withdrawalAccount ? (t('passenger.updateWithdrawAccount') || 'Update') : (t('passenger.saveWithdrawAccount') || 'Save')}
             </Button>
           </div>
         </Card>

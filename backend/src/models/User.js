@@ -192,6 +192,12 @@ const userSchema = new mongoose.Schema({
     enum: ['cash', 'telebirr', 'chapa', 'wallet'],
     default: 'cash'
   },
+  withdrawalAccount: {
+    method: { type: String, enum: ['telebirr', 'cbe_birr', 'bank'], default: 'telebirr' },
+    accountName: String,
+    accountNumber: String,
+    bankCode: String
+  },
   totalRatings: {
     type: Number,
     default: 0
