@@ -13,6 +13,7 @@ router.get('/earnings', protect, authorize('driver'), paymentController.getDrive
 router.post('/withdraw', protect, authorize('driver'), validateWithdrawal, paymentController.requestWithdrawal);
 router.get('/banks', protect, paymentController.getBanks);
 router.get('/withdraw/verify/:reference', protect, paymentController.verifyWithdrawal);
+router.post('/withdraw/reconcile', protect, authorize('admin'), paymentController.reconcileWithdrawals);
 router.post('/chapa/approval', paymentController.chapaApproval);
 router.post('/chapa/webhook', paymentController.chapaWebhook);
 router.delete('/wallet/:paymentId', protect, validatePaymentDetailRoute, paymentController.deleteTransaction);

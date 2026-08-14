@@ -167,6 +167,8 @@ server.listen(PORT, () => {
   logger.info(`DIRS Backend running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
   const { startKeepAlive } = require('./services/keepAlive');
   startKeepAlive();
+  const { startWithdrawalReconciliation } = require('./services/withdrawalReconciliation');
+  startWithdrawalReconciliation();
 });
 
 module.exports = { app, server };

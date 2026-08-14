@@ -463,6 +463,17 @@ exports.requestWithdrawal = asyncHandler(async (req, res) => {
   driver.availableBalance -= amount;
   await driver.save();
 
+  const payment = await Payment.create({
+    type: 'withdrawal',
+    passenger: req.user._id,
+    driver: driver._id,
+    amount,
+    method,
+    status: 'processing',
+    transactionId: transfer.reference || `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+    paymentGatewayResponse: { ...transfer, accountDetails }
+  });
+
   logger.info('Driver withdrawal initiated via Chapa', { driverId: driver._id, amount, method, reference: transfer.reference });
 
   res.json({
@@ -483,6 +494,12 @@ exports.verifyWithdrawal = asyncHandler(async (req, res) => {
   const { reference } = req.params;
   const verify = await chapaService.verifyTransfer(reference);
   res.json({ reference, transfer: verify });
+});
+
+exports.reconcileWithdrawals = asyncHandler(async (req, res) => {
+  const { reconcilePendingWithdrawals } = require('../../services/withdrawalReconciliation');
+  const result = await reconcilePendingWithdrawals();
+  res.json(result);
 });
 
 const processTelebirrPayment = async (amount, phoneNumber) => {
