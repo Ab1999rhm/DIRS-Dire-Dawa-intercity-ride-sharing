@@ -494,13 +494,22 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
 
   if (status === 'success') {
     const payment = await Payment.findOne({ transactionId: tx_ref });
+    let recent = [];
+    if (!payment) {
+      recent = await Payment.find({ type: 'top_up', method: 'chapa' })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('transactionId status createdAt')
+        .lean();
+    }
     logger.info('Chapa webhook lookup', {
       tx_ref,
       found: !!payment,
       paymentStatus: payment?.status,
       paymentId: payment?._id,
       paymentType: payment?.type,
-      amount: payment?.amount
+      amount: payment?.amount,
+      recentChapaTopUps: recent
     });
     if (payment && payment.status !== 'completed') {
       let trusted = true;
