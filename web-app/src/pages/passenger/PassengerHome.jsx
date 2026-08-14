@@ -566,29 +566,28 @@ const PassengerHome = () => {
 
     const currentVehicle = selectedVehicle || VEHICLES[0];
 
+    // Map frontend vehicle IDs to backend vehicle types
+    const vehicleTypeMap = {
+      'bajaj': 'bajaj',
+      'economy': 'car',
+      'comfort': 'car',
+      'minibus': 'minibus'
+    };
+    
+    const backendVehicleType = vehicleTypeMap[currentVehicle.id] || 'car';
+
     try {
-      const fareCalc = calcFare(currentVehicle);
-      const res = await ridesAPI.create({
+      const rideData = await ridesAPI.create({
         pickupLocation: { address: pickup, coordinates: pickupCoords },
         dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
         rideType,
-        vehicleType: currentVehicle.id,
+        vehicleType: backendVehicleType,
         paymentMethod,
         estimatedFare: fareCalc.total,
         promoCode: promoCode || undefined,
-        scheduledTime: scheduleEnabled && scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
+        passengersCount: passengersCount || 1,
+        scheduledTime: scheduleEnabled ? scheduledTime : undefined,
       });
-
-      const rideData = res.data.rideRequest || res.data.ride || {
-        _id: res.data.rideRequestId || 'demo-' + Date.now(),
-        pickupLocation: { address: pickup, coordinates: pickupCoords },
-        dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
-        estimatedFare: fareCalc.total,
-        vehicleType: currentVehicle.id,
-        rideType,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      };
 
       setActiveRide(rideData);
 
@@ -604,7 +603,7 @@ const PassengerHome = () => {
           rideRequestId: rideData._id,
           pickupLocation: { address: pickup, coordinates: pickupCoords },
           dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
-          vehicleType: currentVehicle.id,
+          vehicleType: backendVehicleType,
           estimatedFare: fareCalc.total,
           passengerId: user?._id,
         });
