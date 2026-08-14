@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef, useMemo } from 'react';
-import { authAPI, chatAPI } from '../services/api';
+import { authAPI, chatAPI, notificationsAPI } from '../services/api';
 import { io } from 'socket.io-client';
 
 const AuthContext = createContext(null);
@@ -28,6 +28,17 @@ export const AuthProvider = ({ children }) => {
       const map = {};
       trips.forEach(t => { if (t.unread > 0) map[t.tripId] = t.unread; });
       setChatUnread(map);
+    }).catch(() => {});
+  }, []);
+
+  const loadNotifications = useCallback(() => {
+    if (!localStorage.getItem('accessToken')) return;
+    notificationsAPI.get({ limit: 20 }).then((res) => {
+      const data = res.data || {};
+      if (Array.isArray(data.notifications)) {
+        setNotifications(data.notifications.map((n, i) => ({ ...n, _key: n._id || i })));
+      }
+      if (typeof data.unreadCount === 'number') setUnreadCount(data.unreadCount);
     }).catch(() => {});
   }, []);
 
@@ -94,8 +105,22 @@ export const AuthProvider = ({ children }) => {
     });
 
     newSocket.on('notification', (data) => {
-      setNotifications(prev => [data, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      // New shape: { notification, unreadCount }; old shape: { type, title, body }
+      if (data?.notification) {
+        setNotifications(prev => {
+          const next = [{ ...data.notification, _key: data.notification._id }, ...prev];
+          return next.slice(0, 100);
+        });
+        if (typeof data.unreadCount === 'number') setUnreadCount(data.unreadCount);
+        else setUnreadCount(prev => prev + 1);
+      } else if (data?.title || data?.body) {
+        setNotifications(prev => [{ ...data, _key: `push-${Date.now()}` }, ...prev].slice(0, 100));
+        setUnreadCount(prev => prev + 1);
+      }
+    });
+
+    newSocket.on('notification_count', (data) => {
+      if (typeof data?.unreadCount === 'number') setUnreadCount(data.unreadCount);
     });
 
     newSocket.on('new_ride_request', (data) => {
@@ -156,6 +181,7 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data.user);
           setDriverProfile(res.data.driverProfile);
           connectSocket(token);
+          loadNotifications();
         })
         .catch(() => {
           clearTimeout(wakingTimer);
@@ -178,6 +204,7 @@ export const AuthProvider = ({ children }) => {
     setUser(res.data.user);
     setDriverProfile(res.data.driverProfile);
     connectSocket(res.data.accessToken);
+    loadNotifications();
     return res.data.user;
   };
 
@@ -192,6 +219,7 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     if (driverProfileData) setDriverProfile(driverProfileData);
     connectSocket(accessToken);
+    loadNotifications();
   };
 
   const logout = () => {
@@ -227,7 +255,7 @@ export const AuthProvider = ({ children }) => {
   const contextValue = useMemo(() => ({
     user, driverProfile, loading, serverWaking, socket,
     login, register, completeRegistration, logout, setUser, setDriverProfile,
-    notifications, unreadCount, setNotifications, setUnreadCount,
+    notifications, unreadCount, setNotifications, setUnreadCount, loadNotifications,
     newRideRequest, clearNewRideRequest,
     rideAccepted, clearRideAccepted,
     driverLocation, tripStatusUpdate,
@@ -236,7 +264,7 @@ export const AuthProvider = ({ children }) => {
     chatUnread, markTripRead,
   }), [
     user, driverProfile, loading, serverWaking, socket,
-    notifications, unreadCount,
+    notifications, unreadCount, loadNotifications,
     newRideRequest, rideAccepted,
     driverLocation, tripStatusUpdate, sosAlert,
     chatUnread,

@@ -1,13 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
-import { FaBell, FaGlobe, FaBars, FaTimes, FaUser, FaCar, FaShieldAlt, FaSun, FaMoon } from 'react-icons/fa';
+import { notificationsAPI } from '../../services/api';
+import { FaBell, FaGlobe, FaBars, FaTimes, FaUser, FaCar, FaShieldAlt, FaSun, FaMoon, FaCheckDouble, FaCheck } from 'react-icons/fa';
 import './Navbar.css';
 
 const Navbar = ({ onMenuToggle }) => {
-  const { user, logout, unreadCount } = useAuth();
+  const { user, logout, unreadCount, notifications, setUnreadCount, loadNotifications } = useAuth();
   const { language, setLanguage, availableLanguages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
@@ -17,6 +18,44 @@ const Navbar = ({ onMenuToggle }) => {
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const notifRef = useRef(null);
   const langRef = useRef(null);
+
+  const handleOpenNotifications = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) loadNotifications();
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsAPI.markAllRead();
+      setUnreadCount(0);
+      loadNotifications();
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMarkRead = async (id) => {
+    try {
+      await notificationsAPI.markRead(id);
+      loadNotifications();
+    } catch {
+      // ignore
+    }
+  };
+
+  const formatTime = useCallback((iso) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const diff = Date.now() - d.getTime();
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+      return d.toLocaleDateString();
+    } catch {
+      return '';
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -115,18 +154,40 @@ const Navbar = ({ onMenuToggle }) => {
             {theme === 'light' ? <FaMoon /> : <FaSun />}
           </button>
           <div className="notif-wrapper" ref={notifRef}>
-            <button className="nav-icon-btn" onClick={() => setShowNotifications(!showNotifications)}>
+            <button className="nav-icon-btn" onClick={handleOpenNotifications}>
               <FaBell />
               {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
             </button>
             {showNotifications && (
               <div className="notif-dropdown">
-                <div className="notif-header">Notifications</div>
-                {unreadCount > 0 ? (
-                  <div className="notif-item">You have {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</div>
-                ) : (
-                  <div className="notif-item empty">No new notifications</div>
-                )}
+                <div className="notif-header">
+                  <span>Notifications</span>
+                  {unreadCount > 0 && (
+                    <button className="notif-mark-all" onClick={handleMarkAllRead}>
+                      <FaCheckDouble /> Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className="notif-list">
+                  {notifications.length === 0 ? (
+                    <div className="notif-item empty">No notifications</div>
+                  ) : (
+                    notifications.slice(0, 15).map((n) => (
+                      <div key={n._key || n._id} className={`notif-item ${n.isRead ? '' : 'unread'}`}>
+                        <div className="notif-item-title">{n.title || 'DIRS Update'}</div>
+                        <div className="notif-item-msg">{n.message || n.body || ''}</div>
+                        <div className="notif-item-meta">
+                          <span>{formatTime(n.createdAt || n.timestamp)}</span>
+                          {!n.isRead && (
+                            <button className="notif-read-one" onClick={() => handleMarkRead(n._id)}>
+                              <FaCheck /> Read
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>

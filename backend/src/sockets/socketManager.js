@@ -12,15 +12,9 @@ let io;
 const initializeSocket = (server) => {
   io = socketIo(server, {
     cors: {
-      origin: [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-        'http://localhost:3003',
-        process.env.PASSENGER_APP_URL,
-        process.env.DRIVER_APP_URL,
-        process.env.ADMIN_APP_URL
-      ].filter(Boolean),
+      // Auth is enforced via JWT in the handshake middleware below, so
+      // sockets can accept any origin.
+      origin: true,
       methods: ['GET', 'POST'],
       credentials: true
     }

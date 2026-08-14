@@ -55,6 +55,22 @@ const createNotification = async (recipientId, type, title, message, data = {}, 
       channel
     });
 
+    // Live-push to the recipient's room so ALL notifications (not just ride
+    // updates) appear immediately in the UI, along with the updated unread count.
+    try {
+      const io = require('../sockets/socketManager').getIO();
+      if (io) {
+        const unreadCount = await Notification.countDocuments({ recipient: recipientId, isRead: false });
+        io.to(`user_${recipientId}`).emit('notification', {
+          notification,
+          unreadCount
+        });
+        io.to(`user_${recipientId}`).emit('notification_count', { unreadCount });
+      }
+    } catch (pushError) {
+      logger.warn('Live notification push failed', { error: pushError.message });
+    }
+
     return notification;
   } catch (error) {
     logger.error('Create notification error', { error: error.message });
@@ -126,8 +142,6 @@ const notifyRideUpdate = async (recipientId, type, rideData) => {
     messages[type] || 'Update available',
     rideData
   );
-
-  await sendPushNotification(recipientId, titles[type], messages[type], rideData, type);
 
   return notification;
 };
