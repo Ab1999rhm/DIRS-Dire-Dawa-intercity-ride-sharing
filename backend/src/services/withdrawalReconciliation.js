@@ -82,7 +82,7 @@ async function reconcilePendingWithdrawals() {
 
   const pending = await Payment.find({
     type: 'withdrawal',
-    status: { $in: ['processing', 'pending'] },
+    status: { $in: ['processing'] },
     createdAt: { $gte: cutoff }
   }).limit(50);
 

@@ -94,7 +94,7 @@ const DriverEarnings = () => {
         method: withdrawMethod,
         accountDetails: { accountName, accountNumber, bankCode }
       });
-      toast.success('Withdrawal request submitted successfully');
+      toast.success('Withdrawal request submitted for admin approval');
       setWithdrawAmount('');
       setBankCode('');
       fetchEarnings();
@@ -196,17 +196,26 @@ const DriverEarnings = () => {
 
         <div className="input-group" style={{ marginBottom: 16 }}>
           <label>Withdrawal Method</label>
-          <div className="input-wrapper">
-            <FaMobileAlt className="input-icon" />
-            <select
-              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
-              value={withdrawMethod}
-              onChange={e => setWithdrawMethod(e.target.value)}
-            >
-              <option value="telebirr">Telebirr</option>
-              <option value="cbe_birr">CBE Birr</option>
-              <option value="bank">Bank Transfer</option>
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 6 }}>
+            {[
+              { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
+              { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
+              { id: 'bank', icon: <FaCreditCard />, label: 'Bank' },
+            ].map(m => (
+              <div
+                key={m.id}
+                onClick={() => setWithdrawMethod(m.id)}
+                style={{
+                  padding: '12px 8px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
+                  border: withdrawMethod === m.id ? '2px solid #2563eb' : '2px solid var(--border-light, #e5e7eb)',
+                  background: withdrawMethod === m.id ? 'rgba(37,99,235,0.06)' : 'var(--card)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div style={{ fontSize: 18, color: withdrawMethod === m.id ? '#2563eb' : 'var(--text-muted)', marginBottom: 6 }}>{m.icon}</div>
+                <span style={{ fontSize: 12, fontWeight: 600, color: withdrawMethod === m.id ? '#2563eb' : 'var(--text)' }}>{m.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -225,12 +234,12 @@ const DriverEarnings = () => {
         </div>
 
         <div className="input-group" style={{ marginBottom: 16 }}>
-          <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : 'Account Number'}</label>
+          <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : withdrawMethod === 'cbe_birr' ? 'CBE Birr Number' : 'Account Number'}</label>
           <div className="input-wrapper">
             <FaMobileAlt className="input-icon" />
             <input
               type="text"
-              placeholder={withdrawMethod === 'telebirr' ? '09...' : 'Account number'}
+              placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
               value={accountNumber}
               onChange={e => setAccountNumber(e.target.value)}
               style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
@@ -257,6 +266,9 @@ const DriverEarnings = () => {
           </div>
         )}
 
+        <div style={{ padding: 10, background: 'rgba(59,130,246,0.08)', borderRadius: 8, marginBottom: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
+          <FaClock size={10} style={{ marginRight: 4 }} /> Withdrawals are reviewed and approved by an admin before processing (1-3 business days).
+        </div>
         <button
           type="button"
           disabled={withdrawing}

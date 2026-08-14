@@ -304,6 +304,10 @@ export const adminAPI = {
   getRevenueBreakdown: (params) => api.get('/admin/financials/revenue', { params }),
   getPaymentTransactions: (params) => api.get('/admin/financials/transactions', { params }),
   processCommission: (data) => api.post('/admin/financials/commission', data),
+  // Withdrawal approvals
+  getWithdrawals: (params) => api.get('/payments/withdrawals', { params }),
+  approveWithdrawal: (id, note) => api.post(`/payments/withdrawals/${id}/approve`, { note }),
+  rejectWithdrawal: (id, reason, note) => api.post(`/payments/withdrawals/${id}/reject`, { reason, note }),
   // Safety endpoints
   getFraudAlerts: () => api.get('/admin/safety/fraud-alerts'),
   getSuspiciousActivity: () => api.get('/admin/safety/suspicious-activity'),

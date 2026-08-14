@@ -138,7 +138,7 @@ const PassengerWallet = () => {
           bankCode: withdrawBankCode,
         },
       });
-      toast.success(t('passenger.withdrawSuccess'));
+      toast.success('Withdrawal submitted for admin approval');
       setWithdrawAmount('');
       setWithdrawAccountName('');
       setWithdrawAccountNumber('');
@@ -279,7 +279,7 @@ const PassengerWallet = () => {
             {t('passenger.availableBalance')}: <strong style={{ color: 'var(--text)', fontSize: 15 }}>ETB {balance.toFixed(2)}</strong>
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{t('passenger.amount')}</label>
+            <label>{t('passenger.amount')} (ETB)</label>
             <div className="input-wrapper">
               <FaMoneyBillWave className="input-icon" />
               <input
@@ -287,24 +287,27 @@ const PassengerWallet = () => {
                 placeholder="Enter amount"
                 value={withdrawAmount}
                 onChange={e => setWithdrawAmount(e.target.value)}
+                min="100"
                 max={balance}
               />
             </div>
           </div>
-          <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{t('passenger.selectMethod')}</label>
-            <div className="input-wrapper">
-              <FaMobileAlt className="input-icon" />
-              <select
-                style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
-                value={withdrawMethod}
-                onChange={e => setWithdrawMethod(e.target.value)}
+          <h3 className="passenger-subsection">{t('passenger.selectMethod')}</h3>
+          <div className="passenger-payment-grid" style={{ marginBottom: 16 }}>
+            {[
+              { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
+              { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
+              { id: 'bank', icon: <FaCreditCard />, label: 'Bank Transfer' },
+            ].map(m => (
+              <div
+                key={m.id}
+                className={`passenger-payment-option ${withdrawMethod === m.id ? 'selected' : ''}`}
+                onClick={() => setWithdrawMethod(m.id)}
               >
-                <option value="telebirr">Telebirr</option>
-                <option value="cbe_birr">CBE Birr</option>
-                <option value="bank">Bank Transfer</option>
-              </select>
-            </div>
+                <div className="payment-icon">{m.icon}</div>
+                <span className="payment-label">{m.label}</span>
+              </div>
+            ))}
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
             <label>Account Holder Name</label>
@@ -319,12 +322,12 @@ const PassengerWallet = () => {
             </div>
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : 'Account Number'}</label>
+            <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : withdrawMethod === 'cbe_birr' ? 'CBE Birr Number' : 'Account Number'}</label>
             <div className="input-wrapper">
               <FaMobileAlt className="input-icon" />
               <input
                 type="text"
-                placeholder={withdrawMethod === 'telebirr' ? '09...' : 'Account number'}
+                placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
                 value={withdrawAccountNumber}
                 onChange={e => setWithdrawAccountNumber(e.target.value)}
               />
@@ -348,6 +351,9 @@ const PassengerWallet = () => {
               </div>
             </div>
           )}
+          <div style={{ padding: 10, background: 'var(--info-bg, rgba(59,130,246,0.08))', borderRadius: 8, marginBottom: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
+            <FaClock size={10} style={{ marginRight: 4 }} /> Withdrawals are reviewed and approved by an admin before processing (1-3 business days).
+          </div>
           <button className="passenger-primary-btn" disabled={withdrawLoading} onClick={handleWithdraw}>
             {withdrawLoading ? 'Processing...' : (t('passenger.withdrawNow'))}
           </button>

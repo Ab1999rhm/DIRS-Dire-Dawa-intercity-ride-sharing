@@ -25,10 +25,54 @@ const FinancialManagement = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [approveAmount, setApproveAmount] = useState('');
   const [approveNote, setApproveNote] = useState('');
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [withdrawalsLoading, setWithdrawalsLoading] = useState(false);
 
   useEffect(() => {
     fetchFinancialData();
   }, [filterPeriod]);
+
+  const fetchWithdrawals = async (status = 'pending') => {
+    try {
+      setWithdrawalsLoading(true);
+      const res = await adminAPI.getWithdrawals({ status, limit: 100 });
+      const d = res.data;
+      setWithdrawals(Array.isArray(d) ? d : (d?.withdrawals || []));
+    } catch (err) {
+      console.error('Failed to fetch withdrawals:', err);
+      setWithdrawals([]);
+    } finally {
+      setWithdrawalsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWithdrawals();
+  }, []);
+
+  const handleApproveWithdrawal = async (wd) => {
+    if (!window.confirm(`Approve withdrawal of ETB ${(wd.amount || 0).toLocaleString()} for ${wd.passenger?.firstName || wd.driver?.user?.firstName || 'User'}? This will send the transfer to Chapa.`)) return;
+    try {
+      await adminAPI.approveWithdrawal(wd._id, approveNote || 'Approved by admin');
+      toast.success(`Withdrawal of ETB ${(wd.amount || 0).toLocaleString()} approved`);
+      setApproveNote('');
+      fetchWithdrawals();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to approve withdrawal');
+    }
+  };
+
+  const handleRejectWithdrawal = async (wd) => {
+    const reason = window.prompt('Reason for rejecting this withdrawal:', 'Insufficient funds');
+    if (reason === null) return;
+    try {
+      await adminAPI.rejectWithdrawal(wd._id, reason || 'Rejected by admin');
+      toast.success('Withdrawal rejected and funds refunded');
+      fetchWithdrawals();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to reject withdrawal');
+    }
+  };
 
   const fetchFinancialData = async () => {
     try {
@@ -339,6 +383,67 @@ const FinancialManagement = () => {
                 </button>}
                 <button className="driver-action-btn driver-btn-message" onClick={() => handleExportTxn(txn)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#0891b2', color: 'white', fontWeight: 600 }}>
                   <FaDownload style={{ fontSize: 10 }} /> Export
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Withdrawal Approvals */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24 }}>
+        <div className="admin-section-title" style={{ marginBottom: 0 }}>
+          <FaWallet /> {t('admin.withdrawals') || 'Withdrawal Requests'}
+        </div>
+        <button onClick={() => fetchWithdrawals()} style={{
+          display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px',
+          borderRadius: 16, border: '1px solid #e5e7eb', fontSize: 12, fontWeight: 600,
+          cursor: 'pointer', background: 'white', color: '#6b7280', marginLeft: 'auto',
+        }}>
+          <FaSearch style={{ fontSize: 10 }} /> Refresh
+        </button>
+      </div>
+      <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden', marginTop: 12 }}>
+        {withdrawalsLoading ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+        ) : withdrawals.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <FaWallet style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+            <p style={{ color: 'var(--text-muted)' }}>No withdrawal requests waiting for approval</p>
+          </div>
+        ) : withdrawals.map((wd, idx) => (
+          <div key={wd._id} style={{
+            padding: '14px 16px',
+            borderBottom: idx < withdrawals.length - 1 ? '1px solid var(--border-light)' : 'none',
+            background: idx % 2 === 0 ? 'transparent' : 'var(--bg-secondary, rgba(0,0,0,0.02))',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(59,130,246,0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FaWallet style={{ fontSize: 14 }} />
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>
+                    {wd.driver ? (wd.driver.user?.firstName || 'Driver') + ' ' + (wd.driver.user?.lastName || '') + ' (Driver)' : (wd.passenger?.firstName || 'User') + ' ' + (wd.passenger?.lastName || '')}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {wd.passenger?.phoneNumber || wd.driver?.user?.phoneNumber || ''} · {wd.method || 'N/A'} · {wd.transactionId}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: '#3b82f6' }}>
+                  ETB {(wd.amount || 0).toLocaleString()}
+                </div>
+                <span style={{
+                  background: wd.status === 'pending' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.12)', color: wd.status === 'pending' ? '#d97706' : '#3b82f6',
+                  fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize',
+                }}>{wd.status}</span>
+                <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleApproveWithdrawal(wd)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}>
+                  <FaCheckCircle style={{ fontSize: 10 }} /> Approve
+                </button>
+                <button className="driver-action-btn driver-btn-ban" onClick={() => handleRejectWithdrawal(wd)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}>
+                  <FaTimesCircle style={{ fontSize: 10 }} /> Reject
                 </button>
               </div>
             </div>

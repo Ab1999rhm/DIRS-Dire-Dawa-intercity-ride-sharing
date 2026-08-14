@@ -341,45 +341,34 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Recipient account name and number are required' });
   }
 
-  const transfer = await chapaService.initiateTransfer({
-    accountName: details.accountName || `${user.firstName} ${user.lastName}`,
-    accountNumber: details.accountNumber || chapaService.normalizeEthiopianPhone(user.phoneNumber),
-    amount: withdrawAmount,
-    bankCode: details.bankCode || await chapaService.resolveBankCode(method, details),
-    reference: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
-  });
-
-  if (!transfer || transfer.status === 'failed') {
-    logger.warn('Chapa withdrawal rejected', { userId: user._id, amount: withdrawAmount, method, error: transfer?.error || transfer?.message });
-    return res.status(400).json({ error: transfer?.error || transfer?.message || 'Withdrawal rejected by payment gateway' });
-  }
-
+  // Hold the funds pending admin approval — Chapa transfer happens on approval.
   user.walletBalance = (user.walletBalance || 0) - withdrawAmount;
   await user.save();
 
+  const reference = `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const payment = await Payment.create({
     type: 'withdrawal',
     passenger: user._id,
     amount: withdrawAmount,
     method,
-    status: 'processing',
-    transactionId: transfer.reference || `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
-    paymentGatewayResponse: { ...transfer, accountDetails: details }
+    status: 'pending',
+    transactionId: reference,
+    paymentGatewayResponse: { accountDetails: details, requestedAt: new Date() }
   });
 
-  logger.info('Wallet withdrawal initiated via Chapa', { userId: user._id, amount: withdrawAmount, method, reference: transfer.reference });
+  logger.info('Wallet withdrawal requested (awaiting admin approval)', { userId: user._id, amount: withdrawAmount, method, reference });
   await notifyRideUpdate(user._id, 'withdrawal_requested', {
     amount: withdrawAmount,
     method,
-    reference: transfer.reference,
+    reference,
     estimatedProcessing: '1-3 business days'
   });
 
   res.json({
-    message: 'Withdrawal request submitted',
+    message: 'Withdrawal request submitted for admin approval',
     payment,
     balance: user.walletBalance,
-    reference: transfer.reference,
+    reference,
     estimatedProcessing: '1-3 business days'
   });
 });
@@ -447,40 +436,36 @@ exports.requestWithdrawal = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Recipient account name and number are required' });
   }
 
-  const transfer = await chapaService.initiateTransfer({
-    accountName: accountDetails?.accountName || driver.bankAccount?.accountName,
-    accountNumber: accountDetails?.accountNumber || driver.bankAccount?.accountNumber,
-    amount,
-    bankCode: accountDetails?.bankCode || await chapaService.resolveBankCode(method, accountDetails),
-    reference: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
-  });
-
-  if (!transfer || transfer.status === 'failed') {
-    logger.warn('Chapa driver withdrawal rejected', { driverId: driver._id, amount, method, error: transfer?.error || transfer?.message });
-    return res.status(400).json({ error: transfer?.error || transfer?.message || 'Withdrawal rejected by payment gateway' });
-  }
-
+  // Hold the funds pending admin approval — Chapa transfer happens on approval.
   driver.availableBalance -= amount;
   await driver.save();
 
+  const reference = `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   const payment = await Payment.create({
     type: 'withdrawal',
     passenger: req.user._id,
     driver: driver._id,
     amount,
     method,
-    status: 'processing',
-    transactionId: transfer.reference || `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
-    paymentGatewayResponse: { ...transfer, accountDetails }
+    status: 'pending',
+    transactionId: reference,
+    paymentGatewayResponse: { accountDetails, requestedAt: new Date() }
   });
 
-  logger.info('Driver withdrawal initiated via Chapa', { driverId: driver._id, amount, method, reference: transfer.reference });
-
-  res.json({
-    message: 'Withdrawal request submitted',
+  logger.info('Driver withdrawal requested (awaiting admin approval)', { driverId: driver._id, amount, method, reference });
+  await notifyRideUpdate(req.user._id, 'withdrawal_requested', {
     amount,
     method,
-    reference: transfer.reference,
+    reference,
+    estimatedProcessing: '1-3 business days'
+  });
+
+  res.json({
+    message: 'Withdrawal request submitted for admin approval',
+    payment,
+    amount,
+    method,
+    reference,
     estimatedProcessing: '1-3 business days'
   });
 });
@@ -501,6 +486,143 @@ exports.reconcileWithdrawals = asyncHandler(async (req, res) => {
   const result = await reconcilePendingWithdrawals();
   res.json(result);
 });
+
+exports.getAdminWithdrawals = asyncHandler(async (req, res) => {
+  const { status, page = 1, limit = 20, role } = req.query;
+
+  const query = { type: 'withdrawal' };
+  if (status) query.status = status;
+  if (role === 'driver') query.driver = { $ne: null };
+  if (role === 'passenger') query.driver = null;
+
+  const withdrawals = await Payment.find(query)
+    .populate('passenger', 'firstName lastName phoneNumber email')
+    .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Payment.countDocuments(query);
+
+  res.json({ withdrawals, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
+exports.approveWithdrawal = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body || {};
+
+  const payment = await Payment.findById(id);
+  if (!payment || payment.type !== 'withdrawal') {
+    return res.status(404).json({ error: 'Withdrawal not found' });
+  }
+  if (payment.status !== 'pending') {
+    return res.status(400).json({ error: `Cannot approve a ${payment.status} withdrawal` });
+  }
+
+  const details = payment.paymentGatewayResponse?.accountDetails || {};
+  let accountName = details.accountName;
+  let accountNumber = details.accountNumber;
+  let bankCode = details.bankCode;
+
+  if (payment.driver) {
+    const driver = await Driver.findById(payment.driver).populate('user', 'firstName lastName phoneNumber');
+    if (!driver) {
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+    accountName = accountName || driver.bankAccount?.accountName || `${driver.user?.firstName || ''} ${driver.user?.lastName || ''}`.trim();
+    accountNumber = accountNumber || driver.bankAccount?.accountNumber || chapaService.normalizeEthiopianPhone(driver.user?.phoneNumber);
+  } else {
+    const user = await User.findById(payment.passenger);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    accountName = accountName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    accountNumber = accountNumber || chapaService.normalizeEthiopianPhone(user.phoneNumber);
+  }
+
+  bankCode = bankCode || await chapaService.resolveBankCode(payment.method, details).catch(() => null);
+  if (payment.method === 'bank' && !bankCode) {
+    return res.status(400).json({ error: 'Bank code missing for bank withdrawal' });
+  }
+
+  const reference = `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+  const transfer = await chapaService.initiateTransfer({
+    accountName,
+    accountNumber,
+    amount: payment.amount,
+    bankCode,
+    reference
+  });
+
+  if (!transfer || transfer.status === 'failed') {
+    logger.warn('Chapa transfer rejected on approval', { paymentId: payment._id, error: transfer?.error || transfer?.message });
+    payment.status = 'failed';
+    payment.paymentGatewayResponse = { ...(payment.paymentGatewayResponse || {}), transfer, adminNote: note, failureReason: transfer?.error || transfer?.message || 'Rejected by payment gateway' };
+    await payment.save();
+    await refundWithdrawal(payment);
+    await notifyRideUpdate(payment.passenger, 'withdrawal_failed', { amount: payment.amount, reason: transfer?.error || 'Rejected by payment gateway' });
+    return res.status(400).json({ error: transfer?.error || transfer?.message || 'Withdrawal rejected by payment gateway' });
+  }
+
+  payment.status = 'processing';
+  payment.transactionId = transfer.reference || reference;
+  payment.paymentGatewayResponse = {
+    ...(payment.paymentGatewayResponse || {}),
+    ...transfer,
+    approvedBy: req.user._id,
+    approvedAt: new Date(),
+    adminNote: note
+  };
+  await payment.save();
+
+  await notifyRideUpdate(payment.passenger, 'withdrawal_approved', {
+    amount: payment.amount,
+    reference: transfer.reference,
+    estimatedProcessing: '1-3 business days'
+  });
+  logger.info('Withdrawal approved and sent to Chapa', { paymentId: payment._id, amount: payment.amount, reference: transfer.reference, admin: req.user._id });
+
+  res.json({ message: 'Withdrawal approved and sent for processing', payment });
+});
+
+exports.rejectWithdrawal = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason, note } = req.body || {};
+
+  const payment = await Payment.findById(id);
+  if (!payment || payment.type !== 'withdrawal') {
+    return res.status(404).json({ error: 'Withdrawal not found' });
+  }
+  if (payment.status !== 'pending') {
+    return res.status(400).json({ error: `Cannot reject a ${payment.status} withdrawal` });
+  }
+
+  payment.status = 'failed';
+  payment.paymentGatewayResponse = { ...(payment.paymentGatewayResponse || {}), rejectedBy: req.user._id, rejectedAt: new Date(), rejectReason: reason, adminNote: note };
+  await payment.save();
+
+  await refundWithdrawal(payment);
+  await notifyRideUpdate(payment.passenger, 'withdrawal_failed', { amount: payment.amount, reason: reason || 'Rejected by admin' });
+  logger.info('Withdrawal rejected by admin', { paymentId: payment._id, amount: payment.amount, reason, admin: req.user._id });
+
+  res.json({ message: 'Withdrawal rejected and funds refunded', payment });
+});
+
+async function refundWithdrawal(payment) {
+  if (payment.driver) {
+    const driver = await Driver.findById(payment.driver);
+    if (driver) {
+      driver.availableBalance = (driver.availableBalance || 0) + payment.amount;
+      await driver.save();
+    }
+    return;
+  }
+  const user = await User.findById(payment.passenger);
+  if (user) {
+    user.walletBalance = (user.walletBalance || 0) + payment.amount;
+    await user.save();
+  }
+}
 
 const processTelebirrPayment = async (amount, phoneNumber) => {
   try {

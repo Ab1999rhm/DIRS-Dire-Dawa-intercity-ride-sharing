@@ -49,7 +49,11 @@ const notifyRideUpdate = async (recipientId, type, rideData) => {
     payment_received: 'Payment Received',
     payment_failed: 'Payment Failed',
     rating_received: 'New Rating',
-    sos_alert: 'Emergency Alert'
+    sos_alert: 'Emergency Alert',
+    withdrawal_requested: 'Withdrawal Requested',
+    withdrawal_approved: 'Withdrawal Approved',
+    withdrawal_completed: 'Withdrawal Completed',
+    withdrawal_failed: 'Withdrawal Failed'
   };
 
   const messages = {
@@ -62,7 +66,11 @@ const notifyRideUpdate = async (recipientId, type, rideData) => {
     payment_received: `Payment of ${rideData.amount || 'N/A'} ETB received`,
     payment_failed: 'Payment processing failed. Please try again.',
     rating_received: `You received a ${rideData.rating}-star rating`,
-    sos_alert: 'Emergency SOS alert has been triggered'
+    sos_alert: 'Emergency SOS alert has been triggered',
+    withdrawal_requested: `Your withdrawal of ${rideData.amount || 'N/A'} ETB is awaiting admin approval`,
+    withdrawal_approved: `Your withdrawal of ${rideData.amount || 'N/A'} ETB was approved and is being processed`,
+    withdrawal_completed: `Your withdrawal of ${rideData.amount || 'N/A'} ETB was sent successfully`,
+    withdrawal_failed: `Your withdrawal of ${rideData.amount || 'N/A'} ETB failed${rideData.reason ? `: ${rideData.reason}` : ''}`
   };
 
   const notification = await createNotification(

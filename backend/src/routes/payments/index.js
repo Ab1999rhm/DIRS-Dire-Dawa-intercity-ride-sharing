@@ -14,6 +14,9 @@ router.post('/withdraw', protect, authorize('driver'), validateWithdrawal, payme
 router.get('/banks', protect, paymentController.getBanks);
 router.get('/withdraw/verify/:reference', protect, paymentController.verifyWithdrawal);
 router.post('/withdraw/reconcile', protect, authorize('admin'), paymentController.reconcileWithdrawals);
+router.get('/withdrawals', protect, authorize('admin'), paymentController.getAdminWithdrawals);
+router.post('/withdrawals/:id/approve', protect, authorize('admin'), paymentController.approveWithdrawal);
+router.post('/withdrawals/:id/reject', protect, authorize('admin'), paymentController.rejectWithdrawal);
 router.post('/chapa/approval', paymentController.chapaApproval);
 router.post('/chapa/webhook', paymentController.chapaWebhook);
 router.delete('/wallet/:paymentId', protect, validatePaymentDetailRoute, paymentController.deleteTransaction);
