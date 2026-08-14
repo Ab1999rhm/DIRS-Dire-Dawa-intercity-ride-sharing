@@ -947,6 +947,26 @@
   outline: none; border-color: var(--primary);
 }
 
+/* Wallet confirm button */
+.wallet-confirm-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.wallet-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.wallet-confirm-btn:not(:disabled):hover {
+  filter: brightness(1.1);
+}
+
 /* Settings Toggle Rows */
 .settings-toggle-row {
   display: flex; align-items: center; justify-content: space-between;

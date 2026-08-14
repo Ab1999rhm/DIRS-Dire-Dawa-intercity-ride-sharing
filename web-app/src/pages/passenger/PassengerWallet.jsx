@@ -27,10 +27,28 @@ const PassengerWallet = () => {
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [verifyingId, setVerifyingId] = useState(null);
 
   useEffect(() => {
     fetchWalletData();
   }, []);
+
+  const handleVerifyTopUp = async (tx) => {
+    setVerifyingId(tx._id);
+    try {
+      const res = await paymentsAPI.verifyTopUp({ transactionId: tx.transactionId });
+      if (res.data?.confirmed) {
+        toast.success('Top-up confirmed! Balance updated.');
+      } else {
+        toast.info('Payment still pending. Try again after completing the gateway payment.');
+      }
+      fetchWalletData();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Verification failed');
+    } finally {
+      setVerifyingId(null);
+    }
+  };
 
   const fetchWalletData = async () => {
     setLoading(true);
@@ -284,9 +302,20 @@ const PassengerWallet = () => {
                       <div style={{ fontSize: 14, fontWeight: 700, color: formatted.isCredit ? 'var(--success)' : 'var(--danger)' }}>
                         {formatted.amount}
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: tx.status === 'pending' ? '#d97706' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}>
                         <FaCheckCircle size={10} /> {formatted.status}
                       </div>
+                      {tx.status === 'pending' && tx.type === 'top_up' && (
+                        <button
+                          type="button"
+                          className="wallet-confirm-btn"
+                          disabled={verifyingId === tx._id}
+                          onClick={() => handleVerifyTopUp(tx)}
+                          style={{ marginTop: 6 }}
+                        >
+                          {verifyingId === tx._id ? 'Checking…' : 'Confirm'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
