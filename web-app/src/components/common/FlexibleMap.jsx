@@ -8,9 +8,9 @@ import './FlexibleMap.css';
 // Normalize coordinates to [lat, lng] for Leaflet
 // Detects [lng, lat] format (first value > 30 for Ethiopia) and swaps
 const normalizeCoords = (coords) => {
-  if (!coords || !Array.isArray(coords) || coords.length < 2) return coords;
+  if (!coords || !Array.isArray(coords) || coords.length < 2) return null;
   const [v1, v2] = [parseFloat(coords[0]), parseFloat(coords[1])];
-  if (isNaN(v1) || isNaN(v2)) return coords;
+  if (isNaN(v1) || isNaN(v2)) return null;
   // In Ethiopia: Lat is ~3..15, Lng is ~33..48
   // If first value > 30 and second < 20, it's [lng, lat] — swap to [lat, lng]
   if (v1 > 30 && v2 < 20) return [v2, v1];
@@ -92,9 +92,13 @@ const FlexibleMap = ({
   const [mapInstance, setMapInstance] = useState(null);
 
   // Normalize all incoming coordinates to [lat, lng] for Leaflet
-  const normCenter = normalizeCoords(center);
-  const normMarkers = (markers || []).map(m => m ? { ...m, position: normalizeCoords(m.position) } : m);
-  const normPolyline = polylinePoints ? polylinePoints.map(normalizeCoords) : null;
+  const normCenter = normalizeCoords(center) || [9.6009, 41.8508];
+  const normMarkers = (markers || [])
+    .map(m => m ? { ...m, position: normalizeCoords(m.position) } : m)
+    .filter(m => m && m.position);
+  const normPolyline = polylinePoints 
+    ? polylinePoints.map(normalizeCoords).filter(c => c !== null)
+    : null;
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);

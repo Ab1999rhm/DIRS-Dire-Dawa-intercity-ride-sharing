@@ -42,6 +42,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip external domains (Google Fonts, etc.)
+  if (!url.origin.includes(self.location.origin)) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   if (url.pathname.includes('/api/')) {
     event.respondWith(networkFirstWithCache(request));
     return;
