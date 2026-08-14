@@ -494,6 +494,14 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
 
   if (status === 'success') {
     const payment = await Payment.findOne({ transactionId: tx_ref });
+    logger.info('Chapa webhook lookup', {
+      tx_ref,
+      found: !!payment,
+      paymentStatus: payment?.status,
+      paymentId: payment?._id,
+      paymentType: payment?.type,
+      amount: payment?.amount
+    });
     if (payment && payment.status !== 'completed') {
       let trusted = true;
       if (process.env.CHAPA_SECRET_KEY) {
