@@ -447,6 +447,13 @@ const processChapaPayment = async (amount, email) => {
       }
     );
 
+    logger.info('Chapa initialize response', {
+      tx_ref: response.data?.data?.tx_ref,
+      checkout_url: response.data?.data?.checkout_url,
+      status: response.data?.status,
+      fullKeys: response.data?.data ? Object.keys(response.data.data) : null
+    });
+
     return {
       success: true,
       transactionId: response.data.data.tx_ref,
