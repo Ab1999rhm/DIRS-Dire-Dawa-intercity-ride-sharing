@@ -484,6 +484,17 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
       payment.paidAt = new Date();
       await payment.save();
 
+      if (payment.type === 'top_up' && payment.passenger) {
+        await User.findByIdAndUpdate(payment.passenger, {
+          $inc: { walletBalance: payment.amount }
+        });
+        await notifyRideUpdate(payment.passenger, 'wallet_topup_confirmed', {
+          amount: payment.amount,
+          transactionId: payment.transactionId
+        });
+        logger.info('Wallet top-up confirmed via Chapa', { tx_ref, paymentId: payment._id });
+      }
+
       const trip = await Trip.findById(payment.trip);
       if (trip) {
         trip.payment = payment._id;
