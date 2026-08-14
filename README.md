@@ -157,7 +157,11 @@ Dashboard runs on http://localhost:3003
 ### Payments
 - `POST /api/payments/trip/:id` - Process payment
 - `GET /api/payments/earnings` - Get driver earnings
-- `POST /api/payments/withdraw` - Request withdrawal
+- `POST /api/payments/withdraw` - Request withdrawal (driver, via Chapa transfers)
+- `POST /api/payments/wallet/withdraw` - Request withdrawal (passenger wallet, via Chapa transfers)
+- `GET /api/payments/banks` - List banks/recipients supported by Chapa
+- `GET /api/payments/withdraw/verify/:reference` - Check withdrawal payout status
+- `POST /api/payments/chapa/approval` - Chapa server-approval webhook for transfers
 
 ### Ratings
 - `POST /api/ratings/trip/:id` - Create rating

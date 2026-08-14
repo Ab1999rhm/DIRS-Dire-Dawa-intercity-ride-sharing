@@ -12,6 +12,10 @@ const EarningsPage = () => {
   const [loading, setLoading] = useState(true);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
+  const [accountName, setAccountName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [banks, setBanks] = useState([]);
   const [withdrawing, setWithdrawing] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -20,7 +24,17 @@ const EarningsPage = () => {
   useEffect(() => {
     loadEarnings();
     loadPaymentHistory();
+    loadBanks();
   }, []);
+
+  const loadBanks = async () => {
+    try {
+      const response = await paymentsAPI.getBanks();
+      setBanks(response.data.banks || []);
+    } catch (error) {
+      console.error('Load banks error:', error);
+    }
+  };
 
   const loadEarnings = async () => {
     try {
@@ -57,9 +71,20 @@ const EarningsPage = () => {
 
     setWithdrawing(true);
     try {
-      await paymentsAPI.requestWithdrawal({ amount, method: withdrawMethod });
+      await paymentsAPI.requestWithdrawal({
+        amount,
+        method: withdrawMethod,
+        accountDetails: {
+          accountName,
+          accountNumber,
+          bankCode
+        }
+      });
       toast.success('Withdrawal request submitted successfully');
       setWithdrawAmount('');
+      setAccountName('');
+      setAccountNumber('');
+      setBankCode('');
       loadEarnings();
       loadPaymentHistory();
     } catch (error) {
@@ -75,10 +100,25 @@ const EarningsPage = () => {
       toast.warning('Minimum instant cashout is 100 ETB');
       return;
     }
+    if (!accountName || !accountNumber) {
+      toast.warning('Enter your account name and number to cash out');
+      return;
+    }
     setInstantCashouting(true);
     try {
-      await paymentsAPI.requestWithdrawal({ amount: balance, method: withdrawMethod, instant: true });
+      await paymentsAPI.requestWithdrawal({
+        amount: balance,
+        method: withdrawMethod,
+        accountDetails: {
+          accountName,
+          accountNumber,
+          bankCode
+        }
+      });
       toast.success('Instant cashout initiated!');
+      setAccountName('');
+      setAccountNumber('');
+      setBankCode('');
       loadEarnings();
       loadPaymentHistory();
     } catch (error) {
@@ -172,6 +212,30 @@ const EarningsPage = () => {
               <option value="bank">Bank Transfer</option>
             </select>
           </div>
+          <div className="withdraw-input-group">
+            <input
+              type="text"
+              placeholder="Account holder name"
+              value={accountName}
+              onChange={(e) => setAccountName(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder={withdrawMethod === 'telebirr' ? 'Telebirr number (09...)' : 'Account / CBE Birr number'}
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+            />
+          </div>
+          {withdrawMethod === 'bank' && (
+            <div className="withdraw-input-group">
+              <select value={bankCode} onChange={(e) => setBankCode(e.target.value)}>
+                <option value="">Select bank</option>
+                {banks.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <button
             className="btn-withdraw"
             onClick={handleWithdraw}

@@ -10,6 +10,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
+const chapaService = require('../../services/chapaService');
 
 const idempotencyStore = new Map();
 
@@ -327,6 +328,27 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Insufficient balance' });
   }
 
+  if (method === 'bank' && !accountDetails?.bankCode) {
+    return res.status(400).json({ error: 'Please select a bank for withdrawal' });
+  }
+
+  if (!accountDetails?.accountNumber && !accountDetails?.accountName) {
+    return res.status(400).json({ error: 'Recipient account name and number are required' });
+  }
+
+  const transfer = await chapaService.initiateTransfer({
+    accountName: accountDetails?.accountName || `${user.firstName} ${user.lastName}`,
+    accountNumber: accountDetails?.accountNumber || chapaService.normalizeEthiopianPhone(user.phoneNumber),
+    amount: withdrawAmount,
+    bankCode: accountDetails?.bankCode || await chapaService.resolveBankCode(method, accountDetails),
+    reference: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
+  });
+
+  if (!transfer || transfer.status === 'failed') {
+    logger.warn('Chapa withdrawal rejected', { userId: user._id, amount: withdrawAmount, method });
+    return res.status(400).json({ error: transfer?.message || 'Withdrawal rejected by payment gateway' });
+  }
+
   user.walletBalance = (user.walletBalance || 0) - withdrawAmount;
   await user.save();
 
@@ -336,14 +358,15 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     amount: withdrawAmount,
     method,
     status: 'processing',
-    transactionId: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
-    paymentGatewayResponse: accountDetails ? { accountDetails } : null
+    transactionId: transfer.reference || `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+    paymentGatewayResponse: { ...transfer, accountDetails }
   });
 
-  logger.info('Wallet withdrawal requested', { userId: user._id, amount: withdrawAmount, method });
+  logger.info('Wallet withdrawal initiated via Chapa', { userId: user._id, amount: withdrawAmount, method, reference: transfer.reference });
   await notifyRideUpdate(user._id, 'withdrawal_requested', {
     amount: withdrawAmount,
     method,
+    reference: transfer.reference,
     estimatedProcessing: '1-3 business days'
   });
 
@@ -351,6 +374,7 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     message: 'Withdrawal request submitted',
     payment,
     balance: user.walletBalance,
+    reference: transfer.reference,
     estimatedProcessing: '1-3 business days'
   });
 });
@@ -395,7 +419,7 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
 });
 
 exports.requestWithdrawal = asyncHandler(async (req, res) => {
-  const { amount, method, accountDetails } = req.body;
+  const { amount, method = 'telebirr', accountDetails = null } = req.body;
 
   const driver = await Driver.findOne({ user: req.user._id });
   if (!driver) {
@@ -410,17 +434,50 @@ exports.requestWithdrawal = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Minimum withdrawal is 100 ETB' });
   }
 
+  if (method === 'bank' && !accountDetails?.bankCode) {
+    return res.status(400).json({ error: 'Please select a bank for withdrawal' });
+  }
+
+  if (!accountDetails?.accountNumber && !accountDetails?.accountName) {
+    return res.status(400).json({ error: 'Recipient account name and number are required' });
+  }
+
+  const transfer = await chapaService.initiateTransfer({
+    accountName: accountDetails?.accountName || driver.bankAccount?.accountName,
+    accountNumber: accountDetails?.accountNumber || driver.bankAccount?.accountNumber,
+    amount,
+    bankCode: accountDetails?.bankCode || await chapaService.resolveBankCode(method, accountDetails),
+    reference: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
+  });
+
+  if (!transfer || transfer.status === 'failed') {
+    logger.warn('Chapa driver withdrawal rejected', { driverId: driver._id, amount, method });
+    return res.status(400).json({ error: transfer?.message || 'Withdrawal rejected by payment gateway' });
+  }
+
   driver.availableBalance -= amount;
   await driver.save();
 
-  logger.info('Withdrawal requested', { driverId: driver._id, amount, method });
+  logger.info('Driver withdrawal initiated via Chapa', { driverId: driver._id, amount, method, reference: transfer.reference });
 
   res.json({
     message: 'Withdrawal request submitted',
     amount,
     method,
+    reference: transfer.reference,
     estimatedProcessing: '1-3 business days'
   });
+});
+
+exports.getBanks = asyncHandler(async (req, res) => {
+  const banks = await chapaService.listBanks();
+  res.json({ banks });
+});
+
+exports.verifyWithdrawal = asyncHandler(async (req, res) => {
+  const { reference } = req.params;
+  const verify = await chapaService.verifyTransfer(reference);
+  res.json({ reference, transfer: verify });
 });
 
 const processTelebirrPayment = async (amount, phoneNumber) => {
@@ -480,6 +537,33 @@ const processChapaPayment = async (amount, email) => {
     return { success: false, error: error.message };
   }
 };
+
+exports.chapaApproval = asyncHandler(async (req, res) => {
+  const approvalSecret = process.env.CHAPA_APPROVAL_SECRET;
+  if (approvalSecret) {
+    const signature = req.headers['chapa-signature'] || req.headers['x-chapa-signature'];
+    const bodyString = JSON.stringify(req.body || {});
+    const payloadHash = crypto.createHmac('sha256', approvalSecret).update(bodyString).digest('hex');
+    if (!signature || String(signature) !== payloadHash) {
+      logger.warn('Chapa approval webhook rejected: bad signature', { ip: req.ip, reference: req.body?.reference });
+      return res.status(400).json({ approved: false, message: 'Invalid signature' });
+    }
+  }
+
+  const { reference, amount, bank } = req.body || {};
+  logger.info('Chapa transfer pending server approval', { reference, amount, bank });
+
+  const payment = await Payment.findOne({ transactionId: reference });
+  if (!payment) {
+    logger.warn('Chapa approval for unknown reference', { reference });
+    return res.status(400).json({ approved: false, message: 'Unknown reference' });
+  }
+
+  payment.status = 'processing';
+  await payment.save();
+
+  res.json({ approved: true });
+});
 
 exports.chapaWebhook = asyncHandler(async (req, res) => {
   logger.info('Chapa webhook received', {

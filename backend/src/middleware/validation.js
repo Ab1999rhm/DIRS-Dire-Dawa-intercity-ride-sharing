@@ -122,7 +122,7 @@ const validateResetPassword = [
 
 const validateWithdrawal = [
   body('amount').isFloat({ min: 100 }).withMessage('Minimum withdrawal is 100 ETB'),
-  body('method').isIn(['telebirr', 'bank']).withMessage('Invalid withdrawal method'),
+  body('method').isIn(['telebirr', 'cbe_birr', 'bank']).withMessage('Invalid withdrawal method'),
   handleValidation
 ];
 

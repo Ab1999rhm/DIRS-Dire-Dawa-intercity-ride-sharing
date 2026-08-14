@@ -87,7 +87,9 @@ export const driverAPI = {
 export const paymentsAPI = {
   getEarnings: () => api.get('/payments/earnings'),
   requestWithdrawal: (data) => api.post('/payments/withdraw', data),
-  getPaymentHistory: (params) => api.get('/payments/history', { params })
+  getPaymentHistory: (params) => api.get('/payments/history', { params }),
+  getBanks: () => api.get('/payments/banks'),
+  verifyWithdrawal: (reference) => api.get(`/payments/withdraw/verify/${reference}`)
 };
 
 export const notificationsAPI = {

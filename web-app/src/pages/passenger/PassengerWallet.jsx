@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FaWallet, FaHistory, FaMoneyBillWave, FaMobileAlt, FaCreditCard,
   FaArrowUp, FaArrowDown, FaPlus,
-  FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle, FaTrashAlt
+  FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle, FaTrashAlt, FaUser
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -26,12 +26,27 @@ const PassengerWallet = () => {
   const [topUpMethod, setTopUpMethod] = useState('telebirr');
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
+  const [withdrawAccountName, setWithdrawAccountName] = useState('');
+  const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
+  const [withdrawBankCode, setWithdrawBankCode] = useState('');
+  const [banks, setBanks] = useState([]);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchWalletData();
+    loadBanks();
   }, []);
+
+  const loadBanks = async () => {
+    try {
+      const res = await paymentsAPI.getBanks();
+      setBanks(res.data.banks || []);
+    } catch (err) {
+      console.error('Failed to fetch banks:', err);
+    }
+  };
 
   const handleDelete = async (tx) => {
     if (!window.confirm('Delete this transaction from your history?')) return;
@@ -102,11 +117,18 @@ const PassengerWallet = () => {
       await paymentsAPI.walletWithdraw({
         amount,
         currency: 'ETB',
-        method: 'telebirr',
-        accountDetails: user?.phoneNumber || user?.email || null,
+        method: withdrawMethod,
+        accountDetails: {
+          accountName: withdrawAccountName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+          accountNumber: withdrawAccountNumber || user?.phoneNumber || user?.email || null,
+          bankCode: withdrawBankCode,
+        },
       });
       toast.success(t('passenger.withdrawSuccess'));
       setWithdrawAmount('');
+      setWithdrawAccountName('');
+      setWithdrawAccountNumber('');
+      setWithdrawBankCode('');
       fetchWalletData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Withdrawal failed');
@@ -255,6 +277,63 @@ const PassengerWallet = () => {
               />
             </div>
           </div>
+          <div className="input-group" style={{ marginBottom: 16 }}>
+            <label>{t('passenger.selectMethod')}</label>
+            <div className="input-wrapper">
+              <FaMobileAlt className="input-icon" />
+              <select
+                style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+                value={withdrawMethod}
+                onChange={e => setWithdrawMethod(e.target.value)}
+              >
+                <option value="telebirr">Telebirr</option>
+                <option value="cbe_birr">CBE Birr</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
+          </div>
+          <div className="input-group" style={{ marginBottom: 16 }}>
+            <label>Account Holder Name</label>
+            <div className="input-wrapper">
+              <FaUser className="input-icon" />
+              <input
+                type="text"
+                placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Account holder name'}
+                value={withdrawAccountName}
+                onChange={e => setWithdrawAccountName(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="input-group" style={{ marginBottom: 16 }}>
+            <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : 'Account Number'}</label>
+            <div className="input-wrapper">
+              <FaMobileAlt className="input-icon" />
+              <input
+                type="text"
+                placeholder={withdrawMethod === 'telebirr' ? '09...' : 'Account number'}
+                value={withdrawAccountNumber}
+                onChange={e => setWithdrawAccountNumber(e.target.value)}
+              />
+            </div>
+          </div>
+          {withdrawMethod === 'bank' && (
+            <div className="input-group" style={{ marginBottom: 16 }}>
+              <label>Bank</label>
+              <div className="input-wrapper">
+                <FaCreditCard className="input-icon" />
+                <select
+                  style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+                  value={withdrawBankCode}
+                  onChange={e => setWithdrawBankCode(e.target.value)}
+                >
+                  <option value="">Select bank</option>
+                  {banks.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
           <button className="passenger-primary-btn" disabled={withdrawLoading} onClick={handleWithdraw}>
             {withdrawLoading ? 'Processing...' : (t('passenger.withdrawNow'))}
           </button>
