@@ -1,4 +1,4 @@
-const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dirs-dire-dawa';
+const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'duzooyoyt';
 const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'dirs_unsigned';
 
 export const uploadToCloudinary = async (file, folder = 'dirs-documents') => {
