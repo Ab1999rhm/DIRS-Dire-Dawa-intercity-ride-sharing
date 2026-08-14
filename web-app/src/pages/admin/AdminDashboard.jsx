@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FaUsers, FaCar, FaMoneyBillWave, FaExclamationTriangle, FaShieldAlt,
@@ -6,12 +6,13 @@ import {
   FaUserShield, FaUserClock, FaUserCheck, FaUserSlash,
   FaArrowRight, FaMapMarkerAlt, FaClock, FaEllipsisH, FaMoon, FaSun, FaGlobe,
   FaCheck, FaRoute, FaHeadset, FaChartLine, FaCog, FaStar, FaMap,
-  FaServer, FaDatabase, FaWifi, FaCheckCircle, FaTimesCircle, FaHourglassHalf
+  FaServer, FaDatabase, FaWifi, FaCheckCircle, FaTimesCircle, FaHourglassHalf,
+  FaUser, FaCarSide, FaMoneyBill
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI, sosAPI } from '../../services/api';
+import { adminAPI, sosAPI, notificationsAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
@@ -22,6 +23,9 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const [stats, setStats] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const notifRef = useRef(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,8 +35,24 @@ const AdminDashboard = () => {
   const [recentSOS, setRecentSOS] = useState([]);
   const [systemHealth, setSystemHealth] = useState({ api: 'operational', db: 'operational', socket: 'operational' });
 
+  const loadNotifications = () => {
+    notificationsAPI.get({ limit: 15 }).then((res) => {
+      const d = res.data || {};
+      if (Array.isArray(d.notifications)) setNotifications(d.notifications);
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     fetchDashboard(true);
+    loadNotifications();
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifDropdown(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
   // Refetch + notify when a new SOS alert arrives over the socket
@@ -68,6 +88,44 @@ const AdminDashboard = () => {
       toast.success('SOS alert resolved');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to resolve alert');
+    }
+  };
+
+  const getNotificationIcon = (type = '') => {
+    const t = type.toLowerCase();
+    if (t.includes('sos') || t.includes('emergency') || t.includes('incident')) return <FaExclamationTriangle />;
+    if (t.includes('withdrawal') || t.includes('payment') || t.includes('payout') || t.includes('wallet') || t.includes('refund')) return <FaMoneyBill />;
+    if (t.includes('driver') || t.includes('verification') || t.includes('ride') || t.includes('trip')) return <FaCarSide />;
+    if (t.includes('ticket') || t.includes('support') || t.includes('chat') || t.includes('message')) return <FaHeadset />;
+    if (t.includes('account') || t.includes('ban') || t.includes('block') || t.includes('user')) return <FaUser />;
+    return <FaBell />;
+  };
+
+  const navigateToNotification = (n) => {
+    const type = (n.type || '').toLowerCase();
+    let path = null;
+    if (type.includes('sos') || type.includes('emergency') || type.includes('incident')) path = '/admin/sos';
+    else if (type.includes('withdrawal') || type.includes('payout') || type.includes('wallet') || type.includes('payment') || type.includes('refund')) path = '/admin/financials';
+    else if (type.includes('driver') || type.includes('verification') || type.includes('ride') || type.includes('trip')) path = '/admin/driver-management';
+    else if (type.includes('ticket') || type.includes('support') || type.includes('chat')) path = '/admin/support';
+    else if (type.includes('account') || type.includes('ban') || type.includes('block') || type.includes('user')) path = '/admin/passenger-management';
+    else if (type.includes('announcement') || type.includes('broadcast') || type.includes('content')) path = '/admin/content';
+    if (path) {
+      navigate(path);
+    } else if (n.data?.tripId) {
+      navigate('/admin/trip-management');
+    } else {
+      navigate('/admin/sos');
+    }
+    setShowNotifDropdown(false);
+  };
+
+  const toggleNotifDropdown = () => {
+    const next = !showNotifDropdown;
+    setShowNotifDropdown(next);
+    if (next) {
+      loadNotifications();
+      fetchDashboard(false);
     }
   };
 
@@ -178,12 +236,77 @@ const AdminDashboard = () => {
           <button className="admin-icon-btn" onClick={() => fetchDashboard(false)}>
             <FaSync />
           </button>
-          <button className="admin-icon-btn" title="Notifications">
+          <button className="admin-icon-btn" title="Notifications" onClick={toggleNotifDropdown}>
             <FaBell />
-            {(stats?.sosAlerts || 0) > 0 && (
-              <span className="badge">{stats.sosAlerts}</span>
+            {((notifications.length > 0) || (stats?.sosAlerts || 0) > 0) && (
+              <span className="badge">{stats?.sosAlerts || notifications.length}</span>
             )}
           </button>
+          {showNotifDropdown && (
+            <div className="admin-notif-dropdown" ref={notifRef}>
+              <div className="admin-notif-header">
+                <span>Notifications</span>
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="admin-notif-unread">{notifications.filter(n => !n.isRead).length} new</span>
+                )}
+              </div>
+              <div className="admin-notif-list">
+                {notifications.length === 0 && recentSOS.length === 0 ? (
+                  <div className="admin-notif-empty">No notifications</div>
+                ) : (
+                  <>
+                    {notifications.slice(0, 10).map(n => (
+                      <div
+                        key={n._id || Math.random()}
+                        className="admin-notif-item"
+                        onClick={() => navigateToNotification(n)}
+                      >
+                        <span className={`admin-notif-icon${n.isRead ? '' : ' admin-notif-icon-unread'}`}>
+                          {getNotificationIcon(n.type)}
+                        </span>
+                        <div className="admin-notif-item-body">
+                          <div className={`admin-notif-item-title${n.isRead ? '' : ' admin-notif-item-title-unread'}`}>
+                            {n.type?.replace(/_/g, ' ') || 'Notification'}
+                          </div>
+                          <div className="admin-notif-item-msg">{n.message || n.title || ''}</div>
+                          {n.createdAt && (
+                            <div className="admin-notif-item-time">
+                              {new Date(n.createdAt).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {recentSOS.filter(s => s.status === 'active').slice(0, 5).map(sos => (
+                      <div
+                        key={sos._id}
+                        className="admin-notif-item"
+                        onClick={() => navigate('/admin/sos')}
+                      >
+                        <span className="admin-notif-icon admin-notif-icon-unread" style={{ color: '#dc2626' }}>
+                          <FaExclamationTriangle />
+                        </span>
+                        <div className="admin-notif-item-body">
+                          <div className="admin-notif-item-title admin-notif-item-title-unread">
+                            SOS Alert
+                          </div>
+                          <div className="admin-notif-item-msg">
+                            {sos.user?.firstName ? `${sos.user.firstName} ${sos.user.lastName || ''}`.trim() : (sos.userName || 'User')} {sos.type ? `· ${sos.type.replace('_', ' ')}` : ''}
+                          </div>
+                          <div className="admin-notif-item-time">
+                            {sos.createdAt ? new Date(sos.createdAt).toLocaleString() : 'Active'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+              <div className="admin-notif-footer" onClick={() => { navigate('/admin/sos'); setShowNotifDropdown(false); }}>
+                View all alerts →
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
