@@ -6,12 +6,6 @@ const BANK_CACHE_TTL = 10 * 60 * 1000;
 
 let bankCache = { at: 0, data: [] };
 
-const KNOWN_BANK_CODES = {
-  telebirr: '853d0598-9c01-41ab-ac99-48eab4da1513',
-  cbe_birr: '96e41186-29ba-4e30-b013-2ca36d7e7025',
-  cbe: '96e41186-29ba-4e30-b013-2ca36d7e7025'
-};
-
 function chapaHeaders() {
   return {
     Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
@@ -37,21 +31,25 @@ async function listBanks(force = false) {
 }
 
 async function resolveBankCode(method, accountDetails = {}) {
-  if (accountDetails.bankCode) return accountDetails.bankCode;
+  if (accountDetails.bankCode) return String(accountDetails.bankCode);
 
   const key = method.toLowerCase().replace(/_/g, '');
-  if (KNOWN_BANK_CODES[key]) return KNOWN_BANK_CODES[key];
-
   const banks = await listBanks();
+
   const match = banks.find((b) => {
-    const name = (b.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const name = (b.name || b.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const slug = (b.slug || '').toLowerCase();
     return (
-      (key === 'telebirr' && name.includes('telebirr')) ||
-      (key === 'cbebirr' && name.includes('commercialbankofethiopia')) ||
+      (key.includes('telebirr') && (slug === 'telebirr' || name.includes('telebirr'))) ||
+      (key.includes('cbe') && (slug === 'cbe' || name.includes('commercialbankofethiopia'))) ||
+      slug === key ||
       name.includes(key)
     );
   });
-  return match ? match.id : null;
+
+  if (!match) return null;
+  const code = match.id ?? match.bank_code ?? match.code ?? match.slug;
+  return String(code);
 }
 
 async function initiateTransfer({ accountName, accountNumber, amount, bankCode, reference }) {
@@ -60,7 +58,7 @@ async function initiateTransfer({ accountName, accountNumber, amount, bankCode, 
     account_number: accountNumber,
     amount: String(amount),
     currency: 'ETB',
-    bank_code: bankCode,
+    bank_code: bankCode === null || bankCode === undefined || bankCode === '' ? null : Number(bankCode),
     reference
   };
   try {
@@ -70,7 +68,8 @@ async function initiateTransfer({ accountName, accountNumber, amount, bankCode, 
     logger.error('Chapa transfer error', {
       reference,
       status: error.response?.status,
-      message: error.response?.data?.message || error.response?.data?.error || error.message
+      message: error.response?.data?.message || error.response?.data?.error || error.message,
+      data: error.response?.data
     });
     return {
       status: 'failed',
@@ -103,4 +102,4 @@ function normalizeEthiopianPhone(phone) {
   return p;
 }
 
-module.exports = { listBanks, resolveBankCode, initiateTransfer, verifyTransfer, normalizeEthiopianPhone, KNOWN_BANK_CODES };
+module.exports = { listBanks, resolveBankCode, initiateTransfer, verifyTransfer, normalizeEthiopianPhone };
