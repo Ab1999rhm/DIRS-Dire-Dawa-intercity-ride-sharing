@@ -3025,13 +3025,15 @@ exports.sendBroadcastMessage = asyncHandler(async (req, res) => {
   
   let recipients = [];
   if (targetAudience === 'all') {
-    recipients = await User.find({ isActive: true }).select('_id');
+    recipients = await User.find({ isActive: true }).select('_id preferences');
   } else if (targetAudience === 'drivers') {
-    recipients = await User.find({ role: 'driver', isActive: true }).select('_id');
+    recipients = await User.find({ role: 'driver', isActive: true }).select('_id preferences');
   } else if (targetAudience === 'passengers') {
-    recipients = await User.find({ role: 'passenger', isActive: true }).select('_id');
+    recipients = await User.find({ role: 'passenger', isActive: true }).select('_id preferences');
   }
-  
+
+  recipients = recipients.filter(u => (u.preferences || {}).promotions !== false);
+
   // Create notifications for all recipients
   const notificationPromises = recipients.map(user => 
     createNotification(user._id, 'broadcast', title || 'System Message', message)
@@ -3039,9 +3041,11 @@ exports.sendBroadcastMessage = asyncHandler(async (req, res) => {
   
   await Promise.all(notificationPromises);
   
-  // Emit socket event
+  // Emit socket event to opted-in recipients only
   const io = getIO();
-  io.emit('broadcast_message', { title, message });
+  recipients.forEach(user => {
+    io.to(`user_${user._id}`).emit('broadcast_message', { title, message });
+  });
   
   logger.info('Broadcast message sent', { recipientCount: recipients.length });
   res.json({ message: `Broadcast sent to ${recipients.length} users` });
@@ -5559,11 +5563,19 @@ async function sendPushNotificationToAudience(notification) {
   }
   
   const users = await User.find(query);
-  notification.sentCount = users.length;
+  const prefKey = ['announcement', 'broadcast', 'promo', 'promotion', 'offer'].includes(notification.type) ? 'promotions'
+    : ['sos_alert', 'sos_resolved', 'incident_assigned', 'account_blocked', 'account_unblocked', 'account_suspended', 'account_banned', 'warning'].includes(notification.type) ? 'safetyAlerts'
+    : null;
+
+  const deliverableUsers = prefKey
+    ? users.filter(u => (u.preferences || {})[prefKey] !== false)
+    : users;
+
+  notification.sentCount = deliverableUsers.length;
   
   // Send push notifications (integrate with FCM/OneSignal)
   const io = getIO();
-  users.forEach(user => {
+  deliverableUsers.forEach(user => {
     io.to(`user_${user._id}`).emit('push_notification', {
       title: notification.title,
       message: notification.message,
@@ -5574,7 +5586,7 @@ async function sendPushNotificationToAudience(notification) {
   });
   
   await notification.save();
-  return users.length;
+  return deliverableUsers.length;
 }
 
 async function sendEmailCampaign(campaign) {

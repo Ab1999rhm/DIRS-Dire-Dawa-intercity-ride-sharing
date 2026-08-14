@@ -1,9 +1,51 @@
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { sendSMS } = require('./smsService');
 const logger = require('../config/logger');
 
+/**
+ * Map a notification type to the user preference that controls it.
+ * Types not listed here are considered critical/system and always send.
+ * Returns null when the notification is not user-gated.
+ */
+const PREFERENCE_BY_TYPE = {
+  rideUpdates: ['ride_request', 'ride_accepted', 'ride_cancelled', 'driver_arriving', 'driver_arrived', 'trip_started', 'trip_completed', 'payment_received', 'payment_failed', 'rating_received', 'trip_cancelled', 'trip_assigned', 'driver_reassigned', 'no_show', 'refund_processed', 'compensation_issued', 'wallet_topup_confirmed'],
+  promotions: ['announcement', 'broadcast', 'promo', 'promotion', 'offer'],
+  safetyAlerts: ['sos_alert', 'sos_resolved', 'incident_assigned', 'account_blocked', 'account_unblocked', 'account_suspended', 'account_banned', 'warning']
+};
+
+const PREFERENCE_LOOKUP = Object.entries(PREFERENCE_BY_TYPE).reduce((acc, [pref, types]) => {
+  types.forEach(type => { acc[type] = pref; });
+  return acc;
+}, {});
+
+const getPreferenceForType = (type) => PREFERENCE_LOOKUP[type] || null;
+
+/**
+ * Returns true if a notification should be delivered to the recipient
+ * based on their saved notification preferences.
+ */
+const shouldNotify = async (recipientId, type) => {
+  const prefKey = getPreferenceForType(type);
+  if (!prefKey) return true;
+  try {
+    const user = await User.findById(recipientId).select('preferences');
+    if (!user) return true;
+    const prefs = user.preferences || {};
+    return prefs[prefKey] !== false;
+  } catch (error) {
+    logger.error('Preference gate check failed', { error: error.message, recipientId, type });
+    return true;
+  }
+};
+
 const createNotification = async (recipientId, type, title, message, data = {}, channel = 'in_app') => {
   try {
+    const allowed = await shouldNotify(recipientId, type);
+    if (!allowed) {
+      logger.info('Notification skipped by user preference', { recipientId, type });
+      return null;
+    }
     const notification = await Notification.create({
       recipient: recipientId,
       type,
@@ -20,8 +62,13 @@ const createNotification = async (recipientId, type, title, message, data = {}, 
   }
 };
 
-const sendPushNotification = async (userId, title, body, data = {}) => {
+const sendPushNotification = async (userId, title, body, data = {}, type = null) => {
   try {
+    const allowed = type ? await shouldNotify(userId, type) : true;
+    if (!allowed) {
+      logger.info('Push notification skipped by user preference', { userId, type });
+      return { success: true, skipped: true };
+    }
     const io = require('../sockets/socketManager').getIO();
     if (io) {
       io.to(`user_${userId}`).emit('notification', {
@@ -80,7 +127,7 @@ const notifyRideUpdate = async (recipientId, type, rideData) => {
     rideData
   );
 
-  await sendPushNotification(recipientId, titles[type], messages[type], rideData);
+  await sendPushNotification(recipientId, titles[type], messages[type], rideData, type);
 
   return notification;
 };
