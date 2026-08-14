@@ -1655,8 +1655,8 @@ const PassengerHome = () => {
           </div>
         )}
 
-        {/* STEP 4: Seat Picker (intercity only) */}
-        {bookingStep >= 4 && rideType === 'intercity' && (
+        {/* STEP 4: Seat Picker (intercity minibus only) */}
+        {bookingStep >= 4 && rideType === 'intercity' && selectedVehicle?.id === 'minibus' && (
           <div className="booking-step">
             <div className="booking-step-header">
               <span className="booking-step-number">4</span>
@@ -1671,16 +1671,14 @@ const PassengerHome = () => {
               style={{
                 width: '100%',
                 padding: '12px',
-                background: '#eff6ff',
-                color: '#2563eb',
-                border: '1px dashed #2563eb',
-                borderRadius: '8px',
-                fontWeight: 'bold',
+                borderRadius: 8,
+                border: '1px solid var(--border-light)',
+                background: 'var(--bg-secondary, #f9fafb)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
+                gap: 8,
                 fontSize: 14
               }}
             >
@@ -1946,6 +1944,8 @@ const PassengerHome = () => {
           if (seats.length > 0) setBookingStep(prev => Math.max(prev, 6));
         }}
         passengersCount={passengersCount}
+        vehicleType={selectedVehicle?.id === 'minibus' ? 'minibus' : 'car'}
+        capacity={selectedVehicle?.capacity || 16}
       />
 
       <FareBreakdownModal
