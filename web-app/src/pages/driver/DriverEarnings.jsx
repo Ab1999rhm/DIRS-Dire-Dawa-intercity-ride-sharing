@@ -107,7 +107,7 @@ const DriverEarnings = () => {
 
   const handleInstantCashout = async () => {
     if (!availableBalance || availableBalance < 100) {
-      toast.error('Minimum instant cashout is 100 ETB');
+      toast.error('Minimum cashout is 100 ETB');
       return;
     }
     if (!accountName || !accountNumber) {
@@ -115,7 +115,7 @@ const DriverEarnings = () => {
       return;
     }
     if (withdrawMethod === 'bank' && !bankCode) {
-      toast.error('Select a bank to withdraw');
+      toast.error('Select a bank to cash out');
       return;
     }
 
@@ -126,7 +126,7 @@ const DriverEarnings = () => {
         method: withdrawMethod,
         accountDetails: { accountName, accountNumber, bankCode }
       });
-      toast.success('Instant cashout initiated!');
+      toast.success('Cashout request submitted for admin approval');
       setBankCode('');
       fetchEarnings();
     } catch (err) {
@@ -283,7 +283,7 @@ const DriverEarnings = () => {
           onClick={handleInstantCashout}
           style={{ width: '100%', padding: '12px', background: '#059669', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          ⚡ {withdrawing ? 'Processing...' : `Instant Cashout (${availableBalance?.toFixed(0)} ETB)`}
+          ⚡ {withdrawing ? 'Processing...' : `Cashout Full Balance (${availableBalance?.toFixed(0)} ETB)`}
         </button>
       </Card>
 
