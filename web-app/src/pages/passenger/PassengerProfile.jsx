@@ -9,7 +9,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, referralAPI, documentsAPI, paymentsAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
-import { Card, Button, Input, ToggleButton, ConfirmModal } from '../../components/common';
+import { Card, Button, Input, ToggleButton } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import { useNavigate } from 'react-router-dom';
 import './Passenger.css';
@@ -68,10 +68,6 @@ const PassengerProfile = () => {
   // Privacy settings
   const [shareLocation, setShareLocation] = useState(true);
   const [allowAnalytics, setAllowAnalytics] = useState(false);
-
-  // Delete account modal
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   // Email verification
   const [sendingVerifyOtp, setSendingVerifyOtp] = useState(false);
@@ -312,24 +308,11 @@ const PassengerProfile = () => {
     }
   };
 
-  // Delete account
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
-    try {
-      await authAPI.deleteAccount();
-      localStorage.clear();
-      logout();
-      window.location.href = '/login';
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to delete account');
-      setDeleting(false);
-      setShowDeleteModal(false);
-    }
-  };
-
+  // Logout
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    localStorage.clear();
+    navigate('/login');
   };
 
   const tabs = [
@@ -943,29 +926,9 @@ const PassengerProfile = () => {
                 {t('passenger.logout')}
               </Button>
             </div>
-
-            {/* Danger Zone - Delete Account */}
-            <div className="danger-zone">
-              <h3>{t('passenger.dangerZone')}</h3>
-              <p>{t('passenger.dangerZoneDesc')}</p>
-              <Button variant="danger" size="sm" icon={<FaTrash />} onClick={() => setShowDeleteModal(true)}>
-                {t('passenger.deleteAccount')}
-              </Button>
-            </div>
           </div>
         </Card>
       )}
-
-      {/* Delete Account Confirm Modal */}
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteAccount}
-        title={t('passenger.deleteAccount')}
-        message={t('passenger.deleteWarning')}
-        confirmText={deleting ? 'Deleting...' : t('passenger.deleteAccount')}
-        danger
-      />
     </div>
   );
 };

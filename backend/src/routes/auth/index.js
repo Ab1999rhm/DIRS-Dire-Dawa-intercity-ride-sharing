@@ -394,7 +394,7 @@ router.post('/documents', protect, documentController.uploadDocuments);
 
 router.post('/vehicle-documents', protect, documentController.uploadVehicleDocuments);
 
-router.delete('/account', protect, authController.deleteAccount);
+
 
 router.post('/logout', protect, authController.logout);
 
