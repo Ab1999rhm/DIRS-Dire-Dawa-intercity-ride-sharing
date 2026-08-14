@@ -6,10 +6,8 @@
   "workspaces": [],
   "scripts": {
     "dev:backend": "cd backend && npm run dev",
-    "dev:passenger": "cd passenger-app && npm start",
-    "dev:driver": "cd driver-app && npm start",
-    "dev:admin": "cd admin-dashboard && npm start",
-    "install:all": "npm install && cd backend && npm install && cd ../passenger-app && npm install && cd ../driver-app && npm install && cd ../admin-dashboard && npm install",
+    "dev:web": "cd web-app && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../web-app && npm install",
     "test": "cd backend && npm test"
   },
   "engines": {

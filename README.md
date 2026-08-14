@@ -108,35 +108,15 @@ npm run dev
 
 Server runs on http://localhost:5000
 
-### 5. Install and Start Passenger App
+### 5. Install and Start the Web App
 
 ```bash
-cd passenger-app
+cd web-app
 npm install
 npm start
 ```
 
-App runs on http://localhost:3001
-
-### 6. Install and Start Driver App
-
-```bash
-cd driver-app
-npm install
-npm start
-```
-
-App runs on http://localhost:3002
-
-### 7. Install and Start Admin Dashboard
-
-```bash
-cd admin-dashboard
-npm install
-npm start
-```
-
-Dashboard runs on http://localhost:3003
+App runs on http://localhost:3000
 
 ## API Endpoints
 
@@ -187,9 +167,7 @@ dirs-diredawa/
 │   │   ├── sockets/       # Socket.io handlers
 │   │   └── server.js      # Entry point
 │   └── tests/             # Test files
-├── passenger-app/         # React passenger app
-├── driver-app/           # React driver app
-└── admin-dashboard/      # React admin dashboard
+└── web-app/               # Unified web app (admin, driver, passenger)
 ```
 
 ## Testing
