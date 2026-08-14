@@ -428,6 +428,7 @@ const processTelebirrPayment = async (amount, phoneNumber) => {
 };
 
 const processChapaPayment = async (amount, email) => {
+  const tx_ref = `DIRS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
   try {
     const response = await axios.post(
       'https://api.chapa.co/v1/transaction/initialize',
@@ -435,7 +436,7 @@ const processChapaPayment = async (amount, email) => {
         amount: amount.toString(),
         currency: 'ETB',
         email,
-        tx_ref: `DIRS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+        tx_ref,
         callback_url: `${process.env.BACKEND_URL}/api/payments/chapa/webhook`,
         return_url: `${process.env.FRONTEND_URL}/passenger/wallet`
       },
@@ -447,16 +448,9 @@ const processChapaPayment = async (amount, email) => {
       }
     );
 
-    logger.info('Chapa initialize response', {
-      tx_ref: response.data?.data?.tx_ref,
-      checkout_url: response.data?.data?.checkout_url,
-      status: response.data?.status,
-      fullKeys: response.data?.data ? Object.keys(response.data.data) : null
-    });
-
     return {
       success: true,
-      transactionId: response.data.data.tx_ref,
+      transactionId: tx_ref,
       checkoutUrl: response.data.data.checkout_url
     };
   } catch (error) {
@@ -501,23 +495,9 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
 
   if (status === 'success') {
     const payment = await Payment.findOne({ transactionId: tx_ref });
-    let recent = [];
     if (!payment) {
-      recent = await Payment.find({ type: 'top_up', method: 'chapa' })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select('transactionId status createdAt')
-        .lean();
+      logger.warn('Chapa webhook: payment not found for tx_ref', { tx_ref });
     }
-    logger.info('Chapa webhook lookup', {
-      tx_ref,
-      found: !!payment,
-      paymentStatus: payment?.status,
-      paymentId: payment?._id,
-      paymentType: payment?.type,
-      amount: payment?.amount,
-      recentChapaTopUps: recent
-    });
     if (payment && payment.status !== 'completed') {
       let trusted = true;
       if (process.env.CHAPA_SECRET_KEY) {
