@@ -382,7 +382,12 @@
       "surge": "Surge",
       "yourRating": "Your Rating",
       "callDriver": "Call Driver",
-      "share": "Share"
+      "share": "Share",
+      "walletTopUp": "Manage Wallet",
+      "withdrawalAccount": "Withdrawal Account",
+      "withdrawalAccountDesc": "Set your preferred payout method and account once — wallet withdrawals will use it automatically, no need to re-enter details.",
+      "saveWithdrawAccount": "Save Account",
+      "updateWithdrawAccount": "Update Account"
     },
     "driver": {
       "online": "Online",
@@ -1478,7 +1483,12 @@
       "surge": "ተጨማሪ",
       "yourRating": "ደረጃዎ",
       "callDriver": "ሹፌሩን ጥራ",
-      "share": "አካፍል"
+      "share": "አካፍል",
+      "walletTopUp": "ዋሌት አስተዳድር",
+      "withdrawalAccount": "የገንዘብ ማውጫ መለያ",
+      "withdrawalAccountDesc": "የሚመርጡትን የክፍያ ዘዴ እና መለያ አንዴ ያዘጋጁ — የዋሌት ማውጣት በራሱ ይጠቀማል፣ ዝርዝሮችን እንደገና ማስገባት አያስፈልግም።",
+      "saveWithdrawAccount": "መለያ አስቀምጥ",
+      "updateWithdrawAccount": "መለያ አዘምን"
     },
     "driver": {
       "online": "መስመር ላይ",
@@ -2135,7 +2145,12 @@
       "surge": "Dabaluu",
       "yourRating": "Gatii Keessan",
       "callDriver": "Akkaawistaan Bilbilaa",
-      "share": "Haquu"
+      "share": "Haquu",
+      "walletTopUp": "Wallet Bulchuu",
+      "withdrawalAccount": "Akaawuntii baasuu",
+      "withdrawalAccountDesc": "Mala kaffaltii fi akaawuntii filatamaa kee alakaa lama iyyuu hin galchhuu — baasii wallet kee akkuma ofumaan isa, gadi fageessaa hin barbaachisu.",
+      "saveWithdrawAccount": "Akaawuntii olkaayi",
+      "updateWithdrawAccount": "Akaawuntii haaromsi"
     },
     "driver": {
       "online": "Itti galaa",
@@ -2663,7 +2678,12 @@
       "surge": "Kororka",
       "yourRating": "Qiimahaaga",
       "callDriver": "Wac Darawalaga",
-      "share": "La wadaag"
+      "share": "La wadaag",
+      "walletTopUp": "Maamul Wallet",
+      "withdrawalAccount": "Xisaab laga baxo",
+      "withdrawalAccountDesc": "Habka bixinta iyo xisaabta aad dooratay hal mar aduu u samee — ka-baxista wallet waxay iskiis isticmaali, faahfaahin haddana gelin kuma baahnaatid.",
+      "saveWithdrawAccount": "Kaydi Xisaabta",
+      "updateWithdrawAccount": "Cusbooneysii Xisaabta"
     },
     "driver": {
       "online": "Khadka",

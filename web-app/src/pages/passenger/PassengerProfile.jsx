@@ -50,9 +50,6 @@ const PassengerProfile = () => {
   const [placeAddress, setPlaceAddress] = useState('');
   const [placeType, setPlaceType] = useState('home');
 
-  // Payment state
-  const [paymentMethod, setPaymentMethod] = useState(user?.paymentMethod || 'cash');
-
   // Withdrawal payout account (saved once, reused by wallet withdrawals)
   const [withdrawalAccount, setWithdrawalAccount] = useState(null);
   const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
@@ -125,7 +122,6 @@ const PassengerProfile = () => {
       setEmergencyContacts(user.emergencyContacts || []);
       setProfilePhoto(user.profilePhoto || '');
       setFavoriteLocations(user.favoriteLocations || []);
-      setPaymentMethod(user.paymentMethod || 'cash');
       const wa = user.withdrawalAccount || {};
       if (Object.keys(wa).length) {
         setWithdrawalAccount(wa);
@@ -270,13 +266,6 @@ const PassengerProfile = () => {
       setFavoriteLocations(res.data.user.favoriteLocations);
     }
     toast.success('Place removed');
-  };
-
-  // Payment handler
-  const handleSetPayment = async (method) => {
-    setPaymentMethod(method);
-    await authAPI.updateProfile({ paymentMethod: method });
-    toast.success('Payment method updated');
   };
 
   // Notification preference save
@@ -666,29 +655,6 @@ const PassengerProfile = () => {
       {activeTab === 'payment' && (
         <Card className="profile-card">
           <h3 style={{ fontWeight: 700, marginBottom: 16 }}>{t('passenger.paymentMethods')}</h3>
-
-          {[
-            { key: 'cash', label: t('passenger.cash'), icon: FaMoneyBillWave, iconClass: 'cash', desc: t('passenger.payWithCash') },
-            { key: 'telebirr', label: t('passenger.telebirr'), icon: FaPhone, iconClass: 'telebirr', desc: t('passenger.mobileMoney') },
-            { key: 'chapa', label: t('passenger.chapa'), icon: FaWallet, iconClass: 'chapa', desc: t('passenger.onlinePayment') },
-          ].map(method => (
-            <div
-              key={method.key}
-              className={`payment-method-item ${paymentMethod === method.key ? 'selected' : ''}`}
-              onClick={() => handleSetPayment(method.key)}
-            >
-              <div className={`payment-method-icon ${method.iconClass}`}>
-                <method.icon />
-              </div>
-              <div className="payment-method-info">
-                <h4>{method.label}</h4>
-                <p>{method.desc}</p>
-              </div>
-              {paymentMethod === method.key && (
-                <span className="payment-default-badge">{t('passenger.default')}</span>
-              )}
-            </div>
-          ))}
 
           <div style={{ marginTop: 16 }}>
             <Button
