@@ -459,6 +459,16 @@ const processChapaPayment = async (amount, email) => {
 };
 
 exports.chapaWebhook = asyncHandler(async (req, res) => {
+  logger.info('Chapa webhook received', {
+    event: req.body?.event,
+    status: req.body?.status,
+    tx_ref: req.body?.tx_ref,
+    reference: req.body?.reference,
+    method: req.body?.payment_method,
+    ip: req.ip,
+    headers: Object.keys(req.headers).filter(h => h.toLowerCase().includes('signature'))
+  });
+
   const secret = process.env.CHAPA_WEBHOOK_SECRET;
   if (!secret) {
     logger.error('CHAPA_WEBHOOK_SECRET not configured — webhook disabled');
@@ -476,7 +486,7 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
   );
 
   if (!valid) {
-    logger.warn('Invalid Chapa webhook signature', { ip: req.ip });
+    logger.warn('Invalid Chapa webhook signature', { ip: req.ip, tx_ref: req.body?.tx_ref });
     return res.status(401).json({ error: 'Invalid signature' });
   }
 
@@ -485,6 +495,27 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
   if (status === 'success') {
     const payment = await Payment.findOne({ transactionId: tx_ref });
     if (payment && payment.status !== 'completed') {
+      let trusted = true;
+      if (process.env.CHAPA_SECRET_KEY) {
+        try {
+          const verifyRes = await axios.get(
+            `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
+            { headers: { Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}` } }
+          );
+          const vStatus = verifyRes.data?.data?.status;
+          if (vStatus !== 'success') {
+            logger.warn('Chapa webhook status success but verify API disagrees', { tx_ref, vStatus });
+            trusted = false;
+          }
+        } catch (error) {
+          logger.error('Chapa webhook re-verify failed', { tx_ref, error: error.message });
+        }
+      }
+
+      if (!trusted) {
+        return res.json({ status: 'ok', note: 'webhook received but verification failed, not credited' });
+      }
+
       payment.status = 'completed';
       payment.paidAt = new Date();
       await payment.save();
