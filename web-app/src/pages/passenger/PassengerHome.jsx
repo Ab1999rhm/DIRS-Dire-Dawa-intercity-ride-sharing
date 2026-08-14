@@ -1218,7 +1218,21 @@ const PassengerHome = () => {
               <FaExclamationTriangle /> SOS
             </button>
           </div>
+
+          <button className="passenger-cancel-btn" onClick={() => setShowCancelConfirm(true)}>
+            {t('passenger.cancelRide') || 'Cancel Ride'}
+          </button>
         </div>
+
+        <ConfirmModal
+          isOpen={showCancelConfirm}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={() => { setShowCancelConfirm(false); handleCancelRide(); }}
+          title="Cancel Ride"
+          message="Are you sure you want to cancel this ride? A cancellation fee may apply."
+          confirmText="Cancel Ride"
+          danger
+        />
 
         <InAppChat
           isOpen={showChat}
