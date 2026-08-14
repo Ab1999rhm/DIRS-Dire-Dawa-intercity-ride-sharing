@@ -5,21 +5,43 @@ import { paymentsAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import EmptyState from '../../components/common/EmptyState';
-import { FaWallet, FaMoneyBillWave, FaCalendar, FaClock, FaChartLine, FaCar } from 'react-icons/fa';
+import { FaWallet, FaMoneyBillWave, FaCalendar, FaClock, FaChartLine, FaCar, FaArrowUp, FaMobileAlt, FaCreditCard, FaUser } from 'react-icons/fa';
+import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
 const DriverEarnings = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const toast = useToast();
 
   const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0, total: 0 });
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
+  const [accountName, setAccountName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [banks, setBanks] = useState([]);
+  const [withdrawing, setWithdrawing] = useState(false);
+
   useEffect(() => {
     fetchEarnings();
+    loadBanks();
   }, []);
+
+  const loadBanks = async () => {
+    try {
+      const res = await paymentsAPI.getBanks();
+      setBanks(res.data.banks || []);
+    } catch (err) {
+      console.error('Failed to fetch banks:', err);
+    }
+  };
+
+  const availableBalance = earnings.total * 0.85 || 0;
 
   const fetchEarnings = async () => {
     try {
@@ -43,6 +65,74 @@ const DriverEarnings = () => {
       setError(err.response?.data?.message || 'Failed to load earnings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount < 100) {
+      toast.error('Minimum withdrawal is 100 ETB');
+      return;
+    }
+    if (amount > availableBalance) {
+      toast.error('Insufficient balance');
+      return;
+    }
+    if (!accountName || !accountNumber) {
+      toast.error('Enter your account name and number to withdraw');
+      return;
+    }
+    if (withdrawMethod === 'bank' && !bankCode) {
+      toast.error('Select a bank to withdraw');
+      return;
+    }
+
+    setWithdrawing(true);
+    try {
+      await paymentsAPI.withdraw({
+        amount,
+        method: withdrawMethod,
+        accountDetails: { accountName, accountNumber, bankCode }
+      });
+      toast.success('Withdrawal request submitted successfully');
+      setWithdrawAmount('');
+      setBankCode('');
+      fetchEarnings();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Withdrawal failed');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
+  const handleInstantCashout = async () => {
+    if (!availableBalance || availableBalance < 100) {
+      toast.error('Minimum instant cashout is 100 ETB');
+      return;
+    }
+    if (!accountName || !accountNumber) {
+      toast.error('Enter your account name and number to cash out');
+      return;
+    }
+    if (withdrawMethod === 'bank' && !bankCode) {
+      toast.error('Select a bank to withdraw');
+      return;
+    }
+
+    setWithdrawing(true);
+    try {
+      await paymentsAPI.withdraw({
+        amount: availableBalance,
+        method: withdrawMethod,
+        accountDetails: { accountName, accountNumber, bankCode }
+      });
+      toast.success('Instant cashout initiated!');
+      setBankCode('');
+      fetchEarnings();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Cashout failed');
+    } finally {
+      setWithdrawing(false);
     }
   };
 
@@ -77,18 +167,111 @@ const DriverEarnings = () => {
           <span>Driver Net Payout Wallet</span>
         </div>
         <div className="balance-amount" style={{ fontSize: '26px', fontWeight: '800', margin: '8px 0' }}>
-          {(earnings.total * 0.85)?.toFixed(0)} ETB
+          {availableBalance?.toFixed(0)} ETB
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.9, marginTop: '8px', borderTop: '1px solid #334155', paddingTop: '8px' }}>
           <span>Gross: {earnings.total?.toFixed(0)} ETB</span>
           <span>Platform Fee (-15%): -{(earnings.total * 0.15)?.toFixed(0)} ETB</span>
         </div>
+      </Card>
+
+      <Card className="earnings-section" padding="lg" style={{ marginTop: '16px' }}>
+        <h2 className="section-title">Withdraw Funds</h2>
+
+        <div className="input-group" style={{ marginBottom: 16 }}>
+          <label>Amount (min 100 ETB)</label>
+          <div className="input-wrapper">
+            <FaMoneyBillWave className="input-icon" />
+            <input
+              type="number"
+              placeholder="Enter amount"
+              value={withdrawAmount}
+              onChange={e => setWithdrawAmount(e.target.value)}
+              min="100"
+              max={availableBalance}
+              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        <div className="input-group" style={{ marginBottom: 16 }}>
+          <label>Withdrawal Method</label>
+          <div className="input-wrapper">
+            <FaMobileAlt className="input-icon" />
+            <select
+              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+              value={withdrawMethod}
+              onChange={e => setWithdrawMethod(e.target.value)}
+            >
+              <option value="telebirr">Telebirr</option>
+              <option value="cbe_birr">CBE Birr</option>
+              <option value="bank">Bank Transfer</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="input-group" style={{ marginBottom: 16 }}>
+          <label>Account Holder Name</label>
+          <div className="input-wrapper">
+            <FaUser className="input-icon" />
+            <input
+              type="text"
+              placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Account holder name'}
+              value={accountName}
+              onChange={e => setAccountName(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        <div className="input-group" style={{ marginBottom: 16 }}>
+          <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : 'Account Number'}</label>
+          <div className="input-wrapper">
+            <FaMobileAlt className="input-icon" />
+            <input
+              type="text"
+              placeholder={withdrawMethod === 'telebirr' ? '09...' : 'Account number'}
+              value={accountNumber}
+              onChange={e => setAccountNumber(e.target.value)}
+              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        {withdrawMethod === 'bank' && (
+          <div className="input-group" style={{ marginBottom: 16 }}>
+            <label>Bank</label>
+            <div className="input-wrapper">
+              <FaCreditCard className="input-icon" />
+              <select
+                style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
+                value={bankCode}
+                onChange={e => setBankCode(e.target.value)}
+              >
+                <option value="">Select bank</option>
+                {banks.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
-          style={{ width: '100%', marginTop: '12px', padding: '10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-          onClick={() => alert(`Instant payout request of ${(earnings.total * 0.85)?.toFixed(0)} ETB sent to Telebirr (+251911223344)!`)}
+          disabled={withdrawing}
+          onClick={handleWithdraw}
+          style={{ width: '100%', padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '8px' }}
         >
-          📲 Request Instant Payout to Telebirr
+          <FaArrowUp style={{ marginRight: 6 }} /> {withdrawing ? 'Processing...' : '📲 Request Withdrawal'}
+        </button>
+        <button
+          type="button"
+          disabled={withdrawing || availableBalance < 100}
+          onClick={handleInstantCashout}
+          style={{ width: '100%', padding: '12px', background: '#059669', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          ⚡ {withdrawing ? 'Processing...' : `Instant Cashout (${availableBalance?.toFixed(0)} ETB)`}
         </button>
       </Card>
 
