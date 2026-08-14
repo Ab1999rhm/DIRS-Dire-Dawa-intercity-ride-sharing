@@ -12,6 +12,7 @@ router.get('/history', protect, paymentController.getPaymentHistory);
 router.get('/earnings', protect, authorize('driver'), paymentController.getDriverEarnings);
 router.post('/withdraw', protect, authorize('driver'), validateWithdrawal, paymentController.requestWithdrawal);
 router.post('/chapa/webhook', paymentController.chapaWebhook);
+router.delete('/wallet/:paymentId', protect, validatePaymentDetailRoute, paymentController.deleteTransaction);
 router.get('/:paymentId', protect, validatePaymentDetailRoute, paymentController.getPaymentDetails);
 
 module.exports = router;

@@ -176,6 +176,7 @@ export const paymentsAPI = {
   wallet: (params) => api.get('/payments/wallet', { params }),
   topUp: (data) => api.post('/payments/wallet/topup', data),
   walletWithdraw: (data) => api.post('/payments/wallet/withdraw', data),
+  deleteTransaction: (paymentId) => api.delete(`/payments/wallet/${paymentId}`),
   earnings: () => api.get('/payments/earnings'),
   withdraw: (data) => api.post('/payments/withdraw', data),
 };

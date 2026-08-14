@@ -231,6 +231,28 @@ exports.getWallet = asyncHandler(async (req, res) => {
   });
 });
 
+exports.deleteTransaction = asyncHandler(async (req, res) => {
+  const { paymentId } = req.params;
+
+  const payment = await Payment.findOne({ _id: paymentId, passenger: req.user._id });
+
+  if (!payment) {
+    return res.status(404).json({ error: 'Transaction not found' });
+  }
+
+  if (payment.status === 'completed' && payment.type === 'top_up') {
+    return res.status(400).json({ error: 'Completed top-ups cannot be deleted' });
+  }
+
+  if (payment.type === 'trip_payment') {
+    return res.status(400).json({ error: 'Trip payments cannot be deleted' });
+  }
+
+  await Payment.deleteOne({ _id: payment._id });
+
+  res.json({ success: true, message: 'Transaction deleted' });
+});
+
 exports.walletTopUp = asyncHandler(async (req, res) => {
   const { amount, method } = req.body;
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FaWallet, FaHistory, FaMoneyBillWave, FaMobileAlt, FaCreditCard,
   FaArrowUp, FaArrowDown, FaPlus,
-  FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle
+  FaCheckCircle, FaClock, FaArrowLeft, FaExclamationTriangle, FaTrashAlt
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -27,10 +27,25 @@ const PassengerWallet = () => {
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchWalletData();
   }, []);
+
+  const handleDelete = async (tx) => {
+    if (!window.confirm('Delete this transaction from your history?')) return;
+    setDeletingId(tx._id);
+    try {
+      await paymentsAPI.deleteTransaction(tx._id);
+      toast.success('Transaction deleted');
+      fetchWalletData();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Delete failed');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const fetchWalletData = async () => {
     setLoading(true);
@@ -287,6 +302,16 @@ const PassengerWallet = () => {
                       <div style={{ fontSize: 11, color: tx.status === 'pending' ? '#d97706' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}>
                         <FaCheckCircle size={10} /> {formatted.status}
                       </div>
+                      {(tx.type === 'top_up' && tx.status !== 'completed') && (
+                        <button
+                          type="button"
+                          className="wallet-delete-btn"
+                          disabled={deletingId === tx._id}
+                          onClick={() => handleDelete(tx)}
+                        >
+                          {deletingId === tx._id ? 'Deleting…' : (<><FaTrashAlt size={10} /> Delete</>)}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
