@@ -541,14 +541,20 @@ const DriverDashboard = () => {
               </button>
             </div>
 
-            <button 
-              className="driver-action-btn" 
-              onClick={() => handleTripAction('complete')}
-              style={{ marginTop: 12 }}
-            >
-              <FaCheck />
-              {t('driver.completeTrip') || 'Complete Trip'}
-            </button>
+            {(() => {
+              const nextAction = getNextAction();
+              if (!nextAction) return null;
+              return (
+                <button 
+                  className="driver-action-btn" 
+                  onClick={() => handleTripAction(nextAction.action)}
+                  style={{ marginTop: 12 }}
+                >
+                  <FaCheck />
+                  {nextAction.label}
+                </button>
+              );
+            })()}
 
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               <button
