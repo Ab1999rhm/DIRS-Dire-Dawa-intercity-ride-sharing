@@ -1083,7 +1083,7 @@ const PassengerHome = () => {
           </div>
 
           <div className="ride-actions-row">
-            <button className="passenger-action-btn" onClick={() => activeRide?._id && navigate(`/passenger/trip/${activeRide._id}`)}>
+            <button className="passenger-action-btn" onClick={() => navigate('/passenger/history')}>
               <FaPhone /> {t('passenger.callDriver') || 'Call'}
             </button>
             <button className="passenger-action-btn" onClick={() => setShowChat(true)}>
@@ -1092,7 +1092,7 @@ const PassengerHome = () => {
             <button className="passenger-action-btn" onClick={handleShareTrip}>
               <FaShareAlt /> Share Trip
             </button>
-            <button className="passenger-action-btn danger" onClick={() => activeRide?._id && navigate(`/passenger/trip/${activeRide._id}`)}>
+            <button className="passenger-action-btn danger" onClick={() => navigate('/passenger/history')}>
               <FaExclamationTriangle /> SOS
             </button>
           </div>
@@ -1202,7 +1202,7 @@ const PassengerHome = () => {
           </div>
 
           <div className="ride-actions-row">
-            <button className="passenger-action-btn" onClick={() => activeRide?._id && navigate(`/passenger/trip/${activeRide._id}`)}>
+            <button className="passenger-action-btn" onClick={() => navigate('/passenger/history')}>
               <FaPhone /> {t('passenger.callDriver') || 'Call'}
             </button>
             <button className="passenger-action-btn" onClick={() => setShowChat(true)}>
@@ -1211,7 +1211,7 @@ const PassengerHome = () => {
             <button className="passenger-action-btn" onClick={handleShareTrip}>
               <FaShareAlt /> Share Trip
             </button>
-            <button className="passenger-action-btn danger" onClick={() => activeRide?._id && navigate(`/passenger/trip/${activeRide._id}`)}>
+            <button className="passenger-action-btn danger" onClick={() => navigate('/passenger/history')}>
               <FaExclamationTriangle /> SOS
             </button>
           </div>
