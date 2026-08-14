@@ -14,6 +14,7 @@ import FlexibleMap from '../../components/common/FlexibleMap';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, ratingsAPI, sosAPI, paymentsAPI } from '../../services/api';
+import api from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import Modal, { ConfirmModal } from '../../components/common/Modal';
 import VehicleCategorySelector from '../../components/passenger/VehicleCategorySelector';
@@ -688,13 +689,18 @@ const PassengerHome = () => {
   const handleCancelRide = async () => {
     if (activeRide?._id && activeRide._id !== 'demo') {
       try {
-        await ridesAPI.cancel(activeRide._id, 'Cancelled by passenger');
+        // Use trip cancellation endpoint instead of ride request cancellation
+        await api.put(`/trips/${activeRide._id}/cancel`, { reason: 'Cancelled by passenger', cancelledBy: 'passenger' });
       } catch (err) {
-        console.error(err);
+        console.error('Cancel error:', err);
+        toast.error('Failed to cancel ride');
+        return;
       }
     }
     toast.success('Ride cancelled');
     resetBookingState();
+    // Clear localStorage to prevent trip restoration
+    localStorage.removeItem('dirs_passenger_rides');
   };
 
   const handleSubmitRating = async () => {
@@ -811,6 +817,10 @@ const PassengerHome = () => {
     setSosModalOpen(false);
     setSosType(null);
     setSosDescription('');
+  };
+
+  const handleReportIssue = () => {
+    navigate('/passenger/report');
   };
 
   const handleSendSOS = async () => {
@@ -1074,22 +1084,16 @@ const PassengerHome = () => {
           </div>
 
           <div className="ride-actions-row">
-            {driver.phone ? (
-              <a href={`tel:${driver.phone}`} className="passenger-action-btn">
-                <FaPhone /> {t('passenger.callDriver') || 'Call'}
-              </a>
-            ) : (
-              <button className="passenger-action-btn" disabled>
-                <FaPhone /> {t('passenger.callDriver') || 'Call'}
-              </button>
-            )}
+            <button className="passenger-action-btn" onClick={() => navigate('/passenger/trips')}>
+              <FaPhone /> {t('passenger.callDriver') || 'Call'}
+            </button>
             <button className="passenger-action-btn" onClick={() => setShowChat(true)}>
               <FaComments /> {t('passenger.chatDriver') || 'Chat'}
             </button>
             <button className="passenger-action-btn" onClick={handleShareTrip}>
               <FaShareAlt /> Share Trip
             </button>
-            <button className="passenger-action-btn danger" onClick={handleSOS}>
+            <button className="passenger-action-btn danger" onClick={() => navigate('/passenger/trips')}>
               <FaExclamationTriangle /> SOS
             </button>
           </div>
@@ -1199,22 +1203,16 @@ const PassengerHome = () => {
           </div>
 
           <div className="ride-actions-row">
-            {driver.phone ? (
-              <a href={`tel:${driver.phone}`} className="passenger-action-btn">
-                <FaPhone /> {t('passenger.callDriver') || 'Call'}
-              </a>
-            ) : (
-              <button className="passenger-action-btn" disabled>
-                <FaPhone /> {t('passenger.callDriver') || 'Call'}
-              </button>
-            )}
+            <button className="passenger-action-btn" onClick={() => navigate('/passenger/trips')}>
+              <FaPhone /> {t('passenger.callDriver') || 'Call'}
+            </button>
             <button className="passenger-action-btn" onClick={() => setShowChat(true)}>
               <FaComments /> {t('passenger.chatDriver') || 'Chat'}
             </button>
             <button className="passenger-action-btn" onClick={handleShareTrip}>
               <FaShareAlt /> Share Trip
             </button>
-            <button className="passenger-action-btn danger" onClick={handleSOS}>
+            <button className="passenger-action-btn danger" onClick={() => navigate('/passenger/trips')}>
               <FaExclamationTriangle /> SOS
             </button>
           </div>

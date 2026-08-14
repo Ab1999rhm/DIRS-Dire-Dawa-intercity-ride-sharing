@@ -125,7 +125,7 @@ export const authAPI = {
   forgotPassword: (phoneNumber) => api.post('/auth/forgot-password', { phoneNumber }),
   verifyResetOTP: (phoneNumber, otp) => api.post('/auth/verify-reset-otp', { phoneNumber, otp }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
-  updateDriverStatus: (isOnline, coordinates) => api.put('/auth/driver/status', { isOnline, coordinates }),
+  updateDriverStatus: (isOnline, coordinates, serviceType, intendedDestination) => api.put('/auth/driver/status', { isOnline, coordinates, serviceType, intendedDestination }),
   updateDriverDestination: (city, coordinates) => api.put('/auth/driver/destination', { city, coordinates }),
 };
 
