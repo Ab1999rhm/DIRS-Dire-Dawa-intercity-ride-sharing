@@ -75,7 +75,7 @@ const PassengerProfile = () => {
   const [emailOtp, setEmailOtp] = useState('');
 
   // Real-world Wallet & Referral state
-  const [walletBalance, setWalletBalance] = useState(150);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [referralCode, setReferralCode] = useState('');
   const [referralStats, setReferralStats] = useState({ totalReferred: 0, completedReferrals: 0, credits: 0 });
   const [referralList, setReferralList] = useState([]);
@@ -878,12 +878,12 @@ const PassengerProfile = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('passenger.referralCode') || 'Referral Code'}:</span>
                   <code style={{ padding: '6px 12px', background: 'var(--card)', borderRadius: 6, fontWeight: 700, fontSize: 14, border: '1px solid var(--border)', letterSpacing: 1 }}>
-                    {user?._id?.slice(-8)?.toUpperCase() || 'DIRS0000'}
+                    {referralCode || 'Loading...'}
                   </code>
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
                   <FaUserFriends size={12} style={{ marginRight: 4 }} />
-                  {t('passenger.friendsJoined')}
+                  {t('passenger.friendsJoined', { count: referralStats.totalReferred || 0 })}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <Button
@@ -891,7 +891,7 @@ const PassengerProfile = () => {
                     size="sm"
                     icon={<FaUserFriends />}
                     onClick={async () => {
-                      const code = user?._id?.slice(-8)?.toUpperCase() || 'DIRS0000';
+                      const code = referralCode || 'DIRS0000';
                       const shareData = {
                         title: 'Join DIRS',
                         text: `Join DIRS ride-sharing! Use my code: ${code}`,
