@@ -315,6 +315,11 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
+  // Backwards-compatible: older clients sent a string (phone/email) instead of an object
+  const details = typeof accountDetails === 'string'
+    ? { accountNumber: accountDetails || user.phoneNumber || user.email }
+    : (accountDetails || {});
+
   const withdrawAmount = Number(amount);
   if (!withdrawAmount || withdrawAmount <= 0) {
     return res.status(400).json({ error: 'Invalid amount' });
@@ -328,19 +333,19 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Insufficient balance' });
   }
 
-  if (method === 'bank' && !accountDetails?.bankCode) {
+  if (method === 'bank' && !details.bankCode) {
     return res.status(400).json({ error: 'Please select a bank for withdrawal' });
   }
 
-  if (!accountDetails?.accountNumber && !accountDetails?.accountName) {
+  if (!details.accountNumber && !details.accountName) {
     return res.status(400).json({ error: 'Recipient account name and number are required' });
   }
 
   const transfer = await chapaService.initiateTransfer({
-    accountName: accountDetails?.accountName || `${user.firstName} ${user.lastName}`,
-    accountNumber: accountDetails?.accountNumber || chapaService.normalizeEthiopianPhone(user.phoneNumber),
+    accountName: details.accountName || `${user.firstName} ${user.lastName}`,
+    accountNumber: details.accountNumber || chapaService.normalizeEthiopianPhone(user.phoneNumber),
     amount: withdrawAmount,
-    bankCode: accountDetails?.bankCode || await chapaService.resolveBankCode(method, accountDetails),
+    bankCode: details.bankCode || await chapaService.resolveBankCode(method, details),
     reference: `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`
   });
 
@@ -359,7 +364,7 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
     method,
     status: 'processing',
     transactionId: transfer.reference || `WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
-    paymentGatewayResponse: { ...transfer, accountDetails }
+    paymentGatewayResponse: { ...transfer, accountDetails: details }
   });
 
   logger.info('Wallet withdrawal initiated via Chapa', { userId: user._id, amount: withdrawAmount, method, reference: transfer.reference });
