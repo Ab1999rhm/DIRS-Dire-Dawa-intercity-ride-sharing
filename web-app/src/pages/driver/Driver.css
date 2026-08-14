@@ -1219,7 +1219,7 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding: 8px 0 calc(env(safe-area-inset-bottom, 0px) + 4px);
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
