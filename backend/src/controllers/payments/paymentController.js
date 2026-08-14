@@ -250,7 +250,7 @@ exports.walletTopUp = asyncHandler(async (req, res) => {
   if (method === 'telebirr') {
     transactionId = `TLB-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     gatewayResponse = { simulated: true, mode: process.env.PAYMENT_TEST_MODE || 'test' };
-    paymentStatus = 'pending';
+    paymentStatus = 'completed';
   } else if (method === 'chapa') {
     const result = await processChapaPayment(Number(amount), user.email);
     transactionId = result.transactionId || `CHA-${Date.now()}`;
@@ -282,70 +282,6 @@ exports.walletTopUp = asyncHandler(async (req, res) => {
   });
 
   res.json({ payment, balance: user.walletBalance, checkoutUrl: gatewayResponse?.checkoutUrl || null });
-});
-
-exports.verifyTopUp = asyncHandler(async (req, res) => {
-  const { transactionId } = req.body;
-
-  if (!transactionId) {
-    return res.status(400).json({ error: 'transactionId is required' });
-  }
-
-  const payment = await Payment.findOne({ transactionId, passenger: req.user._id });
-  if (!payment) {
-    return res.status(404).json({ error: 'Transaction not found' });
-  }
-
-  if (payment.status === 'completed') {
-    const user = await User.findById(req.user._id);
-    return res.json({ payment, balance: user.walletBalance });
-  }
-
-  if (payment.type !== 'top_up') {
-    return res.status(400).json({ error: 'Only top-up transactions can be verified here' });
-  }
-
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  let confirmed = false;
-
-  if (payment.method === 'chapa') {
-    try {
-      const verifyResponse = await axios.get(
-        `https://api.chapa.co/v1/transaction/verify/${payment.transactionId}`,
-        { headers: { Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY || ''}` } }
-      );
-      const status = verifyResponse.data?.data?.status;
-      if (status === 'success') {
-        confirmed = true;
-      }
-    } catch (error) {
-      logger.error('Chapa verify error', { error: error.message, tx: payment.transactionId });
-    }
-  } else if (payment.method === 'telebirr') {
-    confirmed = true;
-  }
-
-  if (confirmed) {
-    payment.status = 'completed';
-    payment.paidAt = new Date();
-    await payment.save();
-
-    user.walletBalance = (user.walletBalance || 0) + payment.amount;
-    await user.save();
-
-    await notifyRideUpdate(user._id, 'wallet_topup_confirmed', {
-      amount: payment.amount,
-      transactionId: payment.transactionId
-    });
-
-    logger.info('Wallet top-up verified', { userId: user._id, tx: payment.transactionId, amount: payment.amount });
-  }
-
-  res.json({ payment, balance: user.walletBalance, confirmed });
 });
 
 exports.walletWithdraw = asyncHandler(async (req, res) => {
@@ -501,7 +437,7 @@ const processChapaPayment = async (amount, email) => {
         email,
         tx_ref: `DIRS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
         callback_url: `${process.env.BACKEND_URL}/api/payments/chapa/webhook`,
-        return_url: `${process.env.FRONTEND_URL}`
+        return_url: `${process.env.FRONTEND_URL}/passenger/wallet`
       },
       {
         headers: {
@@ -523,15 +459,16 @@ const processChapaPayment = async (amount, email) => {
 };
 
 exports.chapaWebhook = asyncHandler(async (req, res) => {
-  if (!process.env.CHAPA_WEBHOOK_SECRET) {
-    logger.error('CHAPA_WEBHOOK_SECRET not configured');
+  const secret = process.env.CHAPA_WEBHOOK_SECRET;
+  if (!secret) {
+    logger.error('CHAPA_WEBHOOK_SECRET not configured — webhook disabled');
     return res.status(500).json({ error: 'Webhook not configured' });
   }
 
   const signature = req.headers['chapa-signature'];
+  const bodyString = req.rawBody ? req.rawBody.toString() : JSON.stringify(req.body);
 
-  const hmac = crypto.createHmac('sha256', process.env.CHAPA_WEBHOOK_SECRET);
-  const bodyString = JSON.stringify(req.body);
+  const hmac = crypto.createHmac('sha256', secret);
   const expectedSignature = hmac.update(bodyString).digest('hex');
 
   if (signature !== expectedSignature) {

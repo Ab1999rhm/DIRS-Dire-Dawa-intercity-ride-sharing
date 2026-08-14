@@ -7,7 +7,6 @@ const { validatePayment, validatePaymentRoute, validatePaymentDetailRoute, valid
 router.post('/trip/:tripId', protect, validatePaymentRoute, validatePayment, paymentController.processPayment);
 router.get('/wallet', protect, paymentController.getWallet);
 router.post('/wallet/topup', protect, paymentController.walletTopUp);
-router.post('/wallet/verify', protect, paymentController.verifyTopUp);
 router.post('/wallet/withdraw', protect, paymentController.walletWithdraw);
 router.get('/history', protect, paymentController.getPaymentHistory);
 router.get('/earnings', protect, authorize('driver'), paymentController.getDriverEarnings);
