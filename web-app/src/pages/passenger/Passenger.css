@@ -1162,7 +1162,7 @@
 .passenger-page .history-stat-value {
   display: block;
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text);
   line-height: 1.1;
 }

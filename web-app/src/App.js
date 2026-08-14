@@ -20,7 +20,6 @@ const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
 const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const PassengerHome = React.lazy(() => import('./pages/passenger/PassengerHome'));
-const PassengerTrips = React.lazy(() => import('./pages/passenger/PassengerTrips'));
 const PassengerHistory = React.lazy(() => import('./pages/passenger/PassengerHistory'));
 const PassengerFavorites = React.lazy(() => import('./pages/passenger/PassengerFavorites'));
 const PassengerProfile = React.lazy(() => import('./pages/passenger/PassengerProfile'));
@@ -168,7 +167,6 @@ const PassengerRoutes = React.memo(() => (
   <Suspense fallback={<LoadingSpinner />}>
     <Routes>
       <Route index element={<PassengerHome />} />
-      <Route path="trips" element={<PassengerTrips />} />
       <Route path="trip/:tripId" element={<PassengerTripDetail />} />
       <Route path="wallet" element={<PassengerWallet />} />
       <Route path="history" element={<PassengerHistory />} />
