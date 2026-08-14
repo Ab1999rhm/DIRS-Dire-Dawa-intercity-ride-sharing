@@ -465,13 +465,17 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
     return res.status(500).json({ error: 'Webhook not configured' });
   }
 
-  const signature = req.headers['chapa-signature'];
   const bodyString = req.rawBody ? req.rawBody.toString() : JSON.stringify(req.body);
 
-  const hmac = crypto.createHmac('sha256', secret);
-  const expectedSignature = hmac.update(bodyString).digest('hex');
+  const payloadHash = crypto.createHmac('sha256', secret).update(bodyString).digest('hex');
+  const secretHash = crypto.createHmac('sha256', secret).update(secret).digest('hex');
 
-  if (signature !== expectedSignature) {
+  const signatures = [req.headers['chapa-signature'], req.headers['x-chapa-signature']].filter(Boolean);
+  const valid = signatures.some(
+    s => String(s) === payloadHash || String(s) === secretHash
+  );
+
+  if (!valid) {
     logger.warn('Invalid Chapa webhook signature', { ip: req.ip });
     return res.status(401).json({ error: 'Invalid signature' });
   }
