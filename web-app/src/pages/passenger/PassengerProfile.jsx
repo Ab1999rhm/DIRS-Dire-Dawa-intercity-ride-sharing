@@ -167,10 +167,13 @@ const PassengerProfile = () => {
       toast.error('Please fill in all fields');
       return;
     }
-    const newContact = { name: contactName, phone: contactPhone, _id: Date.now().toString() };
+    const newContact = { name: contactName, phoneNumber: contactPhone };
     const updated = [...emergencyContacts, newContact];
     setEmergencyContacts(updated);
-    await authAPI.updateProfile({ emergencyContacts: updated });
+    const res = await authAPI.updateProfile({ emergencyContacts: updated });
+    if (res.data.user?.emergencyContacts) {
+      setEmergencyContacts(res.data.user.emergencyContacts);
+    }
     setContactName('');
     setContactPhone('');
     setShowContactForm(false);
@@ -180,7 +183,10 @@ const PassengerProfile = () => {
   const handleDeleteContact = async (id) => {
     const updated = emergencyContacts.filter(c => c._id !== id);
     setEmergencyContacts(updated);
-    await authAPI.updateProfile({ emergencyContacts: updated });
+    const res = await authAPI.updateProfile({ emergencyContacts: updated });
+    if (res.data.user?.emergencyContacts) {
+      setEmergencyContacts(res.data.user.emergencyContacts);
+    }
     toast.success('Contact removed');
   };
 
@@ -190,10 +196,13 @@ const PassengerProfile = () => {
       toast.error('Please fill in all fields');
       return;
     }
-    const newPlace = { name: placeName, address: placeAddress, type: placeType, _id: Date.now().toString() };
+    const newPlace = { name: placeName, address: placeAddress, type: placeType };
     const updated = [...favoriteLocations, newPlace];
     setFavoriteLocations(updated);
-    await authAPI.updateProfile({ favoriteLocations: updated });
+    const res = await authAPI.updateProfile({ favoriteLocations: updated });
+    if (res.data.user?.favoriteLocations) {
+      setFavoriteLocations(res.data.user.favoriteLocations);
+    }
     setPlaceName('');
     setPlaceAddress('');
     setPlaceType('home');
@@ -204,7 +213,10 @@ const PassengerProfile = () => {
   const handleDeletePlace = async (id) => {
     const updated = favoriteLocations.filter(p => p._id !== id);
     setFavoriteLocations(updated);
-    await authAPI.updateProfile({ favoriteLocations: updated });
+    const res = await authAPI.updateProfile({ favoriteLocations: updated });
+    if (res.data.user?.favoriteLocations) {
+      setFavoriteLocations(res.data.user.favoriteLocations);
+    }
     toast.success('Place removed');
   };
 
@@ -504,7 +516,7 @@ const PassengerProfile = () => {
                   <div className="contact-avatar">{contact.name?.[0] || '?'}</div>
                   <div>
                     <h4>{contact.name}</h4>
-                    <p>{contact.phone}</p>
+                    <p>{contact.phoneNumber}</p>
                   </div>
                 </div>
                 <button className="contact-delete" onClick={() => handleDeleteContact(contact._id)}>
@@ -521,7 +533,7 @@ const PassengerProfile = () => {
         <Card className="profile-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h3 style={{ fontWeight: 700 }}>{t('passenger.savedPlaces')}</h3>
-            <Button variant="outline" size="sm" icon={<FaPlus />} onClick={() => setShowPlaceForm(!showForm)}>
+            <Button variant="outline" size="sm" icon={<FaPlus />} onClick={() => setShowPlaceForm(!showPlaceForm)}>
               {t('passenger.addPlace')}
             </Button>
           </div>
@@ -630,10 +642,10 @@ const PassengerProfile = () => {
             <Button
               variant="outline"
               fullWidth
-              icon={<FaPlus />}
-              onClick={() => toast.info('Coming soon')}
+              icon={<FaWallet />}
+              onClick={() => navigate('/passenger/wallet')}
             >
-              {t('passenger.addPaymentMethod')}
+              {t('passenger.walletTopUp') || 'Manage Wallet'}
             </Button>
           </div>
         </Card>

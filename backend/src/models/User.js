@@ -163,6 +163,7 @@ const userSchema = new mongoose.Schema({
   favoriteLocations: [{
     name: String,
     address: String,
+    type: { type: String, enum: ['home', 'work', 'school', 'other'], default: 'other' },
     location: {
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: [Number]

@@ -405,6 +405,7 @@ const PassengerHome = () => {
     setPromoCode('');
     setScheduleEnabled(false);
     setScheduledTime('');
+    setPaymentMethod(user?.paymentMethod || 'cash');
     clearInterval(searchingIntervalRef.current);
     clearInterval(timerIntervalRef.current);
   };
