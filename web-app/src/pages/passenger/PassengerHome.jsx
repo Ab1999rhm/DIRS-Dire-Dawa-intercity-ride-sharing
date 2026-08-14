@@ -20,8 +20,6 @@ import VehicleCategorySelector from '../../components/passenger/VehicleCategoryS
 import SeatPickerModal from '../../components/passenger/SeatPickerModal';
 import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
 import InAppChat from '../../components/passenger/InAppChat';
-import FareBreakdownModal from '../../components/passenger/FareBreakdownModal';
-import WalletTopupModal from '../../components/passenger/WalletTopupModal';
 import './Passenger.css';
 
 const SOS_TYPES = [
@@ -223,8 +221,6 @@ const PassengerHome = () => {
   const [showFareBreakdown, setShowFareBreakdown] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [showWalletTopup, setShowWalletTopup] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(150);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
@@ -1968,15 +1964,6 @@ const PassengerHome = () => {
         socket={socket}
         tripStatus={activeRide?.status}
         route={activeRide?.pickupLocation?.address && activeRide?.dropoffLocation?.address ? `${activeRide.pickupLocation.address} → ${activeRide.dropoffLocation.address}` : ''}
-      />
-
-      <WalletTopupModal
-        isOpen={showWalletTopup}
-        onClose={() => setShowWalletTopup(false)}
-        onTopupSuccess={(amt) => {
-          setWalletBalance(prev => prev + amt);
-          toast.success(`Successfully topped up ${amt} ETB to App Wallet!`);
-        }}
       />
 
       <Modal isOpen={sosModalOpen} onClose={handleSOSClose} title="🚨 Emergency SOS" size="sm">

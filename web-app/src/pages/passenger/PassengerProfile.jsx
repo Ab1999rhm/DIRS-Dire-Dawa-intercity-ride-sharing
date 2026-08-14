@@ -11,7 +11,7 @@ import { authAPI, referralAPI, documentsAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, ToggleButton, ConfirmModal } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
-import WalletTopupModal from '../../components/passenger/WalletTopupModal';
+import { useNavigate } from 'react-router-dom';
 import './Passenger.css';
 
 const PLACE_ICONS = {
@@ -25,6 +25,7 @@ const PassengerProfile = () => {
   const { t, language, setLanguage, availableLanguages } = useLanguage();
   const { user, setUser, logout } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('personal');
   const [firstName, setFirstName] = useState('');
@@ -72,7 +73,6 @@ const PassengerProfile = () => {
   const [emailOtp, setEmailOtp] = useState('');
 
   // Real-world Wallet & Referral state
-  const [showWalletTopup, setShowWalletTopup] = useState(false);
   const [walletBalance, setWalletBalance] = useState(150);
   const [referralCode, setReferralCode] = useState('');
   const [referralStats, setReferralStats] = useState({ totalReferred: 0, completedReferrals: 0, credits: 0 });
@@ -341,8 +341,8 @@ const PassengerProfile = () => {
               <strong style={{ fontSize: '20px', fontWeight: 800 }}>{walletBalance} ETB</strong>
             </div>
           </div>
-          <button onClick={() => setShowWalletTopup(true)} style={{ background: 'white', color: '#2563eb', border: 'none', padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>
-            + Top Up
+          <button onClick={() => navigate('/passenger/wallet')} style={{ background: 'white', color: '#2563eb', border: 'none', padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Go to Wallet
           </button>
         </div>
 
@@ -841,15 +841,6 @@ const PassengerProfile = () => {
         message={t('passenger.deleteWarning')}
         confirmText={deleting ? 'Deleting...' : t('passenger.deleteAccount')}
         danger
-      />
-
-      <WalletTopupModal
-        isOpen={showWalletTopup}
-        onClose={() => setShowWalletTopup(false)}
-        onTopupSuccess={(amt) => {
-          setWalletBalance(prev => prev + amt);
-          toast.success(`Successfully added ${amt} ETB to App Wallet!`);
-        }}
       />
     </div>
   );
