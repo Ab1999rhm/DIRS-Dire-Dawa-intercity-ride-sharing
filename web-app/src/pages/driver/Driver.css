@@ -857,6 +857,54 @@
 }
 .balance-icon { font-size: 20px; }
 
+/* === Withdrawal Method Picker === */
+.driver-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+.driver-method-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: var(--card);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+.driver-method-option:hover { border-color: var(--primary-200); }
+.driver-method-option.selected { border-color: var(--primary); background: var(--primary-50, rgba(37,99,235,0.06)); }
+.driver-method-icon { font-size: 18px; color: var(--text-muted); }
+.driver-method-option.selected .driver-method-icon { color: var(--primary); }
+.driver-method-label { font-size: 12px; font-weight: 600; color: var(--text); }
+.driver-method-option.selected .driver-method-label { color: var(--primary); }
+@media (max-width: 400px) {
+  .driver-method-grid { gap: 6px; }
+  .driver-method-option { padding: 10px 4px; }
+  .driver-method-label { font-size: 11px; }
+}
+
+/* === Withdraw Info Notice === */
+.driver-withdraw-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--primary-50, rgba(37,99,235,0.08)), rgba(59,130,246,0.05));
+  border: 1px solid rgba(59,130,246,0.25);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.driver-withdraw-note svg { color: var(--primary); flex-shrink: 0; margin-top: 1px; }
+
 /* === Earnings History === */
 .earnings-history {
   margin-bottom: 24px;

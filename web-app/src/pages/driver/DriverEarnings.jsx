@@ -196,7 +196,7 @@ const DriverEarnings = () => {
 
         <div className="input-group" style={{ marginBottom: 16 }}>
           <label>Withdrawal Method</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 6 }}>
+          <div className="driver-method-grid">
             {[
               { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
               { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
@@ -204,16 +204,11 @@ const DriverEarnings = () => {
             ].map(m => (
               <div
                 key={m.id}
+                className={`driver-method-option ${withdrawMethod === m.id ? 'selected' : ''}`}
                 onClick={() => setWithdrawMethod(m.id)}
-                style={{
-                  padding: '12px 8px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
-                  border: withdrawMethod === m.id ? '2px solid #2563eb' : '2px solid var(--border-light, #e5e7eb)',
-                  background: withdrawMethod === m.id ? 'rgba(37,99,235,0.06)' : 'var(--card)',
-                  transition: 'all 0.2s ease',
-                }}
               >
-                <div style={{ fontSize: 18, color: withdrawMethod === m.id ? '#2563eb' : 'var(--text-muted)', marginBottom: 6 }}>{m.icon}</div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: withdrawMethod === m.id ? '#2563eb' : 'var(--text)' }}>{m.label}</span>
+                <div className="driver-method-icon">{m.icon}</div>
+                <span className="driver-method-label">{m.label}</span>
               </div>
             ))}
           </div>
@@ -266,8 +261,8 @@ const DriverEarnings = () => {
           </div>
         )}
 
-        <div style={{ padding: 10, background: 'rgba(59,130,246,0.08)', borderRadius: 8, marginBottom: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
-          <FaClock size={10} style={{ marginRight: 4 }} /> Withdrawals are reviewed and approved by an admin before processing (1-3 business days).
+        <div className="driver-withdraw-note">
+          <FaClock size={13} /> <span>Withdrawals are reviewed and approved by an admin before processing (1-3 business days).</span>
         </div>
         <button
           type="button"

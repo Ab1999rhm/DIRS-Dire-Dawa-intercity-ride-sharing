@@ -103,6 +103,32 @@ async function reconcilePendingWithdrawals() {
   return { checked: pending.length, updated };
 }
 
+async function reconcileUserWithdrawals(userId) {
+  const pending = await Payment.find({
+    type: 'withdrawal',
+    passenger: userId,
+    status: 'processing'
+  }).limit(20);
+
+  if (pending.length === 0) return { checked: 0, updated: 0 };
+
+  let updated = 0;
+  for (const payment of pending) {
+    const before = payment.status;
+    try {
+      await reconcileWithdrawal(payment);
+      if (before !== payment.status) updated += 1;
+    } catch (err) {
+      logger.error('User withdrawal reconcile error', { paymentId: payment._id, error: err.message });
+    }
+  }
+
+  if (updated > 0) {
+    logger.info(`User withdrawal reconciliation: user=${userId} checked=${pending.length} updated=${updated}`);
+  }
+  return { checked: pending.length, updated };
+}
+
 const startWithdrawalReconciliation = () => {
   if (process.env.WITHDRAWAL_POLL_ENABLED === 'false') {
     logger.info('Withdrawal reconciliation disabled (WITHDRAWAL_POLL_ENABLED=false)');
@@ -125,4 +151,4 @@ const startWithdrawalReconciliation = () => {
   return timer;
 };
 
-module.exports = { startWithdrawalReconciliation, reconcilePendingWithdrawals, reconcileWithdrawal };
+module.exports = { startWithdrawalReconciliation, reconcilePendingWithdrawals, reconcileWithdrawal, reconcileUserWithdrawals };

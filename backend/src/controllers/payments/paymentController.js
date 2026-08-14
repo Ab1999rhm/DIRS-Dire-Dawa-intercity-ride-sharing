@@ -198,6 +198,11 @@ exports.getPaymentDetails = asyncHandler(async (req, res) => {
 exports.getPaymentHistory = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, status } = req.query;
 
+  // Refresh this user's own pending withdrawals against Chapa so the status
+  // is up to date whenever they view history.
+  const { reconcileUserWithdrawals } = require('../../services/withdrawalReconciliation');
+  await reconcileUserWithdrawals(req.user._id).catch(err => logger.warn('reconcile on getPaymentHistory failed', { error: err.message }));
+
   const query = { passenger: req.user._id };
   if (status) {
     query.status = status;
@@ -219,6 +224,11 @@ exports.getWallet = asyncHandler(async (req, res) => {
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
+
+  // Refresh this user's own pending withdrawals against Chapa so the status
+  // is up to date when they open the wallet (no need to wait for the cron).
+  const { reconcileUserWithdrawals } = require('../../services/withdrawalReconciliation');
+  await reconcileUserWithdrawals(user._id).catch(err => logger.warn('reconcile on getWallet failed', { error: err.message }));
 
   const transactions = await Payment.find({ passenger: user._id })
     .populate('trip', 'pickupLocation dropoffLocation createdAt')

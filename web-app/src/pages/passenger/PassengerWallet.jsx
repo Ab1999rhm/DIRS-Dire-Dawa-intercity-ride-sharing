@@ -37,6 +37,8 @@ const PassengerWallet = () => {
   useEffect(() => {
     fetchWalletData();
     loadBanks();
+    const interval = setInterval(() => fetchWalletData(true), 20000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadBanks = async () => {
@@ -62,8 +64,8 @@ const PassengerWallet = () => {
     }
   };
 
-  const fetchWalletData = async () => {
-    setLoading(true);
+  const fetchWalletData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await paymentsAPI.wallet({ limit: 30 });
       setBalance(res.data.balance || 0);
@@ -71,7 +73,7 @@ const PassengerWallet = () => {
     } catch (err) {
       console.error('Failed to fetch wallet data:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -275,8 +277,9 @@ const PassengerWallet = () => {
       {activeSection === 'withdraw' && (
         <div className="passenger-booking-card">
           <h3 className="passenger-subsection">{t('passenger.withdrawFunds')}</h3>
-          <div style={{ padding: 14, background: 'var(--bg)', borderRadius: 12, marginBottom: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
-            {t('passenger.availableBalance')}: <strong style={{ color: 'var(--text)', fontSize: 15 }}>ETB {balance.toFixed(2)}</strong>
+          <div style={{ padding: 14, background: 'linear-gradient(135deg, var(--primary-50, rgba(37,99,235,0.06)), var(--bg))', borderRadius: 12, marginBottom: 16, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid var(--border-light)' }}>
+            <span>{t('passenger.availableBalance')}</span>
+            <strong style={{ color: 'var(--primary)', fontSize: 18 }}>ETB {balance.toFixed(2)}</strong>
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
             <label>{t('passenger.amount')} (ETB)</label>
@@ -351,8 +354,8 @@ const PassengerWallet = () => {
               </div>
             </div>
           )}
-          <div style={{ padding: 10, background: 'var(--info-bg, rgba(59,130,246,0.08))', borderRadius: 8, marginBottom: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
-            <FaClock size={10} style={{ marginRight: 4 }} /> Withdrawals are reviewed and approved by an admin before processing (1-3 business days).
+          <div className="passenger-withdraw-note">
+            <FaClock size={13} /> <span>Withdrawals are reviewed and approved by an admin before processing (1-3 business days).</span>
           </div>
           <button className="passenger-primary-btn" disabled={withdrawLoading} onClick={handleWithdraw}>
             {withdrawLoading ? 'Processing...' : (t('passenger.withdrawNow'))}

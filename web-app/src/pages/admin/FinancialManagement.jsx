@@ -393,7 +393,7 @@ const FinancialManagement = () => {
       {/* Withdrawal Approvals */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24 }}>
         <div className="admin-section-title" style={{ marginBottom: 0 }}>
-          <FaWallet /> {t('admin.withdrawals') || 'Withdrawal Requests'}
+          <FaWallet /> {t('admin.withdrawalRequests') || 'Withdrawal Requests'}
         </div>
         <button onClick={() => fetchWithdrawals()} style={{
           display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px',
@@ -427,7 +427,7 @@ const FinancialManagement = () => {
                     {wd.driver ? (wd.driver.user?.firstName || 'Driver') + ' ' + (wd.driver.user?.lastName || '') + ' (Driver)' : (wd.passenger?.firstName || 'User') + ' ' + (wd.passenger?.lastName || '')}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                    {wd.passenger?.phoneNumber || wd.driver?.user?.phoneNumber || ''} · {wd.method || 'N/A'} · {wd.transactionId}
+                    {wd.paymentGatewayResponse?.accountDetails?.accountName || '—'} · {wd.paymentGatewayResponse?.accountDetails?.accountNumber || wd.passenger?.phoneNumber || wd.driver?.user?.phoneNumber || ''} · {wd.method || 'N/A'} · {wd.transactionId}
                   </div>
                 </div>
               </div>
