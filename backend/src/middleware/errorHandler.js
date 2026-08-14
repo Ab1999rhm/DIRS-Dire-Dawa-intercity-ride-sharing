@@ -1,17 +1,5 @@
 const logger = require('../config/logger');
 
-const sanitizeMessage = (msg) => {
-  if (!msg) return 'Internal Server Error';
-  const lower = msg.toLowerCase();
-  if (lower.includes('mongodb') || lower.includes('mongoose') || lower.includes('connection') ||
-      lower.includes('eaddrinuse') || lower.includes('enotfound') || lower.includes('ETIMEOUT') ||
-      lower.includes('getaddrinfo') || lower.includes('srv') || lower.includes('replicaSet') ||
-      lower.includes('tls') || lower.includes('certificate') || lower.includes('password')) {
-    return 'Service temporarily unavailable. Please try again later.';
-  }
-  return msg;
-};
-
 const errorHandler = (err, req, res, next) => {
   const requestId = req.headers['x-request-id'] || req.id;
 
@@ -25,12 +13,23 @@ const errorHandler = (err, req, res, next) => {
     ip: req.ip
   });
 
-  const statusCode = err.statusCode || 500;
-  const message = 'Service temporarily unavailable. Please try again later.';
+  let statusCode = err.statusCode || 500;
+  let message;
 
-  res.status(statusCode).json({
-    error: message
-  });
+  if (err.name === 'ValidationError') {
+    statusCode = 400;
+    const first = Object.values(err.errors || {})[0];
+    message = first?.message || err.message;
+  } else if (err.name === 'CastError') {
+    statusCode = 400;
+    message = 'Invalid value supplied for a required field';
+  } else if (statusCode >= 400 && statusCode < 500 && err.message) {
+    message = err.message;
+  } else {
+    message = 'Service temporarily unavailable. Please try again later.';
+  }
+
+  res.status(statusCode).json({ error: message });
 };
 
 const asyncHandler = (fn) => (req, res, next) => {

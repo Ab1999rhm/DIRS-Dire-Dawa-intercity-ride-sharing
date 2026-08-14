@@ -31,7 +31,7 @@ const paymentSchema = new mongoose.Schema({
   },
   method: {
     type: String,
-    enum: ['cash', 'telebirr', 'chapa', 'wallet'],
+    enum: ['cash', 'telebirr', 'cbe_birr', 'bank', 'chapa', 'wallet'],
     required: true
   },
   status: {
