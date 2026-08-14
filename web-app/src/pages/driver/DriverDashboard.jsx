@@ -273,11 +273,14 @@ const DriverDashboard = () => {
 
   const getNextAction = () => {
     if (!activeTrip) return null;
+    console.log('Active trip status:', activeTrip.status);
     switch (activeTrip.status) {
       case 'driver_arriving': return { action: 'arrival', label: t('driver.confirmArrival') || 'Confirm Arrival' };
       case 'driver_arrived': return { action: 'start', label: t('driver.startTrip') || 'Start Trip' };
       case 'in_progress': return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
-      default: return null;
+      default: 
+        console.log('Unknown status, returning complete action as fallback');
+        return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
     }
   };
 
@@ -479,6 +482,7 @@ const DriverDashboard = () => {
       {activeTrip && (
         <div className="driver-active-section">
           <h2 className="driver-section-title"><FaCar /> {t('driver.currentTrip') || 'Current Trip'}</h2>
+          {console.log('Rendering active trip:', activeTrip)}
           <Card className="driver-active-card" padding="md">
             <div className="trip-passenger-info">
               <div className="passenger-avatar">
@@ -537,14 +541,14 @@ const DriverDashboard = () => {
               </button>
             </div>
 
-            {getNextAction() && (
-              <button className="driver-action-btn" onClick={() => handleTripAction(getNextAction().action)}>
-                {getNextAction().action === 'start' && <FaCar />}
-                {getNextAction().action === 'arrival' && <FaMapMarkerAlt />}
-                {getNextAction().action === 'complete' && <FaCheck />}
-                {getNextAction().label}
-              </button>
-            )}
+            <button 
+              className="driver-action-btn" 
+              onClick={() => handleTripAction('complete')}
+              style={{ marginTop: 12 }}
+            >
+              <FaCheck />
+              {t('driver.completeTrip') || 'Complete Trip'}
+            </button>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               <button
