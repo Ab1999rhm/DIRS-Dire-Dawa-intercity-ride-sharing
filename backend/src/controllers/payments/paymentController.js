@@ -345,8 +345,8 @@ exports.walletWithdraw = asyncHandler(async (req, res) => {
   });
 
   if (!transfer || transfer.status === 'failed') {
-    logger.warn('Chapa withdrawal rejected', { userId: user._id, amount: withdrawAmount, method });
-    return res.status(400).json({ error: transfer?.message || 'Withdrawal rejected by payment gateway' });
+    logger.warn('Chapa withdrawal rejected', { userId: user._id, amount: withdrawAmount, method, error: transfer?.error || transfer?.message });
+    return res.status(400).json({ error: transfer?.error || transfer?.message || 'Withdrawal rejected by payment gateway' });
   }
 
   user.walletBalance = (user.walletBalance || 0) - withdrawAmount;
@@ -451,8 +451,8 @@ exports.requestWithdrawal = asyncHandler(async (req, res) => {
   });
 
   if (!transfer || transfer.status === 'failed') {
-    logger.warn('Chapa driver withdrawal rejected', { driverId: driver._id, amount, method });
-    return res.status(400).json({ error: transfer?.message || 'Withdrawal rejected by payment gateway' });
+    logger.warn('Chapa driver withdrawal rejected', { driverId: driver._id, amount, method, error: transfer?.error || transfer?.message });
+    return res.status(400).json({ error: transfer?.error || transfer?.message || 'Withdrawal rejected by payment gateway' });
   }
 
   driver.availableBalance -= amount;

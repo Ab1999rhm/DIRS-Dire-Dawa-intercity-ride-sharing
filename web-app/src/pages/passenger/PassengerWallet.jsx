@@ -108,8 +108,22 @@ const PassengerWallet = () => {
       toast.error(t('passenger.invalidAmount'));
       return;
     }
+    if (amount < 100) {
+      toast.error('Minimum withdrawal is 100 ETB');
+      return;
+    }
     if (amount > balance) {
       toast.error(t('passenger.insufficientBalance'));
+      return;
+    }
+    const effectiveAccountName = withdrawAccountName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+    const effectiveAccountNumber = withdrawAccountNumber || user?.phoneNumber || '';
+    if (!effectiveAccountName || !effectiveAccountNumber) {
+      toast.error('Enter an account holder name and number to withdraw');
+      return;
+    }
+    if (withdrawMethod === 'bank' && !withdrawBankCode) {
+      toast.error('Select a bank to withdraw');
       return;
     }
     setWithdrawLoading(true);
@@ -119,8 +133,8 @@ const PassengerWallet = () => {
         currency: 'ETB',
         method: withdrawMethod,
         accountDetails: {
-          accountName: withdrawAccountName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
-          accountNumber: withdrawAccountNumber || user?.phoneNumber || user?.email || null,
+          accountName: effectiveAccountName,
+          accountNumber: effectiveAccountNumber,
           bankCode: withdrawBankCode,
         },
       });

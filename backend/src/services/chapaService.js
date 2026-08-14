@@ -23,9 +23,17 @@ async function listBanks(force = false) {
   if (!force && bankCache.data.length && Date.now() - bankCache.at < BANK_CACHE_TTL) {
     return bankCache.data;
   }
-  const res = await axios.get(`${CHAPA_BASE}/banks`, { headers: chapaHeaders() });
-  bankCache = { at: Date.now(), data: res.data?.data || [] };
-  return bankCache.data;
+  try {
+    const res = await axios.get(`${CHAPA_BASE}/banks`, { headers: chapaHeaders() });
+    bankCache = { at: Date.now(), data: res.data?.data || [] };
+    return bankCache.data;
+  } catch (error) {
+    logger.error('Chapa listBanks error', {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message
+    });
+    return bankCache.data;
+  }
 }
 
 async function resolveBankCode(method, accountDetails = {}) {
@@ -55,15 +63,36 @@ async function initiateTransfer({ accountName, accountNumber, amount, bankCode, 
     bank_code: bankCode,
     reference
   };
-  const res = await axios.post(`${CHAPA_BASE}/transfers`, payload, { headers: chapaHeaders() });
-  return res.data;
+  try {
+    const res = await axios.post(`${CHAPA_BASE}/transfers`, payload, { headers: chapaHeaders() });
+    return res.data;
+  } catch (error) {
+    logger.error('Chapa transfer error', {
+      reference,
+      status: error.response?.status,
+      message: error.response?.data?.message || error.response?.data?.error || error.message
+    });
+    return {
+      status: 'failed',
+      error: error.response?.data?.message || error.response?.data?.error || error.message
+    };
+  }
 }
 
 async function verifyTransfer(reference) {
-  const res = await axios.get(`${CHAPA_BASE}/transfers/verify/${encodeURIComponent(reference)}`, {
-    headers: chapaHeaders()
-  });
-  return res.data;
+  try {
+    const res = await axios.get(`${CHAPA_BASE}/transfers/verify/${encodeURIComponent(reference)}`, {
+      headers: chapaHeaders()
+    });
+    return res.data;
+  } catch (error) {
+    logger.error('Chapa transfer verify error', {
+      reference,
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message
+    });
+    return { status: 'failed', error: error.response?.data?.message || error.message };
+  }
 }
 
 function normalizeEthiopianPhone(phone) {
