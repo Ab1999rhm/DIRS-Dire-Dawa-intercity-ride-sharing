@@ -19,6 +19,7 @@ import Modal, { ConfirmModal } from '../../components/common/Modal';
 import VehicleCategorySelector from '../../components/passenger/VehicleCategorySelector';
 import SeatPickerModal from '../../components/passenger/SeatPickerModal';
 import DigitalTicketModal from '../../components/passenger/DigitalTicketModal';
+import FareBreakdownModal from '../../components/passenger/FareBreakdownModal';
 import InAppChat from '../../components/passenger/InAppChat';
 import './Passenger.css';
 
