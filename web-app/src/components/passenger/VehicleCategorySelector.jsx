@@ -9,7 +9,8 @@ export const VEHICLE_CATEGORIES = [
     id: 'bajaj',
     name: 'Bajaj (TukTuk)',
     icon: <BajajIcon />,
-    capacity: '3 Seats',
+    capacity: 3,
+    capacityLabel: '3 Seats',
     baseFare: 30,
     perKm: 10,
     desc: 'Fastest & cheapest for Dire Dawa intra-city',
@@ -19,7 +20,8 @@ export const VEHICLE_CATEGORIES = [
     id: 'economy',
     name: 'Economy',
     icon: <FaTaxi />,
-    capacity: '4 Seats',
+    capacity: 4,
+    capacityLabel: '4 Seats',
     baseFare: 50,
     perKm: 15,
     desc: 'Standard everyday rides',
@@ -29,7 +31,8 @@ export const VEHICLE_CATEGORIES = [
     id: 'comfort',
     name: 'Comfort VIP',
     icon: <FaCar />,
-    capacity: '4 Seats',
+    capacity: 4,
+    capacityLabel: '4 Seats',
     baseFare: 90,
     perKm: 22,
     desc: 'Air-conditioned premium sedans',
@@ -39,7 +42,8 @@ export const VEHICLE_CATEGORIES = [
     id: 'minibus',
     name: 'Minibus / Coaster',
     icon: <FaBus />,
-    capacity: '12-16 Seats',
+    capacity: 16,
+    capacityLabel: '12-16 Seats',
     baseFare: 150,
     perKm: 20,
     desc: 'Intercity group travel (Harar, Jigjiga)',
@@ -73,7 +77,7 @@ const VehicleCategorySelector = ({ selectedCategory, onSelectCategory, rideType,
                   <strong className="tier-name">{cat.name}</strong>
                   <span className="tier-price">{estimatedCost} ETB</span>
                 </div>
-                <span className="tier-sub">{cat.capacity} • ETA {cat.eta}</span>
+                <span className="tier-sub">{cat.capacityLabel || `${cat.capacity} Seats`} • ETA {cat.eta}</span>
                 <p className="tier-desc">{cat.desc}</p>
               </div>
             </div>
