@@ -53,10 +53,10 @@ const DriverEarnings = () => {
 
       if (earningsRes.data) {
         setEarnings({
-          today: earningsRes.data.today || 0,
-          week: earningsRes.data.week || 0,
-          month: earningsRes.data.month || 0,
-          total: earningsRes.data.total || 0
+          today: earningsRes.data.todayEarnings || earningsRes.data.today || 0,
+          week: earningsRes.data.weekEarnings || earningsRes.data.week || 0,
+          month: earningsRes.data.monthEarnings || earningsRes.data.month || 0,
+          total: earningsRes.data.totalEarnings || earningsRes.data.total || 0
         });
       }
 

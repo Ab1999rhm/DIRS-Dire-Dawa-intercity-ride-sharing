@@ -8,6 +8,23 @@ import { FaCar, FaEdit, FaCheck, FaTimes, FaFileUpload, FaFileImage, FaShieldAlt
 import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
+const DRIVER_VEHICLE_TYPES = [
+  { value: 'sedan', label: 'Sedan' },
+  { value: 'suv', label: 'SUV' },
+  { value: 'minivan', label: 'Minivan' },
+  { value: 'pickup', label: 'Pickup' },
+  { value: 'car', label: 'Car' },
+  { value: 'bajaj', label: 'Bajaj' }
+];
+
+const DRIVER_VEHICLE_ICONS = {
+  sedan: '🚗', suv: '🚙', minivan: '🚐', pickup: '🛻', car: '🚗', bajaj: '🛺'
+};
+
+const DRIVER_VEHICLE_LABELS = {
+  sedan: 'Sedan', suv: 'SUV', minivan: 'Minivan', pickup: 'Pickup', car: 'Car', bajaj: 'Bajaj'
+};
+
 const DriverVehicle = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -35,12 +52,10 @@ const DriverVehicle = () => {
     make: '', model: '', year: '', plateNumber: '', color: '', type: 'sedan'
   });
 
-  const vehicleTypes = [
-    { value: 'sedan', label: t('vehicle.sedan') || 'Sedan' },
-    { value: 'suv', label: t('vehicle.suv') || 'SUV' },
-    { value: 'minivan', label: t('vehicle.minivan') || 'Minivan' },
-    { value: 'pickup', label: t('vehicle.pickup') || 'Pickup' }
-  ];
+  const vehicleTypes = DRIVER_VEHICLE_TYPES.map(v => ({
+    value: v.value,
+    label: t(`vehicle.${v.value}`) || v.label
+  }));
 
   useEffect(() => {
     fetchVehicle();
@@ -132,12 +147,11 @@ const DriverVehicle = () => {
   };
 
   const getTypeIcon = (type) => {
-    switch (type) {
-      case 'suv': return '🚙';
-      case 'minivan': return '🚐';
-      case 'pickup': return '🛻';
-      default: return '🚗';
-    }
+    return DRIVER_VEHICLE_ICONS[type] || '🚗';
+  };
+
+  const getTypeLabel = (type) => {
+    return DRIVER_VEHICLE_LABELS[type] || type || 'Unknown';
   };
 
   if (loading) {
@@ -265,7 +279,7 @@ const DriverVehicle = () => {
             </div>
             <div className="vehicle-info-item">
               <span className="info-label">{t('vehicle.type')}</span>
-              <span className="info-value">{t(`vehicle.${vehicle.type}`) || vehicle.type}</span>
+              <span className="info-value">{getTypeLabel(vehicle.type)}</span>
             </div>
             <div className="vehicle-info-item">
               <span className="info-label">{t('vehicle.status')}</span>
@@ -277,31 +291,32 @@ const DriverVehicle = () => {
           <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: '#1e293b' }}>
-                  Vehicle Documents
+                <h3 style={{ fontSize: '15px', fontWeight: 'bold', margin: 0, color: 'var(--text, #1e293b)' }}>
+                  {t('driver.vehicleDocuments') || 'Vehicle Documents'}
                 </h3>
-                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
-                  Upload photos of your vehicle registration, insurance, and vehicle
+                <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>
+                  {t('driver.uploadDocsDesc') || 'Upload photos of your vehicle registration, insurance, and vehicle'}
                 </p>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
               {[
-                { key: 'vehiclePhoto', title: 'Vehicle Photo' },
-                { key: 'registrationPhoto', title: 'Registration' },
-                { key: 'insurancePhoto', title: 'Insurance' }
+                { key: 'vehiclePhoto', title: t('driver.vehiclePhoto') || 'Vehicle Photo' },
+                { key: 'registrationPhoto', title: t('driver.registration') || 'Registration' },
+                { key: 'insurancePhoto', title: t('driver.insurance') || 'Insurance' }
               ].map(({ key, title }) => {
                 const hasImage = Boolean(documents[key]);
                 return (
-                  <div key={key} style={{
-                    background: '#fff',
-                    border: `2px solid ${hasImage ? '#93c5fd' : '#e2e8f0'}`,
+                  <div key={key} className="vehicle-doc-card" style={{
+                    background: 'var(--card, #fff)',
+                    border: `2px solid ${hasImage ? '#93c5fd' : 'var(--border-light, #e2e8f0)'}`,
                     borderRadius: '12px',
                     padding: '14px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    transition: 'all 0.2s ease'
                   }}>
-                    <strong style={{ fontSize: '13px', color: '#1e293b', display: 'block', marginBottom: '8px' }}>{title}</strong>
+                    <strong style={{ fontSize: '13px', color: 'var(--text, #1e293b)', display: 'block', marginBottom: '8px' }}>{title}</strong>
 
                     {hasImage && (
                       <div style={{ marginBottom: '10px', borderRadius: '8px', overflow: 'hidden', height: '110px', background: '#f1f5f9', border: '1px solid #cbd5e1' }}>
@@ -309,26 +324,37 @@ const DriverVehicle = () => {
                       </div>
                     )}
 
-                    <input type="file" accept="image/*" ref={fileRefs[key]} style={{ display: 'none' }}
-                      onChange={() => handleFileUpload(key)} />
-                    <label style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      padding: '8px 12px',
-                      background: hasImage ? '#f1f5f9' : '#eff6ff',
-                      color: '#2563eb',
-                      border: '1px solid #bfdbfe',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      textAlign: 'center'
-                    }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileRefs[key]}
+                      style={{ display: 'none' }}
+                      onChange={() => handleFileUpload(key)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileRefs[key].current?.click()}
+                      disabled={uploading === key}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        background: hasImage ? '#f1f5f9' : '#eff6ff',
+                        color: '#2563eb',
+                        border: '1px solid #bfdbfe',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        cursor: uploading === key ? 'wait' : 'pointer',
+                        textAlign: 'center',
+                        width: '100%',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
                       <FaFileUpload /> {uploading === key ? 'Uploading...' : hasImage ? 'Replace' : 'Upload'}
-                      <input type="file" accept="image/*" hidden onChange={() => fileRefs[key].current?.click()} />
-                    </label>
+                    </button>
                   </div>
                 );
               })}

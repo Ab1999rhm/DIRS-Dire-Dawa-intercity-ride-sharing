@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { ridesAPI, paymentsAPI, vehiclesAPI, authAPI, sosAPI, reportAPI } from '../../services/api';
+import { ridesAPI, paymentsAPI, vehiclesAPI, authAPI, sosAPI, reportAPI, notificationsAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import L from 'leaflet';
@@ -12,7 +12,7 @@ import {
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
   FaHome, FaListUl, FaWallet, FaCog, FaChevronRight,
   FaExclamationTriangle, FaFlag, FaShieldAlt, FaUserSlash, FaEllipsisH,
-  FaComment
+  FaComment, FaUser, FaHeadset, FaMap, FaSms
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
@@ -78,6 +78,9 @@ const DriverDashboard = () => {
   const [stats, setStats] = useState({ totalTrips: 0, rating: 0, todayEarnings: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const notifRef = useRef(null);
   const [watchId, setWatchId] = useState(null);
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [vehicleType, setVehicleType] = useState(null);
@@ -104,6 +107,25 @@ const DriverDashboard = () => {
       }
     }
   }, [user]);
+
+  const loadNotifications = useCallback(() => {
+    notificationsAPI.get({ limit: 20 }).then((res) => {
+      const d = res.data || {};
+      if (Array.isArray(d.notifications)) setNotifications(d.notifications);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifDropdown(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -173,14 +195,14 @@ const DriverDashboard = () => {
 
       if (earningsRes.data) {
         setEarnings({
-          today: earningsRes.data.today || 956,
-          week: earningsRes.data.week || 4200,
-          month: earningsRes.data.month || 18500
+          today: earningsRes.data.todayEarnings || earningsRes.data.today || 0,
+          week: earningsRes.data.weekEarnings || earningsRes.data.week || 0,
+          month: earningsRes.data.monthEarnings || earningsRes.data.month || 0
         });
         setStats({
-          totalTrips: earningsRes.data.totalTrips || localRides.length || 14,
-          rating: earningsRes.data.rating || 4.9,
-          todayEarnings: earningsRes.data.today || 956
+          totalTrips: earningsRes.data.totalTrips || 0,
+          rating: user?.averageRating || earningsRes.data.rating || 0,
+          todayEarnings: earningsRes.data.todayEarnings || earningsRes.data.today || 0
         });
       }
     } catch (err) {
@@ -355,10 +377,64 @@ const DriverDashboard = () => {
           <h1 className="driver-greeting">{getGreeting()} {user?.firstName || 'Driver'}</h1>
           <p className="driver-location"><FaMapMarkerAlt /> Dire Dawa, Ethiopia</p>
         </div>
-        <button className="driver-bell-btn">
+        <button className="driver-bell-btn" onClick={() => { const next = !showNotifDropdown; setShowNotifDropdown(next); if (next) loadNotifications(); }}>
           <FaBell />
-          {rideRequests.length > 0 && <span className="bell-badge">{rideRequests.length}</span>}
+          {(rideRequests.length + notifications.filter(n => !n.isRead).length) > 0 && (
+            <span className="bell-badge">{rideRequests.length + notifications.filter(n => !n.isRead).length}</span>
+          )}
         </button>
+        {showNotifDropdown && (
+          <div className="driver-notif-dropdown" ref={notifRef}>
+            <div className="driver-notif-header">
+              <span>Notifications</span>
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="driver-notif-unread">{notifications.filter(n => !n.isRead).length} new</span>
+              )}
+            </div>
+            <div className="driver-notif-list">
+              {rideRequests.length > 0 && (
+                <div className="driver-notif-item driver-notif-item-unread" onClick={() => { setShowNotifDropdown(false); }}>
+                  <span className="driver-notif-icon" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}><FaCar /></span>
+                  <div className="driver-notif-item-body">
+                    <div className="driver-notif-item-title driver-notif-item-title-unread">New Ride Request</div>
+                    <div className="driver-notif-item-msg">{rideRequests.length} ride request{rideRequests.length !== 1 ? 's' : ''} waiting</div>
+                  </div>
+                </div>
+              )}
+              {notifications.length === 0 && rideRequests.length === 0 ? (
+                <div className="driver-notif-empty">No notifications</div>
+              ) : (
+                notifications.slice(0, 15).map(n => (
+                  <div key={n._id || Math.random()} className={`driver-notif-item${n.isRead ? '' : ' driver-notif-item-unread'}`}>
+                    <span className={`driver-notif-icon${n.isRead ? '' : ' driver-notif-icon-unread'}`}>
+                      {(() => {
+                        const type = (n.type || '').toLowerCase();
+                        if (type.includes('sos') || type.includes('emergency')) return <FaExclamationTriangle />;
+                        if (type.includes('payment') || type.includes('wallet') || type.includes('withdrawal') || type.includes('earnings')) return <FaMoneyBillWave />;
+                        if (type.includes('ride') || type.includes('trip') || type.includes('driver') || type.includes('booking')) return <FaCar />;
+                        if (type.includes('message') || type.includes('chat')) return <FaComment />;
+                        if (type.includes('rating')) return <FaStar />;
+                        return <FaBell />;
+                      })()}
+                    </span>
+                    <div className="driver-notif-item-body">
+                      <div className={`driver-notif-item-title${n.isRead ? '' : ' driver-notif-item-title-unread'}`}>
+                        {(n.type || 'notification').replace(/_/g, ' ')}
+                      </div>
+                      <div className="driver-notif-item-msg">{n.message || n.title || ''}</div>
+                      {n.createdAt && (
+                        <div className="driver-notif-item-time">{new Date(n.createdAt).toLocaleString()}</div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="driver-notif-footer" onClick={() => { setShowNotifDropdown(false); }}>
+              Dismiss
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="driver-online-row">
