@@ -422,6 +422,30 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
   });
 });
 
+exports.getDriverEarningsHistory = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 20, type } = req.query;
+
+  const driver = await Driver.findOne({ user: req.user._id });
+  if (!driver) {
+    return res.status(404).json({ error: 'Driver not found' });
+  }
+
+  const query = { driver: driver._id };
+  if (type) {
+    query.type = type;
+  }
+
+  const payments = await Payment.find(query)
+    .populate('trip', 'pickupLocation dropoffLocation createdAt vehicleType')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Payment.countDocuments(query);
+
+  res.json({ payments, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+});
+
 exports.requestWithdrawal = asyncHandler(async (req, res) => {
   const { amount, method = 'telebirr', accountDetails = null } = req.body;
 

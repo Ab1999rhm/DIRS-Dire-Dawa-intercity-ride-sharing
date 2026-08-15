@@ -178,6 +178,7 @@ export const paymentsAPI = {
   getBanks: () => api.get('/payments/banks'),
   deleteTransaction: (paymentId) => api.delete(`/payments/wallet/${paymentId}`),
   earnings: () => api.get('/payments/earnings'),
+  earningsHistory: (params) => api.get('/payments/earnings/history', { params }),
   withdraw: (data) => api.post('/payments/withdraw', data),
 };
 

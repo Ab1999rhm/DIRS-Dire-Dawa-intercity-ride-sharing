@@ -134,7 +134,7 @@ const isVehicleCompatible = (vehicle, rideType) => {
   if (rideType === 'intra_city') {
     return ['car', 'minivan', 'bajaj'].includes(vehicle.vehicleType);
   }
-  return vehicle.serviceType === 'intercity' || vehicle.serviceType === 'both';
+  return ['minibus', 'bus', 'car', 'minivan'].includes(vehicle.vehicleType);
 };
 
 const calculateETA = (distanceMeters) => {

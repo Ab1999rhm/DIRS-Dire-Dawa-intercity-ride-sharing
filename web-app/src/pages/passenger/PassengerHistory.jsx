@@ -251,7 +251,7 @@ const PassengerHistory = () => {
 
               <div className="trip-item-footer">
                 <div className="trip-item-meta">
-                  <span><FaCar size={12} /> {trip.vehicleType || 'Sedan'}</span>
+                   <span><FaCar size={12} /> {trip.vehicleType || 'Car'}</span>
                   <span><FaClock size={12} /> {trip.duration || '—'} min</span>
                   {trip.rating && (
                     <span><FaStar size={12} style={{ color: 'var(--accent)' }} /> {trip.rating}</span>

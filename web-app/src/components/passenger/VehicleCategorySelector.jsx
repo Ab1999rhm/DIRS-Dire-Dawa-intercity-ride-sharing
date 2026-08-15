@@ -7,54 +7,70 @@ const BajajIcon = () => <span style={{ fontSize: '1.4em' }}>🛺</span>;
 export const VEHICLE_CATEGORIES = [
   {
     id: 'bajaj',
-    name: 'Bajaj (TukTuk)',
+    name: 'Bajaj',
     icon: <BajajIcon />,
     capacity: 3,
     capacityLabel: '3 Seats',
     baseFare: 30,
     perKm: 10,
-    desc: 'Fastest & cheapest for Dire Dawa intra-city',
-    eta: '2 min'
+    desc: 'Fast & affordable for intra-city',
+    eta: '2 min',
+    rideType: 'intra_city'
   },
   {
-    id: 'economy',
-    name: 'Economy',
+    id: 'car',
+    name: 'Car',
     icon: <FaTaxi />,
     capacity: 4,
     capacityLabel: '4 Seats',
     baseFare: 50,
     perKm: 15,
     desc: 'Standard everyday rides',
-    eta: '3 min'
+    eta: '3 min',
+    rideType: 'both'
   },
   {
-    id: 'comfort',
-    name: 'Comfort VIP',
+    id: 'minivan',
+    name: 'Minivan',
     icon: <FaCar />,
-    capacity: 4,
-    capacityLabel: '4 Seats',
-    baseFare: 90,
-    perKm: 22,
-    desc: 'Air-conditioned premium sedans',
-    eta: '5 min'
+    capacity: 7,
+    capacityLabel: '7 Seats',
+    baseFare: 70,
+    perKm: 18,
+    desc: 'Spacious vehicle for groups',
+    eta: '5 min',
+    rideType: 'both'
   },
   {
     id: 'minibus',
-    name: 'Minibus / Coaster',
+    name: 'Minibus',
     icon: <FaBus />,
     capacity: 16,
     capacityLabel: '12-16 Seats',
     baseFare: 150,
     perKm: 20,
-    desc: 'Intercity group travel (Harar, Jigjiga)',
-    eta: 'Scheduled'
+    desc: 'Group travel (Harar, Jigjiga)',
+    eta: 'Scheduled',
+    rideType: 'intercity'
+  },
+  {
+    id: 'bus',
+    name: 'Bus',
+    icon: <FaBus />,
+    capacity: 30,
+    capacityLabel: '20-30 Seats',
+    baseFare: 200,
+    perKm: 25,
+    desc: 'Large group intercity travel',
+    eta: 'Scheduled',
+    rideType: 'intercity'
   }
 ];
 
 const VehicleCategorySelector = ({ selectedCategory, onSelectCategory, rideType, distanceKm = 5, passengersCount = 1 }) => {
   const availableCategories = VEHICLE_CATEGORIES.filter((cat) => {
-    if (rideType === 'intercity' || rideType === 'interCity') return cat.id === 'minibus' || cat.id === 'comfort';
-    return cat.id !== 'minibus';
+    if (rideType === 'intercity' || rideType === 'interCity') return cat.rideType === 'intercity' || cat.rideType === 'both';
+    return cat.rideType === 'intra_city' || cat.rideType === 'both';
   });
 
   return (

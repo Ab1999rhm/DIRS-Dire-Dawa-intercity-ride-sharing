@@ -52,7 +52,7 @@ const validateRideRequest = [
 ];
 
 const validateVehicle = [
-  body('vehicleType').isIn(['car', 'minivan', 'minibus', 'bajaj', 'bus', 'sedan', 'bike', 'electric']).withMessage('Invalid vehicle type'),
+  body('vehicleType').isIn(['car', 'minivan', 'minibus', 'bajaj', 'bus']).withMessage('Invalid vehicle type'),
   body('make').trim().notEmpty().withMessage('Vehicle make is required'),
   body('model').trim().notEmpty().withMessage('Vehicle model is required'),
   body('year').isInt({ min: 2000 }).withMessage('Invalid vehicle year'),

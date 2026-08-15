@@ -42,9 +42,9 @@ const STATUS_STEPS = [
 const getVehicleIcon = (type) => {
   switch (type) {
     case 'bajaj': return <FaShuttleVan />;
-    case 'minivan': case 'bus': return <FaBus />;
-    case 'bike': return <FaMotorcycle />;
-    case 'electric': return <FaBolt />;
+    case 'minivan': return <FaShuttleVan />;
+    case 'minibus': return <FaBus />;
+    case 'bus': return <FaBus />;
     default: return <FaCar />;
   }
 };
@@ -444,7 +444,7 @@ Rating: ${trip.rating?.rating || 'N/A'}/5
             <div className="driver-info" style={{ flex: 1 }}>
               <h4>{driver.firstName} {driver.lastName}</h4>
               <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                {getVehicleIcon(trip.vehicleType)} {trip.vehicleType || 'Sedan'} {driver.vehiclePlate && `• ${driver.vehiclePlate}`}
+                {getVehicleIcon(trip.vehicleType)} {trip.vehicleType || 'Car'} {driver.vehiclePlate && `• ${driver.vehiclePlate}`}
               </p>
               <span style={{ fontSize: 12, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <FaStar /> {driver.rating || '4.8'}

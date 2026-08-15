@@ -10,6 +10,7 @@ router.post('/wallet/topup', protect, paymentController.walletTopUp);
 router.post('/wallet/withdraw', protect, paymentController.walletWithdraw);
 router.get('/history', protect, paymentController.getPaymentHistory);
 router.get('/earnings', protect, authorize('driver'), paymentController.getDriverEarnings);
+router.get('/earnings/history', protect, authorize('driver'), paymentController.getDriverEarningsHistory);
 router.post('/withdraw', protect, authorize('driver'), validateWithdrawal, paymentController.requestWithdrawal);
 router.get('/banks', protect, paymentController.getBanks);
 router.get('/withdraw/verify/:reference', protect, paymentController.verifyWithdrawal);

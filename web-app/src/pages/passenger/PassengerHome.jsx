@@ -43,8 +43,8 @@ const VEHICLES = VEHICLE_CATEGORIES.map(c => ({
   ...c,
   label: c.name,
   priceKm: c.perKm,
-  priceMin: c.id === 'bajaj' ? 2 : c.id === 'economy' ? 3 : c.id === 'comfort' ? 4 : 2,
-  color: c.id === 'bajaj' ? '#10b981' : c.id === 'economy' ? '#2563eb' : c.id === 'comfort' ? '#8b5cf6' : '#ef4444',
+  priceMin: c.id === 'bajaj' ? 2 : c.id === 'car' ? 3 : c.id === 'minivan' ? 4 : c.id === 'bus' ? 5 : 2,
+  color: c.id === 'bajaj' ? '#10b981' : c.id === 'car' ? '#2563eb' : c.id === 'minivan' ? '#8b5cf6' : c.id === 'bus' ? '#ef4444' : '#f59e0b',
 }));
 
 const pickupIcon = L.divIcon({
@@ -566,12 +566,13 @@ const PassengerHome = () => {
 
     const currentVehicle = selectedVehicle || VEHICLES[0];
 
-    // Map frontend vehicle IDs to backend vehicle types
+    // Map frontend vehicle IDs to backend vehicle types (now 1:1 match)
     const vehicleTypeMap = {
       'bajaj': 'bajaj',
-      'economy': 'car',
-      'comfort': 'car',
-      'minibus': 'minibus'
+      'car': 'car',
+      'minivan': 'minivan',
+      'minibus': 'minibus',
+      'bus': 'bus'
     };
     
     const backendVehicleType = vehicleTypeMap[currentVehicle.id] || 'car';

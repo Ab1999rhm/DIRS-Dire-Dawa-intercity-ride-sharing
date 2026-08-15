@@ -8,7 +8,7 @@ const pricingConfigSchema = new mongoose.Schema({
   },
   vehicleType: {
     type: String,
-    enum: ['sedan', 'suv', 'minivan', 'intercity_bus', 'all'],
+    enum: ['car', 'minivan', 'minibus', 'bajaj', 'bus', 'all'],
     required: true
   },
   baseFare: {

@@ -14,7 +14,7 @@ const DriverEarnings = () => {
   const { user } = useAuth();
   const toast = useToast();
 
-  const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0, total: 0 });
+  const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0, total: 0, availableBalance: 0 });
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,14 +41,14 @@ const DriverEarnings = () => {
     }
   };
 
-  const availableBalance = earnings.total * 0.85 || 0;
+  const availableBalance = earnings.availableBalance || 0;
 
   const fetchEarnings = async () => {
     try {
       setLoading(true);
       const [earningsRes, historyRes] = await Promise.all([
         paymentsAPI.earnings(),
-        paymentsAPI.history()
+        paymentsAPI.earningsHistory({ limit: 50 })
       ]);
 
       if (earningsRes.data) {
@@ -56,11 +56,12 @@ const DriverEarnings = () => {
           today: earningsRes.data.todayEarnings || earningsRes.data.today || 0,
           week: earningsRes.data.weekEarnings || earningsRes.data.week || 0,
           month: earningsRes.data.monthEarnings || earningsRes.data.month || 0,
-          total: earningsRes.data.totalEarnings || earningsRes.data.total || 0
+          total: earningsRes.data.totalEarnings || earningsRes.data.total || 0,
+          availableBalance: earningsRes.data.availableBalance || 0
         });
       }
 
-      setHistory(historyRes.data?.payments || []);
+      setHistory(historyRes.data?.payments || historyRes.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load earnings');
     } finally {
@@ -314,14 +315,27 @@ const DriverEarnings = () => {
             {history.map(payment => (
               <Card key={payment._id} className="history-item" padding="md">
                 <div className="history-info">
-                  <FaCar className="history-icon" />
+                  {payment.type === 'withdrawal' ? (
+                    <FaArrowUp className="history-icon" style={{ color: '#ef4444' }} />
+                  ) : (
+                    <FaCar className="history-icon" style={{ color: '#10b981' }} />
+                  )}
                   <div>
-                    <h4>{payment.trip?.pickup?.address} → {payment.trip?.dropoff?.address}</h4>
+                    <h4>
+                      {payment.type === 'withdrawal' 
+                        ? `Withdrawal - ${payment.method || 'N/A'}`
+                        : payment.trip?.pickupLocation?.address 
+                          ? `${payment.trip.pickupLocation.address} → ${payment.trip.dropoffLocation?.address || 'N/A'}`
+                          : 'Trip Earning'
+                      }
+                    </h4>
                     <span className="history-date">{formatDate(payment.createdAt)}</span>
                   </div>
                 </div>
                 <div className="history-amount">
-                  <span className="amount">{payment.amount?.toFixed(0)} ETB</span>
+                  <span className="amount" style={{ color: payment.type === 'withdrawal' ? '#ef4444' : '#10b981' }}>
+                    {payment.type === 'withdrawal' ? '-' : '+'}{payment.amount?.toFixed(0) || payment.driverEarnings?.toFixed(0) || 0} ETB
+                  </span>
                   <span className={`status-badge ${payment.status}`}>{payment.status}</span>
                 </div>
               </Card>

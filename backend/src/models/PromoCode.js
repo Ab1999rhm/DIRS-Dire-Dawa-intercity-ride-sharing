@@ -77,7 +77,7 @@ const promoCodeSchema = new mongoose.Schema({
   },
   applicableVehicleTypes: [{
     type: String,
-    enum: ['sedan', 'suv', 'minivan', 'intercity_bus', 'all'],
+    enum: ['car', 'minivan', 'minibus', 'bajaj', 'bus', 'all'],
     default: 'all'
   }],
   status: {

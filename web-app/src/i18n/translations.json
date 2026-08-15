@@ -423,7 +423,12 @@
       "addVehicle": "Add Vehicle",
       "editVehicle": "Edit Vehicle",
       "noVehicle": "No vehicle registered",
-      "rating": "Rating"
+      "rating": "Rating",
+      "vehicleDocuments": "Vehicle Documents",
+      "uploadDocsDesc": "Upload photos of your vehicle registration, insurance, and vehicle",
+      "vehiclePhoto": "Vehicle Photo",
+      "registration": "Registration",
+      "insurance": "Insurance"
     },
     "admin": {
       "dashboard": "Dashboard",
@@ -1525,7 +1530,12 @@
       "addVehicle": "ሰው ሰራሽ መሳሪያ ጨምር",
       "editVehicle": "ሰው ሰራሽ መሳሪያ አስተካክል",
       "noVehicle": "ሰው ሰራሽ መሳሪያ የለም",
-      "rating": "ደረጃ"
+      "rating": "ደረጃ",
+      "vehicleDocuments": "የሰው ሰራሽ መሳሪያ ሰነዶች",
+      "uploadDocsDesc": "የሰው ሰራሽ መሳሪያ ምዝገባ፣ ኢንሹራንስ እና የሰው ሰራሽ መሳሪያ ፎቶዎችን ይጫኑ",
+      "vehiclePhoto": "የሰው ሰራሽ መሳሪያ ፎቶ",
+      "registration": "ምዝገባ",
+      "insurance": "ኢንሹራንስ"
     },
     "admin": {
       "dashboard": "ዳሽቦርድ",
@@ -2206,7 +2216,12 @@
       "addVehicle": "Maashinii Addaa",
       "editVehicle": "Maashinii Fakkiinii",
       "noVehicle": "Maashinii hin jiru",
-      "rating": "Gatii"
+      "rating": "Gatii",
+      "vehicleDocuments": "Dokumentoota Maashinii",
+      "uploadDocsDesc": "Fakkii galmaa'ina maashinii, insuransii fi maashinii kee olkaa'i",
+      "vehiclePhoto": "Fakkii Maashinii",
+      "registration": "Galmaa'ina",
+      "insurance": "Inshuransii"
     },
     "admin": {
       "dashboard": "Daashboardii",
@@ -2758,7 +2773,12 @@
       "addVehicle": "Ku dar Gaadhi",
       "editVehicle": "Wax ka bedel Gaadhiga",
       "noVehicle": "Gaadhi ma jiro",
-      "rating": "Qiimaha"
+      "rating": "Qiimaha",
+      "vehicleDocuments": "Dokumentiyada Gaadhiga",
+      "uploadDocsDesc": "Soo rar sawirrada diiwaangelinta gaadhiga, khasaaraha, iyo gaadhiga",
+      "vehiclePhoto": "Sawirka Gaadhiga",
+      "registration": "Diiwaangelinta",
+      "insurance": "Khasaaraha"
     },
     "admin": {
       "dashboard": "Dashboardka",
