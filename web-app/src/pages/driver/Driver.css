@@ -6,7 +6,7 @@
 .driver-page {
   max-width: 480px;
   margin: 0 auto;
-  padding: 12px 16px 100px;
+  padding: 20px 16px 100px;
   overflow-x: hidden;
   box-sizing: border-box;
   min-height: 100vh;
@@ -24,7 +24,7 @@
   bottom: 0;
   pointer-events: none;
   z-index: 50;
-  border: 10px solid #2D5A3D;
+  border: 14px solid #2D5A3D;
   border-image: linear-gradient(135deg, #2D5A3D, #8B7355, #2D5A3D, #8B7355) 1;
 }
 
@@ -38,7 +38,7 @@
   bottom: 0;
   pointer-events: none;
   z-index: 49;
-  border: 14px solid transparent;
+  border: 18px solid transparent;
   background: repeating-linear-gradient(45deg, #2D5A3D 0px, #2D5A3D 8px, #8B7355 8px, #8B7355 16px, #C4A265 16px, #C4A265 24px);
   opacity: 0.12;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
