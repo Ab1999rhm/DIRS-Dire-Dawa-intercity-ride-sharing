@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, documentsAPI } from '../../services/api';
+import { authAPI, documentsAPI, paymentsAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, Modal } from '../../components/common';
-import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt, FaWallet, FaMobileAlt, FaCreditCard, FaUpload, FaSpinner } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
@@ -50,6 +50,13 @@ const DriverProfile = () => {
     availabilityEnd: driverProfile?.settings?.availabilityEnd || '18:00'
   });
 
+  const [withdrawMethod, setWithdrawMethod] = useState(user?.withdrawalAccount?.method || 'telebirr');
+  const [accountName, setAccountName] = useState(user?.withdrawalAccount?.accountName || '');
+  const [accountNumber, setAccountNumber] = useState(user?.withdrawalAccount?.accountNumber || '');
+  const [bankCode, setBankCode] = useState(user?.withdrawalAccount?.bankCode || '');
+  const [banks, setBanks] = useState([]);
+  const [savingPayment, setSavingPayment] = useState(false);
+
   const toast = useToast();
 
   useEffect(() => {
@@ -72,6 +79,7 @@ const DriverProfile = () => {
         }));
       }
     }).catch(() => {});
+    paymentsAPI.getBanks().then(res => setBanks(res.data?.banks || [])).catch(() => {});
   }, []);
 
   const handleDocUpload = async (docKey, isDriverDoc) => {
@@ -116,6 +124,7 @@ const DriverProfile = () => {
   const tabs = [
     { id: 'info', label: t('profile.personalInfo'), icon: <FaUser /> },
     { id: 'documents', label: t('profile.documents'), icon: <FaFileAlt /> },
+    { id: 'payment', label: t('profile.withdrawalAccount') || 'Payment', icon: <FaWallet /> },
     { id: 'settings', label: t('profile.settings'), icon: <FaCog /> }
   ];
 
@@ -146,6 +155,28 @@ const DriverProfile = () => {
       setError(err.response?.data?.message || 'Failed to update settings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaymentUpdate = async () => {
+    if (!accountName || !accountNumber) {
+      toast.error('Enter account name and number');
+      return;
+    }
+    if (withdrawMethod === 'bank' && !bankCode) {
+      toast.error('Select a bank');
+      return;
+    }
+    setSavingPayment(true);
+    try {
+      await authAPI.updateProfile({
+        withdrawalAccount: { method: withdrawMethod, accountName, accountNumber, bankCode }
+      });
+      toast.success('Payment method saved');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save');
+    } finally {
+      setSavingPayment(false);
     }
   };
 
@@ -328,6 +359,73 @@ const DriverProfile = () => {
                 </div>
               ))}
             </div>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === 'payment' && (
+        <div className="settings-section">
+          <Card padding="lg">
+            <h2 className="section-title"><FaWallet /> {t('profile.withdrawalAccount') || 'Withdrawal Method'}</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+              {t('profile.withdrawalAccountDesc') || 'Set up your preferred withdrawal method. This will be used for all future withdrawals.'}
+            </p>
+
+            <div className="driver-method-grid" style={{ marginBottom: 20 }}>
+              {[
+                { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
+                { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
+                { id: 'bank', icon: <FaCreditCard />, label: 'Bank Transfer' },
+              ].map(m => (
+                <div
+                  key={m.id}
+                  className={`driver-method-option ${withdrawMethod === m.id ? 'selected' : ''}`}
+                  onClick={() => setWithdrawMethod(m.id)}
+                >
+                  <div className="driver-method-icon">{m.icon}</div>
+                  <span className="driver-method-label">{m.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="form-grid">
+              <Input
+                label="Account Holder Name"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Full name'}
+                icon={<FaUser />}
+              />
+              <Input
+                label={withdrawMethod === 'bank' ? 'Account Number' : 'Phone Number'}
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
+                icon={<FaPhone />}
+              />
+            </div>
+
+            {withdrawMethod === 'bank' && (
+              <div className="form-grid" style={{ marginTop: 12 }}>
+                <div className="input-group">
+                  <label>Bank</label>
+                  <select
+                    style={{ width: '100%', padding: '12px', border: '1px solid var(--border-light)', borderRadius: 8, background: 'var(--card)' }}
+                    value={bankCode}
+                    onChange={(e) => setBankCode(e.target.value)}
+                  >
+                    <option value="">Select bank</option>
+                    {banks.map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <Button onClick={handlePaymentUpdate} loading={savingPayment} icon={<FaCheck />} style={{ marginTop: 16 }}>
+              {t('common.save')}
+            </Button>
           </Card>
         </div>
       )}

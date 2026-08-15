@@ -1490,6 +1490,155 @@
   animation: slideUp 0.4s ease;
 }
 
+/* === Payment Method Grid === */
+.driver-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.driver-method-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 2px solid var(--border-light, #e2e8f0);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--card, #fff);
+}
+.driver-method-option:hover {
+  border-color: var(--primary-300, #93c5fd);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.driver-method-option.selected {
+  border-color: var(--primary, #2563eb);
+  background: var(--primary-50, #eff6ff);
+}
+.driver-method-icon {
+  font-size: 20px;
+  color: var(--primary, #2563eb);
+}
+.driver-method-option.selected .driver-method-icon {
+  color: var(--primary, #2563eb);
+}
+.driver-method-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+}
+.driver-method-option.selected .driver-method-label {
+  color: var(--primary, #2563eb);
+}
+
+/* === Document Upload Enhanced === */
+.document-upload-area {
+  position: relative;
+  border: 2px dashed var(--border-light, #e2e8f0);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.document-upload-area:hover {
+  border-color: var(--primary-300, #93c5fd);
+  background: var(--primary-50, #eff6ff);
+}
+.doc-upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #64748b);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.doc-upload-btn:hover {
+  color: var(--primary, #2563eb);
+  transform: scale(1.02);
+}
+.doc-upload-btn.small {
+  padding: 12px;
+}
+.doc-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.doc-preview img {
+  border: 2px solid var(--primary-200, #bfdbfe);
+  transition: transform 0.2s ease;
+}
+.doc-preview img:hover {
+  transform: scale(1.05);
+}
+.document-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.document-upload-item {
+  border: 2px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.document-upload-item:hover {
+  border-color: var(--primary-300, #93c5fd);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.verification-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.verification-status h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.status-badge.approved {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.status-badge.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.rejection-reason {
+  color: #991b1b;
+  font-size: 13px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: #fee2e2;
+  border-radius: 8px;
+}
+
 /* === Responsive === */
 @media (max-width: 480px) {
   .driver-page {

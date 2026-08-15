@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef, useMemo } from 'react';
 import { authAPI, chatAPI, notificationsAPI } from '../services/api';
 import { io } from 'socket.io-client';
+import soundService from '../services/soundService';
 
 const AuthContext = createContext(null);
 
@@ -105,6 +106,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     newSocket.on('notification', (data) => {
+      soundService.play('notification');
       // New shape: { notification, unreadCount }; old shape: { type, title, body }
       if (data?.notification) {
         setNotifications(prev => {
@@ -124,10 +126,12 @@ export const AuthProvider = ({ children }) => {
     });
 
     newSocket.on('new_ride_request', (data) => {
+      soundService.play('new-ride');
       setNewRideRequest(data);
     });
 
     newSocket.on('ride_accepted', (data) => {
+      soundService.play('ride-accepted');
       setRideAccepted(data);
     });
 
@@ -136,15 +140,18 @@ export const AuthProvider = ({ children }) => {
     });
 
     newSocket.on('trip_status', (data) => {
+      soundService.play('trip-status');
       setTripStatusUpdate(data);
     });
 
     newSocket.on('sos_alert', (data) => {
+      soundService.play('sos-alert');
       setSosAlert(data);
     });
 
     const handleIncomingMessage = (msg) => {
       if (!msg?.tripId) return;
+      soundService.play('chat-message');
       setChatUnread(prev => ({ ...prev, [msg.tripId]: (prev[msg.tripId] || 0) + 1 }));
       window.dispatchEvent(new CustomEvent('app-toast', {
         detail: { message: `New message from ${msg.senderRole === 'driver' ? 'your driver' : 'your passenger'}`, type: 'info' }
@@ -158,6 +165,14 @@ export const AuthProvider = ({ children }) => {
     loadChatUnread();
     return newSocket;
   }, [user, loadChatUnread]);
+
+  useEffect(() => {
+    if (user?.preferences?.sound === false) {
+      soundService.setEnabled(false);
+    } else {
+      soundService.setEnabled(true);
+    }
+  }, [user?.preferences?.sound]);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');

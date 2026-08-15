@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { paymentsAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import EmptyState from '../../components/common/EmptyState';
-import { FaWallet, FaMoneyBillWave, FaCalendar, FaClock, FaChartLine, FaCar, FaArrowUp, FaMobileAlt, FaCreditCard, FaUser } from 'react-icons/fa';
+import { FaWallet, FaMoneyBillWave, FaCalendar, FaClock, FaChartLine, FaCar, FaArrowUp } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
@@ -13,6 +14,7 @@ const DriverEarnings = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [earnings, setEarnings] = useState({ today: 0, week: 0, month: 0, total: 0, availableBalance: 0 });
   const [history, setHistory] = useState([]);
@@ -20,26 +22,11 @@ const DriverEarnings = () => {
   const [error, setError] = useState(null);
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawMethod, setWithdrawMethod] = useState('telebirr');
-  const [accountName, setAccountName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [bankCode, setBankCode] = useState('');
-  const [banks, setBanks] = useState([]);
   const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     fetchEarnings();
-    loadBanks();
   }, []);
-
-  const loadBanks = async () => {
-    try {
-      const res = await paymentsAPI.getBanks();
-      setBanks(res.data.banks || []);
-    } catch (err) {
-      console.error('Failed to fetch banks:', err);
-    }
-  };
 
   const availableBalance = earnings.availableBalance || 0;
 
@@ -79,12 +66,10 @@ const DriverEarnings = () => {
       toast.error('Insufficient balance');
       return;
     }
-    if (!accountName || !accountNumber) {
-      toast.error('Enter your account name and number to withdraw');
-      return;
-    }
-    if (withdrawMethod === 'bank' && !bankCode) {
-      toast.error('Select a bank to withdraw');
+
+    const savedAccount = user?.withdrawalAccount;
+    if (!savedAccount?.accountName || !savedAccount?.accountNumber) {
+      toast.error('Please set up your withdrawal method in Profile > Payment first');
       return;
     }
 
@@ -92,8 +77,12 @@ const DriverEarnings = () => {
     try {
       await paymentsAPI.withdraw({
         amount,
-        method: withdrawMethod,
-        accountDetails: { accountName, accountNumber, bankCode }
+        method: savedAccount.method || 'telebirr',
+        accountDetails: {
+          accountName: savedAccount.accountName,
+          accountNumber: savedAccount.accountNumber,
+          bankCode: savedAccount.bankCode
+        }
       });
       toast.success('Withdrawal request submitted for admin approval');
       setWithdrawAmount('');
@@ -111,12 +100,10 @@ const DriverEarnings = () => {
       toast.error('Minimum cashout is 100 ETB');
       return;
     }
-    if (!accountName || !accountNumber) {
-      toast.error('Enter your account name and number to cash out');
-      return;
-    }
-    if (withdrawMethod === 'bank' && !bankCode) {
-      toast.error('Select a bank to cash out');
+
+    const savedAccount = user?.withdrawalAccount;
+    if (!savedAccount?.accountName || !savedAccount?.accountNumber) {
+      toast.error('Please set up your withdrawal method in Profile > Payment first');
       return;
     }
 
@@ -124,11 +111,14 @@ const DriverEarnings = () => {
     try {
       await paymentsAPI.withdraw({
         amount: availableBalance,
-        method: withdrawMethod,
-        accountDetails: { accountName, accountNumber, bankCode }
+        method: savedAccount.method || 'telebirr',
+        accountDetails: {
+          accountName: savedAccount.accountName,
+          accountNumber: savedAccount.accountNumber,
+          bankCode: savedAccount.bankCode
+        }
       });
       toast.success('Cashout request submitted for admin approval');
-      setBankCode('');
       fetchEarnings();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Cashout failed');
@@ -195,69 +185,21 @@ const DriverEarnings = () => {
           </div>
         </div>
 
-        <div className="input-group" style={{ marginBottom: 16 }}>
-          <label>Withdrawal Method</label>
-          <div className="driver-method-grid">
-            {[
-              { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
-              { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
-              { id: 'bank', icon: <FaCreditCard />, label: 'Bank' },
-            ].map(m => (
-              <div
-                key={m.id}
-                className={`driver-method-option ${withdrawMethod === m.id ? 'selected' : ''}`}
-                onClick={() => setWithdrawMethod(m.id)}
-              >
-                <div className="driver-method-icon">{m.icon}</div>
-                <span className="driver-method-label">{m.label}</span>
-              </div>
-            ))}
+        {user?.withdrawalAccount?.accountName ? (
+          <div style={{ padding: '12px 16px', background: 'var(--bg-secondary, #f8fafc)', borderRadius: 10, marginBottom: 16, border: '1px solid var(--border-light, #e2e8f0)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Withdrawal to</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{user.withdrawalAccount.accountName}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              {user.withdrawalAccount.method === 'telebirr' ? 'Telebirr' : user.withdrawalAccount.method === 'cbe_birr' ? 'CBE Birr' : 'Bank'}: {user.withdrawalAccount.accountNumber}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              Change in <span style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/driver/profile')}>Profile → Payment</span>
+            </div>
           </div>
-        </div>
-
-        <div className="input-group" style={{ marginBottom: 16 }}>
-          <label>Account Holder Name</label>
-          <div className="input-wrapper">
-            <FaUser className="input-icon" />
-            <input
-              type="text"
-              placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Account holder name'}
-              value={accountName}
-              onChange={e => setAccountName(e.target.value)}
-              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
-            />
-          </div>
-        </div>
-
-        <div className="input-group" style={{ marginBottom: 16 }}>
-          <label>{withdrawMethod === 'telebirr' ? 'Telebirr Number' : withdrawMethod === 'cbe_birr' ? 'CBE Birr Number' : 'Account Number'}</label>
-          <div className="input-wrapper">
-            <FaMobileAlt className="input-icon" />
-            <input
-              type="text"
-              placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
-              value={accountNumber}
-              onChange={e => setAccountNumber(e.target.value)}
-              style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
-            />
-          </div>
-        </div>
-
-        {withdrawMethod === 'bank' && (
-          <div className="input-group" style={{ marginBottom: 16 }}>
-            <label>Bank</label>
-            <div className="input-wrapper">
-              <FaCreditCard className="input-icon" />
-              <select
-                style={{ width: '100%', padding: '12px', border: 'none', background: 'transparent', outline: 'none' }}
-                value={bankCode}
-                onChange={e => setBankCode(e.target.value)}
-              >
-                <option value="">Select bank</option>
-                {banks.map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
+        ) : (
+          <div style={{ padding: '12px 16px', background: '#fef3c7', borderRadius: 10, marginBottom: 16, border: '1px solid #fcd34d' }}>
+            <div style={{ fontSize: 13, color: '#92400e' }}>
+              Please set up your withdrawal method in <span style={{ fontWeight: 600, cursor: 'pointer' }} onClick={() => navigate('/driver/profile')}>Profile → Payment</span> before withdrawing.
             </div>
           </div>
         )}

@@ -104,6 +104,30 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
       continue;
     }
 
+    // Check availability time window
+    if (driver.settings?.availabilityStart && driver.settings?.availabilityEnd) {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const [startH, startM] = (driver.settings.availabilityStart || '08:00').split(':').map(Number);
+      const [endH, endM] = (driver.settings.availabilityEnd || '18:00').split(':').map(Number);
+      const startMinutes = startH * 60 + startM;
+      const endMinutes = endH * 60 + endM;
+      
+      if (startMinutes <= endMinutes) {
+        // Normal shift (e.g., 08:00 - 18:00)
+        if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+          logger.info('Driver outside availability window', { driverId: driver._id, start: driver.settings.availabilityStart, end: driver.settings.availabilityEnd });
+          continue;
+        }
+      } else {
+        // Overnight shift (e.g., 22:00 - 06:00)
+        if (currentMinutes < startMinutes && currentMinutes > endMinutes) {
+          logger.info('Driver outside availability window', { driverId: driver._id, start: driver.settings.availabilityStart, end: driver.settings.availabilityEnd });
+          continue;
+        }
+      }
+    }
+
     const userAgg = nearbyUsers.find(u => u._id.toString() === driver.user._id.toString());
     const distance = userAgg?.distance || 0;
 
