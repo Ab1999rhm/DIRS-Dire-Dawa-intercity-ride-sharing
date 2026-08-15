@@ -1534,6 +1534,103 @@
   color: var(--primary, #2563eb);
 }
 
+/* === Multiple Withdrawal Accounts === */
+.payment-empty {
+  text-align: center;
+  padding: 32px 16px;
+  border: 2px dashed var(--border-light, #e2e8f0);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.payment-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.payment-account-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 12px;
+  background: var(--card, #fff);
+  transition: all 0.2s ease;
+  animation: slideUp 0.3s ease;
+}
+.payment-account-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+.payment-account-card.default {
+  border-color: var(--primary, #2563eb);
+  border-width: 2px;
+  background: linear-gradient(135deg, var(--primary-50, #eff6ff), var(--card, #fff));
+}
+.payment-account-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.payment-account-method-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: linear-gradient(135deg, var(--primary-50, #eff6ff), var(--primary-100, #dbeafe));
+  color: var(--primary, #2563eb);
+}
+.payment-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.payment-default-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--primary, #2563eb), var(--primary-600, #2563eb));
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+.payment-action-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 8px;
+  background: var(--card, #fff);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary, #64748b);
+}
+.payment-action-btn:hover {
+  background: var(--primary-50, #eff6ff);
+  border-color: var(--primary-300, #93c5fd);
+  color: var(--primary, #2563eb);
+}
+.payment-action-btn.remove {
+  padding: 6px 8px;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+.payment-action-btn.remove:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+.payment-add-section {
+  border-top: 1px solid var(--border-light, #e2e8f0);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
 /* === Document Upload Enhanced === */
 .document-upload-area {
   position: relative;

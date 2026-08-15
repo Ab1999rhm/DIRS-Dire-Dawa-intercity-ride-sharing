@@ -1106,6 +1106,19 @@
 [data-theme="dark"] .flexible-map .leaflet-control-attribution { background: rgba(30,41,59,0.8); color: #94a3b8; }
 
 /* === History / Trips stat cards === */
+@keyframes statCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes statGlow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 20px 4px var(--glow-color, rgba(59,130,246,0.15)); }
+}
+@keyframes statIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
 .passenger-page .history-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1114,65 +1127,127 @@
 }
 
 .passenger-page .history-stat {
-  border-radius: 16px;
-  padding: 20px 16px;
+  border-radius: 18px;
+  padding: 22px 16px;
   text-align: center;
-  border: 1px solid var(--border);
+  border: 1.5px solid transparent;
   background: #ffffff;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  gap: 10px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  animation: statCardIn 0.5s ease backwards;
+  position: relative;
+  overflow: hidden;
 }
+.passenger-page .history-stat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.passenger-page .history-stat:nth-child(1) { animation-delay: 0.05s; }
+.passenger-page .history-stat:nth-child(2) { animation-delay: 0.12s; }
+.passenger-page .history-stat:nth-child(3) { animation-delay: 0.19s; }
 
 .passenger-page .history-stat:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
 }
 
+.stat-trips {
+  --glow-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+.stat-trips::before {
+  background: linear-gradient(135deg, rgba(59,130,246,0.04), rgba(37,99,235,0.08));
+}
+.stat-trips:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.15);
+}
+.stat-trips:hover::before { opacity: 1; }
+
+.stat-spent {
+  --glow-color: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+.stat-spent::before {
+  background: linear-gradient(135deg, rgba(16,185,129,0.04), rgba(5,150,105,0.08));
+}
+.stat-spent:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.15);
+}
+.stat-spent:hover::before { opacity: 1; }
+
+.stat-rating {
+  --glow-color: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.15);
+}
+.stat-rating::before {
+  background: linear-gradient(135deg, rgba(245,158,11,0.04), rgba(217,119,6,0.08));
+}
+.stat-rating:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.15);
+}
+.stat-rating:hover::before { opacity: 1; }
+
 .history-stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
   color: #fff;
   margin-bottom: 2px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.passenger-page .history-stat:hover .history-stat-icon {
+  animation: statIconPulse 0.6s ease;
 }
 
 .stat-trips .history-stat-icon {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 .stat-spent .history-stat-icon {
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, #34d399, #059669);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 .stat-rating .history-stat-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
 .passenger-page .history-stat-value {
   display: block;
-  font-size: 24px;
-  font-weight: 500;
+  font-size: 26px;
+  font-weight: 800;
   color: var(--text);
   line-height: 1.2;
+  letter-spacing: -0.5px;
 }
+.stat-trips .history-stat-value { color: #2563eb; }
+.stat-spent .history-stat-value { color: #059669; }
+.stat-rating .history-stat-value { color: #d97706; }
 
 .passenger-page .history-stat-label {
   font-size: 13px;
   color: var(--text-muted);
   text-transform: none;
   letter-spacing: 0;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 @media (max-width: 640px) {
@@ -1187,14 +1262,16 @@
     text-align: left;
     padding: 14px 16px;
     gap: 14px;
+    border-radius: 14px;
   }
 
   .history-stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    font-size: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 18px;
     margin-bottom: 0;
+    flex-shrink: 0;
   }
 
   .passenger-page .history-stat-value {
@@ -1208,5 +1285,8 @@
 }
 
 [data-theme="dark"] .passenger-page .history-stat:hover {
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
 }
+[data-theme="dark"] .stat-trips { border-color: rgba(96,165,250,0.2); }
+[data-theme="dark"] .stat-spent { border-color: rgba(52,211,153,0.2); }
+[data-theme="dark"] .stat-rating { border-color: rgba(251,191,36,0.2); }

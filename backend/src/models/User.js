@@ -203,6 +203,13 @@ const userSchema = new mongoose.Schema({
     accountNumber: String,
     bankCode: String
   },
+  withdrawalAccounts: [{
+    method: { type: String, enum: ['telebirr', 'cbe_birr', 'bank'] },
+    accountName: String,
+    accountNumber: String,
+    bankCode: String,
+    isDefault: { type: Boolean, default: false }
+  }],
   totalRatings: {
     type: Number,
     default: 0

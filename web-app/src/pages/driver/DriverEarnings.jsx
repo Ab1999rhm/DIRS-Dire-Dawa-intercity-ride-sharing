@@ -67,7 +67,8 @@ const DriverEarnings = () => {
       return;
     }
 
-    const savedAccount = user?.withdrawalAccount;
+    const accounts = user?.withdrawalAccounts || [];
+    const savedAccount = accounts.find(a => a.isDefault) || accounts[0] || user?.withdrawalAccount;
     if (!savedAccount?.accountName || !savedAccount?.accountNumber) {
       toast.error('Please set up your withdrawal method in Profile > Payment first');
       return;
@@ -86,7 +87,6 @@ const DriverEarnings = () => {
       });
       toast.success('Withdrawal request submitted for admin approval');
       setWithdrawAmount('');
-      setBankCode('');
       fetchEarnings();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Withdrawal failed');
@@ -101,7 +101,8 @@ const DriverEarnings = () => {
       return;
     }
 
-    const savedAccount = user?.withdrawalAccount;
+    const accounts = user?.withdrawalAccounts || [];
+    const savedAccount = accounts.find(a => a.isDefault) || accounts[0] || user?.withdrawalAccount;
     if (!savedAccount?.accountName || !savedAccount?.accountNumber) {
       toast.error('Please set up your withdrawal method in Profile > Payment first');
       return;
@@ -185,24 +186,34 @@ const DriverEarnings = () => {
           </div>
         </div>
 
-        {user?.withdrawalAccount?.accountName ? (
-          <div style={{ padding: '12px 16px', background: 'var(--bg-secondary, #f8fafc)', borderRadius: 10, marginBottom: 16, border: '1px solid var(--border-light, #e2e8f0)' }}>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Withdrawal to</div>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>{user.withdrawalAccount.accountName}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              {user.withdrawalAccount.method === 'telebirr' ? 'Telebirr' : user.withdrawalAccount.method === 'cbe_birr' ? 'CBE Birr' : 'Bank'}: {user.withdrawalAccount.accountNumber}
+        {(() => {
+          const accounts = user?.withdrawalAccounts || [];
+          const defaultAcc = accounts.find(a => a.isDefault) || accounts[0] || user?.withdrawalAccount;
+          if (defaultAcc?.accountName) {
+            return (
+              <div style={{ padding: '12px 16px', background: 'var(--bg-secondary, #f8fafc)', borderRadius: 10, marginBottom: 16, border: '1px solid var(--border-light, #e2e8f0)' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Withdrawal to</div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{defaultAcc.accountName}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {defaultAcc.method === 'telebirr' ? 'Telebirr' : defaultAcc.method === 'cbe_birr' ? 'CBE Birr' : 'Bank'}: {defaultAcc.accountNumber}
+                </div>
+                {accounts.length > 1 && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{accounts.length} accounts available</div>
+                )}
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                  Change in <span style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/driver/profile')}>Profile → Payment</span>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div style={{ padding: '12px 16px', background: '#fef3c7', borderRadius: 10, marginBottom: 16, border: '1px solid #fcd34d' }}>
+              <div style={{ fontSize: 13, color: '#92400e' }}>
+                Please set up your withdrawal method in <span style={{ fontWeight: 600, cursor: 'pointer' }} onClick={() => navigate('/driver/profile')}>Profile → Payment</span> before withdrawing.
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              Change in <span style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => navigate('/driver/profile')}>Profile → Payment</span>
-            </div>
-          </div>
-        ) : (
-          <div style={{ padding: '12px 16px', background: '#fef3c7', borderRadius: 10, marginBottom: 16, border: '1px solid #fcd34d' }}>
-            <div style={{ fontSize: 13, color: '#92400e' }}>
-              Please set up your withdrawal method in <span style={{ fontWeight: 600, cursor: 'pointer' }} onClick={() => navigate('/driver/profile')}>Profile → Payment</span> before withdrawing.
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="driver-withdraw-note">
           <FaClock size={13} /> <span>Withdrawals are reviewed and approved by an admin before processing (1-3 business days).</span>

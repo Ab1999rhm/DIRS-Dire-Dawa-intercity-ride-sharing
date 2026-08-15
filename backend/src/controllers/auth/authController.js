@@ -455,12 +455,16 @@ exports.getMe = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations, favorites, preferences, paymentMethod, withdrawalAccount, settings } = req.body;
+  const { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations, favorites, preferences, paymentMethod, withdrawalAccount, withdrawalAccounts, settings } = req.body;
 
   const updateData = { firstName, lastName, email, preferredLanguage, emergencyContacts, favoriteLocations, favorites };
   if (preferences) updateData.preferences = preferences;
   if (paymentMethod) updateData.paymentMethod = paymentMethod;
-  if (withdrawalAccount) updateData.withdrawalAccount = withdrawalAccount;
+  if (withdrawalAccounts) {
+    updateData.withdrawalAccounts = withdrawalAccounts;
+  } else if (withdrawalAccount) {
+    updateData.withdrawalAccount = withdrawalAccount;
+  }
 
   const user = await User.findByIdAndUpdate(
     req.user._id,

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authAPI, documentsAPI, paymentsAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, Modal } from '../../components/common';
-import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt, FaWallet, FaMobileAlt, FaCreditCard, FaUpload, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt, FaWallet, FaMobileAlt, FaCreditCard, FaUpload, FaSpinner, FaTrashAlt } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
@@ -50,12 +50,14 @@ const DriverProfile = () => {
     availabilityEnd: driverProfile?.settings?.availabilityEnd || '18:00'
   });
 
-  const [withdrawMethod, setWithdrawMethod] = useState(user?.withdrawalAccount?.method || 'telebirr');
-  const [accountName, setAccountName] = useState(user?.withdrawalAccount?.accountName || '');
-  const [accountNumber, setAccountNumber] = useState(user?.withdrawalAccount?.accountNumber || '');
-  const [bankCode, setBankCode] = useState(user?.withdrawalAccount?.bankCode || '');
+  const [withdrawAccounts, setWithdrawAccounts] = useState(user?.withdrawalAccounts || (user?.withdrawalAccount ? [{ ...user.withdrawalAccount, isDefault: true }] : []));
+  const [newMethod, setNewMethod] = useState('telebirr');
+  const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountNumber, setNewAccountNumber] = useState('');
+  const [newBankCode, setNewBankCode] = useState('');
   const [banks, setBanks] = useState([]);
   const [savingPayment, setSavingPayment] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(-1);
 
   const toast = useToast();
 
@@ -158,23 +160,64 @@ const DriverProfile = () => {
     }
   };
 
-  const handlePaymentUpdate = async () => {
-    if (!accountName || !accountNumber) {
+  const handleAddAccount = async () => {
+    if (!newAccountName || !newAccountNumber) {
       toast.error('Enter account name and number');
       return;
     }
-    if (withdrawMethod === 'bank' && !bankCode) {
+    if (newMethod === 'bank' && !newBankCode) {
       toast.error('Select a bank');
       return;
     }
+    if (withdrawAccounts.length >= 3) {
+      toast.error(t('profile.maxAccounts') || 'Max 3 accounts');
+      return;
+    }
+    const newAccount = { method: newMethod, accountName: newAccountName, accountNumber: newAccountNumber, bankCode: newBankCode, isDefault: withdrawAccounts.length === 0 };
+    const updated = [...withdrawAccounts, newAccount];
     setSavingPayment(true);
     try {
-      await authAPI.updateProfile({
-        withdrawalAccount: { method: withdrawMethod, accountName, accountNumber, bankCode }
-      });
-      toast.success('Payment method saved');
+      await authAPI.updateProfile({ withdrawalAccounts: updated });
+      setWithdrawAccounts(updated);
+      setNewAccountName('');
+      setNewAccountNumber('');
+      setNewBankCode('');
+      setNewMethod('telebirr');
+      setEditingIndex(-1);
+      toast.success(t('profile.accountSaved') || 'Account saved');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save');
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const handleRemoveAccount = async (index) => {
+    const updated = withdrawAccounts.filter((_, i) => i !== index);
+    if (updated.length > 0 && !updated.some(a => a.isDefault)) {
+      updated[0].isDefault = true;
+    }
+    setSavingPayment(true);
+    try {
+      await authAPI.updateProfile({ withdrawalAccounts: updated });
+      setWithdrawAccounts(updated);
+      toast.success(t('profile.accountRemoved') || 'Account removed');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const handleSetDefault = async (index) => {
+    const updated = withdrawAccounts.map((a, i) => ({ ...a, isDefault: i === index }));
+    setSavingPayment(true);
+    try {
+      await authAPI.updateProfile({ withdrawalAccounts: updated });
+      setWithdrawAccounts(updated);
+      toast.success(t('profile.accountUpdated') || 'Default updated');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
     } finally {
       setSavingPayment(false);
     }
@@ -366,66 +409,110 @@ const DriverProfile = () => {
       {activeTab === 'payment' && (
         <div className="settings-section">
           <Card padding="lg">
-            <h2 className="section-title"><FaWallet /> {t('profile.withdrawalAccount') || 'Withdrawal Method'}</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-              {t('profile.withdrawalAccountDesc') || 'Set up your preferred withdrawal method. This will be used for all future withdrawals.'}
+            <h2 className="section-title"><FaWallet /> {t('profile.withdrawalAccount')}</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+              {t('profile.withdrawalAccountDesc')}
             </p>
 
-            <div className="driver-method-grid" style={{ marginBottom: 20 }}>
-              {[
-                { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
-                { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
-                { id: 'bank', icon: <FaCreditCard />, label: 'Bank Transfer' },
-              ].map(m => (
-                <div
-                  key={m.id}
-                  className={`driver-method-option ${withdrawMethod === m.id ? 'selected' : ''}`}
-                  onClick={() => setWithdrawMethod(m.id)}
-                >
-                  <div className="driver-method-icon">{m.icon}</div>
-                  <span className="driver-method-label">{m.label}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="form-grid">
-              <Input
-                label="Account Holder Name"
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Full name'}
-                icon={<FaUser />}
-              />
-              <Input
-                label={withdrawMethod === 'bank' ? 'Account Number' : 'Phone Number'}
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                placeholder={withdrawMethod === 'bank' ? 'Account number' : '09...'}
-                icon={<FaPhone />}
-              />
-            </div>
-
-            {withdrawMethod === 'bank' && (
-              <div className="form-grid" style={{ marginTop: 12 }}>
-                <div className="input-group">
-                  <label>Bank</label>
-                  <select
-                    style={{ width: '100%', padding: '12px', border: '1px solid var(--border-light)', borderRadius: 8, background: 'var(--card)' }}
-                    value={bankCode}
-                    onChange={(e) => setBankCode(e.target.value)}
-                  >
-                    <option value="">Select bank</option>
-                    {banks.map(b => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
+            {withdrawAccounts.length === 0 ? (
+              <div className="payment-empty">
+                <FaWallet size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                <p style={{ fontWeight: 600 }}>{t('profile.noAccounts')}</p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('profile.noAccountsDesc')}</p>
+              </div>
+            ) : (
+              <div className="payment-accounts-list">
+                {withdrawAccounts.map((acc, idx) => (
+                  <div key={idx} className={`payment-account-card ${acc.isDefault ? 'default' : ''}`}>
+                    <div className="payment-account-info">
+                      <div className="payment-account-method-icon">
+                        {acc.method === 'telebirr' ? <FaMobileAlt /> : acc.method === 'cbe_birr' ? <FaMobileAlt /> : <FaCreditCard />}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{acc.accountName}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                          {acc.method === 'telebirr' ? 'Telebirr' : acc.method === 'cbe_birr' ? 'CBE Birr' : 'Bank'}: {acc.accountNumber}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="payment-account-actions">
+                      {acc.isDefault ? (
+                        <span className="payment-default-badge">{t('profile.defaultAccount')}</span>
+                      ) : (
+                        <button className="payment-action-btn" onClick={() => handleSetDefault(idx)} disabled={savingPayment}>
+                          {t('profile.setAsDefault')}
+                        </button>
+                      )}
+                      <button className="payment-action-btn remove" onClick={() => handleRemoveAccount(idx)} disabled={savingPayment}>
+                        <FaTrashAlt />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            <Button onClick={handlePaymentUpdate} loading={savingPayment} icon={<FaCheck />} style={{ marginTop: 16 }}>
-              {t('common.save')}
-            </Button>
+            {withdrawAccounts.length < 3 && (
+              <div className="payment-add-section">
+                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, marginTop: 20 }}>{t('profile.addAccount')}</h3>
+
+                <div className="driver-method-grid" style={{ marginBottom: 16 }}>
+                  {[
+                    { id: 'telebirr', icon: <FaMobileAlt />, label: 'Telebirr' },
+                    { id: 'cbe_birr', icon: <FaMobileAlt />, label: 'CBE Birr' },
+                    { id: 'bank', icon: <FaCreditCard />, label: 'Bank' },
+                  ].map(m => (
+                    <div
+                      key={m.id}
+                      className={`driver-method-option ${newMethod === m.id ? 'selected' : ''}`}
+                      onClick={() => setNewMethod(m.id)}
+                    >
+                      <div className="driver-method-icon">{m.icon}</div>
+                      <span className="driver-method-label">{m.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="form-grid">
+                  <Input
+                    label="Account Holder Name"
+                    value={newAccountName}
+                    onChange={(e) => setNewAccountName(e.target.value)}
+                    placeholder={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Full name'}
+                    icon={<FaUser />}
+                  />
+                  <Input
+                    label={newMethod === 'bank' ? 'Account Number' : 'Phone Number'}
+                    value={newAccountNumber}
+                    onChange={(e) => setNewAccountNumber(e.target.value)}
+                    placeholder={newMethod === 'bank' ? 'Account number' : '09...'}
+                    icon={<FaPhone />}
+                  />
+                </div>
+
+                {newMethod === 'bank' && (
+                  <div className="form-grid" style={{ marginTop: 12 }}>
+                    <div className="input-group">
+                      <label>Bank</label>
+                      <select
+                        style={{ width: '100%', padding: '12px', border: '1px solid var(--border-light)', borderRadius: 8, background: 'var(--card)' }}
+                        value={newBankCode}
+                        onChange={(e) => setNewBankCode(e.target.value)}
+                      >
+                        <option value="">Select bank</option>
+                        {banks.map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <Button onClick={handleAddAccount} loading={savingPayment} icon={<FaCheck />} style={{ marginTop: 16 }}>
+                  {t('profile.saveWithdrawAccount')}
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
       )}
