@@ -179,7 +179,7 @@ const PassengerRoutes = React.memo(() => (
 
 const DriverRoutes = React.memo(() => (
   <div className="app-layout app-shell">
-    <div className="app-body">
+    <div className="app-body app-body-flush">
       <ShellScrollReset />
       <main className="app-main" style={{ marginLeft: 0 }}>
         <Suspense fallback={<LoadingSpinner />}>

@@ -9,20 +9,19 @@ import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
 const DRIVER_VEHICLE_TYPES = [
-  { value: 'sedan', label: 'Sedan' },
-  { value: 'suv', label: 'SUV' },
-  { value: 'minivan', label: 'Minivan' },
-  { value: 'pickup', label: 'Pickup' },
   { value: 'car', label: 'Car' },
-  { value: 'bajaj', label: 'Bajaj' }
+  { value: 'minivan', label: 'Minivan' },
+  { value: 'minibus', label: 'Minibus' },
+  { value: 'bajaj', label: 'Bajaj' },
+  { value: 'bus', label: 'Bus' }
 ];
 
 const DRIVER_VEHICLE_ICONS = {
-  sedan: '🚗', suv: '🚙', minivan: '🚐', pickup: '🛻', car: '🚗', bajaj: '🛺'
+  car: '🚗', minivan: '🚐', minibus: '🚌', bajaj: '🛺', bus: '🚌'
 };
 
 const DRIVER_VEHICLE_LABELS = {
-  sedan: 'Sedan', suv: 'SUV', minivan: 'Minivan', pickup: 'Pickup', car: 'Car', bajaj: 'Bajaj'
+  car: 'Car', minivan: 'Minivan', minibus: 'Minibus', bajaj: 'Bajaj', bus: 'Bus'
 };
 
 const DriverVehicle = () => {
@@ -49,7 +48,8 @@ const DriverVehicle = () => {
   };
 
   const [formData, setFormData] = useState({
-    make: '', model: '', year: '', plateNumber: '', color: '', type: 'sedan'
+    make: '', model: '', year: '', plateNumber: '', color: '', vehicleType: 'car',
+    capacity: 4, registrationExpiry: ''
   });
 
   const vehicleTypes = DRIVER_VEHICLE_TYPES.map(v => ({
@@ -87,7 +87,9 @@ const DriverVehicle = () => {
           year: res.data.vehicle.year || '',
           plateNumber: res.data.vehicle.plateNumber || '',
           color: res.data.vehicle.color || '',
-          type: res.data.vehicle.type || 'sedan'
+          vehicleType: res.data.vehicle.vehicleType || 'car',
+          capacity: res.data.vehicle.capacity || 4,
+          registrationExpiry: res.data.vehicle.registrationExpiry ? res.data.vehicle.registrationExpiry.split('T')[0] : ''
         });
       }
     } catch (err) {
@@ -228,11 +230,29 @@ const DriverVehicle = () => {
               />
               <Select
                 label={t('vehicle.type')}
-                name="type"
-                value={formData.type}
+                name="vehicleType"
+                value={formData.vehicleType}
                 onChange={handleChange}
                 options={vehicleTypes}
                 required
+              />
+              <Input
+                label={t('vehicle.capacity') || 'Seating Capacity'}
+                name="capacity"
+                type="number"
+                value={formData.capacity}
+                onChange={handleChange}
+                placeholder="4"
+                min="1"
+                max="16"
+                required
+              />
+              <Input
+                label={t('vehicle.registrationExpiry') || 'Registration Expiry'}
+                name="registrationExpiry"
+                type="date"
+                value={formData.registrationExpiry}
+                onChange={handleChange}
               />
             </div>
             <div className="form-actions">
@@ -257,7 +277,7 @@ const DriverVehicle = () => {
       ) : (
         <Card padding="lg">
           <div className="vehicle-detail-row">
-            <span className="vehicle-detail-icon">{getTypeIcon(vehicle.type)}</span>
+            <span className="vehicle-detail-icon">{getTypeIcon(vehicle.vehicleType)}</span>
             <div>
               <h4>{vehicle.make} {vehicle.model}</h4>
               <p>{vehicle.year} • {vehicle.color}</p>
@@ -279,7 +299,7 @@ const DriverVehicle = () => {
             </div>
             <div className="vehicle-info-item">
               <span className="info-label">{t('vehicle.type')}</span>
-              <span className="info-value">{getTypeLabel(vehicle.type)}</span>
+              <span className="info-value">{getTypeLabel(vehicle.vehicleType)}</span>
             </div>
             <div className="vehicle-info-item">
               <span className="info-label">{t('vehicle.status')}</span>

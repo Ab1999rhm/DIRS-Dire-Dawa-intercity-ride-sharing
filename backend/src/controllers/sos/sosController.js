@@ -235,6 +235,15 @@ exports.createUserIncident = asyncHandler(async (req, res) => {
     timestamp: new Date()
   });
 
+  await createNotification(
+    req.user._id,
+    'incident_reported',
+    'Issue Report Received',
+    `Your ${category.replace(/_/g, ' ')} report has been received and is being reviewed by our team.`,
+    { incidentId: incident._id, category },
+    'in_app'
+  );
+
   logger.info('User incident reported', { userId: req.user._id, incidentId: incident._id, category });
 
   res.status(201).json({

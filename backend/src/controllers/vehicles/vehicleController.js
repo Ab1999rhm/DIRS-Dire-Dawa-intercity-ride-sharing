@@ -7,7 +7,8 @@ exports.registerVehicle = asyncHandler(async (req, res) => {
   const {
     vehicleType, make, model, year, color,
     plateNumber, registrationExpiry, capacity,
-    serviceType, insuranceExpiry
+    serviceType, insuranceExpiry,
+    registrationPhotoUrl, vehiclePhotoUrl
   } = req.body;
 
   const driver = await Driver.findOne({ user: req.user._id });
@@ -27,8 +28,8 @@ exports.registerVehicle = asyncHandler(async (req, res) => {
     plateNumber, registrationExpiry, capacity,
     serviceType,
     insuranceExpiry,
-    registrationPhoto: req.files?.registrationPhoto?.[0]?.path,
-    vehiclePhoto: req.files?.vehiclePhoto?.[0]?.path
+    registrationPhoto: registrationPhotoUrl || req.files?.registrationPhoto?.[0]?.path,
+    vehiclePhoto: vehiclePhotoUrl || req.files?.vehiclePhoto?.[0]?.path
   });
 
   logger.info('Vehicle registered', { vehicleId: vehicle._id, driverId: driver._id });
@@ -55,11 +56,15 @@ exports.updateVehicle = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Driver profile not found' });
   }
 
-  const { vehicleType, make, model, year, color, plateNumber, capacity, serviceType } = req.body;
+  const { vehicleType, make, model, year, color, plateNumber, capacity, serviceType, registrationPhotoUrl, vehiclePhotoUrl } = req.body;
+
+  const updateData = { vehicleType, make, model, year, color, plateNumber, capacity, serviceType };
+  if (registrationPhotoUrl) updateData.registrationPhoto = registrationPhotoUrl;
+  if (vehiclePhotoUrl) updateData.vehiclePhoto = vehiclePhotoUrl;
 
   const vehicle = await Vehicle.findOneAndUpdate(
     { driver: driver._id, isActive: true },
-    { vehicleType, make, model, year, color, plateNumber, capacity, serviceType },
+    updateData,
     { new: true, runValidators: true }
   );
 

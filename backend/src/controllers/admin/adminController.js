@@ -1159,6 +1159,21 @@ exports.resolveDriverIssue = asyncHandler(async (req, res) => {
   const { resolution } = req.body;
   const trip = await Trip.findByIdAndUpdate(req.params.issueId, { driverIssueStatus: 'resolved', driverIssueResolution: resolution }, { new: true });
   if (!trip) return res.status(404).json({ message: 'Driver issue not found' });
+
+  if (trip.driver) {
+    const driver = await Driver.findById(trip.driver);
+    if (driver && driver.user) {
+      await createNotification(
+        driver.user,
+        'issue_resolved',
+        'Issue Report Resolved',
+        `Your issue report for trip has been resolved. ${resolution || ''}`,
+        { tripId: trip._id, resolution },
+        'in_app'
+      );
+    }
+  }
+
   res.json({ message: 'Driver issue resolved', trip });
 });
 

@@ -11,7 +11,7 @@ const logger = require('../config/logger');
 const PREFERENCE_BY_TYPE = {
   rideUpdates: ['ride_request', 'ride_accepted', 'ride_cancelled', 'driver_arriving', 'driver_arrived', 'trip_started', 'trip_completed', 'payment_received', 'payment_failed', 'rating_received', 'trip_cancelled', 'trip_assigned', 'driver_reassigned', 'no_show', 'refund_processed', 'compensation_issued', 'wallet_topup_confirmed'],
   promotions: ['announcement', 'broadcast', 'promo', 'promotion', 'offer'],
-  safetyAlerts: ['sos_alert', 'sos_resolved', 'incident_assigned', 'account_blocked', 'account_unblocked', 'account_suspended', 'account_banned', 'warning']
+  safetyAlerts: ['sos_alert', 'sos_resolved', 'incident_assigned', 'account_blocked', 'account_unblocked', 'account_suspended', 'account_banned', 'warning', 'incident_reported', 'issue_resolved']
 };
 
 const PREFERENCE_LOOKUP = Object.entries(PREFERENCE_BY_TYPE).reduce((acc, [pref, types]) => {

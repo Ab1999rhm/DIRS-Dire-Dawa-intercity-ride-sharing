@@ -594,7 +594,7 @@ exports.confirmArrival = asyncHandler(async (req, res) => {
 
 exports.cancelTrip = asyncHandler(async (req, res) => {
   const { tripId } = req.params;
-  const { reason } = req.body;
+  const { reason, cancelledBy } = req.body;
 
   const trip = await Trip.findById(tripId);
   if (!trip) {
@@ -613,19 +613,23 @@ exports.cancelTrip = asyncHandler(async (req, res) => {
     driver.isAvailable = true;
     driver.currentTrip = null;
     await driver.save();
+    
+    // Also update the user's online status
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(driver.user, { isOnline: true });
   }
 
   const rideRequest = await RideRequest.findById(trip.rideRequest);
   if (rideRequest) {
     rideRequest.status = 'cancelled';
-    rideRequest.cancelledBy = 'driver';
+    rideRequest.cancelledBy = cancelledBy || 'driver';
     rideRequest.cancellationReason = reason;
     await rideRequest.save();
   }
 
   await notifyRideUpdate(trip.passenger, 'ride_cancelled', {
     tripId: trip._id,
-    reason: reason || 'Driver cancelled'
+    reason: reason || 'Trip cancelled'
   });
 
   const io = getIO();

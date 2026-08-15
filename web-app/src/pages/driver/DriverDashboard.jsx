@@ -115,6 +115,24 @@ const DriverDashboard = () => {
     }).catch(() => {});
   }, []);
 
+  const handleNotificationClick = useCallback(async (notification) => {
+    if (!notification.isRead) {
+      try {
+        await notificationsAPI.markRead(notification._id);
+        setNotifications(prev => prev.map(n => n._id === notification._id ? { ...n, isRead: true } : n));
+      } catch (_) {}
+    }
+    setShowNotifDropdown(false);
+    const type = (notification.type || '').toLowerCase();
+    if (type.includes('ride') || type.includes('trip')) {
+      navigate('/driver/trips');
+    } else if (type.includes('payment') || type.includes('wallet') || type.includes('earnings')) {
+      navigate('/driver/earnings');
+    } else if (type.includes('issue_resolved') || type.includes('incident')) {
+      navigate('/driver');
+    }
+  }, [navigate]);
+
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
@@ -387,9 +405,16 @@ const DriverDashboard = () => {
           <div className="driver-notif-dropdown" ref={notifRef}>
             <div className="driver-notif-header">
               <span>Notifications</span>
-              {notifications.filter(n => !n.isRead).length > 0 && (
-                <span className="driver-notif-unread">{notifications.filter(n => !n.isRead).length} new</span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="driver-notif-unread" style={{ cursor: 'pointer' }} onClick={async () => {
+                    try {
+                      await notificationsAPI.markAllRead();
+                      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                    } catch (_) {}
+                  }}>Mark all read</span>
+                )}
+              </div>
             </div>
             <div className="driver-notif-list">
               {rideRequests.length > 0 && (
@@ -405,7 +430,7 @@ const DriverDashboard = () => {
                 <div className="driver-notif-empty">No notifications</div>
               ) : (
                 notifications.slice(0, 15).map(n => (
-                  <div key={n._id || Math.random()} className={`driver-notif-item${n.isRead ? '' : ' driver-notif-item-unread'}`}>
+                  <div key={n._id || Math.random()} className={`driver-notif-item${n.isRead ? '' : ' driver-notif-item-unread'}`} onClick={() => handleNotificationClick(n)} style={{ cursor: 'pointer' }}>
                     <span className={`driver-notif-icon${n.isRead ? '' : ' driver-notif-icon-unread'}`}>
                       {(() => {
                         const type = (n.type || '').toLowerCase();
@@ -414,6 +439,7 @@ const DriverDashboard = () => {
                         if (type.includes('ride') || type.includes('trip') || type.includes('driver') || type.includes('booking')) return <FaCar />;
                         if (type.includes('message') || type.includes('chat')) return <FaComment />;
                         if (type.includes('rating')) return <FaStar />;
+                        if (type.includes('incident') || type.includes('issue')) return <FaShieldAlt />;
                         return <FaBell />;
                       })()}
                     </span>

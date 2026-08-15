@@ -35,20 +35,17 @@ const vehicleSchema = new mongoose.Schema({
     unique: true
   },
   registrationExpiry: {
-    type: Date,
-    required: [true, 'Registration expiry date is required']
+    type: Date
   },
   registrationPhoto: {
-    type: String,
-    required: [true, 'Registration document photo is required']
+    type: String
   },
   vehiclePhoto: {
-    type: String,
-    required: [true, 'Vehicle photo is required']
+    type: String
   },
   capacity: {
     type: Number,
-    required: [true, 'Seating capacity is required'],
+    default: 4,
     min: 1,
     max: 16
   },
