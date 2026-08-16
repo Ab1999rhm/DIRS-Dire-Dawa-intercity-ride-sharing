@@ -138,12 +138,15 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
     }
   }
 
-  const nearbyDrivers = await findNearbyDrivers(
+  const matchResult = await findNearbyDrivers(
     toLngLat(pickupLocation.coordinates),
     normalizedRideType,
     15000,
     dropoffLocation
   );
+
+  const nearbyDrivers = matchResult.drivers || [];
+  const noDriverReason = matchResult.noDriverReason || null;
 
   const io = getIO();
 
@@ -168,13 +171,15 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
   logger.info('Ride request created', {
     rideRequestId: rideRequest._id,
     rideType: normalizedRideType,
-    nearbyDriversCount: nearbyDrivers.length
+    nearbyDriversCount: nearbyDrivers.length,
+    noDriverReason
   });
 
   res.status(201).json({
-    message: 'Ride request created',
+    message: noDriverReason || 'Ride request created',
     rideRequest,
-    nearbyDriversCount: nearbyDrivers.length
+    nearbyDriversCount: nearbyDrivers.length,
+    noDriverReason
   });
 });
 

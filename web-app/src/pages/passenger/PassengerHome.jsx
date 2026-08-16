@@ -11,6 +11,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import FlexibleMap from '../../components/common/FlexibleMap';
+import INTERCITY_DESTINATIONS_RAW from '../../constants/intercityDestinations';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, ratingsAPI, sosAPI, paymentsAPI } from '../../services/api';
@@ -149,19 +150,12 @@ const DIRE_DAWA_PLACES = [
 ];
 
 // ─── Intercity / National destinations ───
-const INTERCITY_PLACES = [
-  { label: 'Harar, Ethiopia', lat: 9.3115, lon: 42.1199 },
-  { label: 'Jigjiga, Ethiopia', lat: 9.3506, lon: 42.7933 },
-  { label: 'Addis Ababa, Ethiopia', lat: 9.0192, lon: 38.7525 },
-  { label: 'Adama (Nazret), Ethiopia', lat: 8.5400, lon: 39.2700 },
-  { label: 'Hawassa, Ethiopia', lat: 7.0621, lon: 38.4763 },
-  { label: 'Bahir Dar, Ethiopia', lat: 11.5938, lon: 37.3909 },
-  { label: 'Mekelle, Ethiopia', lat: 13.4967, lon: 39.4753 },
-  { label: 'Jimma, Ethiopia', lat: 7.6789, lon: 36.8340 },
-  { label: 'Dessie, Ethiopia', lat: 11.1321, lon: 39.6353 },
-  { label: 'Chiro, West Hararghe', lat: 9.0667, lon: 40.8667 },
-  { label: 'Asebe Teferi, Oromia', lat: 9.0667, lon: 40.8667 },
-];
+const INTERCITY_PLACES = INTERCITY_DESTINATIONS_RAW.map(d => ({
+  label: `${d.label}, Ethiopia`,
+  lat: d.lat,
+  lon: d.lon,
+  key: d.key,
+}));
 
 const HARDCODED_CITIES = [...DIRE_DAWA_PLACES, ...INTERCITY_PLACES];
 
@@ -192,6 +186,7 @@ const PassengerHome = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [rideState, setRideState] = useState('idle');
+  const [noDriverReason, setNoDriverReason] = useState('');
   const [bookingStep, setBookingStep] = useState(1);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
@@ -406,6 +401,7 @@ const PassengerHome = () => {
     setPromoCode('');
     setScheduleEnabled(false);
     setScheduledTime('');
+    setNoDriverReason('');
     setPaymentMethod(user?.paymentMethod || 'cash');
     clearInterval(searchingIntervalRef.current);
     clearInterval(timerIntervalRef.current);
@@ -590,18 +586,21 @@ const PassengerHome = () => {
         scheduledTime: scheduleEnabled ? scheduledTime : undefined,
       });
 
-      setActiveRide(rideData);
+      // Normalize: axios returns { data: { rideRequest, nearbyDriversCount } }
+      const rideResponse = rideData?.data || rideData;
+      const rideRequest = rideResponse?.rideRequest || rideResponse;
+      setActiveRide(rideRequest);
 
       // Persist ride to local storage so it instantly appears in My Trips & History
       try {
         const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
-        const updated = [rideData, ...localRides.filter(r => r._id !== rideData._id)];
+        const updated = [rideRequest, ...localRides.filter(r => r._id !== rideRequest._id)];
         localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
       } catch (_) {}
 
       if (socket) {
         socket.emit('ride_request', {
-          rideRequestId: rideData._id,
+          rideRequestId: rideRequest._id,
           pickupLocation: { address: pickup, coordinates: pickupCoords },
           dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
           vehicleType: backendVehicleType,
@@ -610,77 +609,35 @@ const PassengerHome = () => {
         });
       }
 
-      // Only run auto-match fallback if single-device demo mode is enabled
-      if (isDemoMode) {
-        setTimeout(() => {
-          setRideState((currentState) => {
-            if (currentState === 'searching') {
-              clearInterval(searchingIntervalRef.current);
-              const demoDriver = {
-                name: 'Abebe Kebede (Verified Driver)',
-                phone: '+251911889900',
-                rating: '4.9',
-                vehicle: {
-                  make: currentVehicle.label,
-                  model: '2024 Edition',
-                  color: 'Blue & White',
-                  plateNumber: 'DIR-3-B4592'
-                }
-              };
-              setFoundDriverInfo(demoDriver);
-              toast.success(`Driver Abebe accepted your ${currentVehicle.label} ride!`);
-
-              // Update persisted ride status
-              try {
-                const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
-                const matchedRide = { ...rideData, status: 'accepted', driver: { firstName: 'Abebe', lastName: 'Kebede', rating: 4.9, phoneNumber: '+251911889900' } };
-                const updated = [matchedRide, ...localRides.filter(r => r._id !== rideData._id)];
-                localStorage.setItem('dirs_passenger_rides', JSON.stringify(updated));
-              } catch (_) {}
-
-              return 'driver_found';
-            }
-            return currentState;
-          });
-        }, 3500);
-      } else {
-        // Real mode: timeout after 30 seconds if no driver found
-        setTimeout(() => {
-          setRideState((currentState) => {
-            if (currentState === 'searching') {
-              clearInterval(searchingIntervalRef.current);
-              setRideState('no_driver');
-              return 'no_driver';
-            }
-            return currentState;
-          });
-        }, 30000);
+      // If backend found no nearby drivers, show no_driver immediately
+      const driversCount = rideResponse?.nearbyDriversCount ?? 0;
+      const reason = rideResponse?.noDriverReason || '';
+      if (driversCount === 0) {
+        clearInterval(searchingIntervalRef.current);
+        setNoDriverReason(reason || 'No drivers available');
+        setRideState('no_driver');
+        return;
       }
 
-    } catch (err) {
-      console.warn('Backend API note:', err);
-      // Fallback for seamless demo testing if backend request fails
+      // Timeout after 30 seconds if no driver accepts
       setTimeout(() => {
         setRideState((currentState) => {
           if (currentState === 'searching') {
             clearInterval(searchingIntervalRef.current);
-            setFoundDriverInfo({
-              name: 'Abebe Kebede (Verified Driver)',
-              phone: '+251911889900',
-              rating: '4.9',
-              vehicle: {
-                make: currentVehicle.label,
-                model: '2024 Edition',
-                color: 'Blue & White',
-                plateNumber: 'DIR-3-B4592'
-              }
-            });
-            toast.success(`Driver matched: ${currentVehicle.label}!`);
-            return 'driver_found';
+            return 'no_driver';
           }
           return currentState;
         });
-      }, 3000);
+      }, 30000);
+
+    } catch (err) {
+      console.warn('Backend API error:', err);
+      clearInterval(searchingIntervalRef.current);
+      const msg = err?.response?.data?.message || err?.response?.data?.error || '';
+      if (msg.includes('No drivers available')) {
+        setNoDriverReason(msg);
+      }
+      setRideState('no_driver');
     } finally {
       setLoading(false);
     }
@@ -877,6 +834,7 @@ const PassengerHome = () => {
     setRideState('searching');
     setSearchingDrivers(0);
     setFoundDriverInfo(null);
+    setNoDriverReason('');
 
     searchingIntervalRef.current = setInterval(() => {
       setSearchingDrivers(prev => {
@@ -1010,15 +968,19 @@ const PassengerHome = () => {
 
   // ─── STATE: NO DRIVER FOUND ────────────────────────────────────────
   if (rideState === 'no_driver') {
+    const destLabel = dropoff ? dropoff.split(',')[0] : '';
+    const isNoDriverForDest = noDriverReason && noDriverReason.includes('No drivers available');
     return (
       <div className="passenger-page">
         <div className="ride-status">
           <div className="no-driver-icon">
             <FaTimesCircle />
           </div>
-          <h3>No Drivers Available</h3>
+          <h3>{isNoDriverForDest ? `No Drivers Going to ${destLabel}` : 'No Drivers Available'}</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-            No nearby drivers could be found. Please try again or choose a different vehicle type.
+            {isNoDriverForDest
+              ? `There are no drivers heading to ${destLabel} right now. Please try again later or choose a different destination.`
+              : 'No nearby drivers could be found. Please try again or choose a different vehicle type.'}
           </p>
           <div className="no-driver-actions">
             <button className="passenger-primary-btn" onClick={handleRetryFindDriver}>

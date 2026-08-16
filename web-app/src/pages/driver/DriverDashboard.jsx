@@ -16,16 +16,9 @@ import {
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
+import INTERCITY_DESTINATIONS from '../../constants/intercityDestinations';
 import './Driver.css';
 
-const INTERCITY_DESTINATIONS = [
-  { key: 'harar', label: 'Harar', emoji: '🕌' },
-  { key: 'addis ababa', label: 'Addis Ababa', emoji: '🏙️' },
-  { key: 'combolcha', label: 'Combolcha', emoji: '🏔️' },
-  { key: 'jijiga', label: 'Jijiga', emoji: '🏜️' },
-  { key: 'awash', label: 'Awash', emoji: '🌿' },
-  { key: 'debre markos', label: 'Debre Markos', emoji: '⛪' },
-];
 
 const driverIcon = L.divIcon({
   className: 'driver-marker',

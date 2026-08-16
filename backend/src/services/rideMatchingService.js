@@ -3,13 +3,20 @@ const Vehicle = require('../models/Vehicle');
 const User = require('../models/User');
 
 const INTERCITY_DESTINATIONS = {
-  'harar': { label: 'Harar', coordinates: [42.1200, 9.3110] },
-  'addis ababa': { label: 'Addis Ababa', coordinates: [38.7578, 9.0192] },
-  'combolcha': { label: 'Combolcha', coordinates: [39.8700, 8.9300] },
-  'jijiga': { label: 'Jijiga', coordinates: [42.8000, 9.3500] },
-  'dire dawa': { label: 'Dire Dawa', coordinates: [41.8500, 9.6000] },
-  'awash': { label: 'Awash', coordinates: [40.1500, 8.9833] },
+  'harar':        { label: 'Harar',        coordinates: [42.1200, 9.3110] },
+  'addis ababa':  { label: 'Addis Ababa',  coordinates: [38.7578, 9.0192] },
+  'jijiga':       { label: 'Jijiga',       coordinates: [42.8000, 9.3500] },
+  'combolcha':    { label: 'Combolcha',    coordinates: [39.8700, 8.9300] },
+  'awash':        { label: 'Awash',        coordinates: [40.1500, 8.9833] },
   'debre markos': { label: 'Debre Markos', coordinates: [37.7300, 10.3400] },
+  'adama':        { label: 'Adama',        coordinates: [39.2700, 8.5400] },
+  'hawassa':      { label: 'Hawassa',      coordinates: [38.4763, 7.0621] },
+  'bahir dar':    { label: 'Bahir Dar',    coordinates: [37.3909, 11.5938] },
+  'mekelle':      { label: 'Mekelle',      coordinates: [39.4753, 13.4967] },
+  'jimma':        { label: 'Jimma',        coordinates: [36.8340, 7.6789] },
+  'dessie':       { label: 'Dessie',       coordinates: [39.6353, 11.1321] },
+  'chiro':        { label: 'Chiro',        coordinates: [40.8667, 9.0667] },
+  'asebe teferi': { label: 'Asebe Teferi', coordinates: [40.8667, 9.0667] },
 };
 
 const matchDestinationCity = (dropoffAddress) => {
@@ -41,13 +48,16 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
     query.serviceType = { $in: ['intercity', 'both'] };
   }
 
-  // For intercity rides, only match drivers whose destination matches
+  // For intercity rides, ONLY match drivers whose destination matches — strict matching
   if (rideType === 'intercity' && dropoffInfo) {
     const destCity = matchDestinationCity(dropoffInfo.address);
-    if (destCity) {
-      query['intendedDestination.city'] = destCity.key;
-      logger.info('Intercity ride - filtering by destination', { destCity: destCity.key, dropoffAddress: dropoffInfo.address });
+    if (!destCity) {
+      // Destination not in our supported cities list — no drivers can serve this
+      logger.info('Intercity ride - unsupported destination', { dropoffAddress: dropoffInfo.address });
+      return { drivers: [], noDriverReason: `No drivers available for this destination` };
     }
+    query['intendedDestination.city'] = destCity.key;
+    logger.info('Intercity ride - filtering by destination', { destCity: destCity.key, dropoffAddress: dropoffInfo.address });
   }
 
   logger.info('Finding nearby drivers', { pickupCoordinates, rideType, maxDistance, query });
@@ -67,7 +77,12 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
 
   logger.info('Nearby users found', { count: nearbyUsers.length });
 
-  if (!nearbyUsers.length) return [];
+  if (!nearbyUsers.length) {
+    const reason = rideType === 'intercity' && dropoffInfo
+      ? `No drivers available heading to ${matchDestinationCity(dropoffInfo.address)?.label || dropoffInfo.address}`
+      : 'No nearby drivers found';
+    return { drivers: [], noDriverReason: reason };
+  }
 
   const driverUserIds = nearbyUsers.map(u => u._id);
 
@@ -151,7 +166,14 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
     return bScore - aScore;
   });
 
-  return nearbyDrivers;
+  if (nearbyDrivers.length === 0) {
+    const reason = rideType === 'intercity' && dropoffInfo
+      ? `No drivers available heading to ${matchDestinationCity(dropoffInfo.address)?.label || dropoffInfo.address}`
+      : 'No nearby drivers found';
+    return { drivers: [], noDriverReason: reason };
+  }
+
+  return { drivers: nearbyDrivers, noDriverReason: null };
 };
 
 const isVehicleCompatible = (vehicle, rideType) => {
