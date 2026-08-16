@@ -772,7 +772,11 @@
   border-radius: 999px;
   padding: 4px;
   animation: slideUp 0.35s ease;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.driver-page .tabs::-webkit-scrollbar { display: none; }
 .driver-page .tab {
   flex: 1;
   padding: 10px 16px;
@@ -785,6 +789,7 @@
   transition: all 0.2s ease;
   border: none;
   text-align: center;
+  white-space: nowrap;
 }
 .driver-page .tab.active {
   background: var(--card);
@@ -793,6 +798,13 @@
 }
 .driver-page .tab:hover:not(.active) {
   color: var(--text);
+}
+@media (max-width: 480px) {
+  .driver-page .tab {
+    flex: none;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
 }
 
 /* === Section Title (subpages) === */
