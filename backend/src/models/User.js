@@ -155,6 +155,11 @@ const userSchema = new mongoose.Schema({
     coordinates: { type: [Number], default: null },
     updatedAt: { type: Date, default: null }
   },
+  currentArea: {
+    name: { type: String, default: null },
+    coordinates: { type: [Number], default: null },
+    updatedAt: { type: Date, default: null }
+  },
   currentLocation: {
     type: { type: String, enum: ['Point'], default: 'Point' },
     coordinates: { type: [Number], default: [0, 0] },

@@ -621,7 +621,7 @@ exports.uploadProfilePhoto = asyncHandler(async (req, res) => {
 });
 
 exports.updateDriverStatus = asyncHandler(async (req, res) => {
-  const { isOnline, serviceType, intendedDestination } = req.body;
+  const { isOnline, serviceType, intendedDestination, currentArea } = req.body;
 
   if (typeof isOnline !== 'boolean') {
     return res.status(400).json({ error: 'isOnline must be a boolean' });
@@ -669,7 +669,21 @@ exports.updateDriverStatus = asyncHandler(async (req, res) => {
     };
   }
 
+  if (currentArea) {
+    userUpdate.currentArea = {
+      name: currentArea.name || currentArea,
+      coordinates: currentArea.coordinates || null,
+      updatedAt: new Date()
+    };
+  } else if (currentArea === null) {
+    userUpdate.currentArea = {
+      name: null,
+      coordinates: null,
+      updatedAt: null
+    };
+  }
+
   await User.findByIdAndUpdate(req.user._id, userUpdate);
 
-  res.json({ message: 'Status updated', isOnline, serviceType, intendedDestination });
+  res.json({ message: 'Status updated', isOnline, serviceType, intendedDestination, currentArea });
 });

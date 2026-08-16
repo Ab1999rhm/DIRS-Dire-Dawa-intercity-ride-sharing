@@ -383,6 +383,20 @@ router.put('/driver/destination', protect, async (req, res) => {
   }
 });
 
+router.put('/driver/area', protect, async (req, res) => {
+  try {
+    const User = require('../../models/User');
+    const { area, coordinates } = req.body;
+    const update = {
+      currentArea: area ? { name: area, coordinates, updatedAt: new Date() } : { name: null, coordinates: null, updatedAt: null }
+    };
+    await User.findByIdAndUpdate(req.user._id, update);
+    res.json({ message: 'Area updated', currentArea: update.currentArea });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/documents', protect, documentController.getDocuments);
 
 router.post('/send-phone-otp', authController.sendPhoneOTP);

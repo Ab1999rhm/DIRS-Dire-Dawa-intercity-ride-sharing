@@ -382,6 +382,142 @@
 }
 .dest-emoji { font-size: 18px; }
 
+/* === Active Area/Destination Display === */
+.driver-area-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.04));
+  border: 1.5px solid rgba(37, 99, 235, 0.2);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  animation: fadeIn 0.3s ease;
+}
+.driver-area-active-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary, #2563eb);
+}
+.driver-area-clear {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.driver-area-clear:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* === Driver Search Input === */
+.driver-search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.driver-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 14px;
+  pointer-events: none;
+}
+.driver-search-input {
+  width: 100%;
+  padding: 10px 36px 10px 36px;
+  border: 1.5px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  font-size: 13px;
+  background: var(--card, #fff);
+  color: var(--text);
+  transition: all 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+.driver-search-input:focus {
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.driver-search-input::placeholder {
+  color: var(--text-muted, #94a3b8);
+}
+.driver-search-clear {
+  position: absolute;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-muted, #94a3b8);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.driver-search-clear:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* === Driver Search Dropdown === */
+.driver-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card, #fff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+  animation: scaleIn 0.15s ease;
+}
+.driver-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--border-light, #f1f5f9);
+}
+.driver-search-item:last-child {
+  border-bottom: none;
+}
+.driver-search-item:hover {
+  background: var(--primary-50, #eff6ff);
+}
+.driver-search-item.active {
+  background: var(--primary-50, #eff6ff);
+  font-weight: 600;
+}
+.driver-search-item-icon {
+  color: var(--primary, #2563eb);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.driver-search-item-check {
+  margin-left: auto;
+  color: #10b981;
+  font-size: 12px;
+}
+
 /* === Section Titles === */
 .driver-section-title {
   font-size: 17px;

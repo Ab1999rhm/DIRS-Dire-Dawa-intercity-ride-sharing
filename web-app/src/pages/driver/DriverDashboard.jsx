@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, paymentsAPI, vehiclesAPI, authAPI, sosAPI, reportAPI, notificationsAPI } from '../../services/api';
+import { placesAPI } from '../../services/api';
 import { Card } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
 import L from 'leaflet';
@@ -12,14 +13,35 @@ import {
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
   FaHome, FaListUl, FaWallet, FaCog, FaChevronRight,
   FaExclamationTriangle, FaFlag, FaShieldAlt, FaUserSlash, FaEllipsisH,
-  FaComment, FaUser, FaHeadset, FaMap, FaSms
+  FaComment, FaUser, FaHeadset, FaMap, FaSms, FaSearch, FaTimesCircle
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
 import INTERCITY_DESTINATIONS from '../../constants/intercityDestinations';
-import { placesAPI } from '../../services/api';
 import './Driver.css';
 
+const INTRA_CITY_PLACES = [
+  { key: 'sabian', label: 'Sabian, Dire Dawa', lat: 9.5950, lon: 41.8600 },
+  { key: 'kezira', label: 'Kezira, Dire Dawa', lat: 9.6080, lon: 41.8450 },
+  { key: 'addis ketema', label: 'Addis Ketema, Dire Dawa', lat: 9.5990, lon: 41.8530 },
+  { key: 'gendekore', label: 'Gendekore, Dire Dawa', lat: 9.6120, lon: 41.8390 },
+  { key: 'dire dawa city center', label: 'Dire Dawa City Center', lat: 9.6009, lon: 41.8508 },
+  { key: 'melka jebdu', label: 'Melka Jebdu, Dire Dawa', lat: 9.5880, lon: 41.8700 },
+  { key: 'legehare', label: 'Legehare, Dire Dawa', lat: 9.6050, lon: 41.8470 },
+  { key: 'taiwan', label: 'Taiwan, Dire Dawa', lat: 9.6030, lon: 41.8540 },
+  { key: 'ashewa', label: 'Ashewa, Dire Dawa', lat: 9.6090, lon: 41.8610 },
+  { key: 'megala', label: 'Megala, Dire Dawa', lat: 9.5910, lon: 41.8650 },
+  { key: 'buramedo', label: 'Buramedo, Dire Dawa', lat: 9.5870, lon: 41.8430 },
+  { key: 'dire dawa market', label: 'Dire Dawa Main Market', lat: 9.6072, lon: 41.8445 },
+  { key: 'taiwan market', label: 'Taiwan Market, Dire Dawa', lat: 9.6028, lon: 41.8542 },
+  { key: 'sabian market', label: 'Sabian Market, Dire Dawa', lat: 9.5955, lon: 41.8605 },
+  { key: 'dire dawa hospital', label: 'Dire Dawa Referral Hospital', lat: 9.6015, lon: 41.8430 },
+  { key: 'dilchora hospital', label: 'Dil Chora Hospital, Dire Dawa', lat: 9.6055, lon: 41.8555 },
+  { key: 'dire dawa university', label: 'Dire Dawa University', lat: 9.6133, lon: 41.8617 },
+  { key: 'bus station', label: 'Dire Dawa Bus Station', lat: 9.6005, lon: 41.8398 },
+  { key: 'railway station', label: 'Dire Dawa Railway Station', lat: 9.5998, lon: 41.8462 },
+  { key: 'airport', label: 'Dire Dawa Airport', lat: 9.6247, lon: 41.8542 },
+];
 
 const driverIcon = L.divIcon({
   className: 'driver-marker',
@@ -79,13 +101,22 @@ const DriverDashboard = () => {
   const [mapCenter, setMapCenter] = useState([9.6009, 41.8508]);
   const [vehicleType, setVehicleType] = useState(null);
   const [vehicle, setVehicle] = useState(null);
-  const [serviceType, setServiceType] = useState('intra_city'); // 'intra_city' or 'intercity'
+  const [serviceType, setServiceType] = useState('intra_city');
   const [intendedDestination, setIntendedDestination] = useState(user?.intendedDestination?.city || null);
+  const [currentArea, setCurrentArea] = useState(user?.currentArea?.name || null);
   const [showReportSection, setShowReportSection] = useState(false);
   const [reportCategory, setReportCategory] = useState('');
   const [reportDescription, setReportDescription] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
   const [destinations, setDestinations] = useState(INTERCITY_DESTINATIONS);
+  const [intraCityPlaces, setIntraCityPlaces] = useState(INTRA_CITY_PLACES);
+
+  const [destSearch, setDestSearch] = useState('');
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [showDestSuggestions, setShowDestSuggestions] = useState(false);
+  const [areaSearch, setAreaSearch] = useState('');
+  const [areaSuggestions, setAreaSuggestions] = useState([]);
+  const [showAreaSuggestions, setShowAreaSuggestions] = useState(false);
 
   useEffect(() => {
     placesAPI.getAll({ type: 'intercity' }).then(res => {
@@ -93,14 +124,39 @@ const DriverDashboard = () => {
         key: p.key, label: p.label || p.name, emoji: p.emoji || '', lat: p.coordinates.lat, lon: p.coordinates.lon
       }));
       if (places.length > 0) setDestinations(places);
-    }).catch(() => {});
+    }).catch(() => {
+      toast.info('Using offline destination data');
+    });
+
+    placesAPI.getAll({ type: 'intra_city' }).then(res => {
+      const places = (res.data.places || []).map(p => ({
+        key: p.key, label: p.label || p.name, lat: p.coordinates.lat, lon: p.coordinates.lon
+      }));
+      if (places.length > 0) setIntraCityPlaces(places);
+    }).catch(() => {
+      toast.info('Using offline area data');
+    });
   }, []);
 
-  // Sync isOnline with user data when it loads async
+  const filterDestSuggestions = useCallback((query) => {
+    if (query.length < 2) { setDestSuggestions([]); return; }
+    const lower = query.toLowerCase();
+    const matches = destinations.filter(d => d.label.toLowerCase().includes(lower) || d.key.includes(lower));
+    setDestSuggestions(matches.slice(0, 6));
+    setShowDestSuggestions(matches.length > 0);
+  }, [destinations]);
+
+  const filterAreaSuggestions = useCallback((query) => {
+    if (query.length < 2) { setAreaSuggestions([]); return; }
+    const lower = query.toLowerCase();
+    const matches = intraCityPlaces.filter(p => p.label.toLowerCase().includes(lower) || p.key.includes(lower));
+    setAreaSuggestions(matches.slice(0, 6));
+    setShowAreaSuggestions(matches.length > 0);
+  }, [intraCityPlaces]);
+
   useEffect(() => {
     if (user && typeof user.isOnline === 'boolean') {
       setIsOnline(user.isOnline);
-      // If user was online, restart geolocation tracking
       if (user.isOnline && !watchId && navigator.geolocation) {
         const id = navigator.geolocation.watchPosition(
           (pos) => emitLocationUpdate([pos.coords.longitude, pos.coords.latitude]),
@@ -137,9 +193,7 @@ const DriverDashboard = () => {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+  useEffect(() => { loadNotifications(); }, [loadNotifications]);
 
   useEffect(() => {
     const onClick = (e) => {
@@ -207,7 +261,6 @@ const DriverDashboard = () => {
       const backendTrip = activeTrips.find(t => ['driver_arriving', 'driver_arrived', 'in_progress'].includes(t.status)) || null;
       const backendRides = activeTrips.filter(t => t.status === 'pending');
 
-      // Merge with persisted passenger orders from localStorage
       const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
       const pendingLocal = localRides.filter(r => ['pending', 'searching'].includes((r.status || '').toLowerCase()));
       const activeLocal = localRides.find(r => ['accepted', 'in_progress', 'driver_arriving', 'driver_found', 'ongoing'].includes((r.status || '').toLowerCase()));
@@ -236,10 +289,24 @@ const DriverDashboard = () => {
 
   const handleDestinationChange = useCallback(async (dest) => {
     setIntendedDestination(dest?.key || null);
+    setDestSearch('');
+    setDestSuggestions([]);
+    setShowDestSuggestions(false);
     try {
-      await authAPI.updateDriverDestination(dest?.key || null, dest ? undefined : undefined);
+      await authAPI.updateDriverDestination(dest?.key || null);
       toast.success(dest ? `Destination set to ${dest.label}` : 'Destination cleared');
     } catch { toast.error('Failed to update destination'); }
+  }, [toast]);
+
+  const handleAreaChange = useCallback(async (area) => {
+    setCurrentArea(area?.key || null);
+    setAreaSearch('');
+    setAreaSuggestions([]);
+    setShowAreaSuggestions(false);
+    try {
+      await authAPI.updateDriverArea(area?.key || null, area ? [area.lat, area.lon] : null);
+      toast.success(area ? `Area set to ${area.label}` : 'Area cleared');
+    } catch { toast.error('Failed to update area'); }
   }, [toast]);
 
   const toggleOnline = useCallback(() => {
@@ -251,10 +318,9 @@ const DriverDashboard = () => {
     setIsOnline(newStatus);
     setUser(prev => prev ? { ...prev, isOnline: newStatus } : prev);
     const coords = mapCenter;
-    authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]], serviceType, intendedDestination).catch(() => {});
+    authAPI.updateDriverStatus(newStatus, [coords[1], coords[0]], serviceType, intendedDestination, currentArea ? { name: currentArea } : null).catch(() => {});
     if (newStatus) {
       toast.success(`You are now ONLINE for ${serviceType === 'intra_city' ? 'Intra-City' : 'Intercity'} rides!`);
-      // Load pending passenger orders
       fetchData();
       if (navigator.geolocation) {
         const id = navigator.geolocation.watchPosition(
@@ -268,7 +334,7 @@ const DriverDashboard = () => {
       toast.info('You are now OFFLINE');
       if (watchId) { navigator.geolocation.clearWatch(watchId); setWatchId(null); }
     }
-  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, serviceType, intendedDestination, setUser]);
+  }, [isOnline, watchId, emitLocationUpdate, toast, mapCenter, serviceType, intendedDestination, currentArea, setUser]);
 
   const handleAcceptRide = async (rideId) => {
     try {
@@ -317,14 +383,11 @@ const DriverDashboard = () => {
 
   const getNextAction = () => {
     if (!activeTrip) return null;
-    console.log('Active trip status:', activeTrip.status);
     switch (activeTrip.status) {
       case 'driver_arriving': return { action: 'arrival', label: t('driver.confirmArrival') || 'Confirm Arrival' };
       case 'driver_arrived': return { action: 'start', label: t('driver.startTrip') || 'Start Trip' };
       case 'in_progress': return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
-      default: 
-        console.log('Unknown status, returning complete action as fallback');
-        return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
+      default: return { action: 'complete', label: t('driver.completeTrip') || 'Complete Trip' };
     }
   };
 
@@ -504,12 +567,117 @@ const DriverDashboard = () => {
         </div>
       )}
 
+      {isOnline && serviceType === 'intra_city' && (
+        <div className="driver-destination-picker">
+          <p className="destination-label">
+            <FaMapMarkerAlt /> Where are you based? (Area)
+          </p>
+          {currentArea && (
+            <div className="driver-area-active">
+              <span className="driver-area-active-label">{intraCityPlaces.find(p => p.key === currentArea)?.label || currentArea}</span>
+              <button className="driver-area-clear" onClick={() => handleAreaChange(null)}>
+                <FaTimesCircle /> Clear
+              </button>
+            </div>
+          )}
+          <div style={{ position: 'relative' }}>
+            <div className="driver-search-input-wrap">
+              <FaSearch className="driver-search-icon" />
+              <input
+                type="text"
+                className="driver-search-input"
+                placeholder="Search your area..."
+                value={areaSearch}
+                onChange={(e) => { setAreaSearch(e.target.value); filterAreaSuggestions(e.target.value); }}
+                onFocus={() => { if (areaSearch.length >= 2) filterAreaSuggestions(areaSearch); }}
+                onBlur={() => setTimeout(() => setShowAreaSuggestions(false), 200)}
+              />
+              {areaSearch && (
+                <button className="driver-search-clear" onClick={() => { setAreaSearch(''); setAreaSuggestions([]); setShowAreaSuggestions(false); }}>
+                  <FaTimes />
+                </button>
+              )}
+            </div>
+            {showAreaSuggestions && areaSuggestions.length > 0 && (
+              <div className="driver-search-dropdown">
+                {areaSuggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    className={`driver-search-item ${currentArea === s.key ? 'active' : ''}`}
+                    onMouseDown={() => handleAreaChange(s)}
+                  >
+                    <FaMapMarkerAlt className="driver-search-item-icon" />
+                    <span>{s.label}</span>
+                    {currentArea === s.key && <FaCheck className="driver-search-item-check" />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="destination-grid" style={{ marginTop: 8 }}>
+            {intraCityPlaces.slice(0, 6).map(place => (
+              <button
+                key={place.key}
+                className={`destination-chip ${currentArea === place.key ? 'active' : ''}`}
+                onClick={() => handleAreaChange(currentArea === place.key ? null : place)}
+              >
+                <span>{place.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isOnline && serviceType === 'intercity' && (
         <div className="driver-destination-picker">
           <p className="destination-label">
             <FaMapMarkerAlt /> Where are you heading? (Intercity)
           </p>
-          <div className="destination-grid">
+          {intendedDestination && (
+            <div className="driver-area-active">
+              <span className="driver-area-active-label">
+                {destinations.find(d => d.key === intendedDestination)?.emoji} {destinations.find(d => d.key === intendedDestination)?.label || intendedDestination}
+              </span>
+              <button className="driver-area-clear" onClick={() => handleDestinationChange(null)}>
+                <FaTimesCircle /> Clear
+              </button>
+            </div>
+          )}
+          <div style={{ position: 'relative' }}>
+            <div className="driver-search-input-wrap">
+              <FaSearch className="driver-search-icon" />
+              <input
+                type="text"
+                className="driver-search-input"
+                placeholder="Search destination city..."
+                value={destSearch}
+                onChange={(e) => { setDestSearch(e.target.value); filterDestSuggestions(e.target.value); }}
+                onFocus={() => { if (destSearch.length >= 2) filterDestSuggestions(destSearch); }}
+                onBlur={() => setTimeout(() => setShowDestSuggestions(false), 200)}
+              />
+              {destSearch && (
+                <button className="driver-search-clear" onClick={() => { setDestSearch(''); setDestSuggestions([]); setShowDestSuggestions(false); }}>
+                  <FaTimes />
+                </button>
+              )}
+            </div>
+            {showDestSuggestions && destSuggestions.length > 0 && (
+              <div className="driver-search-dropdown">
+                {destSuggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    className={`driver-search-item ${intendedDestination === s.key ? 'active' : ''}`}
+                    onMouseDown={() => handleDestinationChange(s)}
+                  >
+                    <FaMapMarkerAlt className="driver-search-item-icon" />
+                    <span>{s.emoji} {s.label}</span>
+                    {intendedDestination === s.key && <FaCheck className="driver-search-item-check" />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="destination-grid" style={{ marginTop: 8 }}>
             {destinations.map(dest => (
               <button
                 key={dest.key}
@@ -588,7 +756,6 @@ const DriverDashboard = () => {
       {activeTrip && (
         <div className="driver-active-section">
           <h2 className="driver-section-title"><FaCar /> {t('driver.currentTrip') || 'Current Trip'}</h2>
-          {console.log('Rendering active trip:', activeTrip)}
           <Card className="driver-active-card" padding="md">
             <div className="trip-passenger-info">
               <div className="passenger-avatar">
@@ -623,7 +790,6 @@ const DriverDashboard = () => {
               <span>{activeTrip.fare?.totalFare || activeTrip.fare?.total || 0} ETB</span>
             </div>
 
-            {/* Real-World External Navigation Launcher */}
             <div style={{ display: 'flex', gap: '8px', margin: '12px 0' }}>
               <button
                 type="button"
@@ -633,7 +799,7 @@ const DriverDashboard = () => {
                   window.open(`https://www.google.com/maps/search/?api=1&query=${addr}`, '_blank');
                 }}
               >
-                🗺️ Open Google Maps
+                Open Google Maps
               </button>
               <button
                 type="button"
@@ -643,7 +809,7 @@ const DriverDashboard = () => {
                   window.open(`https://waze.com/ul?q=${addr}&navigate=yes`, '_blank');
                 }}
               >
-                🚗 Open Waze
+                Open Waze
               </button>
             </div>
 
@@ -719,11 +885,10 @@ const DriverDashboard = () => {
           <h2 className="driver-section-title">{t('driver.newRequests') || 'New Requests'}</h2>
           {rideRequests.map(ride => (
             <Card key={ride._id} className="driver-request-card" padding="md" style={{ borderLeft: '4px solid #2563eb' }}>
-              {/* Real-World 15-second Circular Request Acceptance Timer */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', padding: '8px 12px', borderRadius: '8px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e40af' }}>⚡ Incoming Ride Request</span>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e40af' }}>Incoming Ride Request</span>
                 <span style={{ fontSize: '12px', fontWeight: '800', color: '#dc2626', background: '#fee2e2', padding: '2px 8px', borderRadius: '10px' }}>
-                  ⏳ 15s Auto-Decline
+                  15s Auto-Decline
                 </span>
               </div>
               <div className="request-header">

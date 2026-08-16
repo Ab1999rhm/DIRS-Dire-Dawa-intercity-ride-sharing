@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, documentsAPI, paymentsAPI } from '../../services/api';
+import { placesAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, Modal } from '../../components/common';
-import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt, FaWallet, FaMobileAlt, FaCreditCard, FaUpload, FaSpinner, FaTrashAlt } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaCar, FaFileAlt, FaCog, FaGlobe, FaBell, FaClock, FaSignOutAlt, FaCheck, FaTimes, FaIdCard, FaShieldAlt, FaWallet, FaMobileAlt, FaCreditCard, FaUpload, FaSpinner, FaTrashAlt, FaMapMarkerAlt, FaHome, FaBuilding, FaStar } from 'react-icons/fa';
 import { useToast } from '../../components/common/Toast';
 import './Driver.css';
 
@@ -59,6 +60,14 @@ const DriverProfile = () => {
   const [savingPayment, setSavingPayment] = useState(false);
   const [editingIndex, setEditingIndex] = useState(-1);
 
+  const [savedPlaces, setSavedPlaces] = useState(user?.favoriteLocations || []);
+  const [showAddPlace, setShowAddPlace] = useState(false);
+  const [newPlace, setNewPlace] = useState({ name: '', address: '', type: 'other', searchQuery: '' });
+  const [placeSuggestions, setPlaceSuggestions] = useState([]);
+  const [showPlaceSuggestions, setShowPlaceSuggestions] = useState(false);
+  const [savingPlace, setSavingPlace] = useState(false);
+  const [intraCityPlaces, setIntraCityPlaces] = useState([]);
+
   const toast = useToast();
 
   useEffect(() => {
@@ -82,7 +91,59 @@ const DriverProfile = () => {
       }
     }).catch(() => {});
     paymentsAPI.getBanks().then(res => setBanks(res.data?.banks || [])).catch(() => {});
+
+    placesAPI.getAll({ type: 'intra_city' }).then(res => {
+      const places = (res.data.places || []).map(p => ({
+        key: p.key, label: p.label || p.name, lat: p.coordinates.lat, lon: p.coordinates.lon
+      }));
+      if (places.length > 0) setIntraCityPlaces(places);
+    }).catch(() => {});
   }, []);
+
+  const filterPlaceSuggestions = (query) => {
+    if (query.length < 2) { setPlaceSuggestions([]); return; }
+    const lower = query.toLowerCase();
+    const matches = intraCityPlaces.filter(p => p.label.toLowerCase().includes(lower) || p.key.includes(lower));
+    setPlaceSuggestions(matches.slice(0, 6));
+    setShowPlaceSuggestions(matches.length > 0);
+  };
+
+  const handleAddSavedPlace = async () => {
+    if (!newPlace.name) {
+      toast.error('Enter a place name');
+      return;
+    }
+    setSavingPlace(true);
+    try {
+      const place = {
+        name: newPlace.name,
+        address: newPlace.address || newPlace.name,
+        type: newPlace.type,
+        location: newPlace.lat ? { type: 'Point', coordinates: [newPlace.lon, newPlace.lat] } : undefined
+      };
+      const updated = [...savedPlaces, place];
+      await authAPI.updateProfile({ favoriteLocations: updated });
+      setSavedPlaces(updated);
+      setNewPlace({ name: '', address: '', type: 'other', searchQuery: '' });
+      setShowAddPlace(false);
+      toast.success('Place saved');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save place');
+    } finally {
+      setSavingPlace(false);
+    }
+  };
+
+  const handleRemoveSavedPlace = async (index) => {
+    const updated = savedPlaces.filter((_, i) => i !== index);
+    try {
+      await authAPI.updateProfile({ favoriteLocations: updated });
+      setSavedPlaces(updated);
+      toast.success('Place removed');
+    } catch (err) {
+      toast.error('Failed to remove place');
+    }
+  };
 
   const handleDocUpload = async (docKey, isDriverDoc) => {
     const file = fileInputRef[docKey]?.current?.files?.[0];
@@ -125,6 +186,7 @@ const DriverProfile = () => {
 
   const tabs = [
     { id: 'info', label: t('profile.personalInfo'), icon: <FaUser /> },
+    { id: 'places', label: 'Places', icon: <FaMapMarkerAlt /> },
     { id: 'documents', label: t('profile.documents'), icon: <FaFileAlt /> },
     { id: 'payment', label: t('profile.withdrawalAccount') || 'Payment', icon: <FaWallet /> },
     { id: 'settings', label: t('profile.settings'), icon: <FaCog /> }
@@ -305,6 +367,130 @@ const DriverProfile = () => {
             </div>
           </form>
         </Card>
+      )}
+
+      {activeTab === 'places' && (
+        <div className="settings-section">
+          <Card padding="lg">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 className="section-title" style={{ margin: 0 }}><FaMapMarkerAlt /> Saved Places</h2>
+              <button
+                className="doc-upload-btn"
+                style={{ padding: '6px 14px', fontSize: 12 }}
+                onClick={() => setShowAddPlace(!showAddPlace)}
+              >
+                {showAddPlace ? <><FaTimes /> Cancel</> : <><FaCheck /> Add Place</>}
+              </button>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+              Save your frequent locations for quick access
+            </p>
+
+            {showAddPlace && (
+              <div style={{ padding: 14, background: 'var(--bg-secondary, #f9fafb)', borderRadius: 10, border: '1px solid var(--border-light)', marginBottom: 16, animation: 'fadeIn 0.2s ease' }}>
+                <div className="form-grid" style={{ marginBottom: 10 }}>
+                  <Input
+                    label="Place Name"
+                    value={newPlace.name}
+                    onChange={(e) => setNewPlace({ ...newPlace, name: e.target.value })}
+                    placeholder="e.g. Home, Office"
+                    icon={<FaMapMarkerAlt />}
+                  />
+                  <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>Type</label>
+                    <select
+                      style={{ padding: '10px 12px', border: '1px solid var(--border-light)', borderRadius: 8, background: 'var(--card)' }}
+                      value={newPlace.type}
+                      onChange={(e) => setNewPlace({ ...newPlace, type: e.target.value })}
+                    >
+                      <option value="home">Home</option>
+                      <option value="work">Work</option>
+                      <option value="school">School</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ position: 'relative', marginBottom: 10 }}>
+                  <input
+                    type="text"
+                    style={{ width: '100%', padding: '10px 36px 10px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }}
+                    placeholder="Search location or enter address..."
+                    value={newPlace.searchQuery}
+                    onChange={(e) => {
+                      setNewPlace({ ...newPlace, searchQuery: e.target.value });
+                      filterPlaceSuggestions(e.target.value);
+                    }}
+                    onFocus={() => { if (newPlace.searchQuery.length >= 2) filterPlaceSuggestions(newPlace.searchQuery); }}
+                    onBlur={() => setTimeout(() => setShowPlaceSuggestions(false), 200)}
+                  />
+                  {showPlaceSuggestions && placeSuggestions.length > 0 && (
+                    <div className="driver-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10 }}>
+                      {placeSuggestions.map((s, i) => (
+                        <div
+                          key={i}
+                          className="driver-search-item"
+                          onMouseDown={() => {
+                            setNewPlace({ ...newPlace, name: newPlace.name || s.label, searchQuery: s.label, address: s.label, lat: s.lat, lon: s.lon });
+                            setShowPlaceSuggestions(false);
+                          }}
+                        >
+                          <FaMapMarkerAlt className="driver-search-item-icon" />
+                          <span>{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <Button onClick={handleAddSavedPlace} loading={savingPlace} icon={<FaCheck />} style={{ width: '100%' }}>
+                  Save Place
+                </Button>
+              </div>
+            )}
+
+            {savedPlaces.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
+                <FaMapMarkerAlt size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+                <p style={{ fontWeight: 600 }}>No saved places</p>
+                <p style={{ fontSize: 13 }}>Add your frequent locations above</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {savedPlaces.map((place, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: 12, background: 'var(--card)', border: '1px solid var(--border-light)',
+                    borderRadius: 10, transition: 'all 0.2s ease'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: place.type === 'home' ? 'rgba(37, 99, 235, 0.1)' : place.type === 'work' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(139, 92, 246, 0.1)',
+                        color: place.type === 'home' ? '#2563eb' : place.type === 'work' ? '#10b981' : '#8b5cf6'
+                      }}>
+                        {place.type === 'home' ? <FaHome /> : place.type === 'work' ? <FaBuilding /> : <FaStar />}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{place.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{place.address}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveSavedPlace(idx)}
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, border: 'none',
+                        background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.2s ease', fontSize: 13
+                      }}
+                    >
+                      <FaTrashAlt />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
       )}
 
       {activeTab === 'documents' && (

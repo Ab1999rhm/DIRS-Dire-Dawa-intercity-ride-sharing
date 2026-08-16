@@ -158,15 +158,21 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
       driver,
       vehicle,
       distance,
-      eta: calculateETA(distance)
+      eta: calculateETA(distance),
+      currentArea: driver.user.currentArea?.name || null
     });
   }
 
+  const pickupAreaName = dropoffInfo?.pickupAreaName || null;
+
   allCompatibleDrivers.sort((a, b) => {
     const ratingWeight = 0.4;
-    const distanceWeight = 0.6;
-    const aScore = (a.driver.user.averageRating || 4) * ratingWeight - (a.distance / 1000) * distanceWeight;
-    const bScore = (b.driver.user.averageRating || 4) * ratingWeight - (b.distance / 1000) * distanceWeight;
+    const distanceWeight = 0.5;
+    const areaWeight = 0.1;
+    const aAreaBonus = (pickupAreaName && a.currentArea && a.currentArea.toLowerCase() === pickupAreaName.toLowerCase()) ? 1 : 0;
+    const bAreaBonus = (pickupAreaName && b.currentArea && b.currentArea.toLowerCase() === pickupAreaName.toLowerCase()) ? 1 : 0;
+    const aScore = (a.driver.user.averageRating || 4) * ratingWeight - (a.distance / 1000) * distanceWeight + aAreaBonus * areaWeight;
+    const bScore = (b.driver.user.averageRating || 4) * ratingWeight - (b.distance / 1000) * distanceWeight + bAreaBonus * areaWeight;
     return bScore - aScore;
   });
 

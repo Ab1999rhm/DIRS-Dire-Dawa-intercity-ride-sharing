@@ -125,8 +125,9 @@ export const authAPI = {
   forgotPassword: (phoneNumber) => api.post('/auth/forgot-password', { phoneNumber }),
   verifyResetOTP: (phoneNumber, otp) => api.post('/auth/verify-reset-otp', { phoneNumber, otp }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
-  updateDriverStatus: (isOnline, coordinates, serviceType, intendedDestination) => api.put('/auth/driver/status', { isOnline, coordinates, serviceType, intendedDestination }),
+  updateDriverStatus: (isOnline, coordinates, serviceType, intendedDestination, currentArea) => api.put('/auth/driver/status', { isOnline, coordinates, serviceType, intendedDestination, currentArea }),
   updateDriverDestination: (city, coordinates) => api.put('/auth/driver/destination', { city, coordinates }),
+  updateDriverArea: (area, coordinates) => api.put('/auth/driver/area', { area, coordinates }),
 };
 
 export const ridesAPI = {
@@ -650,6 +651,12 @@ export const adminAPI = {
 // Public places API (no auth)
 export const placesAPI = {
   getAll: (params) => api.get('/rides/places', { params }),
+};
+
+// Saved places API (authenticated, uses favoriteLocations in User model)
+export const savedPlacesAPI = {
+  getAll: () => api.get('/auth/profile'),
+  update: (places) => api.put('/auth/profile', { favoriteLocations: places }),
 };
 
 // Network status helper
