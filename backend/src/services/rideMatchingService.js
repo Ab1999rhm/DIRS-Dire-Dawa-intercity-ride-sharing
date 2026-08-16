@@ -28,10 +28,9 @@ const matchDestinationCity = (dropoffAddress) => {
   return null;
 };
 
-const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 15000, dropoffInfo = null) => {
+const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 15000, dropoffInfo = null, requestedVehicleType = null) => {
   const logger = require('../config/logger');
   
-  // pickupCoordinates should already be [lng, lat] from the controller
   const query = {
     role: 'driver',
     isActive: true,
@@ -41,26 +40,25 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
     }
   };
 
-  // Filter by serviceType - driver must support the requested ride type
   if (rideType === 'intra_city') {
     query.serviceType = { $in: ['intra_city', 'both'] };
   } else if (rideType === 'intercity') {
     query.serviceType = { $in: ['intercity', 'both'] };
   }
 
-  // For intercity rides, ONLY match drivers whose destination matches — strict matching
+  let destCityLabel = null;
   if (rideType === 'intercity' && dropoffInfo) {
     const destCity = matchDestinationCity(dropoffInfo.address);
     if (!destCity) {
-      // Destination not in our supported cities list — no drivers can serve this
       logger.info('Intercity ride - unsupported destination', { dropoffAddress: dropoffInfo.address });
-      return { drivers: [], noDriverReason: `No drivers available for this destination` };
+      return { drivers: [], noDriverReason: `No drivers available for this destination`, availableVehicles: [] };
     }
+    destCityLabel = destCity.label;
     query['intendedDestination.city'] = destCity.key;
     logger.info('Intercity ride - filtering by destination', { destCity: destCity.key, dropoffAddress: dropoffInfo.address });
   }
 
-  logger.info('Finding nearby drivers', { pickupCoordinates, rideType, maxDistance, query });
+  logger.info('Finding nearby drivers', { pickupCoordinates, rideType, maxDistance, requestedVehicleType, query });
 
   const nearbyUsers = await User.aggregate([
     {
@@ -78,10 +76,10 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
   logger.info('Nearby users found', { count: nearbyUsers.length });
 
   if (!nearbyUsers.length) {
-    const reason = rideType === 'intercity' && dropoffInfo
-      ? `No drivers available heading to ${matchDestinationCity(dropoffInfo.address)?.label || dropoffInfo.address}`
+    const reason = rideType === 'intercity' && destCityLabel
+      ? `No drivers available heading to ${destCityLabel}`
       : 'No nearby drivers found';
-    return { drivers: [], noDriverReason: reason };
+    return { drivers: [], noDriverReason: reason, availableVehicles: [] };
   }
 
   const driverUserIds = nearbyUsers.map(u => u._id);
@@ -95,31 +93,20 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
 
   logger.info('Drivers after filtering', { 
     totalNearbyUsers: nearbyUsers.length, 
-    driversFound: drivers.length,
-    filterCriteria: { verificationStatus: 'approved', isAvailable: true, currentTrip: null }
+    driversFound: drivers.length
   });
 
-  const nearbyDrivers = [];
+  const allCompatibleDrivers = [];
 
   for (const driver of drivers) {
     if (!driver.user || !driver.user.currentLocation || !driver.user.currentLocation.coordinates) {
-      logger.warn('Driver missing location data', { driverId: driver._id, hasUser: !!driver.user, hasLocation: !!driver.user?.currentLocation });
       continue;
     }
 
     const vehicle = await Vehicle.findOne({ driver: driver._id, isActive: true });
+    if (!vehicle) continue;
+    if (!isVehicleCompatible(vehicle, rideType)) continue;
 
-    if (!vehicle) {
-      logger.warn('Driver has no active vehicle', { driverId: driver._id });
-      continue;
-    }
-
-    if (!isVehicleCompatible(vehicle, rideType)) {
-      logger.warn('Vehicle not compatible', { driverId: driver._id, vehicleType: vehicle.vehicleType, serviceType: vehicle.serviceType, rideType });
-      continue;
-    }
-
-    // Check availability time window
     if (driver.settings?.availabilityStart && driver.settings?.availabilityEnd) {
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -129,24 +116,16 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
       const endMinutes = endH * 60 + endM;
       
       if (startMinutes <= endMinutes) {
-        // Normal shift (e.g., 08:00 - 18:00)
-        if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
-          logger.info('Driver outside availability window', { driverId: driver._id, start: driver.settings.availabilityStart, end: driver.settings.availabilityEnd });
-          continue;
-        }
+        if (currentMinutes < startMinutes || currentMinutes > endMinutes) continue;
       } else {
-        // Overnight shift (e.g., 22:00 - 06:00)
-        if (currentMinutes < startMinutes && currentMinutes > endMinutes) {
-          logger.info('Driver outside availability window', { driverId: driver._id, start: driver.settings.availabilityStart, end: driver.settings.availabilityEnd });
-          continue;
-        }
+        if (currentMinutes < startMinutes && currentMinutes > endMinutes) continue;
       }
     }
 
     const userAgg = nearbyUsers.find(u => u._id.toString() === driver.user._id.toString());
     const distance = userAgg?.distance || 0;
 
-    nearbyDrivers.push({
+    allCompatibleDrivers.push({
       driver,
       vehicle,
       distance,
@@ -154,26 +133,49 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
     });
   }
 
-  logger.info('Final nearby drivers count', { count: nearbyDrivers.length });
-
-  nearbyDrivers.sort((a, b) => {
+  allCompatibleDrivers.sort((a, b) => {
     const ratingWeight = 0.4;
     const distanceWeight = 0.6;
-
     const aScore = (a.driver.user.averageRating || 4) * ratingWeight - (a.distance / 1000) * distanceWeight;
     const bScore = (b.driver.user.averageRating || 4) * ratingWeight - (b.distance / 1000) * distanceWeight;
-
     return bScore - aScore;
   });
 
-  if (nearbyDrivers.length === 0) {
-    const reason = rideType === 'intercity' && dropoffInfo
-      ? `No drivers available heading to ${matchDestinationCity(dropoffInfo.address)?.label || dropoffInfo.address}`
-      : 'No nearby drivers found';
-    return { drivers: [], noDriverReason: reason };
+  logger.info('All compatible drivers found', { count: allCompatibleDrivers.length, requestedVehicleType });
+
+  // Two-pass matching: first try exact vehicle type, then fall back
+  if (requestedVehicleType) {
+    const exactMatches = allCompatibleDrivers.filter(d => d.vehicle.vehicleType === requestedVehicleType);
+    
+    if (exactMatches.length > 0) {
+      return { drivers: exactMatches, noDriverReason: null, availableVehicles: [] };
+    }
+
+    // No exact match — build available vehicles list from what IS available
+    const vehicleCounts = {};
+    for (const d of allCompatibleDrivers) {
+      const type = d.vehicle.vehicleType;
+      vehicleCounts[type] = (vehicleCounts[type] || 0) + 1;
+    }
+
+    const VEHICLE_LABELS = {
+      bajaj: 'Bajaj', car: 'Car', minivan: 'Minivan', minibus: 'Minibus', bus: 'Bus'
+    };
+
+    const availableVehicles = Object.entries(vehicleCounts).map(([type, count]) => ({
+      type,
+      label: VEHICLE_LABELS[type] || type,
+      count
+    }));
+
+    const requestedLabel = VEHICLE_LABELS[requestedVehicleType] || requestedVehicleType;
+    const destLabel = destCityLabel || 'this destination';
+    const reason = `No ${requestedLabel} drivers available heading to ${destLabel}`;
+
+    return { drivers: [], noDriverReason: reason, availableVehicles };
   }
 
-  return { drivers: nearbyDrivers, noDriverReason: null };
+  return { drivers: allCompatibleDrivers, noDriverReason: null, availableVehicles: [] };
 };
 
 const isVehicleCompatible = (vehicle, rideType) => {

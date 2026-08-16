@@ -187,6 +187,7 @@ const PassengerHome = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [rideState, setRideState] = useState('idle');
   const [noDriverReason, setNoDriverReason] = useState('');
+  const [availableVehicles, setAvailableVehicles] = useState([]);
   const [bookingStep, setBookingStep] = useState(1);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
@@ -402,6 +403,7 @@ const PassengerHome = () => {
     setScheduleEnabled(false);
     setScheduledTime('');
     setNoDriverReason('');
+    setAvailableVehicles([]);
     setPaymentMethod(user?.paymentMethod || 'cash');
     clearInterval(searchingIntervalRef.current);
     clearInterval(timerIntervalRef.current);
@@ -612,9 +614,11 @@ const PassengerHome = () => {
       // If backend found no nearby drivers, show no_driver immediately
       const driversCount = rideResponse?.nearbyDriversCount ?? 0;
       const reason = rideResponse?.noDriverReason || '';
+      const vehicles = rideResponse?.availableVehicles || [];
       if (driversCount === 0) {
         clearInterval(searchingIntervalRef.current);
         setNoDriverReason(reason || 'No drivers available');
+        setAvailableVehicles(vehicles);
         setRideState('no_driver');
         return;
       }
@@ -969,19 +973,52 @@ const PassengerHome = () => {
   // ─── STATE: NO DRIVER FOUND ────────────────────────────────────────
   if (rideState === 'no_driver') {
     const destLabel = dropoff ? dropoff.split(',')[0] : '';
-    const isNoDriverForDest = noDriverReason && noDriverReason.includes('No drivers available');
+    const hasAlternatives = availableVehicles.length > 0;
+    const isVehicleMismatch = hasAlternatives && noDriverReason && noDriverReason.includes('No ');
+
+    const switchVehicleType = (newType) => {
+      const match = VEHICLES.find(v => v.id === newType);
+      if (match) {
+        setSelectedVehicle(match);
+        setRideState('idle');
+        setBookingStep(4);
+        setShowBookingConfirm(true);
+      }
+    };
+
     return (
       <div className="passenger-page">
         <div className="ride-status">
           <div className="no-driver-icon">
             <FaTimesCircle />
           </div>
-          <h3>{isNoDriverForDest ? `No Drivers Going to ${destLabel}` : 'No Drivers Available'}</h3>
+          <h3>{isVehicleMismatch ? noDriverReason : noDriverReason && noDriverReason.includes('heading to') ? `No Drivers Going to ${destLabel}` : 'No Drivers Available'}</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-            {isNoDriverForDest
-              ? `There are no drivers heading to ${destLabel} right now. Please try again later or choose a different destination.`
-              : 'No nearby drivers could be found. Please try again or choose a different vehicle type.'}
+            {hasAlternatives
+              ? `But we found other vehicles heading to ${destLabel}:`
+              : noDriverReason || 'No nearby drivers could be found. Please try again or choose a different destination.'}
           </p>
+
+          {hasAlternatives && (
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 }}>
+              {availableVehicles.map(v => (
+                <button
+                  key={v.type}
+                  onClick={() => switchVehicleType(v.type)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 16px', borderRadius: 12,
+                    border: '2px solid var(--primary)', background: 'var(--primary-50, #eff6ff)',
+                    cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'var(--primary)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {v.label} <span style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '2px 8px', fontSize: 11 }}>{v.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="no-driver-actions">
             <button className="passenger-primary-btn" onClick={handleRetryFindDriver}>
               <FaCar /> Try Again

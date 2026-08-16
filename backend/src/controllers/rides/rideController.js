@@ -142,11 +142,13 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
     toLngLat(pickupLocation.coordinates),
     normalizedRideType,
     15000,
-    dropoffLocation
+    dropoffLocation,
+    vehicleType
   );
 
   const nearbyDrivers = matchResult.drivers || [];
   const noDriverReason = matchResult.noDriverReason || null;
+  const availableVehicles = matchResult.availableVehicles || [];
 
   const io = getIO();
 
@@ -171,15 +173,18 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
   logger.info('Ride request created', {
     rideRequestId: rideRequest._id,
     rideType: normalizedRideType,
+    vehicleType,
     nearbyDriversCount: nearbyDrivers.length,
-    noDriverReason
+    noDriverReason,
+    availableVehiclesCount: availableVehicles.length
   });
 
   res.status(201).json({
     message: noDriverReason || 'Ride request created',
     rideRequest,
     nearbyDriversCount: nearbyDrivers.length,
-    noDriverReason
+    noDriverReason,
+    availableVehicles
   });
 });
 
