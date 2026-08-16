@@ -638,6 +638,18 @@ export const adminAPI = {
   updateWebhook: (id, data) => api.put(`/admin/config/webhooks/${id}`, data),
   deleteWebhook: (id) => api.delete(`/admin/config/webhooks/${id}`),
   testWebhook: (id) => api.post(`/admin/config/webhooks/${id}/test`),
+  // Places
+  getPlaces: (params) => api.get('/admin/config/places', { params }),
+  getPlace: (id) => api.get(`/admin/config/places/${id}`),
+  createPlace: (data) => api.post('/admin/config/places', data),
+  updatePlace: (id, data) => api.put(`/admin/config/places/${id}`, data),
+  deletePlace: (id) => api.delete(`/admin/config/places/${id}`),
+  bulkCreatePlaces: (data) => api.post('/admin/config/places/bulk', data),
+};
+
+// Public places API (no auth)
+export const placesAPI = {
+  getAll: (params) => api.get('/rides/places', { params }),
 };
 
 // Network status helper

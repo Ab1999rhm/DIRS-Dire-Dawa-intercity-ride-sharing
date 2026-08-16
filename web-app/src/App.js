@@ -50,6 +50,7 @@ const SupportSystem = React.lazy(() => import('./pages/admin/SupportDashboard'))
 const AnalyticsReporting = React.lazy(() => import('./pages/admin/AnalyticsReporting'));
 const ContentNotifications = React.lazy(() => import('./pages/admin/ContentNotifications'));
 const SystemConfiguration = React.lazy(() => import('./pages/admin/SystemConfiguration'));
+const AdminPlaces = React.lazy(() => import('./pages/admin/AdminPlaces'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 const LoadingSpinner = ({ waking }) => (
@@ -223,6 +224,7 @@ const AdminRoutes = React.memo(() => (
       <Route path="analytics" element={<AnalyticsReporting />} />
       <Route path="content" element={<ContentNotifications />} />
       <Route path="configuration" element={<SystemConfiguration />} />
+      <Route path="places" element={<AdminPlaces />} />
       <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>
   </Suspense>

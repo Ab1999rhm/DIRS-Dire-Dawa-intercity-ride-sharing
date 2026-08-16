@@ -3,6 +3,20 @@ const router = express.Router();
 const rideController = require('../../controllers/rides/rideController');
 const { protect, authorize } = require('../../middleware/auth');
 const { validateRideRequest } = require('../../middleware/validation');
+const Place = require('../../models/Place');
+
+// Public endpoint - fetch active places for passenger/driver autocomplete
+router.get('/places', async (req, res) => {
+  try {
+    const { type } = req.query;
+    const query = { isActive: true };
+    if (type) query.type = type;
+    const places = await Place.find(query).sort({ sortOrder: 1, name: 1 }).select('-createdBy -updatedBy -__v');
+    res.json({ places });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch places' });
+  }
+});
 
 router.post('/estimate', protect, rideController.estimateFare);
 

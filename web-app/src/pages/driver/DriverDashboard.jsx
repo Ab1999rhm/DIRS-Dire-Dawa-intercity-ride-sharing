@@ -17,6 +17,7 @@ import {
 import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
 import INTERCITY_DESTINATIONS from '../../constants/intercityDestinations';
+import { placesAPI } from '../../services/api';
 import './Driver.css';
 
 
@@ -84,6 +85,16 @@ const DriverDashboard = () => {
   const [reportCategory, setReportCategory] = useState('');
   const [reportDescription, setReportDescription] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [destinations, setDestinations] = useState(INTERCITY_DESTINATIONS);
+
+  useEffect(() => {
+    placesAPI.getAll({ type: 'intercity' }).then(res => {
+      const places = (res.data.places || []).map(p => ({
+        key: p.key, label: p.label || p.name, emoji: p.emoji || '', lat: p.coordinates.lat, lon: p.coordinates.lon
+      }));
+      if (places.length > 0) setDestinations(places);
+    }).catch(() => {});
+  }, []);
 
   // Sync isOnline with user data when it loads async
   useEffect(() => {
@@ -499,7 +510,7 @@ const DriverDashboard = () => {
             <FaMapMarkerAlt /> Where are you heading? (Intercity)
           </p>
           <div className="destination-grid">
-            {INTERCITY_DESTINATIONS.map(dest => (
+            {destinations.map(dest => (
               <button
                 key={dest.key}
                 className={`destination-chip ${intendedDestination === dest.key ? 'active' : ''}`}

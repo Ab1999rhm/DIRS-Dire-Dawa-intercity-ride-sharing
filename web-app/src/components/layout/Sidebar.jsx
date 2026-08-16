@@ -108,6 +108,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       color: '#6366f1',
       items: [
         { path: '/admin/content', icon: <FaNewspaper />, label: t('admin.contentNotifications'), badge: null },
+        { path: '/admin/places', icon: <FaMapMarkerAlt />, label: 'Places', badge: null },
         { path: '/admin/configuration', icon: <FaWrench />, label: t('admin.systemConfiguration'), badge: null },
       ]
     },

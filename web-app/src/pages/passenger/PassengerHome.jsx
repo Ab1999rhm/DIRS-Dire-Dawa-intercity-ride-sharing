@@ -12,6 +12,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import INTERCITY_DESTINATIONS_RAW from '../../constants/intercityDestinations';
+import { placesAPI } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI, ratingsAPI, sosAPI, paymentsAPI } from '../../services/api';
@@ -157,8 +158,6 @@ const INTERCITY_PLACES = INTERCITY_DESTINATIONS_RAW.map(d => ({
   key: d.key,
 }));
 
-const HARDCODED_CITIES = [...DIRE_DAWA_PLACES, ...INTERCITY_PLACES];
-
 const isWithinDireDawa = (label, coords) => {
   if (label && label.toLowerCase().includes('dire dawa')) return true;
   if (coords && coords.length === 2) {
@@ -173,6 +172,9 @@ const PassengerHome = () => {
   const { user, socket, tripStatusUpdate, rideAccepted, driverLocation, notifications } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+
+  const [intraCityPlaces, setIntraCityPlaces] = useState(DIRE_DAWA_PLACES);
+  const [intercityPlaces, setIntercityPlaces] = useState(INTERCITY_PLACES);
 
   const [pickup, setPickup] = useState('');
   const [dropoff, setDropoff] = useState('');
@@ -257,6 +259,28 @@ const PassengerHome = () => {
   const timerIntervalRef = useRef(null);
 
   useEffect(() => { fetchRecentTrips(); fetchStats(); }, []);
+
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      try {
+        const [intraRes, interRes] = await Promise.all([
+          placesAPI.getAll({ type: 'intra_city' }),
+          placesAPI.getAll({ type: 'intercity' })
+        ]);
+        const intra = (intraRes.data.places || []).map(p => ({
+          label: p.label || p.name, lat: p.coordinates.lat, lon: p.coordinates.lon, key: p.key
+        }));
+        const inter = (interRes.data.places || []).map(p => ({
+          label: p.label || p.name, lat: p.coordinates.lat, lon: p.coordinates.lon, key: p.key
+        }));
+        if (intra.length > 0) setIntraCityPlaces(intra);
+        if (inter.length > 0) setIntercityPlaces(inter);
+      } catch (_) {
+        // Fallback to hardcoded lists
+      }
+    };
+    fetchPlaces();
+  }, []);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -442,8 +466,8 @@ const PassengerHome = () => {
 
       // For intraCity, only show Dire Dawa places first; for intercity show all
       const localPool = rideType === 'intraCity'
-        ? [...DIRE_DAWA_PLACES, ...INTERCITY_PLACES]
-        : [...INTERCITY_PLACES, ...DIRE_DAWA_PLACES];
+        ? [...intraCityPlaces, ...intercityPlaces]
+        : [...intercityPlaces, ...intraCityPlaces];
 
       const localMatches = localPool.filter(c =>
         c.label.toLowerCase().includes(lowerQuery)

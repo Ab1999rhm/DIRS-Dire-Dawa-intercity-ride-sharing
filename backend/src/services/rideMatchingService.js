@@ -1,8 +1,10 @@
 const Driver = require('../models/Driver');
 const Vehicle = require('../models/Vehicle');
 const User = require('../models/User');
+const Place = require('../models/Place');
 
-const INTERCITY_DESTINATIONS = {
+// Fallback hardcoded destinations (used if DB is empty)
+const FALLBACK_DESTINATIONS = {
   'harar':        { label: 'Harar',        coordinates: [42.1200, 9.3110] },
   'addis ababa':  { label: 'Addis Ababa',  coordinates: [38.7578, 9.0192] },
   'jijiga':       { label: 'Jijiga',       coordinates: [42.8000, 9.3500] },
@@ -19,10 +21,37 @@ const INTERCITY_DESTINATIONS = {
   'asebe teferi': { label: 'Asebe Teferi', coordinates: [40.8667, 9.0667] },
 };
 
-const matchDestinationCity = (dropoffAddress) => {
+let cachedDestinations = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const getDestinations = async () => {
+  const now = Date.now();
+  if (cachedDestinations && (now - cacheTimestamp) < CACHE_TTL) {
+    return cachedDestinations;
+  }
+  try {
+    const places = await Place.find({ type: 'intercity', isActive: true });
+    if (places.length > 0) {
+      const map = {};
+      for (const p of places) {
+        map[p.key] = { label: p.label || p.name, coordinates: [p.coordinates.lon, p.coordinates.lat] };
+      }
+      cachedDestinations = map;
+      cacheTimestamp = now;
+      return map;
+    }
+  } catch (_) {}
+  cachedDestinations = FALLBACK_DESTINATIONS;
+  cacheTimestamp = now;
+  return FALLBACK_DESTINATIONS;
+};
+
+const matchDestinationCity = async (dropoffAddress) => {
   if (!dropoffAddress) return null;
   const lower = dropoffAddress.toLowerCase();
-  for (const [key, dest] of Object.entries(INTERCITY_DESTINATIONS)) {
+  const destinations = await getDestinations();
+  for (const [key, dest] of Object.entries(destinations)) {
     if (lower.includes(key)) return { key, ...dest };
   }
   return null;
@@ -48,7 +77,7 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
 
   let destCityLabel = null;
   if (rideType === 'intercity' && dropoffInfo) {
-    const destCity = matchDestinationCity(dropoffInfo.address);
+    const destCity = await matchDestinationCity(dropoffInfo.address);
     if (!destCity) {
       logger.info('Intercity ride - unsupported destination', { dropoffAddress: dropoffInfo.address });
       return { drivers: [], noDriverReason: `No drivers available for this destination`, availableVehicles: [] };
@@ -191,4 +220,4 @@ const calculateETA = (distanceMeters) => {
   return Math.ceil(distanceMeters / avgSpeedMs / 60);
 };
 
-module.exports = { findNearbyDrivers, calculateETA, INTERCITY_DESTINATIONS, matchDestinationCity };
+module.exports = { findNearbyDrivers, calculateETA, matchDestinationCity, getDestinations };
