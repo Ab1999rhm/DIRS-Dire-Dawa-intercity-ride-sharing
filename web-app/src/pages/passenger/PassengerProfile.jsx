@@ -3,11 +3,11 @@ import {
   FaUser, FaPhone, FaEnvelope, FaSignOutAlt, FaPlus, FaTrash, FaGlobe,
   FaBell, FaShieldAlt, FaCamera, FaHome, FaBuilding, FaSchool, FaMapMarkerAlt,
   FaCreditCard, FaMoneyBillWave, FaWallet, FaCheckCircle, FaExclamationTriangle,
-  FaToggleOn, FaToggleOff, FaUserFriends, FaGift, FaCopy, FaMobileAlt
+  FaToggleOn, FaToggleOff, FaUserFriends, FaGift, FaCopy, FaMobileAlt, FaSearch, FaTimes
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, referralAPI, documentsAPI, paymentsAPI } from '../../services/api';
+import { authAPI, referralAPI, documentsAPI, paymentsAPI, placesAPI } from '../../services/api';
 import { uploadToCloudinary } from '../../services/cloudinary';
 import { Card, Button, Input, ToggleButton } from '../../components/common';
 import { useToast } from '../../components/common/Toast';
@@ -49,6 +49,12 @@ const PassengerProfile = () => {
   const [placeName, setPlaceName] = useState('');
   const [placeAddress, setPlaceAddress] = useState('');
   const [placeType, setPlaceType] = useState('home');
+  const [placeLat, setPlaceLat] = useState(null);
+  const [placeLon, setPlaceLon] = useState(null);
+  const [placeSearchQuery, setPlaceSearchQuery] = useState('');
+  const [placeSuggestions, setPlaceSuggestions] = useState([]);
+  const [showPlaceSuggestions, setShowPlaceSuggestions] = useState(false);
+  const [intraCityPlaces, setIntraCityPlaces] = useState([]);
 
   // Withdrawal payout account (saved once, reused by wallet withdrawals)
   const [withdrawalAccount, setWithdrawalAccount] = useState(null);
@@ -141,6 +147,23 @@ const PassengerProfile = () => {
       .then(res => setBanks(res.data.banks || []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    placesAPI.getAll({ type: 'intra_city' }).then(res => {
+      const places = (res.data.places || []).map(p => ({
+        key: p.key, label: p.label || p.name, lat: p.coordinates.lat, lon: p.coordinates.lon
+      }));
+      if (places.length > 0) setIntraCityPlaces(places);
+    }).catch(() => {});
+  }, []);
+
+  const filterPlaceSuggestions = (query) => {
+    if (query.length < 2) { setPlaceSuggestions([]); return; }
+    const lower = query.toLowerCase();
+    const matches = intraCityPlaces.filter(p => p.label.toLowerCase().includes(lower) || p.key.includes(lower));
+    setPlaceSuggestions(matches.slice(0, 6));
+    setShowPlaceSuggestions(matches.length > 0);
+  };
 
   const handleSaveWithdrawAccount = async () => {
     if (!withdrawAccountName.trim() || !withdrawAccountNumber.trim()) {
@@ -241,6 +264,9 @@ const PassengerProfile = () => {
       return;
     }
     const newPlace = { name: placeName, address: placeAddress, type: placeType };
+    if (placeLat && placeLon) {
+      newPlace.location = { type: 'Point', coordinates: [placeLon, placeLat] };
+    }
     const updated = [...favoriteLocations, newPlace];
     setFavoriteLocations(updated);
     const res = await authAPI.updateProfile({ favoriteLocations: updated });
@@ -250,6 +276,9 @@ const PassengerProfile = () => {
     setPlaceName('');
     setPlaceAddress('');
     setPlaceType('home');
+    setPlaceLat(null);
+    setPlaceLon(null);
+    setPlaceSearchQuery('');
     setShowPlaceForm(false);
     toast.success('Place saved');
   };
@@ -592,15 +621,65 @@ const PassengerProfile = () => {
                 onChange={e => setPlaceName(e.target.value)}
                 placeholder="e.g. Home, Office"
               />
-              <Input
-                label={t('passenger.address')}
-                value={placeAddress}
-                onChange={e => setPlaceAddress(e.target.value)}
-                placeholder={t('passenger.enterAddress')}
-                style={{ marginTop: 8 }}
-              />
+              <div style={{ position: 'relative' }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>{t('passenger.address')}</label>
+                <div style={{ position: 'relative' }}>
+                  <FaSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 14, pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    style={{ width: '100%', padding: '10px 36px 10px 36px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }}
+                    placeholder="Search location or enter address..."
+                    value={placeSearchQuery}
+                    onChange={(e) => {
+                      setPlaceSearchQuery(e.target.value);
+                      setPlaceAddress(e.target.value);
+                      setPlaceLat(null);
+                      setPlaceLon(null);
+                      filterPlaceSuggestions(e.target.value);
+                    }}
+                    onFocus={() => { if (placeSearchQuery.length >= 2) filterPlaceSuggestions(placeSearchQuery); }}
+                    onBlur={() => setTimeout(() => setShowPlaceSuggestions(false), 200)}
+                  />
+                  {placeSearchQuery && (
+                    <button
+                      onClick={() => { setPlaceSearchQuery(''); setPlaceAddress(''); setPlaceLat(null); setPlaceLon(null); setPlaceSuggestions([]); setShowPlaceSuggestions(false); }}
+                      style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}
+                    >
+                      <FaTimes />
+                    </button>
+                  )}
+                </div>
+                {showPlaceSuggestions && placeSuggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--card)', border: '1px solid var(--border-light)', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, maxHeight: 180, overflowY: 'auto', marginTop: 4 }}>
+                    {placeSuggestions.map((s, i) => (
+                      <div
+                        key={i}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)', fontSize: 13, transition: 'background 0.15s' }}
+                        onMouseDown={() => {
+                          setPlaceName(placeName || s.label.split(',')[0]);
+                          setPlaceAddress(s.label);
+                          setPlaceSearchQuery(s.label);
+                          setPlaceLat(s.lat);
+                          setPlaceLon(s.lon);
+                          setShowPlaceSuggestions(false);
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-50)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <FaMapMarkerAlt style={{ color: 'var(--primary)', fontSize: 12, flexShrink: 0 }} />
+                        <span>{s.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {placeLat && placeLon && (
+                <div style={{ fontSize: 12, color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <FaMapMarkerAlt /> Location captured ({placeLat.toFixed(4)}, {placeLon.toFixed(4)})
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-                <Button variant="ghost" size="sm" onClick={() => { setShowPlaceForm(false); setPlaceName(''); setPlaceAddress(''); }}>{t('common.cancel')}</Button>
+                <Button variant="ghost" size="sm" onClick={() => { setShowPlaceForm(false); setPlaceName(''); setPlaceAddress(''); setPlaceLat(null); setPlaceLon(null); setPlaceSearchQuery(''); }}>{t('common.cancel')}</Button>
                 <Button variant="primary" size="sm" onClick={handleAddPlace}>{t('passenger.savePlace')}</Button>
               </div>
             </div>
@@ -623,6 +702,11 @@ const PassengerProfile = () => {
                   <div className="saved-place-info">
                     <h4>{place.name}</h4>
                     <p>{place.address}</p>
+                    {place.location?.coordinates && (
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+                        <FaMapMarkerAlt size={10} /> Coords saved
+                      </p>
+                    )}
                   </div>
                   <button className="saved-place-delete" onClick={() => handleDeletePlace(place._id)}>
                     <FaTrash size={14} />

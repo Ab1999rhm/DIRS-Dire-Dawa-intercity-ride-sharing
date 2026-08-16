@@ -5,7 +5,8 @@ import {
   FaExchangeAlt, FaClock, FaMoneyBillWave, FaPhone, FaRoute, FaWallet,
   FaUserShield, FaUsers, FaMobileAlt, FaBell, FaMotorcycle,
   FaShuttleVan, FaBus, FaBolt, FaShareAlt, FaTimes, FaCheck, FaChevronRight,
-  FaLocationArrow, FaSpinner, FaTimesCircle, FaSmile, FaThumbsUp, FaTag, FaChair, FaComments, FaQrcode, FaWifi, FaSms, FaCalculator, FaArrowRight
+  FaLocationArrow, FaSpinner, FaTimesCircle, FaSmile, FaThumbsUp, FaTag, FaChair, FaComments, FaQrcode, FaWifi, FaSms, FaCalculator, FaArrowRight,
+  FaHome, FaBuilding, FaSchool, FaBriefcase
 } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -175,11 +176,15 @@ const PassengerHome = () => {
 
   const [intraCityPlaces, setIntraCityPlaces] = useState(DIRE_DAWA_PLACES);
   const [intercityPlaces, setIntercityPlaces] = useState(INTERCITY_PLACES);
+  const [savedPlaces, setSavedPlaces] = useState([]);
+  const [recentPlaces, setRecentPlaces] = useState([]);
 
   const [pickup, setPickup] = useState('');
   const [dropoff, setDropoff] = useState('');
   const [pickupCoords, setPickupCoords] = useState(null);
   const [dropoffCoords, setDropoffCoords] = useState(null);
+  const [pickupPlaceId, setPickupPlaceId] = useState(null);
+  const [dropoffPlaceId, setDropoffPlaceId] = useState(null);
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
@@ -280,6 +285,50 @@ const PassengerHome = () => {
       }
     };
     fetchPlaces();
+  }, []);
+
+  useEffect(() => {
+    if (user?.favoriteLocations?.length > 0) {
+      const places = user.favoriteLocations.map(p => ({
+        label: p.name, sublabel: p.address, lat: p.location?.coordinates?.[1], lon: p.location?.coordinates?.[0],
+        key: `saved_${p._id}`, category: p.type || 'other', source: 'saved'
+      })).filter(p => p.lat && p.lon);
+      setSavedPlaces(places);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const loadRecentPlaces = async () => {
+      try {
+        const res = await ridesAPI.passengerTrips({ limit: 10, status: 'completed' });
+        const trips = res.data.trips || [];
+        const placeMap = new Map();
+        for (const trip of trips) {
+          if (trip.pickupLocation?.address && trip.pickupLocation?.coordinates) {
+            const coords = trip.pickupLocation.coordinates.coordinates || trip.pickupLocation.coordinates;
+            const key = trip.pickupLocation.address.substring(0, 40);
+            if (!placeMap.has(key)) {
+              placeMap.set(key, {
+                label: trip.pickupLocation.address, lat: coords[1] ?? coords[0], lon: coords[0] ?? coords[1],
+                key: `recent_pickup_${placeMap.size}`, category: 'recent', source: 'recent'
+              });
+            }
+          }
+          if (trip.dropoffLocation?.address && trip.dropoffLocation?.coordinates) {
+            const coords = trip.dropoffLocation.coordinates.coordinates || trip.dropoffLocation.coordinates;
+            const key = trip.dropoffLocation.address.substring(0, 40);
+            if (!placeMap.has(key)) {
+              placeMap.set(key, {
+                label: trip.dropoffLocation.address, lat: coords[1] ?? coords[0], lon: coords[0] ?? coords[1],
+                key: `recent_dropoff_${placeMap.size}`, category: 'recent', source: 'recent'
+              });
+            }
+          }
+        }
+        setRecentPlaces(Array.from(placeMap.values()).slice(0, 6));
+      } catch (_) {}
+    };
+    loadRecentPlaces();
   }, []);
 
   useEffect(() => {
@@ -428,6 +477,8 @@ const PassengerHome = () => {
     setScheduledTime('');
     setNoDriverReason('');
     setAvailableVehicles([]);
+    setPickupPlaceId(null);
+    setDropoffPlaceId(null);
     setPaymentMethod(user?.paymentMethod || 'cash');
     clearInterval(searchingIntervalRef.current);
     clearInterval(timerIntervalRef.current);
@@ -464,6 +515,15 @@ const PassengerHome = () => {
       }
       const lowerQuery = query.toLowerCase();
 
+      // Saved places first, then recent, then local DB/hardcoded, then Nominatim
+      const savedMatches = savedPlaces.filter(p =>
+        p.label.toLowerCase().includes(lowerQuery) || (p.sublabel && p.sublabel.toLowerCase().includes(lowerQuery))
+      ).map(p => ({ ...p, source: 'saved' }));
+
+      const recentMatches = recentPlaces.filter(p =>
+        p.label.toLowerCase().includes(lowerQuery)
+      ).map(p => ({ ...p, source: 'recent' }));
+
       // For intraCity, only show Dire Dawa places first; for intercity show all
       const localPool = rideType === 'intraCity'
         ? [...intraCityPlaces, ...intercityPlaces]
@@ -471,10 +531,11 @@ const PassengerHome = () => {
 
       const localMatches = localPool.filter(c =>
         c.label.toLowerCase().includes(lowerQuery)
-      );
+      ).map(p => ({ ...p, source: 'place' }));
 
       if (query.length < 3) {
-        setter(localMatches.slice(0, 8));
+        const combined = [...savedMatches, ...recentMatches, ...localMatches];
+        setter(combined.slice(0, 10));
         return;
       }
 
@@ -502,23 +563,25 @@ const PassengerHome = () => {
           label: item.display_name,
           lat: parseFloat(item.lat),
           lon: parseFloat(item.lon),
+          source: 'nominatim'
         }));
 
-        // Local Dire Dawa places always appear first, then remote
-        const combined = [...localMatches, ...remoteResults];
+        // Saved > Recent > Local > Remote
+        const combined = [...savedMatches, ...recentMatches, ...localMatches, ...remoteResults];
         const seen = new Set();
         const unique = combined.filter(item => {
-          const key = `${parseFloat(item.lat).toFixed(3)},${parseFloat(item.lon).toFixed(3)}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
+          const k = `${parseFloat(item.lat).toFixed(3)},${parseFloat(item.lon).toFixed(3)}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
           return true;
         });
-        setter(unique.slice(0, 8));
+        setter(unique.slice(0, 10));
       } catch (_) {
-        setter(localMatches.slice(0, 8));
+        const combined = [...savedMatches, ...recentMatches, ...localMatches];
+        setter(combined.slice(0, 10));
       }
     }, 400),
-    [rideType]
+    [rideType, savedPlaces, recentPlaces]
   );
 
   const swapLocations = () => {
@@ -601,8 +664,8 @@ const PassengerHome = () => {
 
     try {
       const rideData = await ridesAPI.create({
-        pickupLocation: { address: pickup, coordinates: pickupCoords },
-        dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
+        pickupLocation: { address: pickup, coordinates: pickupCoords, placeId: pickupPlaceId || undefined },
+        dropoffLocation: { address: dropoff, coordinates: dropoffCoords, placeId: dropoffPlaceId || undefined },
         rideType,
         vehicleType: backendVehicleType,
         paymentMethod,
@@ -1506,6 +1569,7 @@ const PassengerHome = () => {
                 onChange={(e) => {
                   setPickup(e.target.value);
                   setPickupCoords(null);
+                  setPickupPlaceId(null);
                   setShowPickupSuggestions(true);
                   fetchSuggestions(e.target.value, setPickupSuggestions);
                 }}
@@ -1521,12 +1585,24 @@ const PassengerHome = () => {
                       onMouseDown={() => {
                         setPickup(s.label);
                         setPickupCoords([s.lat, s.lon]);
+                        setPickupPlaceId(s.key || null);
                         setPickupSuggestions([]);
                         setShowPickupSuggestions(false);
                       }}
                     >
-                      <FaMapMarkerAlt className="suggestion-icon" />
-                      <span>{s.label}</span>
+                      {s.source === 'saved' ? <FaHome className="suggestion-icon" style={{ color: '#2563eb' }} /> :
+                       s.source === 'recent' ? <FaHistory className="suggestion-icon" style={{ color: '#10b981' }} /> :
+                       s.category ? (() => {
+                         const catIcons = { neighborhood: FaMapMarkerAlt, market: FaBuilding, hospital: FaSchool, school: FaSchool, transport: FaRoute, hotel: FaBuilding, government: FaBuilding, landmark: FaMapMarkerAlt };
+                         const Icon = catIcons[s.category] || FaMapMarkerAlt;
+                         return <Icon className="suggestion-icon" />;
+                       })() : <FaMapMarkerAlt className="suggestion-icon" />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
+                        {s.sublabel && <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.sublabel}</span>}
+                      </div>
+                      {s.source === 'saved' && <span style={{ fontSize: 9, fontWeight: 700, color: '#2563eb', background: 'rgba(37,99,235,0.1)', padding: '2px 6px', borderRadius: 8, flexShrink: 0 }}>SAVED</span>}
+                      {s.source === 'recent' && <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: 8, flexShrink: 0 }}>RECENT</span>}
                     </div>
                   ))}
                 </div>
@@ -1550,6 +1626,7 @@ const PassengerHome = () => {
                 onChange={(e) => {
                   setDropoff(e.target.value);
                   setDropoffCoords(null);
+                  setDropoffPlaceId(null);
                   setShowDropoffSuggestions(true);
                   fetchSuggestions(e.target.value, setDropoffSuggestions);
                 }}
@@ -1565,12 +1642,24 @@ const PassengerHome = () => {
                       onMouseDown={() => {
                         setDropoff(s.label);
                         setDropoffCoords([s.lat, s.lon]);
+                        setDropoffPlaceId(s.key || null);
                         setDropoffSuggestions([]);
                         setShowDropoffSuggestions(false);
                       }}
                     >
-                      <FaMapMarkerAlt className="suggestion-icon" />
-                      <span>{s.label}</span>
+                      {s.source === 'saved' ? <FaHome className="suggestion-icon" style={{ color: '#2563eb' }} /> :
+                       s.source === 'recent' ? <FaHistory className="suggestion-icon" style={{ color: '#10b981' }} /> :
+                       s.category ? (() => {
+                         const catIcons = { neighborhood: FaMapMarkerAlt, market: FaBuilding, hospital: FaSchool, school: FaSchool, transport: FaRoute, hotel: FaBuilding, government: FaBuilding, landmark: FaMapMarkerAlt };
+                         const Icon = catIcons[s.category] || FaMapMarkerAlt;
+                         return <Icon className="suggestion-icon" />;
+                       })() : <FaMapMarkerAlt className="suggestion-icon" />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
+                        {s.sublabel && <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.sublabel}</span>}
+                      </div>
+                      {s.source === 'saved' && <span style={{ fontSize: 9, fontWeight: 700, color: '#2563eb', background: 'rgba(37,99,235,0.1)', padding: '2px 6px', borderRadius: 8, flexShrink: 0 }}>SAVED</span>}
+                      {s.source === 'recent' && <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '2px 6px', borderRadius: 8, flexShrink: 0 }}>RECENT</span>}
                     </div>
                   ))}
                 </div>

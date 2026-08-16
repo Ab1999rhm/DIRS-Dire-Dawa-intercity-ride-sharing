@@ -278,8 +278,20 @@ const PassengerHistory = () => {
                   const params = new URLSearchParams();
                   if (trip.pickupLocation?.address) params.set('pickup', trip.pickupLocation.address);
                   if (trip.dropoffLocation?.address) params.set('dropoff', trip.dropoffLocation.address);
-                  if (trip.pickupLocation?.coordinates) params.set('pickupCoords', JSON.stringify(trip.pickupLocation.coordinates));
-                  if (trip.dropoffLocation?.coordinates) params.set('dropoffCoords', JSON.stringify(trip.dropoffLocation.coordinates));
+                  const fixCoords = (loc) => {
+                    if (!loc?.coordinates) return null;
+                    const c = loc.coordinates.coordinates || loc.coordinates;
+                    if (!Array.isArray(c) || c.length < 2) return null;
+                    let [v1, v2] = [parseFloat(c[0]), parseFloat(c[1])];
+                    if (v1 > 30 && v2 < 20) return [v2, v1];
+                    return [v1, v2];
+                  };
+                  const pc = fixCoords(trip.pickupLocation);
+                  const dc = fixCoords(trip.dropoffLocation);
+                  if (pc) params.set('pickupCoords', JSON.stringify(pc));
+                  if (dc) params.set('dropoffCoords', JSON.stringify(dc));
+                  if (trip.pickupLocation?.placeId) params.set('pickupPlaceId', trip.pickupLocation.placeId);
+                  if (trip.dropoffLocation?.placeId) params.set('dropoffPlaceId', trip.dropoffLocation.placeId);
                   navigate(`/passenger?${params.toString()}`);
                 }}
                 style={{
