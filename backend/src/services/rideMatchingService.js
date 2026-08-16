@@ -21,9 +21,50 @@ const FALLBACK_DESTINATIONS = {
   'asebe teferi': { label: 'Asebe Teferi', coordinates: [40.8667, 9.0667] },
 };
 
+// Common aliases → canonical city key
+const CITY_ALIASES = {
+  'dire dawa': 'chiro',
+  'dire': 'chiro',
+  'addis': 'addis ababa',
+  'bahirdar': 'bahir dar',
+  'bahirdar': 'bahir dar',
+  'bahri dar': 'bahir dar',
+  'debremarkos': 'debre markos',
+  'debre markos': 'debre markos',
+  'mekelle': 'mekelle',
+  'mekelle': 'mekelle',
+  'awash': 'awash',
+  'hawassa': 'hawassa',
+  'hawasa': 'hawassa',
+  'combolcha': 'combolcha',
+  'combolacha': 'combolcha',
+  'asebe teferi': 'asebe teferi',
+  'asabe': 'asebe teferi',
+  'aseba': 'asebe teferi',
+};
+
+const levenshteinDistance = (a, b) => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return matrix[b.length][a.length];
+};
+
 let cachedDestinations = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 const getDestinations = async () => {
   const now = Date.now();
@@ -47,13 +88,73 @@ const getDestinations = async () => {
   return FALLBACK_DESTINATIONS;
 };
 
-const matchDestinationCity = async (dropoffAddress) => {
-  if (!dropoffAddress) return null;
-  const lower = dropoffAddress.toLowerCase();
+const matchDestinationCity = async (dropoffAddress, placeId) => {
+  if (!dropoffAddress && !placeId) return null;
   const destinations = await getDestinations();
-  for (const [key, dest] of Object.entries(destinations)) {
-    if (lower.includes(key)) return { key, ...dest };
+
+  // 1. Direct placeId match (highest confidence)
+  if (placeId) {
+    try {
+      const place = await Place.findOne({ _id: placeId, type: 'intercity', isActive: true });
+      if (place && destinations[place.key]) {
+        return { key: place.key, ...destinations[place.key] };
+      }
+    } catch (_) {}
   }
+
+  const lower = dropoffAddress.toLowerCase().trim();
+
+  // 2. Exact key match
+  if (destinations[lower]) return { key: lower, ...destinations[lower] };
+
+  // 3. Alias match
+  if (CITY_ALIASES[lower]) {
+    const key = CITY_ALIASES[lower];
+    if (destinations[key]) return { key, ...destinations[key] };
+  }
+
+  // 4. Substring match (existing behavior)
+  for (const [key, dest] of Object.entries(destinations)) {
+    if (lower.includes(key) || key.includes(lower)) return { key, ...dest };
+  }
+
+  // 5. Fuzzy match — Levenshtein distance ≤ 2 for short names, ≤ 3 for longer
+  let bestKey = null;
+  let bestDist = Infinity;
+  const words = lower.split(/\s+/);
+  for (const [key, dest] of Object.entries(destinations)) {
+    const keyWords = key.split(/\s+/);
+    // Check individual words
+    for (const w of words) {
+      if (w.length < 3) continue;
+      for (const kw of keyWords) {
+        if (kw.length < 3) continue;
+        const maxDist = Math.min(2, Math.floor(kw.length / 3) + 1);
+        const dist = levenshteinDistance(w, kw);
+        if (dist <= maxDist && dist < bestDist) {
+          bestDist = dist;
+          bestKey = key;
+        }
+      }
+    }
+    // Also check full string
+    const maxFullDist = lower.length <= 5 ? 1 : 2;
+    const fullDist = levenshteinDistance(lower, key);
+    if (fullDist <= maxFullDist && fullDist < bestDist) {
+      bestDist = fullDist;
+      bestKey = key;
+    }
+  }
+  if (bestKey) return { key: bestKey, ...destinations[bestKey] };
+
+  // 6. Partial word overlap — user typed part of the city name
+  for (const [key, dest] of Object.entries(destinations)) {
+    const keyParts = key.split(/\s+/);
+    for (const part of keyParts) {
+      if (part.length >= 4 && lower.includes(part)) return { key, ...dest };
+    }
+  }
+
   return null;
 };
 
@@ -77,7 +178,7 @@ const findNearbyDrivers = async (pickupCoordinates, rideType, maxDistance = 1500
 
   let destCityLabel = null;
   if (rideType === 'intercity' && dropoffInfo) {
-    const destCity = await matchDestinationCity(dropoffInfo.address);
+    const destCity = await matchDestinationCity(dropoffInfo.address, dropoffInfo.placeId);
     if (!destCity) {
       logger.info('Intercity ride - unsupported destination', { dropoffAddress: dropoffInfo.address });
       return { drivers: [], noDriverReason: `No drivers available for this destination`, availableVehicles: [] };
