@@ -133,6 +133,7 @@ const AdminPlaces = () => {
 
   const intraCityCount = places.filter(p => p.type === 'intra_city').length;
   const intercityCount = places.filter(p => p.type === 'intercity').length;
+  const activeCount = places.filter(p => p.isActive).length;
 
   return (
     <div className="admin-page">
@@ -187,7 +188,7 @@ const AdminPlaces = () => {
               placeholder="Search places..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ padding: '8px 12px', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 13 }}
+              style={{ padding: '8px 12px', border: '1.5px solid var(--border-light)', borderRadius: 8, fontSize: 13 }}
             />
             <button type="submit" className="admin-btn admin-btn-sm"><FaSearch /></button>
           </form>
@@ -198,10 +199,10 @@ const AdminPlaces = () => {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+        <div className="admin-loading">Loading...</div>
       ) : places.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-          <FaMapMarkerAlt size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
+        <div className="admin-empty-state">
+          <FaMapMarkerAlt size={40} />
           <p>No places found</p>
         </div>
       ) : (
@@ -218,8 +219,8 @@ const AdminPlaces = () => {
               </tr>
             </thead>
             <tbody>
-              {places.map(place => (
-                <tr key={place._id}>
+              {places.map((place, idx) => (
+                <tr key={place._id} style={{ '--row-index': idx, animationDelay: `${idx * 0.03}s` }}>
                   <td>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>
                       {place.emoji} {place.label || place.name}
@@ -246,10 +247,10 @@ const AdminPlaces = () => {
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="admin-btn admin-btn-sm" onClick={() => openEdit(place)}>
-                        <FaEdit />
+                        <FaEdit /> Edit
                       </button>
                       <button className="admin-btn admin-btn-sm admin-btn-danger" onClick={() => handleDelete(place)}>
-                        <FaTrash />
+                        <FaTrash /> Delete
                       </button>
                     </div>
                   </td>
