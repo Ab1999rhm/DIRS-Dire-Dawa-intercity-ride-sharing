@@ -12,7 +12,6 @@ const Referral = require('../../models/Referral');
 const RideRequest = require('../../models/RideRequest');
 const Notification = require('../../models/Notification');
 const DispatchContact = require('../../models/DispatchContact');
-const Place = require('../../models/Place');
 const { dispatchToContacts } = require('../../services/dispatchService');
 
 const buildDateFilter = (startDate, endDate) => {
@@ -6269,95 +6268,4 @@ async function createAuditLog(entityType, entityId, action, performedBy, previou
     logger.error('Audit log creation failed', { error: error.message });
   }
 }
-
-// ==================== PLACES CRUD ====================
-
-exports.getPlaces = asyncHandler(async (req, res) => {
-  const { type, category, isActive, search } = req.query;
-  const query = {};
-  if (type) query.type = type;
-  if (category) query.category = category;
-  if (isActive !== undefined) query.isActive = isActive === 'true';
-  if (search) query.name = { $regex: search, $options: 'i' };
-
-  const places = await Place.find(query).sort({ sortOrder: 1, name: 1 });
-  res.json({ places, total: places.length });
-});
-
-exports.getPlace = asyncHandler(async (req, res) => {
-  const place = await Place.findById(req.params.id);
-  if (!place) return res.status(404).json({ error: 'Place not found' });
-  res.json({ place });
-});
-
-exports.createPlace = asyncHandler(async (req, res) => {
-  const { name, type, key, label, emoji, coordinates, city, category, sortOrder, isActive } = req.body;
-  if (!name || !type || !coordinates) {
-    return res.status(400).json({ error: 'name, type, and coordinates are required' });
-  }
-
-  const placeKey = key || name.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
-  const placeLabel = label || name;
-
-  const existing = await Place.findOne({ key: placeKey, type });
-  if (existing) return res.status(400).json({ error: 'A place with this key already exists for this type' });
-
-  const place = await Place.create({
-    name, type, key: placeKey, label: placeLabel,
-    emoji: emoji || '', coordinates, city: city || 'Dire Dawa',
-    category: category || 'other', sortOrder: sortOrder || 0,
-    isActive: isActive !== false,
-    createdBy: req.user._id
-  });
-
-  res.status(201).json({ place });
-});
-
-exports.updatePlace = asyncHandler(async (req, res) => {
-  const place = await Place.findById(req.params.id);
-  if (!place) return res.status(404).json({ error: 'Place not found' });
-
-  const allowed = ['name', 'label', 'emoji', 'coordinates', 'city', 'category', 'sortOrder', 'isActive'];
-  allowed.forEach(field => {
-    if (req.body[field] !== undefined) place[field] = req.body[field];
-  });
-  place.updatedBy = req.user._id;
-  await place.save();
-
-  res.json({ place });
-});
-
-exports.deletePlace = asyncHandler(async (req, res) => {
-  const place = await Place.findById(req.params.id);
-  if (!place) return res.status(404).json({ error: 'Place not found' });
-  await place.deleteOne();
-  res.json({ message: 'Place deleted' });
-});
-
-exports.bulkCreatePlaces = asyncHandler(async (req, res) => {
-  const { places } = req.body;
-  if (!Array.isArray(places) || places.length === 0) {
-    return res.status(400).json({ error: 'places array is required' });
-  }
-
-  let created = 0;
-  let skipped = 0;
-
-  for (const p of places) {
-    const placeKey = p.key || p.name.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
-    const exists = await Place.findOne({ key: placeKey, type: p.type });
-    if (exists) { skipped++; continue; }
-
-    await Place.create({
-      name: p.name, type: p.type, key: placeKey,
-      label: p.label || p.name, emoji: p.emoji || '',
-      coordinates: p.coordinates, city: p.city || 'Dire Dawa',
-      category: p.category || 'other', sortOrder: p.sortOrder || 0,
-      isActive: p.isActive !== false, createdBy: req.user._id
-    });
-    created++;
-  }
-
-  res.json({ created, skipped, total: places.length });
-});
 
