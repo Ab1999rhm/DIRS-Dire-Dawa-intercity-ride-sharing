@@ -68,7 +68,11 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const totalUsers = await User.countDocuments();
   const totalPassengers = await User.countDocuments({ role: 'passenger' });
   const totalDrivers = await User.countDocuments({ role: 'driver' });
-  const pendingVerifications = await Driver.countDocuments({ verificationStatus: { $in: ['pending', 'under_review'] } });
+  const pendingVerifications = await Driver.countDocuments({
+    verificationStatus: { $in: ['pending', 'under_review'] },
+    isBanned: { $ne: true },
+    isSuspended: { $ne: true }
+  });
   const activeDrivers = await Driver.countDocuments({ isAvailable: true, isOnline: true });
   const totalTrips = await Trip.countDocuments();
   const completedTrips = await Trip.countDocuments({ status: 'completed' });
