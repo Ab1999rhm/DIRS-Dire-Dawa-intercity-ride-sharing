@@ -88,7 +88,7 @@ const AdminUsers = () => {
   const handleSuspend = async (userId) => {
     try {
       await adminAPI.suspendUser(userId, 'Suspended by admin');
-      setUsers(prev => prev.map(u => u._id === userId ? { ...u, status: 'suspended' } : u));
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: false } : u));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to suspend user');
     }
@@ -97,10 +97,17 @@ const AdminUsers = () => {
   const handleReactivate = async (userId) => {
     try {
       await adminAPI.reactivateUser(userId);
-      setUsers(prev => prev.map(u => u._id === userId ? { ...u, status: 'active' } : u));
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, isActive: true, isBanned: false } : u));
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to reactivate user');
     }
+  };
+
+  const getStatus = (u) => {
+    if (u.status) return u.status;
+    if (u.isBanned) return 'banned';
+    if (u.isActive === false) return 'suspended';
+    return 'active';
   };
 
   if (loading) {
@@ -205,7 +212,7 @@ const AdminUsers = () => {
                 </div>
               </div>
               <div>
-                <StatusBadge status={u.status || 'active'} />
+                <StatusBadge status={getStatus(u)} />
                 <div style={{ marginTop: 4 }}>
                   <Badge variant={u.isVerified ? 'success' : 'warning'}>{u.isVerified ? 'Verified' : 'Unverified'}</Badge>
                 </div>
@@ -219,7 +226,7 @@ const AdminUsers = () => {
                     <FaCheckCircle /> Verify
                   </button>
                 )}
-                {u.status !== 'suspended' ? (
+                {getStatus(u) !== 'suspended' ? (
                   <button className="btn btn-danger btn-sm" onClick={() => handleSuspend(u._id)}>
                     <FaBan /> {t('admin.suspend')}
                   </button>
@@ -243,7 +250,7 @@ const AdminUsers = () => {
             <div className="detail-row"><span className="detail-key">{t('admin.name') || 'Name'}</span><span className="detail-val">{selectedUser.firstName} {selectedUser.lastName}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.phone') || 'Phone'}</span><span className="detail-val">{selectedUser.phoneNumber}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.role') || 'Role'}</span><span className="detail-val">{selectedUser.role}</span></div>
-            <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val">{selectedUser.status || 'active'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val">{getStatus(selectedUser)}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.verification') || 'Verification'}</span><span className="detail-val">{selectedUser.isVerified ? 'Verified' : 'Unverified'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.email') || 'Email'}</span><span className="detail-val">{selectedUser.email || 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">FAN (National ID)</span><span className="detail-val">{selectedUser.nationalId || 'N/A'}</span></div>
