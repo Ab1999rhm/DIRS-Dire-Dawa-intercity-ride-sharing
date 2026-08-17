@@ -40,6 +40,7 @@ const RealTimeMonitoring = () => {
   const { t } = useLanguage();
   const { socket } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [allDrivers, setAllDrivers] = useState([]);
   const [activeDrivers, setActiveDrivers] = useState([]);
   const [activeTrips, setActiveTrips] = useState([]);
   const [sosAlerts, setSosAlerts] = useState([]);
@@ -69,7 +70,23 @@ const RealTimeMonitoring = () => {
         clearInterval(refreshIntervalRef.current);
       }
     };
-  }, [autoRefresh, filterStatus]);
+  }, [autoRefresh]);
+
+  useEffect(() => {
+    applyFilter(allDrivers, filterStatus);
+  }, [filterStatus, allDrivers]);
+
+  const applyFilter = (drivers, status) => {
+    if (status === 'all' || status === 'offline') {
+      setActiveDrivers(drivers);
+    } else if (status === 'available') {
+      setActiveDrivers(drivers.filter(d => d.isAvailable));
+    } else if (status === 'busy') {
+      setActiveDrivers(drivers.filter(d => !d.isAvailable));
+    } else {
+      setActiveDrivers(drivers);
+    }
+  };
 
   // Socket.io event listeners for real-time updates
   useEffect(() => {
@@ -121,12 +138,9 @@ const RealTimeMonitoring = () => {
         adminAPI.getBookingQueue().catch(() => ({ data: null }))
       ]);
 
-      let filteredDrivers = driversRes.data?.drivers || [];
-      if (filterStatus !== 'all') {
-        filteredDrivers = filteredDrivers.filter(d => d.isAvailable === (filterStatus === 'available'));
-      }
-
-      setActiveDrivers(filteredDrivers);
+      const allDriverData = driversRes.data?.drivers || [];
+      setAllDrivers(allDriverData);
+      applyFilter(allDriverData, filterStatus);
       setActiveTrips(tripsRes.data?.trips || []);
       const sosData = sosRes.data;
       setSosAlerts(Array.isArray(sosData) ? sosData : (sosData?.alerts || sosData?.data || []));
@@ -142,7 +156,7 @@ const RealTimeMonitoring = () => {
   const handleSOSResponse = async (sosId) => {
     try {
       await adminAPI.respondToSOS(sosId);
-      setSosAlerts(sosAlerts.filter(s => s.id !== sosId));
+      setSosAlerts(sosAlerts.filter(s => (s._id || s.id) !== sosId));
     } catch (err) {
       console.error('Failed to respond to SOS:', err);
     }
@@ -234,7 +248,7 @@ const RealTimeMonitoring = () => {
               <FaServer />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.serverStatus}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.serverStatus}</div>
               <div className="admin-stat-label">{t('admin.serverStatus') || 'Server Status'}</div>
             </div>
           </div>
@@ -243,7 +257,7 @@ const RealTimeMonitoring = () => {
               <FaServer />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.cpuUsage}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.cpuUsage}</div>
               <div className="admin-stat-label">{t('admin.cpuUsage') || 'CPU Usage'}</div>
             </div>
           </div>
@@ -252,7 +266,7 @@ const RealTimeMonitoring = () => {
               <FaMemory />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.memoryUsage}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.memoryUsage}</div>
               <div className="admin-stat-label">{t('admin.memoryUsage') || 'Memory Usage'}</div>
             </div>
           </div>
@@ -261,7 +275,7 @@ const RealTimeMonitoring = () => {
               <FaDatabase />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.dbSize}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.dbSize}</div>
               <div className="admin-stat-label">{t('admin.dbSize') || 'DB Size'}</div>
             </div>
           </div>
@@ -276,7 +290,7 @@ const RealTimeMonitoring = () => {
               <FaClock />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.uptime}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.uptime}</div>
               <div className="admin-stat-label">{t('admin.uptime') || 'Uptime'}</div>
             </div>
           </div>
@@ -285,8 +299,8 @@ const RealTimeMonitoring = () => {
               <FaUsers />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.activeConnections}</div>
-              <div className="admin-stat-label">{t('admin.activeConnections') || 'Active Connections'}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.activeConnections || 0}</div>
+              <div className="admin-stat-label">{t('admin.connectedUsers') || 'Connected Users'}</div>
             </div>
           </div>
           <div className="admin-stat-card">
@@ -294,7 +308,7 @@ const RealTimeMonitoring = () => {
               <FaTachometerAlt />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.apiLatency}ms</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.apiLatency}ms</div>
               <div className="admin-stat-label">{t('admin.apiLatency') || 'API Latency'}</div>
             </div>
           </div>
@@ -303,7 +317,7 @@ const RealTimeMonitoring = () => {
               <FaExclamationTriangle />
             </div>
             <div>
-              <div className="admin-stat-value">{systemHealth.errorRate}</div>
+              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.errorRate}</div>
               <div className="admin-stat-label">{t('admin.errorRate') || 'Error Rate'}</div>
             </div>
           </div>
@@ -364,21 +378,21 @@ const RealTimeMonitoring = () => {
       {sosAlerts.length > 0 && (
         <div className="admin-activity-list" style={{ marginBottom: 20, borderColor: '#ef4444' }}>
           {sosAlerts.map((sos) => (
-            <div key={sos.id} className="admin-activity-item" style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
+            <div key={sos._id || sos.id} className="admin-activity-item" style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
               <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
                 <FaExclamationTriangle />
               </div>
               <div className="admin-activity-info">
                 <div className="admin-activity-text" style={{ color: '#ef4444', fontWeight: 700 }}>
-                  {t('admin.sosFrom') || 'SOS from'} {sos.driverName}
+                  {t('admin.sosFrom') || 'SOS from'} {sos.driverName || sos.user?.firstName || 'Driver'}
                 </div>
                 <div className="admin-activity-time">
-                  {sos.location?.address || (sos.location?.coordinates ? `${sos.location.coordinates[1]?.toFixed(4)}, ${sos.location.coordinates[0]?.toFixed(4)}` : sos.location || 'N/A')} • {sos.time}
+                  {sos.location?.address || (sos.location?.coordinates ? `${sos.location.coordinates[1]?.toFixed(4)}, ${sos.location.coordinates[0]?.toFixed(4)}` : sos.location || 'N/A')} • {sos.time || (sos.createdAt ? new Date(sos.createdAt).toLocaleTimeString() : '')}
                 </div>
               </div>
               <button
                 className="btn btn-primary btn-sm"
-                onClick={() => handleSOSResponse(sos.id)}
+                onClick={() => handleSOSResponse(sos._id || sos.id)}
               >
                 <FaEye /> {t('admin.respond') || 'Respond'}
               </button>
@@ -594,7 +608,7 @@ const RealTimeMonitoring = () => {
                 padding: '2px 8px',
                 borderRadius: 10,
               }}>
-                {activeDrivers.length}
+                {allDrivers.length}
               </span>
             </button>
             <button
@@ -622,7 +636,7 @@ const RealTimeMonitoring = () => {
                 padding: '2px 8px',
                 borderRadius: 10,
               }}>
-                {activeDrivers.filter(d => d.isAvailable).length}
+                {allDrivers.filter(d => d.isAvailable).length}
               </span>
             </button>
             <button
@@ -650,7 +664,7 @@ const RealTimeMonitoring = () => {
                 padding: '2px 8px',
                 borderRadius: 10,
               }}>
-                {activeDrivers.filter(d => !d.isAvailable).length}
+                {allDrivers.filter(d => !d.isAvailable).length}
               </span>
             </button>
             <button

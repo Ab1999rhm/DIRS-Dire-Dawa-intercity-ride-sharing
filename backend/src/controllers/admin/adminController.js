@@ -808,23 +808,7 @@ const convertToCSV = (data) => {
   return [headers, ...rows].join('\n');
 };
 
-// Monitoring
-exports.getSystemHealth = asyncHandler(async (req, res) => {
-  const totalUsers = await User.countDocuments();
-  const activeDrivers = await Driver.countDocuments({ isOnline: true });
-  const totalTrips = await Trip.countDocuments();
-  const uptime = process.uptime();
-  res.json({
-    status: 'healthy',
-    uptime,
-    database: 'connected',
-    totalUsers,
-    activeDrivers,
-    totalTrips,
-    memoryUsage: process.memoryUsage().heapUsed,
-    timestamp: new Date()
-  });
-});
+// Monitoring — detailed system health (kept at bottom of file, overrides earlier stub if any)
 
 exports.getActiveDriversMonitoring = asyncHandler(async (req, res) => {
   const drivers = await Driver.find({ isOnline: true })
