@@ -230,12 +230,7 @@ const AdminRoutes = React.memo(() => (
   </Suspense>
 ));
 
-function App() {
-  useEffect(() => {
-    offlineService.init();
-  }, []);
-
-const BanOverlay = () => {
+const BanOverlay = React.memo(() => {
   const { accountBanned, logout } = useAuth();
   if (!accountBanned) return null;
   return (
@@ -248,7 +243,12 @@ const BanOverlay = () => {
       </div>
     </div>
   );
-};
+});
+
+function App() {
+  useEffect(() => {
+    offlineService.init();
+  }, []);
 
   const passengerRoute = useMemo(() => (
     <RoleRoute allowedRole="passenger">
