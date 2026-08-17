@@ -86,7 +86,7 @@ const DriverProfile = () => {
           rejectionReason: res.data.driver?.rejectionReason || null,
           vehiclePhoto: res.data.vehicle?.vehiclePhoto || null,
           registrationPhoto: res.data.vehicle?.registrationPhoto || null,
-          insurancePhoto: res.data.vehicle?.insurancePhoto || null,
+          insurancePhoto: res.data.driver?.insurancePhoto || res.data.vehicle?.insurancePhoto || null,
           insuranceExpiry: res.data.vehicle?.insuranceExpiry || '',
           registrationExpiry: res.data.vehicle?.registrationExpiry || '',
           librePhoto: res.data.driver?.librePhoto || null,

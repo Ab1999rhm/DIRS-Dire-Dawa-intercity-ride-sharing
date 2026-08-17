@@ -197,6 +197,9 @@ const DriverManagement = () => {
       await adminAPI.approveDriver(id);
       toast.success('Driver approved');
       fetchDrivers();
+      if (selectedDriver?._id === id) {
+        setSelectedDriver(prev => ({ ...prev, verificationStatus: 'approved' }));
+      }
     } catch (err) {
       console.error('Failed to approve driver:', err);
       toast.error('Failed to approve driver');
@@ -207,6 +210,9 @@ const DriverManagement = () => {
       await adminAPI.rejectDriver(id, reason);
       toast.success('Driver rejected');
       fetchDrivers();
+      if (selectedDriver?._id === id) {
+        setSelectedDriver(prev => ({ ...prev, verificationStatus: 'rejected' }));
+      }
     } catch (err) {
       console.error('Failed to reject driver:', err);
       toast.error('Failed to reject driver');
