@@ -659,7 +659,9 @@ const DriverManagement = () => {
                   {[
                     { label: 'Driving License', url: driver.licensePhoto },
                     { label: 'National ID', url: driver.nationalIdPhoto },
+                    { label: 'Vehicle Photo', url: driver.vehicle?.vehiclePhoto },
                     { label: 'Vehicle Libre', url: driver.documents?.librePhoto?.data },
+                    { label: 'Registration', url: driver.vehicle?.registrationPhoto },
                     { label: 'Insurance', url: driver.documents?.insurancePhoto?.data },
                     { label: 'Police Clearance', url: driver.documents?.policeClearancePhoto?.data },
                   ].map(doc => (
@@ -705,6 +707,8 @@ const DriverManagement = () => {
                     {[
                       ['License', driver.licensePhoto],
                       ['National ID', driver.nationalIdPhoto],
+                      ['Vehicle Photo', driver.vehicle?.vehiclePhoto],
+                      ['Registration', driver.vehicle?.registrationPhoto],
                       ['Vehicle Libre', driver.documents?.librePhoto?.data],
                       ['Insurance', driver.documents?.insurancePhoto?.data],
                     ].map(([label, photoData]) => {

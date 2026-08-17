@@ -473,6 +473,8 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
         capacity: vehicle.capacity,
         insuranceExpiry: vehicle.insuranceExpiry,
         registrationExpiry: vehicle.registrationExpiry,
+        vehiclePhoto: vehicle.vehiclePhoto,
+        registrationPhoto: vehicle.registrationPhoto,
       };
     }
     return driverObj;

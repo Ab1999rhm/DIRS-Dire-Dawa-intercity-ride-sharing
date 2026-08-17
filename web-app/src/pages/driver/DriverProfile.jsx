@@ -636,8 +636,7 @@ const DriverProfile = () => {
             <div className="document-upload-grid">
               {[
                 { key: 'vehiclePhoto', label: 'Vehicle Photo', icon: <FaCar /> },
-                { key: 'registrationPhoto', label: 'Registration', icon: <FaFileAlt /> },
-                { key: 'insurancePhoto', label: 'Insurance', icon: <FaShieldAlt /> }
+                { key: 'registrationPhoto', label: 'Registration', icon: <FaFileAlt /> }
               ].map(doc => (
                 <div key={doc.key} className="document-upload-item">
                   <input type="file" accept="image/*" ref={fileInputRef[doc.key]} style={{ display: 'none' }}
