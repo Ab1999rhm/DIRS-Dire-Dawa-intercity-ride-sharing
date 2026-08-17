@@ -36,5 +36,3 @@ Harar, Addis Ababa, Jijiga, Combolcha, Awash, Debre Markos, Adama, Hawassa, Bahi
 ## Known Issues
 - Render/Cloudflare `x-render-routing: no-server`: External HTTP requests sometimes return 404 (infrastructure issue)
 - Backend jest suites fail on pre-existing `../server` require issue
-- `/passenger/notifications` route in App.js has no component file (dead route)
-- `/driver/trip/:tripId` route exists in App.js but DriverTripDetail.jsx does NOT exist
