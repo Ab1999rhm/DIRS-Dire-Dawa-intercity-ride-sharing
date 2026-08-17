@@ -68,7 +68,16 @@ const DriverManagement = () => {
     try {
       const res = await adminAPI.drivers();
       const d = res.data;
-      setDrivers(Array.isArray(d) ? d : (d?.data || d?.drivers || []));
+      const list = (Array.isArray(d) ? d : (d?.data || d?.drivers || [])).map(driver => {
+        let status = 'pending';
+        if (driver.isBanned) status = 'banned';
+        else if (driver.isSuspended) status = 'suspended';
+        else if (driver.verificationStatus === 'approved') status = 'active';
+        else if (driver.verificationStatus === 'rejected') status = 'banned';
+        else status = 'pending';
+        return { ...driver, status };
+      });
+      setDrivers(list);
     } catch (err) {
       console.error('Failed to fetch drivers:', err);
       setDrivers([]);
@@ -623,11 +632,11 @@ const DriverManagement = () => {
           <div className="admin-section-title" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 8 }}>
             <FaFileAlt /> Pending Verifications
             <span style={{ background: '#fef3c7', color: '#d97706', fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 12 }}>
-              {drivers.filter(d => d.status === 'pending').length}
+              {drivers.filter(d => d.verificationStatus === 'pending' || d.verificationStatus === 'under_review').length}
             </span>
           </div>
           <div className="admin-activity-list">
-            {drivers.filter(d => d.status === 'pending').map(driver => (
+            {drivers.filter(d => d.verificationStatus === 'pending' || d.verificationStatus === 'under_review').map(driver => (
               <div key={driver._id} className="admin-activity-item" style={{ background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: 10, padding: 14, marginBottom: 8 }}>
                 <div className="admin-activity-icon" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
                   <FaIdCard />
@@ -636,10 +645,17 @@ const DriverManagement = () => {
                   <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                   <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.user?.phoneNumber || driver.phoneNumber}</div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                    {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto']].map(([label, key]) => {
-                      const docStatus = driver.documents?.[key]?.status || 'pending';
+                    {[
+                      ['License', driver.licensePhoto],
+                      ['National ID', driver.nationalIdPhoto],
+                      ['Vehicle Libre', driver.documents?.librePhoto?.data],
+                      ['Insurance', driver.documents?.insurancePhoto?.data],
+                      ['Police Clearance', driver.documents?.policeClearancePhoto?.data],
+                    ].map(([label, photoData]) => {
+                      const hasDoc = Boolean(photoData);
+                      const docStatus = hasDoc ? 'uploaded' : 'not uploaded';
                       return (
-                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(docStatus)}15`, color: getDocStatusColor(docStatus), fontWeight: 600, textTransform: 'capitalize' }}>
+                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: hasDoc ? '#dcfce715' : '#fef3c715', color: hasDoc ? '#15803d' : '#b45309', fontWeight: 600 }}>
                           {label}: {docStatus}
                         </span>
                       );
@@ -659,34 +675,41 @@ const DriverManagement = () => {
                 </div>
               </div>
             ))}
+            {drivers.filter(d => d.verificationStatus === 'pending' || d.verificationStatus === 'under_review').length === 0 && (
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: '#6b7280' }}>
+                <FaCheckCircle style={{ fontSize: 40, color: '#10b981', marginBottom: 12 }} />
+                <p>All driver verifications are complete</p>
+              </div>
+            )}
           </div>
           <div className="admin-section-title" style={{ marginTop: 24 }}><FaFileAlt /> Document Status Overview</div>
           <div className="admin-activity-list">
-            {drivers.filter(d => d.status !== 'pending').map(driver => (
-              <div key={driver._id} className="admin-activity-item" style={{ borderLeft: '3px solid #e5e7eb', borderRadius: 10, padding: 14, marginBottom: 8 }}>
+            {drivers.filter(d => d.verificationStatus !== 'pending' && d.verificationStatus !== 'under_review').map(driver => (
+              <div key={driver._id} className="admin-activity-item" style={{ borderLeft: `3px solid ${driver.verificationStatus === 'approved' ? '#10b981' : '#ef4444'}`, borderRadius: 10, padding: 14, marginBottom: 8 }}>
                 <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text" style={{ fontWeight: 600 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontWeight: 600 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: driver.verificationStatus === 'approved' ? '#dcfce7' : '#fef2f2', color: driver.verificationStatus === 'approved' ? '#15803d' : '#dc2626', fontWeight: 600 }}>
+                      {driver.verificationStatus}
+                    </span>
+                    {driver.isSuspended && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#fef3c7', color: '#92400e', fontWeight: 600 }}>Suspended</span>}
+                    {driver.isBanned && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#7f1d1d15', color: '#7f1d1d', fontWeight: 600 }}>Banned</span>}
+                  </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                    {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto']].map(([label, key]) => {
-                      const st = driver.documents?.[key]?.status || 'unknown';
+                    {[
+                      ['License', driver.licensePhoto],
+                      ['National ID', driver.nationalIdPhoto],
+                      ['Vehicle Libre', driver.documents?.librePhoto?.data],
+                      ['Insurance', driver.documents?.insurancePhoto?.data],
+                    ].map(([label, photoData]) => {
+                      const hasDoc = Boolean(photoData);
                       return (
-                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: `${getDocStatusColor(st)}15`, color: getDocStatusColor(st), fontWeight: 600, textTransform: 'capitalize' }}>
-                          {label}: {st}
-                          {st === 'expired' && <FaRedo style={{ cursor: 'pointer', marginLeft: 4 }} onClick={() => handleRequestResubmit(driver._id, label)} />}
+                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: hasDoc ? '#dcfce715' : '#f3f4f6', color: hasDoc ? '#15803d' : '#9ca3af', fontWeight: 600 }}>
+                          {label}: {hasDoc ? 'On file' : 'Not uploaded'}
                         </span>
                       );
                     })}
                   </div>
-                </div>
-                <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
-                  {Object.entries(driver.documents || {}).map(([key, info]) => {
-                    const label = key.replace('Photo', '');
-                    return info.status === 'expired' && (
-                      <button key={key} className="btn btn-sm" style={{ background: '#ef444415', color: '#ef4444', fontSize: 10, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px' }} onClick={() => handleRequestResubmit(driver._id, label)}>
-                        <FaRedo /> Re-submit {label}
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
             ))}
