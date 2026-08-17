@@ -468,7 +468,7 @@ const TripManagement = () => {
             </div>
 
             {/* Bottom row: Action Buttons */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+            <div className="trip-action-btns" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
               <button className="driver-action-btn driver-btn-view" onClick={() => handleViewTripDetails(trip._id || trip.id)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}><FaEye style={{ fontSize: 10 }} /> View</button>
               {trip.status === 'completed' && <button className="driver-action-btn driver-btn-view" onClick={() => { setSelectedTrip(trip); setShowFareAdjustmentModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#8b5cf6', color: 'white', fontWeight: 600 }}><FaEdit style={{ fontSize: 10 }} /> Fare</button>}
               {trip.status === 'completed' && <button className="driver-action-btn driver-btn-reactivate" onClick={() => { setSelectedTrip(trip); setShowRefundModal(true); }} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}><FaHandHoldingUsd style={{ fontSize: 10 }} /> Refund</button>}
