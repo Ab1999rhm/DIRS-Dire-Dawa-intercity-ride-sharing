@@ -434,6 +434,7 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
   const Vehicle = require('../../models/Vehicle');
   const Trip = require('../../models/Trip');
   const Rating = require('../../models/Rating');
+  const Payment = require('../../models/Payment');
 
   const filter = {};
   if (status && status !== 'all') {
@@ -469,11 +470,42 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
       totalTrips: { $sum: 1 },
       completedTrips: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
       cancelledTrips: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
-      totalRevenue: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$fare', 0] } }
+      totalRevenue: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, { $ifNull: ['$fare.totalFare', '$fare'] }, 0] } },
+      complaints: { $sum: { $cond: [{ $eq: ['$hasDispute', true] }, 1, 0] } },
+      lostItemReports: { $sum: { $cond: [{ $eq: ['$hasLostItem', true] }, 1, 0] } },
+      avgResponseTime: { $avg: { $cond: [{ $gt: ['$responseTime', 0] }, '$responseTime', null] } }
     }}
   ]);
   const tripStatsMap = new Map();
   tripStats.forEach(s => tripStatsMap.set(s._id.toString(), s));
+
+  // Compute commission and earnings from Payment collection
+  const paymentStats = await Payment.aggregate([
+    { $match: { driver: { $in: driverIds }, status: 'completed' } },
+    { $group: {
+      _id: '$driver',
+      totalFareAmount: { $sum: { $ifNull: ['$amount', 0] } },
+      commissionPaid: { $sum: { $ifNull: ['$platformCommission', 0] } },
+      totalDriverEarnings: { $sum: { $ifNull: ['$driverEarnings', 0] } }
+    }}
+  ]);
+  const paymentStatsMap = new Map();
+  paymentStats.forEach(s => paymentStatsMap.set(s._id.toString(), s));
+
+  // Compute monthly earnings (current month)
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthlyStats = await Payment.aggregate([
+    { $match: { driver: { $in: driverIds }, status: 'completed', createdAt: { $gte: monthStart } } },
+    { $group: {
+      _id: '$driver',
+      monthlyEarnings: { $sum: { $ifNull: ['$driverEarnings', 0] } },
+      monthlyRevenue: { $sum: { $ifNull: ['$amount', 0] } }
+    }}
+  ]);
+  const monthlyStatsMap = new Map();
+  monthlyStats.forEach(s => monthlyStatsMap.set(s._id.toString(), s));
 
   // Compute real ratings from Rating collection
   const ratingAgg = await Rating.aggregate([
@@ -513,7 +545,32 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
       driverObj.completedTrips = stats.completedTrips;
       driverObj.cancelledTrips = stats.cancelledTrips;
       driverObj.totalEarnings = stats.totalRevenue;
+      driverObj.complaints = stats.complaints || 0;
+      driverObj.lostItemReports = stats.lostItemReports || 0;
+      driverObj.avgResponseTime = stats.avgResponseTime ? Math.round(stats.avgResponseTime) : 0;
+    } else {
+      driverObj.totalTrips = 0;
+      driverObj.completedTrips = 0;
+      driverObj.cancelledTrips = 0;
+      driverObj.totalEarnings = 0;
+      driverObj.complaints = 0;
+      driverObj.lostItemReports = 0;
+      driverObj.avgResponseTime = 0;
     }
+
+    // Override with real payment stats (commission, earnings, monthly)
+    const pStats = paymentStatsMap.get(d._id.toString());
+    if (pStats) {
+      driverObj.totalEarnings = pStats.totalFareAmount;
+      driverObj.commissionPaid = pStats.commissionPaid;
+      driverObj.netEarnings = pStats.totalDriverEarnings;
+    } else {
+      driverObj.commissionPaid = 0;
+      driverObj.netEarnings = 0;
+    }
+
+    const mStats = monthlyStatsMap.get(d._id.toString());
+    driverObj.monthlyEarnings = mStats ? mStats.monthlyEarnings : 0;
 
     // Override with real rating
     const userRating = ratingMap.get(d.user?._id?.toString());
