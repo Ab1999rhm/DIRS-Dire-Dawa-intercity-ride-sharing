@@ -222,7 +222,7 @@ router.put('/config/service-areas', protect, authorize('admin'), adminController
 
 // Passenger wallet
 router.get('/passengers/:passengerId/wallet', protect, authorize('admin'), adminController.getPassengerWallet);
-router.post('/passengers/:passengerId/refund', protect, authorize('admin'), adminController.processRefund);
+router.post('/passengers/:passengerId/refund', protect, authorize('admin'), adminController.processPassengerRefund);
 router.post('/passengers/:passengerId/add-funds', protect, authorize('admin'), adminController.addPassengerFunds);
 router.get('/passengers/:passengerId/transactions', protect, authorize('admin'), adminController.getPassengerTransactions);
 router.put('/passengers/:passengerId/ban', protect, authorize('admin'), adminController.banPassenger);

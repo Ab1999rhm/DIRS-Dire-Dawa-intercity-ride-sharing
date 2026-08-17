@@ -959,7 +959,7 @@ exports.getPassengerWallet = asyncHandler(async (req, res) => {
   res.json({ balance: user.walletBalance || 0, currency: 'ETB' });
 });
 
-exports.processRefund = asyncHandler(async (req, res) => {
+exports.processPassengerRefund = asyncHandler(async (req, res) => {
   const { passengerId } = req.params;
   const { amount, reason } = req.body;
   const user = await User.findById(passengerId);
@@ -1030,8 +1030,18 @@ exports.getTripDetails = asyncHandler(async (req, res) => {
 
 exports.adjustFare = asyncHandler(async (req, res) => {
   const { newFare, reason } = req.body;
+  if (!newFare || newFare < 0) return res.status(400).json({ message: 'Invalid fare amount' });
   const trip = await Trip.findByIdAndUpdate(req.params.tripId, { 'fare.totalFare': newFare }, { new: true });
   if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+  // Also update the linked Payment record
+  const payment = await Payment.findOne({ trip: req.params.tripId });
+  if (payment) {
+    payment.amount = newFare;
+    await payment.save();
+  }
+
+  logger.info('Fare adjusted by admin', { tripId: req.params.tripId, newFare, reason });
   res.json({ message: 'Fare adjusted', trip });
 });
 
@@ -1929,6 +1939,16 @@ exports.processDriverPayout = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Trip not found' });
   }
 
+  if (trip.status !== 'completed') {
+    return res.status(400).json({ error: 'Can only payout for completed trips' });
+  }
+
+  // Idempotency: check if already paid
+  const existingPayment = await Payment.findOne({ trip: tripId });
+  if (existingPayment && existingPayment.status === 'completed' && existingPayment.driverEarnings > 0) {
+    return res.status(400).json({ error: 'Payout already processed for this trip' });
+  }
+
   const fare = trip.fare?.totalFare || 0;
   const commissionRate = trip.driver.commissionRate || 10;
   const driverEarnings = fare * (1 - commissionRate / 100);
@@ -1943,12 +1963,22 @@ exports.processDriverPayout = asyncHandler(async (req, res) => {
   });
 
   // Update existing payment or create new one
-  const existingPayment = await Payment.findOne({ trip: tripId });
   if (existingPayment) {
     existingPayment.driverEarnings = driverEarnings;
     existingPayment.platformCommission = fare * commissionRate / 100;
     existingPayment.status = 'completed';
     await existingPayment.save();
+  } else {
+    await Payment.create({
+      trip: tripId,
+      driver: trip.driver._id,
+      passenger: trip.passenger,
+      amount: fare,
+      driverEarnings,
+      platformCommission: fare * commissionRate / 100,
+      status: 'completed',
+      paymentMethod: 'cash'
+    });
   }
 
   logger.info('Driver payout processed by admin', { tripId, driverEarnings });
@@ -1965,16 +1995,50 @@ exports.applyPromoCode = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Trip not found' });
   }
 
-  // Apply discount to fare
+  // Validate the promo code exists and is active
+  const promo = await PromoCode.findOne({ code: code.toUpperCase() });
+  if (!promo) {
+    return res.status(404).json({ error: 'Promo code not found' });
+  }
+  if (promo.status !== 'active') {
+    return res.status(400).json({ error: 'Promo code is not active' });
+  }
+  if (promo.validUntil < new Date()) {
+    return res.status(400).json({ error: 'Promo code has expired' });
+  }
+  if (promo.usageLimit && promo.usedCount >= promo.usageLimit) {
+    return res.status(400).json({ error: 'Promo code usage limit reached' });
+  }
+
+  // Calculate actual discount based on promo type
   const currentFare = trip.fare?.totalFare || 0;
-  const newFare = Math.max(0, currentFare - discountAmount);
+  let actualDiscount = discountAmount;
+  if (promo.discountType === 'percentage') {
+    actualDiscount = (currentFare * promo.discountValue) / 100;
+    if (promo.maxDiscountAmount) {
+      actualDiscount = Math.min(actualDiscount, promo.maxDiscountAmount);
+    }
+  } else if (promo.discountType === 'fixed_amount') {
+    actualDiscount = promo.discountValue;
+  } else if (promo.discountType === 'free_ride') {
+    actualDiscount = currentFare;
+  }
+
+  actualDiscount = Math.min(actualDiscount, currentFare);
+  const newFare = Math.max(0, currentFare - actualDiscount);
 
   trip.fare.totalFare = newFare;
+  trip.promoCode = code.toUpperCase();
+  trip.promoDiscount = actualDiscount;
   await trip.save();
 
-  logger.info('Promo code applied by admin', { tripId, code, discountAmount });
+  // Increment usage count
+  promo.usedCount += 1;
+  await promo.save();
 
-  res.json({ message: 'Promo code applied successfully', newFare });
+  logger.info('Promo code applied by admin', { tripId, code, actualDiscount, newFare });
+
+  res.json({ message: 'Promo code applied successfully', newFare, discount: actualDiscount });
 });
 
 // Dispute Handling

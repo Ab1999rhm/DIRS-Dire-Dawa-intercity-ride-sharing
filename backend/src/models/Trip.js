@@ -98,6 +98,14 @@ const tripSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  promoCode: {
+    type: String,
+    default: null
+  },
+  promoDiscount: {
+    type: Number,
+    default: 0
+  },
   hasLostItem: {
     type: Boolean,
     default: false
