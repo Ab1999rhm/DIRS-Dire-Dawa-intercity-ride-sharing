@@ -748,7 +748,7 @@ const DriverManagement = () => {
           </div>
           <div className="admin-activity-list">
             {drivers.filter(d => d.status === 'active').sort((a, b) => (b.rating || 0) - (a.rating || 0)).map(driver => {
-              const completionRate = driver.totalTrips > 0 ? ((driver.completedTrips / driver.totalTrips) * 100).toFixed(1) : 0;
+              const completionRate = driver.totalTrips > 0 ? ((driver.completedTrips / driver.totalTrips) * 100).toFixed(1) : null;
               const barColor = completionRate > 90 ? '#10b981' : completionRate > 70 ? '#f59e0b' : '#ef4444';
               return (
                 <div key={driver._id} className="admin-activity-item" style={{ cursor: 'pointer', borderLeft: `3px solid ${barColor}`, borderRadius: 10, padding: 14, marginBottom: 8 }} onClick={() => openDetail(driver, 'performance')}>
@@ -757,17 +757,21 @@ const DriverManagement = () => {
                     <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
                     <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', fontSize: 11, color: '#6b7280' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaStar style={{ color: '#f59e0b', fontSize: 9 }} /> {getDriverRating(driver).toFixed(1)}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCheckCircle style={{ color: '#10b981', fontSize: 9 }} /> {completionRate}% completion</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCheckCircle style={{ color: '#10b981', fontSize: 9 }} /> {completionRate !== null ? `${completionRate}% completion` : 'No trips'}</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaCar style={{ color: '#3b82f6', fontSize: 9 }} /> {driver.totalTrips || 0} trips</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaTimesCircle style={{ color: '#ef4444', fontSize: 9 }} /> {driver.cancelledTrips || 0} cancelled</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><FaClock style={{ color: '#6b7280', fontSize: 9 }} /> {driver.avgResponseTime || 'N/A'} min avg</span>
                       {driver.complaints > 0 && <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: 2 }}><FaEnvelope style={{ fontSize: 9 }} /> {driver.complaints} complaints</span>}
-                      {(driver.rating || 0) < 3.5 && <span style={{ color: '#dc2626', fontWeight: 700 }}>LOW RATING</span>}
+                      {driver.totalRatings > 0 && driver.rating < 3.5 && <span style={{ color: '#dc2626', fontWeight: 700 }}>LOW RATING</span>}
                     </div>
-                    <div style={{ marginTop: 8, height: 6, borderRadius: 3, background: '#e5e7eb', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${completionRate}%`, background: barColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
-                    </div>
-                    <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>{completionRate}% completion rate</div>
+                    {completionRate !== null && (
+                      <>
+                        <div style={{ marginTop: 8, height: 6, borderRadius: 3, background: '#e5e7eb', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${completionRate}%`, background: barColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                        </div>
+                        <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 2 }}>{completionRate}% completion rate</div>
+                      </>
+                    )}
                   </div>
                 </div>
               );

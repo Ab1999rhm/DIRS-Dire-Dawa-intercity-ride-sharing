@@ -432,6 +432,8 @@ exports.getPendingDriverVerifications = asyncHandler(async (req, res) => {
 exports.getAllDrivers = asyncHandler(async (req, res) => {
   const { page = 1, limit = 50, status } = req.query;
   const Vehicle = require('../../models/Vehicle');
+  const Trip = require('../../models/Trip');
+  const Rating = require('../../models/Rating');
 
   const filter = {};
   if (status && status !== 'all') {
@@ -459,6 +461,32 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
   const vehicleMap = new Map();
   vehicles.forEach(v => vehicleMap.set(v.driver.toString(), v));
 
+  // Compute real trip stats from Trip collection
+  const tripStats = await Trip.aggregate([
+    { $match: { driver: { $in: driverIds } } },
+    { $group: {
+      _id: '$driver',
+      totalTrips: { $sum: 1 },
+      completedTrips: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+      cancelledTrips: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
+      totalRevenue: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, '$fare', 0] } }
+    }}
+  ]);
+  const tripStatsMap = new Map();
+  tripStats.forEach(s => tripStatsMap.set(s._id.toString(), s));
+
+  // Compute real ratings from Rating collection
+  const ratingAgg = await Rating.aggregate([
+    { $match: { ratee: { $in: drivers.map(d => d.user?._id).filter(Boolean) } } },
+    { $group: {
+      _id: '$ratee',
+      avgRating: { $avg: '$rating' },
+      totalRatings: { $sum: 1 }
+    }}
+  ]);
+  const ratingMap = new Map();
+  ratingAgg.forEach(r => ratingMap.set(r._id.toString(), r));
+
   const driversWithVehicles = drivers.map(d => {
     const driverObj = d.toObject();
     const vehicle = vehicleMap.get(d._id.toString());
@@ -477,6 +505,26 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
         registrationPhoto: vehicle.registrationPhoto,
       };
     }
+
+    // Override with real trip stats
+    const stats = tripStatsMap.get(d._id.toString());
+    if (stats) {
+      driverObj.totalTrips = stats.totalTrips;
+      driverObj.completedTrips = stats.completedTrips;
+      driverObj.cancelledTrips = stats.cancelledTrips;
+      driverObj.totalEarnings = stats.totalRevenue;
+    }
+
+    // Override with real rating
+    const userRating = ratingMap.get(d.user?._id?.toString());
+    if (userRating && userRating.totalRatings > 0) {
+      driverObj.rating = userRating.avgRating;
+      driverObj.totalRatings = userRating.totalRatings;
+    } else {
+      driverObj.rating = 0;
+      driverObj.totalRatings = 0;
+    }
+
     return driverObj;
   });
 
