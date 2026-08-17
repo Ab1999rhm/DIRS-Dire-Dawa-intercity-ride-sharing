@@ -68,7 +68,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const totalUsers = await User.countDocuments();
   const totalPassengers = await User.countDocuments({ role: 'passenger' });
   const totalDrivers = await User.countDocuments({ role: 'driver' });
-  const pendingVerifications = await Driver.countDocuments({ verificationStatus: 'pending' });
+  const pendingVerifications = await Driver.countDocuments({ verificationStatus: { $in: ['pending', 'under_review'] } });
   const activeDrivers = await Driver.countDocuments({ isAvailable: true, isOnline: true });
   const totalTrips = await Trip.countDocuments();
   const completedTrips = await Trip.countDocuments({ status: 'completed' });
@@ -431,7 +431,17 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
 
   const filter = {};
   if (status && status !== 'all') {
-    filter.verificationStatus = status;
+    if (status === 'suspended') {
+      filter.isSuspended = true;
+    } else if (status === 'banned') {
+      filter.isBanned = true;
+    } else if (status === 'active') {
+      filter.verificationStatus = 'approved';
+      filter.isSuspended = false;
+      filter.isBanned = false;
+    } else {
+      filter.verificationStatus = status;
+    }
   }
 
   const drivers = await Driver.find(filter)
@@ -471,6 +481,10 @@ exports.getAllDrivers = asyncHandler(async (req, res) => {
     pending: await Driver.countDocuments({ verificationStatus: 'pending' }),
     approved: await Driver.countDocuments({ verificationStatus: 'approved' }),
     rejected: await Driver.countDocuments({ verificationStatus: 'rejected' }),
+    underReview: await Driver.countDocuments({ verificationStatus: 'under_review' }),
+    suspended: await Driver.countDocuments({ isSuspended: true }),
+    banned: await Driver.countDocuments({ isBanned: true }),
+    active: await Driver.countDocuments({ verificationStatus: 'approved', isSuspended: { $ne: true }, isBanned: { $ne: true } }),
   };
 
   res.json({ drivers: driversWithVehicles, total, page: parseInt(page), pages: Math.ceil(total / limit), stats });

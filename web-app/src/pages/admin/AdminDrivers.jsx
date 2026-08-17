@@ -34,7 +34,7 @@ const AdminDrivers = () => {
   const { user } = useAuth();
   const toast = useToast();
   const [drivers, setDrivers] = useState([]);
-  const [driverStats, setDriverStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [driverStats, setDriverStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, active: 0, suspended: 0, banned: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -152,15 +152,20 @@ const AdminDrivers = () => {
           />
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {['all', 'pending', 'approved', 'rejected'].map(s => (
+          {[
+            { key: 'all', label: t('admin.all') || 'All', count: driverStats.total },
+            { key: 'active', label: t('admin.active') || 'Active', count: driverStats.active },
+            { key: 'pending', label: t('admin.pending') || 'Pending', count: driverStats.pending },
+            { key: 'suspended', label: t('admin.suspended') || 'Suspended', count: driverStats.suspended },
+            { key: 'banned', label: t('admin.banned') || 'Banned', count: driverStats.banned },
+          ].map(tab => (
             <button
-              key={s}
+              key={tab.key}
               type="button"
-              className={`btn btn-sm ${filterStatus === s ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => handleFilterChange(s)}
-              style={{ textTransform: 'capitalize' }}
+              className={`btn btn-sm ${filterStatus === tab.key ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => handleFilterChange(tab.key)}
             >
-              {t(`admin.${s}`) || s} ({s === 'all' ? driverStats.total : driverStats[s] || 0})
+              {tab.label} ({tab.count})
             </button>
           ))}
         </div>
