@@ -3049,6 +3049,11 @@
 }
 
 /* Mobile responsive for trip management */
+.trip-action-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 @media (max-width: 480px) {
   .admin-stats-grid {
     grid-template-columns: 1fr 1fr;
@@ -3070,7 +3075,7 @@
     font-size: 10px;
   }
   .trip-action-btns {
-    display: grid;
+    display: grid !important;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
   }
