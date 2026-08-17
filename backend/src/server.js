@@ -169,6 +169,22 @@ server.listen(PORT, () => {
   startKeepAlive();
   const { startWithdrawalReconciliation } = require('./services/withdrawalReconciliation');
   startWithdrawalReconciliation();
+
+  // Auto-delete read notifications older than 1 day
+  const Notification = require('./models/Notification');
+  const CLEANUP_INTERVAL = 60 * 60 * 1000; // every hour
+  const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 1 day
+  setInterval(async () => {
+    try {
+      const cutoff = new Date(Date.now() - MAX_AGE_MS);
+      const result = await Notification.deleteMany({ isRead: true, readAt: { $lt: cutoff } });
+      if (result.deletedCount > 0) {
+        logger.info(`Cleanup: deleted ${result.deletedCount} old read notifications`);
+      }
+    } catch (err) {
+      logger.error('Notification cleanup failed', { error: err.message });
+    }
+  }, CLEANUP_INTERVAL);
 });
 
 module.exports = { app, server };

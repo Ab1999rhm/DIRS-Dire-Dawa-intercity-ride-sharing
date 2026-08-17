@@ -1011,24 +1011,34 @@ const DriverManagement = () => {
 
             {detailTab === 'documents' && (
               <div className="driver-detail">
-                {[['license', 'licensePhoto'], ['insurance', 'insurancePhoto'], ['registration', 'registrationPhoto'], ['backgroundCheck', 'backgroundCheckPhoto']].map(([label, docKey]) => {
-                  const info = selectedDriver.documents?.[docKey] || {};
-                  const docLabel = label === 'backgroundCheck' ? 'Background Check' : label;
-                  return (
-                    <div key={docKey} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: `1px solid ${getDocStatusColor(info.status)}30` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>{docLabel}</span>
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${getDocStatusColor(info.status)}15`, color: getDocStatusColor(info.status), fontWeight: 600 }}>{info.status || 'pending'}</span>
-                      </div>
-                      {info.expiry && <div style={{ fontSize: 11, color: '#6b7280' }}>Expires: {info.expiry}</div>}
-                      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                        <button className="btn btn-sm" style={{ background: '#10b981', color: 'white' }} onClick={() => toast.success(`${docLabel} approved`)}>Approve</button>
-                        <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white' }} onClick={() => toast.success(`${docLabel} rejected`)}>Reject</button>
-                        <button className="btn btn-sm" style={{ background: '#f59e0b15', color: '#d97706' }} onClick={() => handleRequestResubmit(selectedDriver._id, label)}>Request Re-submit</button>
-                      </div>
+                {[
+                  { label: 'Driving License', url: selectedDriver.licensePhoto, status: selectedDriver.verificationStatus === 'approved' ? 'approved' : 'pending' },
+                  { label: 'National ID', url: selectedDriver.nationalIdPhoto, status: selectedDriver.verificationStatus === 'approved' ? 'approved' : 'pending' },
+                  { label: 'Vehicle Photo', url: selectedDriver.vehicle?.vehiclePhoto, status: selectedDriver.vehicle?.vehiclePhoto ? 'uploaded' : 'not uploaded' },
+                  { label: 'Vehicle Libre', url: selectedDriver.documents?.librePhoto?.data, status: selectedDriver.documents?.librePhoto?.status || 'pending' },
+                  { label: 'Registration', url: selectedDriver.vehicle?.registrationPhoto, status: selectedDriver.vehicle?.registrationPhoto ? 'uploaded' : 'not uploaded' },
+                  { label: 'Insurance', url: selectedDriver.documents?.insurancePhoto?.data, status: selectedDriver.documents?.insurancePhoto?.status || 'pending' },
+                  { label: 'Police Clearance', url: selectedDriver.documents?.policeClearancePhoto?.data, status: selectedDriver.documents?.policeClearancePhoto?.status || 'pending' },
+                ].map(doc => (
+                  <div key={doc.label} style={{ marginBottom: 12, padding: 14, background: '#f9fafb', borderRadius: 10, border: `1px solid ${getDocStatusColor(doc.status)}30` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13 }}>{doc.label}</span>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${getDocStatusColor(doc.status)}15`, color: getDocStatusColor(doc.status), fontWeight: 600 }}>{doc.status}</span>
                     </div>
-                  );
-                })}
+                    {doc.url ? (
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: 8 }}>
+                        <img src={doc.url} alt={doc.label} style={{ width: '100%', maxHeight: 150, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }} />
+                      </a>
+                    ) : (
+                      <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 8, fontStyle: 'italic' }}>No document uploaded</div>
+                    )}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="btn btn-sm" style={{ background: '#10b981', color: 'white' }} onClick={() => handleApprove(selectedDriver._id)}>Approve</button>
+                      <button className="btn btn-sm" style={{ background: '#ef4444', color: 'white' }} onClick={() => handleReject(selectedDriver._id, `${doc.label} not verified`)}>Reject</button>
+                      <button className="btn btn-sm" style={{ background: '#f59e0b15', color: '#d97706' }} onClick={() => handleRequestResubmit(selectedDriver._id, doc.label)}>Request Re-submit</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

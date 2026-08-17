@@ -26,16 +26,13 @@ exports.uploadDocuments = asyncHandler(async (req, res) => {
   if (licenseExpiry) driver.licenseExpiry = licenseExpiry;
   if (nationalId) driver.nationalId = nationalId;
   if (librePhotoUrl) {
-    if (!driver.documents) driver.documents = {};
-    driver.documents.librePhoto = { data: librePhotoUrl, status: 'pending', updatedAt: new Date() };
+    driver.set('documents.librePhoto', { data: librePhotoUrl, status: 'pending', updatedAt: new Date() });
   }
   if (insurancePhotoUrl) {
-    if (!driver.documents) driver.documents = {};
-    driver.documents.insurancePhoto = { data: insurancePhotoUrl, status: 'pending', updatedAt: new Date() };
+    driver.set('documents.insurancePhoto', { data: insurancePhotoUrl, status: 'pending', updatedAt: new Date() });
   }
   if (policeClearancePhotoUrl) {
-    if (!driver.documents) driver.documents = {};
-    driver.documents.policeClearancePhoto = { data: policeClearancePhotoUrl, status: 'pending', updatedAt: new Date() };
+    driver.set('documents.policeClearancePhoto', { data: policeClearancePhotoUrl, status: 'pending', updatedAt: new Date() });
   }
 
   if (driver.verificationStatus === 'rejected') {

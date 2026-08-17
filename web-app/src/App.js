@@ -235,6 +235,21 @@ function App() {
     offlineService.init();
   }, []);
 
+const BanOverlay = () => {
+  const { accountBanned, logout } = useAuth();
+  if (!accountBanned) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'white', borderRadius: 20, padding: 32, maxWidth: 400, width: '100%', textAlign: 'center' }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: '#dc2626' }}>Account Banned</h2>
+        <p style={{ margin: '0 0 16px', fontSize: 14, color: '#6b7280', lineHeight: 1.5 }}>{accountBanned.reason}</p>
+        <p style={{ margin: '0 0 20px', fontSize: 12, color: '#9ca3af' }}>If you believe this is an error, please contact support.</p>
+        <button onClick={logout} style={{ width: '100%', padding: '12px 0', background: '#dc2626', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Sign Out</button>
+      </div>
+    </div>
+  );
+};
+
   const passengerRoute = useMemo(() => (
     <RoleRoute allowedRole="passenger">
       <AppLayout bottomNav>
@@ -271,6 +286,7 @@ function App() {
             <ToastProvider>
               <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <NetworkStatus />
+                <BanOverlay />
                 <PWAInstallPrompt />
                 <a href="#main-content" className="skip-link" style={{
                   position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px',

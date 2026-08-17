@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const [tripStatusUpdate, setTripStatusUpdate] = useState(null);
   const [sosAlert, setSosAlert] = useState(null);
   const [chatUnread, setChatUnread] = useState({});
+  const [accountBanned, setAccountBanned] = useState(null);
 
   const socketRef = useRef(null);
 
@@ -177,6 +178,18 @@ export const AuthProvider = ({ children }) => {
     socketRef.current = newSocket;
     setSocket(newSocket);
     loadChatUnread();
+
+    newSocket.on('account_banned', (data) => {
+      setAccountBanned({ reason: data.reason || 'Your account has been permanently banned.' });
+      setUser(null);
+      setDriverProfile(null);
+      localStorage.clear();
+    });
+
+    newSocket.on('account_reactivated', () => {
+      setAccountBanned(null);
+    });
+
     return newSocket;
   }, [user, loadChatUnread]);
 
@@ -209,6 +222,9 @@ export const AuthProvider = ({ children }) => {
           setServerWaking(false);
           setUser(res.data.user);
           setDriverProfile(res.data.driverProfile);
+          if (res.data.user?.isBanned || res.data.driverProfile?.isBanned) {
+            setAccountBanned({ reason: res.data.driverProfile?.banReason || res.data.user?.banReason || 'Your account has been permanently banned.' });
+          }
           connectSocket(token);
           loadNotifications();
         })
@@ -232,6 +248,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('refreshToken', res.data.refreshToken);
     setUser(res.data.user);
     setDriverProfile(res.data.driverProfile);
+    if (res.data.user?.isBanned || res.data.driverProfile?.isBanned) {
+      setAccountBanned({ reason: res.data.driverProfile?.banReason || res.data.user?.banReason || 'Your account has been permanently banned.' });
+    }
     connectSocket(res.data.accessToken);
     loadNotifications();
     return res.data.user;
@@ -292,12 +311,13 @@ export const AuthProvider = ({ children }) => {
     sosAlert, clearSosAlert,
     emitLocationUpdate,
     chatUnread, markTripRead,
+    accountBanned, setAccountBanned,
   }), [
     user, driverProfile, loading, serverWaking, socket,
     notifications, unreadCount, loadNotifications,
     newRideRequest, rideAccepted, newPassengerJoined,
     driverLocation, tripStatusUpdate, sosAlert,
-    chatUnread,
+    chatUnread, accountBanned,
   ]);
 
   return (
