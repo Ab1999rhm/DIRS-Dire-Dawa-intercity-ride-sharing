@@ -69,7 +69,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const totalPassengers = await User.countDocuments({ role: 'passenger' });
   const totalDrivers = await User.countDocuments({ role: 'driver' });
   const pendingVerifications = await Driver.countDocuments({ verificationStatus: 'pending' });
-  const activeDrivers = await Driver.countDocuments({ isAvailable: true });
+  const activeDrivers = await Driver.countDocuments({ isAvailable: true, isOnline: true });
   const totalTrips = await Trip.countDocuments();
   const completedTrips = await Trip.countDocuments({ status: 'completed' });
   const activeTripsCount = await Trip.countDocuments({ status: { $in: ['driver_arriving', 'in_progress'] } });
@@ -105,13 +105,28 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .limit(10);
 
-  // Get online drivers
-  const onlineDriverDocs = await Driver.find({ isAvailable: true })
-    .populate('user', 'firstName lastName')
+  // Get online drivers — require both isAvailable AND isOnline to be true,
+  // and the user's location must have been updated within the last 5 minutes
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const onlineDriverDocs = await Driver.find({ isAvailable: true, isOnline: true })
+    .populate('user', 'firstName lastName currentLocation')
+    .limit(20);
+
+  // Filter out stale drivers whose location hasn't been updated recently
+  const onlineDriverIds = onlineDriverDocs
+    .filter(d => d.user?.currentLocation?.updatedAt && new Date(d.user.currentLocation.updatedAt) > fiveMinAgo)
+    .map(d => d._id);
+
+  // Also include drivers on active trips regardless of location staleness
+  const onTripDriverIds = (await Driver.find({ currentTrip: { $exists: true, $ne: null } }).select('_id')).map(d => d._id);
+  const allOnlineIds = [...new Set([...onlineDriverIds, ...onTripDriverIds])];
+
+  const onlineDriverDocsFiltered = await Driver.find({ _id: { $in: allOnlineIds } })
+    .populate('user', 'firstName lastName currentLocation')
     .limit(10);
 
   // Convert to plain objects so attached fields (vehicle/rating) serialize in the response
-  const onlineDrivers = onlineDriverDocs.map(d => d.toObject());
+  const onlineDrivers = onlineDriverDocsFiltered.map(d => d.toObject());
 
   // Get vehicle info for online drivers
   const driverIds = onlineDrivers.map(d => d._id);
@@ -207,7 +222,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
       sosAlerts: activeSOS,
       completedToday,
       cancelledToday,
-      onlineDrivers: activeDrivers,
+      onlineDrivers: onlineDrivers.length,
       pendingApprovals: pendingVerifications,
       onTripDrivers,
       activePassengers,
