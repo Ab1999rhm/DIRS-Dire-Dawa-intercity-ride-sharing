@@ -34,6 +34,7 @@ const AdminDashboard = () => {
   const [onlineDrivers, setOnlineDrivers] = useState([]);
   const [recentSOS, setRecentSOS] = useState([]);
   const [systemHealth, setSystemHealth] = useState({ api: 'operational', db: 'operational', socket: 'operational' });
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const loadNotifications = () => {
     notificationsAPI.get({ limit: 15 }).then((res) => {
@@ -45,6 +46,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchDashboard(true);
     loadNotifications();
+    const interval = setInterval(() => {
+      fetchDashboard(false);
+      loadNotifications();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -74,6 +80,7 @@ const AdminDashboard = () => {
       setOnlineDrivers(res.data.onlineDrivers || []);
       setRecentSOS(res.data.recentSOS || []);
       setSystemHealth(res.data.systemHealth || { api: 'operational', db: 'operational', socket: 'operational' });
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard');
     } finally {
@@ -130,12 +137,12 @@ const AdminDashboard = () => {
   };
 
   const statCards = [
-    { key: 'onlineDrivers', icon: <FaCar />, value: stats?.onlineDrivers || 0, color: '#10b981', bg: 'rgba(16,185,129,0.08)', label: 'Online Now' },
-    { key: 'activeTrips', icon: <FaRoute />, value: stats?.activeTrips || 0, color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', label: 'Active Trips' },
-    { key: 'todayRevenue', icon: <FaMoneyBillWave />, value: stats?.todayRevenue || 0, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', isCurrency: true, label: "Today's Revenue" },
-    { key: 'sosAlerts', icon: <FaShieldAlt />, value: stats?.sosAlerts || 0, color: '#dc2626', bg: 'rgba(220,38,38,0.08)', label: 'SOS Alerts' },
-    { key: 'completedToday', icon: <FaCheckCircle />, value: stats?.completedToday || 0, color: '#059669', bg: 'rgba(5,150,105,0.08)', label: 'Completed Today' },
-    { key: 'pendingApprovals', icon: <FaHourglassHalf />, value: stats?.pendingApprovals || 0, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', label: 'Pending Approvals' },
+    { key: 'onlineDrivers', icon: <FaCar />, value: stats?.onlineDrivers || 0, color: '#10b981', bg: 'rgba(16,185,129,0.10)', label: 'Online Drivers', sublabel: `${stats?.onTripDrivers || 0} on trip` },
+    { key: 'activeTrips', icon: <FaRoute />, value: stats?.activeTrips || 0, color: '#3b82f6', bg: 'rgba(59,130,246,0.10)', label: 'Active Trips', sublabel: `${stats?.completedToday || 0} completed today` },
+    { key: 'todayRevenue', icon: <FaMoneyBillWave />, value: stats?.todayRevenue || 0, color: '#7c3aed', bg: 'rgba(124,58,237,0.10)', isCurrency: true, label: "Today's Revenue", sublabel: `Commission: ETB ${(stats?.commissionToday || 0).toLocaleString()}` },
+    { key: 'sosAlerts', icon: <FaShieldAlt />, value: stats?.sosAlerts || 0, color: '#dc2626', bg: 'rgba(220,38,38,0.10)', label: 'SOS Alerts', sublabel: 'Active emergencies', pulse: (stats?.sosAlerts || 0) > 0 },
+    { key: 'completedToday', icon: <FaCheckCircle />, value: stats?.completedToday || 0, color: '#059669', bg: 'rgba(5,150,105,0.10)', label: 'Completed Today', sublabel: `${stats?.cancelledToday || 0} cancelled` },
+    { key: 'pendingApprovals', icon: <FaHourglassHalf />, value: stats?.pendingApprovals || 0, color: '#f59e0b', bg: 'rgba(245,158,11,0.10)', label: 'Pending Approvals', sublabel: 'Driver verifications' },
   ];
 
   const quickActions = [
@@ -236,6 +243,12 @@ const AdminDashboard = () => {
           <button className="admin-icon-btn" onClick={() => fetchDashboard(false)}>
             <FaSync />
           </button>
+          {lastUpdated && (
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }} />
+              {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
           <button className="admin-icon-btn" title="Notifications" onClick={toggleNotifDropdown}>
             <FaBell />
             {((notifications.length > 0) || (stats?.sosAlerts || 0) > 0) && (
@@ -311,6 +324,9 @@ const AdminDashboard = () => {
       </div>
 
       {/* Today's Live Metrics */}
+      <div className="admin-section-title admin-animate-in-delay-1" style={{ marginBottom: 10 }}>
+        <FaChartBar /> Today's Live Metrics
+      </div>
       <div
         className="admin-stats-grid admin-animate-in-delay-1"
       >
@@ -318,8 +334,15 @@ const AdminDashboard = () => {
           <div
             key={card.key}
             className={`admin-stat-card admin-animate-in${index > 0 ? ` admin-animate-in-delay-${Math.min(index, 5)}` : ''}`}
-            style={{ borderLeft: `4px solid ${card.color}` }}
+            style={{ borderLeft: `4px solid ${card.color}`, position: 'relative', overflow: 'hidden' }}
           >
+            {card.pulse && (
+              <span style={{
+                position: 'absolute', top: 8, right: 8, width: 10, height: 10,
+                borderRadius: '50%', background: card.color,
+                animation: 'pulse 2s infinite'
+              }} />
+            )}
             <div className="admin-stat-icon" style={{ background: card.bg, color: card.color }}>
               {card.icon}
             </div>
@@ -328,6 +351,9 @@ const AdminDashboard = () => {
                 {card.isCurrency ? `ETB ${(card.value || 0).toLocaleString()}` : (card.value || 0).toLocaleString()}
               </div>
               <div className="admin-stat-label">{card.label}</div>
+              {card.sublabel && (
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{card.sublabel}</div>
+              )}
             </div>
           </div>
         ))}

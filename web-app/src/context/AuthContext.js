@@ -94,7 +94,12 @@ export const AuthProvider = ({ children }) => {
 
     const newSocket = io(process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://dirs-dire-dawa-intercity-ride-sharing.onrender.com', {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: 15,
+      timeout: 20000,
     });
 
     newSocket.on('connect', () => {
