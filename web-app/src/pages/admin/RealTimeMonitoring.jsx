@@ -275,32 +275,6 @@ const RealTimeMonitoring = () => {
         </div>
       </div>
 
-      {/* SOS Alerts Priority */}
-      {sosAlerts.length > 0 && (
-        <div className="admin-section-title" style={{ color: '#ef4444' }}>
-          <FaExclamationTriangle /> {t('admin.criticalAlerts') || 'Critical Alerts'}
-        </div>
-      )}
-      {sosAlerts.length > 0 && (
-        <div className="admin-activity-list" style={{ marginBottom: 20, borderColor: '#ef4444' }}>
-          {sosAlerts.map((sos) => (
-            <div key={sos._id || sos.id} className="admin-activity-item" style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
-              <div className="admin-activity-icon" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
-                <FaExclamationTriangle />
-              </div>
-              <div className="admin-activity-info">
-                <div className="admin-activity-text" style={{ color: '#ef4444', fontWeight: 700 }}>
-                  {t('admin.sosFrom') || 'SOS from'} {sos.driverName || sos.user?.firstName || 'Driver'}
-                </div>
-                <div className="admin-activity-time">
-                  {sos.location?.address || (sos.location?.coordinates ? `${sos.location.coordinates[1]?.toFixed(4)}, ${sos.location.coordinates[0]?.toFixed(4)}` : sos.location || 'N/A')} • {sos.time || (sos.createdAt ? new Date(sos.createdAt).toLocaleTimeString() : '')}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Live Map Section */}
       <div className="admin-section-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <FaMapMarkerAlt /> <span>{t('admin.liveMap') || 'Live Map'}</span>
