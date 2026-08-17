@@ -26,8 +26,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     let mounted = true;
     const fetchStats = async () => {
       try {
-        const res = await adminAPI.dashboard();
-        const s = res.data?.stats;
+        const res = await adminAPI.getSystemHealth();
+        const s = res.data;
         if (mounted && s) {
           setStats({
             activeDrivers: s.activeDrivers || 0,

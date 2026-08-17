@@ -2857,3 +2857,31 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .admin-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-header-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .admin-header-actions .admin-icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+  .admin-header-actions .badge {
+    width: 14px;
+    height: 14px;
+    font-size: 8px;
+    top: -4px;
+    right: -4px;
+  }
+  .admin-header-actions > span {
+    display: none;
+  }
+}

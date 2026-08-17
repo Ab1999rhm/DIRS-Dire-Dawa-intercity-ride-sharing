@@ -11,6 +11,9 @@ const api = axios.create({
 
 // Request interceptor - add token
 api.interceptors.request.use((config) => {
+  if (!config.headers || typeof config.headers !== 'object') {
+    config.headers = {};
+  }
   const token = localStorage.getItem('accessToken');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
@@ -19,12 +22,10 @@ api.interceptors.request.use((config) => {
 // Response interceptor - handle 401, cache data, handle offline
 api.interceptors.response.use(
   (response) => {
-    // Cache successful responses
     cacheResponse(response);
     return response;
   },
   async (error) => {
-    // Handle 401 - token refresh
     if (error.response?.status === 401) {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
@@ -32,8 +33,13 @@ api.interceptors.response.use(
           const res = await axios.post(`${API_URL}/auth/refresh-token`, { refreshToken });
           localStorage.setItem('accessToken', res.data.accessToken);
           localStorage.setItem('refreshToken', res.data.refreshToken);
-          error.config.headers.Authorization = `Bearer ${res.data.accessToken}`;
-          return api(error.config);
+          if (error.config && (!error.config.headers || typeof error.config.headers !== 'object')) {
+            error.config.headers = {};
+          }
+          if (error.config) {
+            error.config.headers.Authorization = `Bearer ${res.data.accessToken}`;
+            return api(error.config);
+          }
         } catch {
           localStorage.clear();
           window.location.href = '/login';
@@ -41,7 +47,6 @@ api.interceptors.response.use(
       }
     }
 
-    // Handle network errors - queue for sync
     if (!error.response && error.message === 'Network Error') {
       console.log('Offline detected, request will be queued');
     }

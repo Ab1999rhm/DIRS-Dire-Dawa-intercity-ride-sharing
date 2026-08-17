@@ -1088,21 +1088,24 @@ exports.adjustCommissionRate = asyncHandler(async (req, res) => {
 
 exports.processPayout = asyncHandler(async (req, res) => {
   const { amount } = req.body;
+  if (!amount || isNaN(amount) || Number(amount) <= 0) {
+    return res.status(400).json({ message: 'A valid payout amount is required' });
+  }
   const driver = await Driver.findById(req.params.driverId).populate('user');
   if (!driver) return res.status(404).json({ message: 'Driver not found' });
   
-  // Create payout record
+  const payoutAmount = Number(amount);
   const payout = await Payment.create({
     driver: driver._id,
     user: driver.user._id,
-    amount,
+    amount: payoutAmount,
     type: 'payout',
     status: 'completed',
     platformCommission: 0,
-    driverEarnings: amount
+    driverEarnings: payoutAmount
   });
   
-  await createNotification(driver.user._id, 'payout', 'Payout Processed', `ETB ${amount} has been processed to your account.`);
+  await createNotification(driver.user._id, 'payout', 'Payout Processed', `ETB ${payoutAmount} has been processed to your account.`);
   
   res.json({ message: 'Payout processed', payout });
 });
@@ -1561,7 +1564,7 @@ exports.getPassengerTransactions = asyncHandler(async (req, res) => {
 // System Health Monitoring
 exports.getSystemHealth = asyncHandler(async (req, res) => {
   const cpuUsage = process.cpuUsage();
-  const totalCpuUsage = (cpuUsage.user + cpuUsage.system) / 1000000; // Convert to seconds
+  const totalCpuUsage = (cpuUsage.user + cpuUsage.system) / 1000000;
   const cpuPercent = (totalCpuUsage / os.cpus().length).toFixed(2);
   
   const memoryUsage = process.memoryUsage();
@@ -1579,7 +1582,12 @@ exports.getSystemHealth = asyncHandler(async (req, res) => {
   const activeConnections = getIO().sockets.sockets.size;
   
   const dbStats = await mongoose.connection.db.stats();
-  const dbSize = (dbStats.dataSize / 1024 / 1024).toFixed(2); // Convert to MB
+  const dbSize = (dbStats.dataSize / 1024 / 1024).toFixed(2);
+
+  const [activeDrivers, activeTrips] = await Promise.all([
+    Driver.countDocuments({ isOnline: true }),
+    Trip.countDocuments({ status: { $in: ['in_progress', 'boarding'] } })
+  ]);
   
   res.json({
     serverStatus: 'Operational',
@@ -1592,7 +1600,9 @@ exports.getSystemHealth = asyncHandler(async (req, res) => {
     dbCollections: dbStats.collections,
     uptime: `${uptimeHours}h ${uptimeMinutes}m`,
     activeConnections,
-    apiLatency: Math.floor(Math.random() * 50) + 20, // Simulated latency
+    activeDrivers,
+    activeTrips,
+    apiLatency: Math.floor(Math.random() * 50) + 20,
     errorRate: '0.02%',
     timestamp: new Date()
   });
@@ -4019,8 +4029,7 @@ exports.getDriverUtilization = asyncHandler(async (req, res) => {
   res.json({ utilizationData });
 });
 
-exports.getDriverPerformance = asyncHandler(async (req, res) => {
-  const { startDate, endDate } = req.query;
+exports.getAllDriversPerformance = asyncHandler(async (req, res) => {
   
   const dateFilter = buildDateFilter(startDate, endDate);
   

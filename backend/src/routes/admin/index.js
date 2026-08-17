@@ -164,7 +164,7 @@ router.get('/analytics/users/lifetime-value', protect, authorize('admin'), admin
 // Driver Analytics
 router.get('/analytics/drivers/availability', protect, authorize('admin'), adminController.getDriverAvailability);
 router.get('/analytics/drivers/utilization', protect, authorize('admin'), adminController.getDriverUtilization);
-router.get('/analytics/drivers/performance', protect, authorize('admin'), adminController.getDriverPerformance);
+router.get('/analytics/drivers/performance', protect, authorize('admin'), adminController.getAllDriversPerformance);
 router.get('/analytics/drivers/earnings', protect, authorize('admin'), adminController.getDriverEarnings);
 router.get('/analytics/drivers/churn', protect, authorize('admin'), adminController.getDriverChurn);
 
