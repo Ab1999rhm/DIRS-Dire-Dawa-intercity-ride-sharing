@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  FaMapMarkerAlt, FaCar, FaExclamationTriangle, FaServer,
-  FaClock, FaRoute, FaUser, FaSignal, FaCheckCircle, FaTimesCircle,
+  FaMapMarkerAlt, FaCar, FaExclamationTriangle,
+  FaRoute, FaUser, FaSignal, FaCheckCircle, FaTimesCircle,
   FaSync, FaExpand, FaCompress, FaFilter, FaBell,
-  FaMemory, FaDatabase, FaUsers, FaTachometerAlt, FaChartBar,
+  FaUsers, FaTachometerAlt, FaChartBar,
   FaMoneyBillWave
 } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from 'react-leaflet';
@@ -45,7 +45,6 @@ const RealTimeMonitoring = () => {
   const [offlineCount, setOfflineCount] = useState(0);
   const [activeTrips, setActiveTrips] = useState([]);
   const [sosAlerts, setSosAlerts] = useState([]);
-  const [systemHealth, setSystemHealth] = useState(null);
   const [bookingQueue, setBookingQueue] = useState(null);
   const [speedAlerts, setSpeedAlerts] = useState([]);
   const [geofenceAlerts, setGeofenceAlerts] = useState([]);
@@ -131,11 +130,10 @@ const RealTimeMonitoring = () => {
 
   const fetchRealTimeData = async () => {
     try {
-      const [driversRes, tripsRes, sosRes, healthRes, queueRes] = await Promise.all([
+      const [driversRes, tripsRes, sosRes, queueRes] = await Promise.all([
         adminAPI.getActiveDriversLocations().catch(() => ({ data: { drivers: [] } })),
         adminAPI.getActiveTripsRoutes().catch(() => ({ data: { trips: [] } })),
         adminAPI.getSOSAlerts().catch(() => ({ data: [] })),
-        adminAPI.getSystemHealth().catch(() => ({ data: null })),
         adminAPI.getBookingQueue().catch(() => ({ data: null }))
       ]);
 
@@ -146,7 +144,6 @@ const RealTimeMonitoring = () => {
       setActiveTrips(tripsRes.data?.trips || []);
       const sosData = sosRes.data;
       setSosAlerts(Array.isArray(sosData) ? sosData : (sosData?.alerts || sosData?.data || []));
-      setSystemHealth(healthRes.data);
       setBookingQueue(queueRes.data);
       setLoading(false);
     } catch (err) {
@@ -232,90 +229,6 @@ const RealTimeMonitoring = () => {
           </button>
         </div>
       </div>
-
-      {/* System Health */}
-      {systemHealth && (
-        <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-              <FaServer />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.serverStatus}</div>
-              <div className="admin-stat-label">{t('admin.serverStatus') || 'Server Status'}</div>
-            </div>
-          </div>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-              <FaServer />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.cpuUsage}</div>
-              <div className="admin-stat-label">{t('admin.cpuUsage') || 'CPU Usage'}</div>
-            </div>
-          </div>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(139, 92, 246, 0.08)', color: '#8b5cf6' }}>
-              <FaMemory />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.memoryUsage}</div>
-              <div className="admin-stat-label">{t('admin.memoryUsage') || 'Memory Usage'}</div>
-            </div>
-          </div>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(236, 72, 153, 0.08)', color: '#ec4899' }}>
-              <FaDatabase />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.dbSize}</div>
-              <div className="admin-stat-label">{t('admin.dbSize') || 'DB Size'}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Extended System Health */}
-      {systemHealth && (
-        <div className="admin-stats-grid" style={{ marginBottom: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6' }}>
-              <FaClock />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.uptime}</div>
-              <div className="admin-stat-label">{t('admin.uptime') || 'Uptime'}</div>
-            </div>
-          </div>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-              <FaUsers />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.activeConnections || 0}</div>
-              <div className="admin-stat-label">{t('admin.connectedUsers') || 'Connected Users'}</div>
-            </div>
-          </div>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b' }}>
-              <FaTachometerAlt />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.apiLatency}ms</div>
-              <div className="admin-stat-label">{t('admin.apiLatency') || 'API Latency'}</div>
-            </div>
-          </div>
-          <div className="admin-stat-card">
-            <div className="admin-stat-icon" style={{ background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444' }}>
-              <FaExclamationTriangle />
-            </div>
-            <div>
-              <div className="admin-stat-value" style={{ fontSize: 16 }}>{systemHealth.errorRate}</div>
-              <div className="admin-stat-label">{t('admin.errorRate') || 'Error Rate'}</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Live Analytics Dashboard */}
       <div className="admin-section-title">
