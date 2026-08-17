@@ -26,6 +26,8 @@ router.post('/:rideRequestId/decline', protect, authorize('driver'), rideControl
 router.post('/:rideRequestId/cancel', protect, authorize('passenger'), rideController.cancelRideRequest);
 
 router.get('/available', protect, authorize('driver'), rideController.getAvailableRides);
+router.get('/shared-trips', protect, rideController.getSharedTrips);
+router.get('/vehicle-trip/:tripId/seats', protect, rideController.getVehicleTripSeats);
 router.get('/driver/stats', protect, authorize('driver'), rideController.getDriverStats);
 router.get('/passenger/trips', protect, authorize('passenger'), rideController.getPassengerTrips);
 router.get('/driver/trips', protect, authorize('driver'), rideController.getDriverTrips);

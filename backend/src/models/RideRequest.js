@@ -61,6 +61,14 @@ const rideRequestSchema = new mongoose.Schema({
     min: 1,
     max: 6
   },
+  selectedSeats: [{
+    type: String
+  }],
+  vehicleTrip: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'VehicleTrip',
+    default: null
+  },
   scheduledTime: {
     type: Date,
     default: null

@@ -35,7 +35,7 @@ const generateSeatLayout = (vehicleType, capacity) => {
   return layout;
 };
 
-const SeatPickerModal = ({ isOpen, onClose, selectedSeats = [], onConfirmSeats, passengersCount = 1, vehicleType = 'minibus', capacity = 16 }) => {
+const SeatPickerModal = ({ isOpen, onClose, selectedSeats = [], onConfirmSeats, passengersCount = 1, vehicleType = 'minibus', capacity = 16, takenSeats = [], tripInfo = null }) => {
   if (!isOpen) return null;
 
   const seatLayout = generateSeatLayout(vehicleType, capacity);
@@ -105,11 +105,14 @@ const SeatPickerModal = ({ isOpen, onClose, selectedSeats = [], onConfirmSeats, 
                 {row.map((seat, cIdx) => {
                   if (!seat) return <div key={cIdx} className="aisle"></div>;
                   const isSelected = selectedSeats.includes(seat);
+                  const isTaken = takenSeats.includes(seat);
                   return (
                     <button
                       key={seat}
-                      className={`seat-btn ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleSeat(seat)}
+                      className={`seat-btn ${isSelected ? 'selected' : ''} ${isTaken ? 'taken' : ''}`}
+                      onClick={() => !isTaken && toggleSeat(seat)}
+                      disabled={isTaken}
+                      title={isTaken ? 'Seat taken' : `Seat ${seat}`}
                     >
                       {seat}
                     </button>
@@ -123,7 +126,20 @@ const SeatPickerModal = ({ isOpen, onClose, selectedSeats = [], onConfirmSeats, 
         <div className="seat-legend">
           <span className="legend-item"><span className="legend-box available"></span> Available</span>
           <span className="legend-item"><span className="legend-box selected"></span> Selected</span>
+          {takenSeats.length > 0 && (
+            <span className="legend-item"><span className="legend-box taken"></span> Taken</span>
+          )}
         </div>
+
+        {tripInfo && (
+          <div style={{ padding: '12px 16px', background: 'var(--primary-50)', borderRadius: 8, marginTop: 8, fontSize: 13 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{tripInfo.vehicle}</div>
+            <div style={{ color: 'var(--text-muted)' }}>{tripInfo.plateNumber} · {tripInfo.driver}</div>
+            <div style={{ color: 'var(--primary)', fontWeight: 600, marginTop: 4 }}>
+              {capacity - takenSeats.length} of {capacity} seats available
+            </div>
+          </div>
+        )}
 
         <button className="confirm-seat-btn" onClick={onClose}>
           <FaCheck /> Confirm {selectedSeats.length} Seat(s)

@@ -156,6 +156,8 @@ export const ridesAPI = {
   complete: (id) => api.post(`/rides/trip/${id}/complete`),
   confirmArrival: (id) => api.post(`/rides/trip/${id}/arrival`),
   available: (params) => api.get('/rides/available', { params }),
+  getSharedTrips: (params) => api.get('/rides/shared-trips', { params }),
+  getVehicleTripSeats: (tripId) => api.get(`/rides/vehicle-trip/${tripId}/seats`),
 };
 
 export const chatAPI = {

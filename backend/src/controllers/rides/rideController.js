@@ -2,6 +2,7 @@ const RideRequest = require('../../models/RideRequest');
 const Trip = require('../../models/Trip');
 const Driver = require('../../models/Driver');
 const Vehicle = require('../../models/Vehicle');
+const VehicleTrip = require('../../models/VehicleTrip');
 const Payment = require('../../models/Payment');
 const User = require('../../models/User');
 const SuspiciousActivity = require('../../models/SuspiciousActivity');
@@ -64,7 +65,7 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
     rideType, pickupLocation, dropoffLocation,
     route: routeInput, estimatedFare, passengersCount,
     scheduledTime, isScheduled, promoCode, notes,
-    vehicleType, paymentMethod
+    vehicleType, paymentMethod, selectedSeats: inputSeats
   } = req.body;
 
   let route = routeInput;
@@ -136,6 +137,174 @@ exports.createRideRequest = asyncHandler(async (req, res) => {
         status: 'detected'
       });
     }
+  }
+
+  // === SHARED RIDE POOLING ===
+  const SHARED_VEHICLE_TYPES = ['minibus', 'bus', 'minivan'];
+  const isSharedType = SHARED_VEHICLE_TYPES.includes(vehicleType);
+
+  if (isSharedType && normalizedRideType === 'intercity' && inputSeats && inputSeats.length > 0) {
+    const toLngLatInner = (coords) => coords && coords.length === 2 ? [coords[1], coords[0]] : coords;
+    const pickupLngLat = toLngLatInner(pickupLocation.coordinates);
+
+    // 1. Find existing VehicleTrips with available seats for this destination
+    const { matchDestinationCity } = require('../../services/rideMatchingService');
+    const destCity = await matchDestinationCity(dropoffLocation.address, dropoffLocation.placeId);
+
+    const availableTrips = await VehicleTrip.find({
+      status: { $in: ['scheduled', 'boarding'] },
+      vehicleType,
+      rideType: 'intercity',
+      departureTime: { $gte: new Date(Date.now() - 30 * 60 * 1000) },
+      ...(destCity ? { destinationCity: destCity.key } : {})
+    }).populate('vehicle', 'plateNumber make model color capacity')
+      .populate('driver', 'firstName lastName phoneNumber averageRating');
+
+    // 2. Try to find a trip with enough available seats
+    for (const trip of availableTrips) {
+      const availableSeats = trip.seats.filter(s => s.status === 'available');
+      if (availableSeats.length < inputSeats.length) continue;
+
+      // 3. Atomically reserve seats using findOneAndUpdate
+      let reservationSuccess = true;
+      for (const seatId of inputSeats) {
+        const result = await VehicleTrip.findOneAndUpdate(
+          {
+            _id: trip._id,
+            'seats.seatId': seatId,
+            'seats.status': 'available'
+          },
+          {
+            $set: {
+              'seats.$.status': 'reserved',
+              'seats.$.passenger': req.user._id,
+              'seats.$.rideRequest': rideRequest._id
+            },
+            $push: { passengers: rideRequest._id },
+            $inc: { totalCollected: trip.farePerSeat || 0 }
+          },
+          { new: true }
+        );
+        if (!result) {
+          reservationSuccess = false;
+          // Rollback: release any already-reserved seats
+          for (const released of inputSeats) {
+            if (released === seatId) break;
+            await VehicleTrip.findOneAndUpdate(
+              { _id: trip._id, 'seats.seatId': released },
+              {
+                $set: { 'seats.$.status': 'available', 'seats.$.passenger': null, 'seats.$.rideRequest': null },
+                $pull: { passengers: rideRequest._id },
+                $inc: { totalCollected: -(trip.farePerSeat || 0) }
+              }
+            );
+          }
+          break;
+        }
+      }
+
+      if (reservationSuccess) {
+        // Link ride request to VehicleTrip
+        rideRequest.vehicleTrip = trip._id;
+        rideRequest.vehicle = trip.vehicle._id;
+        rideRequest.driver = trip.driver._id;
+        rideRequest.selectedSeats = inputSeats;
+        rideRequest.status = 'accepted';
+        await rideRequest.save();
+
+        logger.info('Shared ride - seats reserved', {
+          tripId: trip._id,
+          passenger: req.user._id,
+          seats: inputSeats,
+          vehicle: trip.vehicle.plateNumber
+        });
+
+        // Create Trip document
+        const distanceKm = rideRequest.route?.distance
+          ? rideRequest.route.distance / 1000
+          : haversineDistance(pickupLocation.coordinates, dropoffLocation.coordinates);
+        const durationMin = rideRequest.route?.duration
+          ? rideRequest.route.duration / 60
+          : Math.max((distanceKm / 30) * 60, 5);
+
+        const newTrip = await Trip.create({
+          rideRequest: rideRequest._id,
+          passenger: req.user._id,
+          driver: trip.driver._id,
+          vehicle: trip.vehicle._id,
+          status: 'driver_arriving',
+          rideType: 'intercity',
+          pickupLocation: {
+            address: rideRequest.pickupLocation.address,
+            coordinates: rideRequest.pickupLocation.coordinates.coordinates
+          },
+          dropoffLocation: {
+            address: rideRequest.dropoffLocation.address,
+            coordinates: rideRequest.dropoffLocation.coordinates.coordinates
+          },
+          fare: calculateFare('intercity', distanceKm, durationMin)
+        });
+
+        const io = getIO();
+
+        // Notify passenger
+        io.to(`user_${req.user._id}`).emit('ride_accepted', {
+          rideRequestId: rideRequest._id,
+          tripId: newTrip._id,
+          driver: {
+            name: `${trip.driver.firstName} ${trip.driver.lastName}`,
+            phone: trip.driver.phoneNumber,
+            rating: trip.driver.averageRating,
+            profilePhoto: trip.driver.profilePhoto,
+            vehicle: {
+              make: trip.vehicle.make,
+              model: trip.vehicle.model,
+              color: trip.vehicle.color,
+              plateNumber: trip.vehicle.plateNumber,
+              vehicleType: trip.vehicle.vehicleType,
+            },
+            seats: inputSeats,
+            vehicleTripId: trip._id
+          }
+        });
+
+        await notifyRideUpdate(req.user._id, 'ride_accepted', {
+          driverName: `${trip.driver.firstName} ${trip.driver.lastName}`,
+          vehicleInfo: `${trip.vehicle.color} ${trip.vehicle.make} ${trip.vehicle.model}`,
+          tripId: newTrip._id,
+          seats: inputSeats
+        });
+
+        // Notify driver of new passenger
+        io.to(`user_${trip.driver._id}`).emit('new_passenger_joined', {
+          rideRequestId: rideRequest._id,
+          passenger: {
+            name: `${req.user.firstName} ${req.user.lastName}`,
+            phone: req.user.phoneNumber,
+            seats: inputSeats
+          },
+          vehicleTripId: trip._id
+        });
+
+        return res.json({
+          message: 'Seats reserved on shared trip',
+          rideRequest,
+          trip: newTrip,
+          vehicleTrip: {
+            id: trip._id,
+            plateNumber: trip.vehicle.plateNumber,
+            vehicle: `${trip.vehicle.color} ${trip.vehicle.make} ${trip.vehicle.model}`,
+            driver: `${trip.driver.firstName} ${trip.driver.lastName}`,
+            seats: inputSeats,
+            availableSeats: availableSeats.length - inputSeats.length
+          }
+        });
+      }
+    }
+
+    // No available shared trip found — fall through to broadcast
+    rideRequest.selectedSeats = inputSeats;
+    await rideRequest.save();
   }
 
   const matchResult = await findNearbyDrivers(
@@ -215,9 +384,73 @@ exports.acceptRideRequest = asyncHandler(async (req, res) => {
   rideRequest.status = 'accepted';
   await rideRequest.save();
 
-  driver.isAvailable = false;
-  driver.currentTrip = rideRequest._id;
-  await driver.save();
+  // === SHARED RIDE: Create VehicleTrip if shared vehicle type ===
+  const SHARED_VEHICLE_TYPES = ['minibus', 'bus', 'minivan'];
+  let vehicleTrip = null;
+  if (SHARED_VEHICLE_TYPES.includes(vehicle.vehicleType) && rideRequest.rideType === 'intercity') {
+    const toLngLatInner = (coords) => coords && coords.length === 2 ? [coords[1], coords[0]] : coords;
+    const { matchDestinationCity } = require('../../services/rideMatchingService');
+    const destCity = await matchDestinationCity(
+      rideRequest.dropoffLocation.address,
+      rideRequest.dropoffLocation.placeId
+    );
+
+    // Generate seat layout
+    const capacity = vehicle.capacity || 16;
+    const seatsPerRow = 4;
+    const seats = [];
+    let seatNum = 1;
+    for (let row = 1; row <= Math.ceil(capacity / seatsPerRow); row++) {
+      for (let col = 1; col <= seatsPerRow; col++) {
+        if (col === 3) continue; // aisle
+        if (seatNum <= capacity) {
+          const seatId = `${row}${String.fromCharCode(64 + col)}`;
+          const isTaken = (rideRequest.selectedSeats || []).includes(seatId);
+          seats.push({
+            seatId,
+            status: isTaken ? 'occupied' : 'available',
+            passenger: isTaken ? rideRequest.passenger : null,
+            rideRequest: isTaken ? rideRequest._id : null
+          });
+          seatNum++;
+        }
+      }
+    }
+
+    vehicleTrip = await VehicleTrip.create({
+      vehicle: vehicle._id,
+      driver: req.user._id,
+      rideType: 'intercity',
+      vehicleType: vehicle.vehicleType,
+      destinationCity: destCity?.key || null,
+      departureTime: new Date(),
+      status: 'boarding',
+      capacity,
+      seats,
+      farePerSeat: rideRequest.estimatedFare || 0,
+      passengers: [rideRequest._id],
+      totalCollected: rideRequest.estimatedFare || 0
+    });
+
+    rideRequest.vehicleTrip = vehicleTrip._id;
+    await rideRequest.save();
+
+    driver.isAvailable = false;
+    driver.currentTrip = rideRequest._id;
+    await driver.save();
+
+    logger.info('Shared VehicleTrip created', {
+      vehicleTripId: vehicleTrip._id,
+      driverId: driver._id,
+      vehicle: vehicle.plateNumber,
+      capacity,
+      destinationCity: destCity?.key
+    });
+  } else {
+    driver.isAvailable = false;
+    driver.currentTrip = rideRequest._id;
+    await driver.save();
+  }
 
   const distanceKm = rideRequest.route?.distance
     ? rideRequest.route.distance / 1000
@@ -267,7 +500,10 @@ exports.acceptRideRequest = asyncHandler(async (req, res) => {
         color: vehicle.color,
         plateNumber: vehicle.plateNumber,
         vehicleType: vehicle.vehicleType,
-      }
+      },
+      vehicleTripId: vehicleTrip?._id || null,
+      seats: rideRequest.selectedSeats || [],
+      availableSeats: vehicleTrip ? vehicleTrip.seats.filter(s => s.status === 'available').length : 0
     }
   });
 
@@ -753,5 +989,71 @@ exports.getDriverStats = asyncHandler(async (req, res) => {
       plateNumber: vehicle.plateNumber
     } : null,
     recentTrips
+  });
+});
+
+// === SHARED RIDE ENDPOINTS ===
+
+exports.getSharedTrips = asyncHandler(async (req, res) => {
+  const { destinationCity, vehicleType, rideType = 'intercity' } = req.query;
+
+  const query = {
+    status: { $in: ['scheduled', 'boarding'] },
+    rideType
+  };
+  if (destinationCity) query.destinationCity = destinationCity;
+  if (vehicleType) query.vehicleType = vehicleType;
+
+  const trips = await VehicleTrip.find(query)
+    .populate('vehicle', 'plateNumber make model color capacity vehicleType')
+    .populate('driver', 'firstName lastName phoneNumber averageRating profilePhoto')
+    .sort({ departureTime: 1 })
+    .limit(20);
+
+  const result = trips.map(t => ({
+    _id: t._id,
+    vehicle: t.vehicle,
+    driver: t.driver,
+    vehicleType: t.vehicleType,
+    destinationCity: t.destinationCity,
+    departureTime: t.departureTime,
+    status: t.status,
+    capacity: t.capacity,
+    farePerSeat: t.farePerSeat,
+    availableSeats: t.seats.filter(s => s.status === 'available').length,
+    totalSeats: t.seats.length,
+    seats: t.seats
+  }));
+
+  res.json({ sharedTrips: result });
+});
+
+exports.getVehicleTripSeats = asyncHandler(async (req, res) => {
+  const { tripId } = req.params;
+
+  const trip = await VehicleTrip.findById(tripId)
+    .populate('vehicle', 'plateNumber make model color capacity')
+    .populate('driver', 'firstName lastName averageRating');
+
+  if (!trip) {
+    return res.status(404).json({ error: 'Vehicle trip not found' });
+  }
+
+  res.json({
+    trip: {
+      _id: trip._id,
+      vehicle: trip.vehicle,
+      driver: trip.driver,
+      vehicleType: trip.vehicleType,
+      destinationCity: trip.destinationCity,
+      departureTime: trip.departureTime,
+      status: trip.status,
+      capacity: trip.capacity,
+      farePerSeat: trip.farePerSeat,
+      seats: trip.seats,
+      availableSeats: trip.seats.filter(s => s.status === 'available').length,
+      occupiedSeats: trip.seats.filter(s => s.status === 'occupied').length,
+      reservedSeats: trip.seats.filter(s => s.status === 'reserved').length
+    }
   });
 });

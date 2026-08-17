@@ -47,7 +47,7 @@ const vehicleSchema = new mongoose.Schema({
     type: Number,
     default: 4,
     min: 1,
-    max: 16
+    max: 30
   },
   serviceType: {
     type: String,

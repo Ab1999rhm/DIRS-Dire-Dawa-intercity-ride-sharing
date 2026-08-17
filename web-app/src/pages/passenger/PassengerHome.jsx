@@ -672,6 +672,7 @@ const PassengerHome = () => {
         estimatedFare: fareCalc.total,
         promoCode: promoCode || undefined,
         passengersCount: passengersCount || 1,
+        selectedSeats: selectedSeats.length > 0 ? selectedSeats : undefined,
         scheduledTime: scheduleEnabled ? scheduledTime : undefined,
       });
 
@@ -679,6 +680,24 @@ const PassengerHome = () => {
       const rideResponse = rideData?.data || rideData;
       const rideRequest = rideResponse?.rideRequest || rideResponse;
       setActiveRide(rideRequest);
+
+      // Handle shared trip response — seats reserved immediately
+      const vehicleTripInfo = rideResponse?.vehicleTrip;
+      if (vehicleTripInfo) {
+        setRideState('driver_found');
+        setFoundDriverInfo({
+          name: vehicleTripInfo.driver,
+          vehicle: vehicleTripInfo.vehicle,
+          plateNumber: vehicleTripInfo.plateNumber,
+          seats: vehicleTripInfo.seats,
+          availableSeats: vehicleTripInfo.availableSeats,
+          isShared: true
+        });
+        setSearchingDrivers(0);
+        clearInterval(searchingIntervalRef.current);
+        toast.success(`Seats ${vehicleTripInfo.seats.join(', ')} reserved on ${vehicleTripInfo.plateNumber}!`);
+        return;
+      }
 
       // Persist ride to local storage so it instantly appears in My Trips & History
       try {
@@ -1166,6 +1185,16 @@ const PassengerHome = () => {
               <span>
                 <FaStar /> {driver.rating || '4.5'}
               </span>
+              {driver.isShared && driver.seats && (
+                <div style={{ marginTop: 8, padding: '8px 12px', background: 'var(--primary-50)', borderRadius: 8, fontSize: 12 }}>
+                  <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                    <FaChair /> Seats: {driver.seats.join(', ')}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', marginTop: 2 }}>
+                    {driver.availableSeats} more seats available on this vehicle
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

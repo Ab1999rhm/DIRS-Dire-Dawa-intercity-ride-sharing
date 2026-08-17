@@ -55,6 +55,14 @@
   color: white;
 }
 
+.seat-btn.taken {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
 .aisle {
   width: 24px;
 }
@@ -87,6 +95,11 @@
 
 .legend-box.selected {
   background: #2563eb;
+}
+
+.legend-box.taken {
+  background: #e5e7eb;
+  border: 2px solid #d1d5db;
 }
 
 .confirm-seat-btn {
