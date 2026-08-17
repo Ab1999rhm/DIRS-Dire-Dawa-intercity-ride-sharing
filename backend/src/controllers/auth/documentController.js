@@ -18,13 +18,25 @@ exports.uploadDocuments = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Driver profile not found' });
   }
 
-  const { licensePhotoUrl, nationalIdPhotoUrl, licenseNumber, licenseExpiry, nationalId } = req.body;
+  const { licensePhotoUrl, nationalIdPhotoUrl, licenseNumber, licenseExpiry, nationalId, librePhotoUrl, insurancePhotoUrl, policeClearancePhotoUrl } = req.body;
 
   if (licensePhotoUrl) driver.licensePhoto = licensePhotoUrl;
   if (nationalIdPhotoUrl) driver.nationalIdPhoto = nationalIdPhotoUrl;
   if (licenseNumber) driver.licenseNumber = licenseNumber;
   if (licenseExpiry) driver.licenseExpiry = licenseExpiry;
   if (nationalId) driver.nationalId = nationalId;
+  if (librePhotoUrl) {
+    if (!driver.documents) driver.documents = {};
+    driver.documents.librePhoto = { data: librePhotoUrl, status: 'pending', updatedAt: new Date() };
+  }
+  if (insurancePhotoUrl) {
+    if (!driver.documents) driver.documents = {};
+    driver.documents.insurancePhoto = { data: insurancePhotoUrl, status: 'pending', updatedAt: new Date() };
+  }
+  if (policeClearancePhotoUrl) {
+    if (!driver.documents) driver.documents = {};
+    driver.documents.policeClearancePhoto = { data: policeClearancePhotoUrl, status: 'pending', updatedAt: new Date() };
+  }
 
   if (driver.verificationStatus === 'rejected') {
     driver.verificationStatus = 'pending';
@@ -78,7 +90,10 @@ exports.getDocuments = asyncHandler(async (req, res) => {
       nationalId: driver.nationalId,
       nationalIdPhoto: driver.nationalIdPhoto,
       verificationStatus: driver.verificationStatus,
-      rejectionReason: driver.rejectionReason
+      rejectionReason: driver.rejectionReason,
+      librePhoto: driver.documents?.librePhoto?.data || null,
+      insurancePhoto: driver.documents?.insurancePhoto?.data || null,
+      policeClearancePhoto: driver.documents?.policeClearancePhoto?.data || null
     },
     vehicle: vehicle ? {
       vehiclePhoto: vehicle.vehiclePhoto,

@@ -9,7 +9,7 @@ import {
   FaMapMarkerAlt, FaListUl, FaChartBar, FaUsers, FaSync, FaCog, FaEdit,
   FaReply, FaCheck, FaTimes, FaInfoCircle, FaFileExport, FaPercentage,
   FaHistory, FaExchangeAlt, FaUserClock, FaFlag, FaBolt, FaFire,
-  FaChartArea, FaClipboardList, FaUserGraduate, FaShieldAlt
+  FaChartArea, FaClipboardList, FaUserGraduate, FaShieldAlt, FaFileImage
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -637,41 +637,47 @@ const DriverManagement = () => {
           </div>
           <div className="admin-activity-list">
             {drivers.filter(d => d.verificationStatus === 'pending' || d.verificationStatus === 'under_review').map(driver => (
-              <div key={driver._id} className="admin-activity-item" style={{ background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: 10, padding: 14, marginBottom: 8 }}>
-                <div className="admin-activity-icon" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
-                  <FaIdCard />
-                </div>
-                <div className="admin-activity-info" style={{ flex: 1 }}>
-                  <div className="admin-activity-text" style={{ fontWeight: 700 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
-                  <div className="admin-activity-time">{driver.vehicle?.make} {driver.vehicle?.model} · {driver.user?.phoneNumber || driver.phoneNumber}</div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                    {[
-                      ['License', driver.licensePhoto],
-                      ['National ID', driver.nationalIdPhoto],
-                      ['Vehicle Libre', driver.documents?.librePhoto?.data],
-                      ['Insurance', driver.documents?.insurancePhoto?.data],
-                      ['Police Clearance', driver.documents?.policeClearancePhoto?.data],
-                    ].map(([label, photoData]) => {
-                      const hasDoc = Boolean(photoData);
-                      const docStatus = hasDoc ? 'uploaded' : 'not uploaded';
-                      return (
-                        <span key={label} style={{ fontSize: 10, padding: '3px 10px', borderRadius: 8, background: hasDoc ? '#dcfce715' : '#fef3c715', color: hasDoc ? '#15803d' : '#b45309', fontWeight: 600 }}>
-                          {label}: {docStatus}
-                        </span>
-                      );
-                    })}
+              <div key={driver._id} style={{ background: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#f59e0b15', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FaIdCard />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{driver.user?.firstName || driver.firstName} {driver.user?.lastName || driver.lastName}</div>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>{driver.user?.phoneNumber || driver.phoneNumber}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                    <button onClick={() => handleApprove(driver._id)} style={{ padding: '8px 14px', fontSize: 12, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#10b981', color: 'white', fontWeight: 600 }}>
+                      <FaCheckCircle /> Approve
+                    </button>
+                    <button onClick={() => handleReject(driver._id, 'Documents not verified')} style={{ padding: '8px 14px', fontSize: 12, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ef4444', color: 'white', fontWeight: 600 }}>
+                      <FaTimesCircle /> Reject
+                    </button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-                  <button className="driver-action-btn driver-btn-verify" onClick={() => handleApprove(driver._id)}>
-                    <FaCheckCircle /> Approve
-                  </button>
-                  <button className="driver-action-btn driver-btn-reject" onClick={() => handleReject(driver._id, 'Documents not verified')}>
-                    <FaTimesCircle /> Reject
-                  </button>
-                  <button className="driver-action-btn driver-btn-review" onClick={() => { openDetail(driver); setDetailTab('documents'); }}>
-                    <FaEye /> Review
-                  </button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
+                  {[
+                    { label: 'Driving License', url: driver.licensePhoto },
+                    { label: 'National ID', url: driver.nationalIdPhoto },
+                    { label: 'Vehicle Libre', url: driver.documents?.librePhoto?.data },
+                    { label: 'Insurance', url: driver.documents?.insurancePhoto?.data },
+                    { label: 'Police Clearance', url: driver.documents?.policeClearancePhoto?.data },
+                  ].map(doc => (
+                    <div key={doc.label} style={{ borderRadius: 10, overflow: 'hidden', border: doc.url ? '2px solid #10b981' : '2px dashed #d1d5db', background: doc.url ? '#f0fdf4' : '#f9fafb', textAlign: 'center' }}>
+                      {doc.url ? (
+                        <a href={doc.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textDecoration: 'none' }}>
+                          <img src={doc.url} alt={doc.label} style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
+                          <div style={{ fontSize: 10, fontWeight: 600, padding: '6px 4px', color: '#15803d' }}>{doc.label}</div>
+                        </a>
+                      ) : (
+                        <div style={{ padding: '20px 8px', color: '#9ca3af' }}>
+                          <FaFileImage style={{ fontSize: 20, marginBottom: 4, opacity: 0.4 }} />
+                          <div style={{ fontSize: 10, fontWeight: 600 }}>{doc.label}</div>
+                          <div style={{ fontSize: 9, color: '#b45309', marginTop: 2 }}>Not uploaded</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}

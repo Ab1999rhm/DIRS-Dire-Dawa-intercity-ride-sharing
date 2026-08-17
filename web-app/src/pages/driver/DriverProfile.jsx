@@ -40,9 +40,11 @@ const DriverProfile = () => {
     registrationPhoto: null,
     insurancePhoto: null,
     insuranceExpiry: '',
-    registrationExpiry: ''
+    registrationExpiry: '',
+    librePhoto: null,
+    policeClearancePhoto: null
   });
-  const fileInputRef = { licensePhoto: useRef(null), nationalIdPhoto: useRef(null), vehiclePhoto: useRef(null), registrationPhoto: useRef(null), insurancePhoto: useRef(null) };
+  const fileInputRef = { licensePhoto: useRef(null), nationalIdPhoto: useRef(null), vehiclePhoto: useRef(null), registrationPhoto: useRef(null), insurancePhoto: useRef(null), librePhoto: useRef(null), policeClearancePhoto: useRef(null) };
   const [uploadingDoc, setUploadingDoc] = useState(null);
 
   const [settings, setSettings] = useState({
@@ -86,7 +88,9 @@ const DriverProfile = () => {
           registrationPhoto: res.data.vehicle?.registrationPhoto || null,
           insurancePhoto: res.data.vehicle?.insurancePhoto || null,
           insuranceExpiry: res.data.vehicle?.insuranceExpiry || '',
-          registrationExpiry: res.data.vehicle?.registrationExpiry || ''
+          registrationExpiry: res.data.vehicle?.registrationExpiry || '',
+          librePhoto: res.data.driver?.librePhoto || null,
+          policeClearancePhoto: res.data.driver?.policeClearancePhoto || null
         }));
       }
     }).catch(() => {});
@@ -561,6 +565,69 @@ const DriverProfile = () => {
               <Input label="National ID Number" value={documents.nationalId}
                 onChange={(e) => setDocuments({ ...documents, nationalId: e.target.value })}
                 onBlur={() => handleDocTextUpdate({ nationalId: documents.nationalId })} />
+            </div>
+          </Card>
+
+          <Card padding="lg">
+            <h2 className="section-title"><FaFileAlt /> Vehicle Libre (Bolo)</h2>
+            <div className="document-upload-area">
+              <input type="file" accept="image/*" ref={fileInputRef.librePhoto} style={{ display: 'none' }}
+                onChange={() => handleDocUpload('librePhoto', true)} />
+              {documents.librePhoto ? (
+                <div className="doc-preview">
+                  <img src={documents.librePhoto} alt="Vehicle Libre" style={{ maxHeight: 120, borderRadius: 8 }} />
+                  <Button variant="ghost" size="sm" onClick={() => fileInputRef.librePhoto.current?.click()}>
+                    Replace
+                  </Button>
+                </div>
+              ) : (
+                <button className="doc-upload-btn" onClick={() => fileInputRef.librePhoto.current?.click()}>
+                  <FaFileAlt size={24} />
+                  <span>{uploadingDoc === 'librePhoto' ? 'Uploading...' : 'Upload Vehicle Libre'}</span>
+                </button>
+              )}
+            </div>
+          </Card>
+
+          <Card padding="lg">
+            <h2 className="section-title"><FaShieldAlt /> Commercial Insurance</h2>
+            <div className="document-upload-area">
+              <input type="file" accept="image/*" ref={fileInputRef.insurancePhoto} style={{ display: 'none' }}
+                onChange={() => handleDocUpload('insurancePhoto', true)} />
+              {documents.insurancePhoto ? (
+                <div className="doc-preview">
+                  <img src={documents.insurancePhoto} alt="Insurance" style={{ maxHeight: 120, borderRadius: 8 }} />
+                  <Button variant="ghost" size="sm" onClick={() => fileInputRef.insurancePhoto.current?.click()}>
+                    Replace
+                  </Button>
+                </div>
+              ) : (
+                <button className="doc-upload-btn" onClick={() => fileInputRef.insurancePhoto.current?.click()}>
+                  <FaShieldAlt size={24} />
+                  <span>{uploadingDoc === 'insurancePhoto' ? 'Uploading...' : 'Upload Insurance Certificate'}</span>
+                </button>
+              )}
+            </div>
+          </Card>
+
+          <Card padding="lg">
+            <h2 className="section-title"><FaShieldAlt /> Police Clearance Record</h2>
+            <div className="document-upload-area">
+              <input type="file" accept="image/*" ref={fileInputRef.policeClearancePhoto} style={{ display: 'none' }}
+                onChange={() => handleDocUpload('policeClearancePhoto', true)} />
+              {documents.policeClearancePhoto ? (
+                <div className="doc-preview">
+                  <img src={documents.policeClearancePhoto} alt="Police Clearance" style={{ maxHeight: 120, borderRadius: 8 }} />
+                  <Button variant="ghost" size="sm" onClick={() => fileInputRef.policeClearancePhoto.current?.click()}>
+                    Replace
+                  </Button>
+                </div>
+              ) : (
+                <button className="doc-upload-btn" onClick={() => fileInputRef.policeClearancePhoto.current?.click()}>
+                  <FaShieldAlt size={24} />
+                  <span>{uploadingDoc === 'policeClearancePhoto' ? 'Uploading...' : 'Upload Police Clearance'}</span>
+                </button>
+              )}
             </div>
           </Card>
 
