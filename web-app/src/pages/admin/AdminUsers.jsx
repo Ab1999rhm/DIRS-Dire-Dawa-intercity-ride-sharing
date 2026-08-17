@@ -185,39 +185,30 @@ const AdminUsers = () => {
           <p style={{ color: 'var(--text-muted)' }}>{t('admin.noUsersMatch') || 'No users match your search criteria'}</p>
         </div>
       ) : (
-        <div className="admin-table admin-animate-in-delay-2">
-          <div className="admin-table-header">
-            <div style={{ gridColumn: 'span 2' }}>User</div>
-            <div>Phone</div>
-            <div>Role</div>
-            <div>Status</div>
-            <div style={{ gridColumn: 'span 2', textAlign: 'right' }}>Actions</div>
-          </div>
+        <div className="user-cards-list admin-animate-in-delay-2">
           {filteredUsers.map((u) => (
-            <div key={u._id} className="admin-table-row">
-              <div className="row-main">
-                <div className="row-avatar">
+            <div key={u._id} className="user-card">
+              <div className="user-card-row">
+                <div className="user-card-avatar">
                   {u.firstName?.[0]}{u.lastName?.[0]}
                 </div>
-                <div className="row-info">
+                <div className="user-card-info">
                   <h4>{u.firstName} {u.lastName}</h4>
                   <p>{t('admin.joined') || 'Joined'} {new Date(u.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              <div>{u.phoneNumber}</div>
-              <div>
-                <Badge variant={u.role === 'driver' ? 'success' : u.role === 'admin' ? 'warning' : 'primary'}>{u.role}</Badge>
-                <div style={{ marginTop: 4, fontSize: 11, color: 'var(--text-muted)' }}>
-                  {u.nationalId ? `FAN: ${u.nationalId}` : 'No FAN'}
+              <div className="user-card-row">
+                <div className="user-card-phone">
+                  {u.phoneNumber}
                 </div>
               </div>
-              <div>
+              <div className="user-card-row user-card-badges">
                 <StatusBadge status={getStatus(u)} />
-                <div style={{ marginTop: 4 }}>
-                  <Badge variant={u.isVerified ? 'success' : 'warning'}>{u.isVerified ? 'Verified' : 'Unverified'}</Badge>
-                </div>
+                <Badge variant={u.isVerified ? 'success' : 'warning'}>{u.isVerified ? 'Verified' : 'Unverified'}</Badge>
+                <Badge variant={u.role === 'driver' ? 'success' : u.role === 'admin' ? 'warning' : 'primary'}>{u.role}</Badge>
+                {u.nationalId && <span className="user-card-fan">FAN: {u.nationalId}</span>}
               </div>
-              <div className="row-actions">
+              <div className="user-card-row user-card-actions">
                 <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedUser(u); setShowModal(true); }}>
                   <FaEye /> {t('common.view') || 'View'}
                 </button>
@@ -235,7 +226,7 @@ const AdminUsers = () => {
                     {t('admin.reactivate') || 'Reactivate'}
                   </button>
                 )}
-                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteUser(u._id, `${u.firstName} ${u.lastName}`)}>
                   <FaTrashAlt /> Delete
                 </button>
               </div>

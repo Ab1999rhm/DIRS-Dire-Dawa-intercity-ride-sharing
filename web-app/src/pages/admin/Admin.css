@@ -913,6 +913,97 @@
   flex-shrink: 0;
 }
 
+/* ===== USER CARDS LIST ===== */
+.user-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px;
+  transition: all 0.2s ease;
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.user-card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.user-card-row:last-child {
+  margin-bottom: 0;
+}
+
+.user-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.user-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-card-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-card-info p {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.user-card-phone {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.user-card-badges {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.user-card-fan {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.user-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
 /* ===== STATUS BADGE ===== */
 .status-badge {
   display: inline-block;
@@ -1170,6 +1261,27 @@
   color: #f1f5f9;
 }
 [data-theme="dark"] .row-info p {
+  color: #94a3b8;
+}
+
+/* Dark mode for user cards */
+[data-theme="dark"] .user-card {
+  background: #16213e;
+  border-color: #2a2a4a;
+}
+[data-theme="dark"] .user-card-info h4 {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .user-card-info p {
+  color: #94a3b8;
+}
+[data-theme="dark"] .user-card-phone {
+  color: #e2e8f0;
+}
+[data-theme="dark"] .user-card-actions {
+  border-color: #2a2a4a;
+}
+[data-theme="dark"] .user-card-fan {
   color: #94a3b8;
 }
 [data-theme="dark"] .admin-bottom-nav {
@@ -2912,6 +3024,26 @@
     right: -4px;
   }
   .admin-header-actions > span {
+    display: none;
+  }
+}
+
+/* Mobile responsive for user cards */
+@media (max-width: 480px) {
+  .user-card {
+    padding: 12px;
+  }
+  .user-card-actions {
+    gap: 6px;
+  }
+  .user-card-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .user-card-actions .btn svg {
     display: none;
   }
 }
