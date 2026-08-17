@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaDownload } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/api';
+import { useToast } from '../../components/common/Toast';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import Modal from '../../components/common/Modal';
 import Badge, { StatusBadge } from '../../components/common/Badge';
@@ -11,6 +12,7 @@ import './Admin.css';
 const AdminTrips = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const toast = useToast();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,6 +84,23 @@ const AdminTrips = () => {
     { key: 'cancelled', label: t('admin.cancelled') || 'Cancelled' },
   ];
 
+  const handleExport = async () => {
+    try {
+      const params = statusFilter !== 'all' ? { status: statusFilter } : {};
+      const res = await adminAPI.exportTripData({ ...params, format: 'csv' });
+      const blob = new Blob([res.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trips_export_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Export downloaded');
+    } catch (err) {
+      toast.error('Export failed');
+    }
+  };
+
   if (loading) {
     return (
       <div className="admin-page">
@@ -108,6 +127,13 @@ const AdminTrips = () => {
 
       <div className="admin-header admin-animate-in">
         <h1>{t('admin.trips')}</h1>
+        <button
+          className="btn btn-sm btn-ghost"
+          onClick={handleExport}
+          style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          <FaDownload /> {t('admin.export') || 'Export'}
+        </button>
       </div>
 
       <div className="admin-animate-in-delay-1" style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>

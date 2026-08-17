@@ -3,10 +3,12 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { ridesAPI } from '../../services/api';
 import { Card } from '../../components/common';
+import Modal from '../../components/common/Modal';
+import Badge, { StatusBadge } from '../../components/common/Badge';
 import { EmptyStateIllustration } from '../../components/common/Backgrounds';
 import EmptyState from '../../components/common/EmptyState';
 import InAppChat from '../../components/passenger/InAppChat';
-import { FaCar, FaStar, FaMapMarkerAlt, FaCalendar, FaFilter, FaComment } from 'react-icons/fa';
+import { FaCar, FaStar, FaMapMarkerAlt, FaCalendar, FaFilter, FaComment, FaEye } from 'react-icons/fa';
 import './Driver.css';
 
 const DriverTrips = () => {
@@ -18,6 +20,8 @@ const DriverTrips = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [chatTrip, setChatTrip] = useState(null);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 5;
 
@@ -156,8 +160,14 @@ const DriverTrips = () => {
                 </span>
                 <button
                   className="driver-chat-btn"
-                  onClick={() => setChatTrip(trip)}
+                  onClick={(e) => { e.stopPropagation(); setSelectedTrip(trip); setShowDetailModal(true); }}
                   style={{ marginLeft: 'auto' }}
+                >
+                  <FaEye /> Details
+                </button>
+                <button
+                  className="driver-chat-btn"
+                  onClick={() => setChatTrip(trip)}
                 >
                   <FaComment /> Chat
                   {chatUnread[trip._id] > 0 && (
@@ -202,6 +212,31 @@ const DriverTrips = () => {
           route={chatTrip.pickup?.address && chatTrip.dropoff?.address ? `${chatTrip.pickup.address} → ${chatTrip.dropoff.address}` : ''}
         />
       )}
+
+      <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title={t('driver.tripDetails') || 'Trip Details'}>
+        {selectedTrip && (
+          <div className="detail-modal-content">
+            <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val"><StatusBadge status={selectedTrip.status} /></span></div>
+            {selectedTrip.isVehicleTrip && (
+              <div className="detail-row"><span className="detail-key">Ride Type</span><span className="detail-val" style={{ fontWeight: 600, color: 'var(--primary)' }}>Shared Ride</span></div>
+            )}
+            <div className="detail-row"><span className="detail-key">{t('admin.pickup') || 'Pickup'}</span><span className="detail-val">{selectedTrip.pickup?.address || selectedTrip.pickupLocation?.address || 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.dropoff') || 'Dropoff'}</span><span className="detail-val">{selectedTrip.dropoff?.address || selectedTrip.dropoffLocation?.address || 'N/A'}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.passenger') || 'Passenger'}</span><span className="detail-val">{selectedTrip.passenger?.firstName} {selectedTrip.passenger?.lastName}</span></div>
+            <div className="detail-row"><span className="detail-key">{t('admin.fare') || 'Fare'}</span><span className="detail-val">ETB {(selectedTrip.fare?.totalFare || selectedTrip.fare?.total || 0).toLocaleString()}</span></div>
+            {selectedTrip.isVehicleTrip && selectedTrip.vehicleTrip && (
+              <>
+                <div className="detail-row"><span className="detail-key">Vehicle</span><span className="detail-val">{selectedTrip.vehicleTrip.vehicle?.plateNumber || 'N/A'} ({selectedTrip.vehicleTrip.vehicle?.vehicleType || 'N/A'})</span></div>
+                <div className="detail-row"><span className="detail-key">Seats Occupied</span><span className="detail-val">{selectedTrip.vehicleTrip.seats?.filter(s => s.status === 'occupied' || s.status === 'reserved').length || 0} of {selectedTrip.vehicleTrip.seats?.length || 0}</span></div>
+              </>
+            )}
+            <div className="detail-row"><span className="detail-key">{t('admin.date') || 'Date'}</span><span className="detail-val">{new Date(selectedTrip.createdAt).toLocaleString()}</span></div>
+            {selectedTrip.rating?.driver && (
+              <div className="detail-row"><span className="detail-key">{t('admin.rating') || 'Rating'}</span><span className="detail-val"><FaStar style={{ color: '#f59e0b' }} /> {selectedTrip.rating.driver}</span></div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

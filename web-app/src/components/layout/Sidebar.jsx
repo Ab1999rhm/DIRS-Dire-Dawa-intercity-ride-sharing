@@ -73,6 +73,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       items: [
         { path: '/admin/driver-management', icon: <FaCarSide />, label: t('admin.driverManagement'), badge: null },
         { path: '/admin/passenger-management', icon: <FaUsers />, label: t('admin.passengerManagement'), badge: null },
+        { path: '/admin/users', icon: <FaUsers />, label: t('admin.allUsers') || 'All Users', badge: null },
         { path: '/admin/trip-management', icon: <FaRoute />, label: t('admin.tripManagement'), badge: null },
       ]
     },
