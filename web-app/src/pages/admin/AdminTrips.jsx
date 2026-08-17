@@ -27,13 +27,30 @@ const AdminTrips = () => {
       setLoading(true);
       const params = statusFilter !== 'all' ? { status: statusFilter } : {};
       let backendTrips = [];
+      let vehicleTrips = [];
       try {
         const res = await adminAPI.trips(params);
         backendTrips = res.data.trips || res.data || [];
+        vehicleTrips = res.data.vehicleTrips || [];
       } catch (_) {}
 
+      // Normalize VehicleTrips to look like regular trips for display
+      const normalizedVehicleTrips = vehicleTrips.map(vt => ({
+        _id: vt._id,
+        isVehicleTrip: true,
+        status: vt.status,
+        passenger: vt.passengers?.[0] ? { firstName: `${vt.passengers.length} passengers`, lastName: '' } : { firstName: 'Empty', lastName: '' },
+        driver: vt.driver,
+        vehicle: vt.vehicle,
+        pickupLocation: { address: vt.destinationCity || 'Shared Trip' },
+        dropoffLocation: { address: vt.destinationCity || '' },
+        fare: { totalFare: vt.totalCollected || 0 },
+        createdAt: vt.createdAt,
+        vehicleTrip: vt
+      }));
+
       const localRides = JSON.parse(localStorage.getItem('dirs_passenger_rides') || '[]');
-      const combined = [...backendTrips, ...localRides];
+      const combined = [...backendTrips, ...normalizedVehicleTrips, ...localRides];
 
       const seen = new Set();
       const unique = combined.filter(r => {
@@ -44,7 +61,7 @@ const AdminTrips = () => {
 
       const filtered = unique.filter(r => {
         const s = (r.status || 'pending').toLowerCase();
-        if (statusFilter === 'active') return ['accepted', 'searching', 'pending', 'in_progress', 'driver_found', 'driver_arriving', 'ongoing'].includes(s);
+        if (statusFilter === 'active') return ['accepted', 'searching', 'pending', 'in_progress', 'driver_found', 'driver_arriving', 'ongoing', 'scheduled', 'boarding'].includes(s);
         if (statusFilter === 'completed') return s === 'completed' || s === 'finished';
         if (statusFilter === 'cancelled') return s === 'cancelled' || s === 'rejected';
         return true;

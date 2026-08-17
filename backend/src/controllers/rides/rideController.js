@@ -602,8 +602,17 @@ exports.cancelRideRequest = asyncHandler(async (req, res) => {
   if (rideRequest.driver) {
     const driver = await Driver.findById(rideRequest.driver);
     if (driver) {
-      driver.isAvailable = true;
-      driver.currentTrip = null;
+      // For shared trips, only make driver available if VehicleTrip has no more passengers
+      if (rideRequest.vehicleTrip) {
+        const updatedVT = await VehicleTrip.findById(rideRequest.vehicleTrip);
+        if (!updatedVT || updatedVT.status === 'completed' || updatedVT.status === 'cancelled' || updatedVT.passengers.length === 0) {
+          driver.isAvailable = true;
+          driver.currentTrip = null;
+        }
+      } else {
+        driver.isAvailable = true;
+        driver.currentTrip = null;
+      }
       await driver.save();
     }
 
@@ -697,6 +706,10 @@ exports.startTrip = asyncHandler(async (req, res) => {
       status: { $in: ['accepted', 'pending'] }
     });
     const io = getIO();
+    io.to(`trip_${tripId}`).emit('trip_status', {
+      tripId: trip._id,
+      status: 'in_progress'
+    });
     for (const rr of allPassengers) {
       io.to(`user_${rr.passenger}`).emit('trip_status', {
         tripId: trip._id,
@@ -791,6 +804,12 @@ exports.completeTrip = asyncHandler(async (req, res) => {
     }
     driver.totalTrips += 1;
     await driver.save();
+  }
+
+  // Update rideRequest status
+  if (rideRequest) {
+    rideRequest.status = 'completed';
+    await rideRequest.save();
   }
 
   await notifyRideUpdate(trip.passenger, 'trip_completed', {
@@ -995,10 +1014,6 @@ exports.cancelTrip = asyncHandler(async (req, res) => {
       driver.currentTrip = null;
     }
     await driver.save();
-    
-    // Also update the user's online status
-    const User = require('../models/User');
-    await User.findByIdAndUpdate(driver.user, { isOnline: true });
   }
 
   await notifyRideUpdate(trip.passenger, 'ride_cancelled', {

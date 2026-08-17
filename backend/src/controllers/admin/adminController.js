@@ -698,7 +698,14 @@ exports.getActiveTripsMonitoring = asyncHandler(async (req, res) => {
     .populate('passenger', 'firstName lastName phoneNumber')
     .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } })
     .sort({ createdAt: -1 });
-  res.json(trips);
+
+  // Also include active VehicleTrips
+  const vehicleTrips = await VehicleTrip.find({ status: { $in: ['scheduled', 'boarding', 'in_progress'] } })
+    .populate('vehicle', 'make model plateNumber vehicleType')
+    .populate('driver', 'firstName lastName phoneNumber')
+    .sort({ createdAt: -1 });
+
+  res.json({ trips, vehicleTrips });
 });
 
 exports.respondToSOS = asyncHandler(async (req, res) => {
@@ -878,11 +885,23 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
 
 // Trip details
 exports.getTripDetails = asyncHandler(async (req, res) => {
-  const trip = await Trip.findById(req.params.tripId)
+  // Try Trip first
+  let trip = await Trip.findById(req.params.tripId)
     .populate('passenger', 'firstName lastName phoneNumber')
     .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } });
-  if (!trip) return res.status(404).json({ message: 'Trip not found' });
-  res.json(trip);
+  
+  // If not found, try VehicleTrip
+  if (!trip) {
+    const vehicleTrip = await VehicleTrip.findById(req.params.tripId)
+      .populate('vehicle', 'make model plateNumber vehicleType')
+      .populate('driver', 'firstName lastName phoneNumber')
+      .populate('passengers', 'passenger selectedSeats estimatedFare status');
+    if (vehicleTrip) {
+      return res.json({ type: 'vehicleTrip', vehicleTrip });
+    }
+    return res.status(404).json({ message: 'Trip not found' });
+  }
+  res.json({ type: 'trip', trip });
 });
 
 exports.adjustFare = asyncHandler(async (req, res) => {
@@ -1565,6 +1584,26 @@ exports.completeTrip = asyncHandler(async (req, res) => {
   const { tripId } = req.params;
   const { notes } = req.body;
 
+  // Check if it's a VehicleTrip first
+  const vehicleTrip = await VehicleTrip.findById(tripId);
+  if (vehicleTrip) {
+    vehicleTrip.status = 'completed';
+    // Mark all reserved seats as occupied
+    for (const seat of vehicleTrip.seats) {
+      if (seat.status === 'reserved') seat.status = 'occupied';
+    }
+    await vehicleTrip.save();
+    
+    // Complete all associated RideRequests
+    await RideRequest.updateMany(
+      { vehicleTrip: vehicleTrip._id, status: { $in: ['accepted', 'pending'] } },
+      { status: 'completed' }
+    );
+
+    logger.info('VehicleTrip completed by admin', { tripId, notes });
+    return res.json({ message: 'Shared trip completed successfully', vehicleTrip });
+  }
+
   const trip = await Trip.findById(tripId).populate('driver').populate('passenger');
   if (!trip) {
     return res.status(404).json({ error: 'Trip not found' });
@@ -1595,6 +1634,31 @@ exports.completeTrip = asyncHandler(async (req, res) => {
 exports.cancelTrip = asyncHandler(async (req, res) => {
   const { tripId } = req.params;
   const { reason, cancelledBy } = req.body;
+
+  // Check if it's a VehicleTrip first
+  const vehicleTrip = await VehicleTrip.findById(tripId);
+  if (vehicleTrip) {
+    vehicleTrip.status = 'cancelled';
+    // Release all reserved seats
+    for (const seat of vehicleTrip.seats) {
+      if (seat.status === 'reserved' || seat.status === 'available') {
+        seat.status = 'available';
+        seat.passenger = null;
+        seat.rideRequest = null;
+      }
+    }
+    vehicleTrip.passengers = [];
+    await vehicleTrip.save();
+
+    // Cancel all associated RideRequests
+    await RideRequest.updateMany(
+      { vehicleTrip: vehicleTrip._id, status: { $in: ['accepted', 'pending'] } },
+      { status: 'cancelled', cancelledBy: 'admin', cancellationReason: reason }
+    );
+
+    logger.info('VehicleTrip cancelled by admin', { tripId, reason, notes: cancelledBy });
+    return res.json({ message: 'Shared trip cancelled successfully', vehicleTrip });
+  }
 
   const trip = await Trip.findById(tripId).populate('driver').populate('passenger');
   if (!trip) {
