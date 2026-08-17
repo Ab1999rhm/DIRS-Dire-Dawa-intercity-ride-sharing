@@ -56,7 +56,7 @@ exports.uploadVehicleDocuments = asyncHandler(async (req, res) => {
 
   const vehicle = await Vehicle.findOne({ driver: driver._id, isActive: true });
   if (!vehicle) {
-    return res.status(404).json({ error: 'No active vehicle found' });
+    return res.json({ message: 'No vehicle registered yet. Vehicle documents will be available after adding a vehicle.', vehicle: null });
   }
 
   const { vehiclePhotoUrl, registrationPhotoUrl, insurancePhotoUrl, insuranceExpiry, registrationExpiry } = req.body;
