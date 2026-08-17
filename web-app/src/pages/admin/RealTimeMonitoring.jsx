@@ -42,6 +42,7 @@ const RealTimeMonitoring = () => {
   const [loading, setLoading] = useState(true);
   const [allDrivers, setAllDrivers] = useState([]);
   const [activeDrivers, setActiveDrivers] = useState([]);
+  const [offlineCount, setOfflineCount] = useState(0);
   const [activeTrips, setActiveTrips] = useState([]);
   const [sosAlerts, setSosAlerts] = useState([]);
   const [systemHealth, setSystemHealth] = useState(null);
@@ -77,8 +78,8 @@ const RealTimeMonitoring = () => {
   }, [filterStatus, allDrivers]);
 
   const applyFilter = (drivers, status) => {
-    if (status === 'all' || status === 'offline') {
-      setActiveDrivers(drivers);
+    if (status === 'offline') {
+      setActiveDrivers([]);
     } else if (status === 'available') {
       setActiveDrivers(drivers.filter(d => d.isAvailable));
     } else if (status === 'busy') {
@@ -140,6 +141,7 @@ const RealTimeMonitoring = () => {
 
       const allDriverData = driversRes.data?.drivers || [];
       setAllDrivers(allDriverData);
+      setOfflineCount(driversRes.data?.offlineDrivers || 0);
       applyFilter(allDriverData, filterStatus);
       setActiveTrips(tripsRes.data?.trips || []);
       const sosData = sosRes.data;
@@ -692,7 +694,7 @@ const RealTimeMonitoring = () => {
                 padding: '2px 8px',
                 borderRadius: 10,
               }}>
-                0
+                {offlineCount}
               </span>
             </button>
           </div>

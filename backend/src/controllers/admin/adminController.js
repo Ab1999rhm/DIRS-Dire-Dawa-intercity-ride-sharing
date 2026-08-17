@@ -1618,7 +1618,6 @@ exports.getActiveDriversLocations = asyncHandler(async (req, res) => {
     select: 'firstName lastName currentLocation averageRating totalRatings'
   });
   
-  // Get vehicles for each driver
   const driverIds = drivers.map(d => d._id);
   const vehicles = await Vehicle.find({ 
     driver: { $in: driverIds },
@@ -1648,8 +1647,11 @@ exports.getActiveDriversLocations = asyncHandler(async (req, res) => {
         updatedAt: driver.user.currentLocation.updatedAt
       };
     });
+
+  const totalDrivers = await Driver.countDocuments();
+  const offlineDrivers = totalDrivers - drivers.length;
   
-  res.json({ drivers: driversWithLocations });
+  res.json({ drivers: driversWithLocations, totalDrivers, offlineDrivers });
 });
 
 // Get active trips with routes for live map
@@ -1693,23 +1695,27 @@ exports.getActiveTripsRoutes = asyncHandler(async (req, res) => {
 
 // Get booking queue
 exports.getBookingQueue = asyncHandler(async (req, res) => {
-  const pendingTrips = await Trip.find({ 
+  const pendingRequests = await RideRequest.find({ 
     status: 'pending'
   })
   .populate('passenger', 'firstName lastName phoneNumber')
-  .select('status pickupLocation dropoffLocation fare createdAt')
+  .select('status pickupLocation dropoffLocation estimatedFare createdAt rideType')
   .sort({ createdAt: 1 });
   
   const availableDrivers = await Driver.countDocuments({ 
     isOnline: true,
     isAvailable: true
   });
+
+  const avgWaitTime = pendingRequests.length > 0
+    ? Math.floor(pendingRequests.reduce((sum, r) => sum + (Date.now() - new Date(r.createdAt).getTime()), 0) / pendingRequests.length / 60000)
+    : 0;
   
   res.json({ 
-    queue: pendingTrips,
-    queueLength: pendingTrips.length,
+    queue: pendingRequests,
+    queueLength: pendingRequests.length,
     availableDrivers,
-    avgWaitTime: pendingTrips.length > 0 ? Math.floor(Math.random() * 10) + 2 : 0 // Simulated wait time
+    avgWaitTime
   });
 });
 
