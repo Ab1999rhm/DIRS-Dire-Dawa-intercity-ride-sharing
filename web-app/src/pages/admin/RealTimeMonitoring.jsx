@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   FaMapMarkerAlt, FaCar, FaExclamationTriangle, FaServer,
   FaClock, FaRoute, FaUser, FaSignal, FaCheckCircle, FaTimesCircle,
-  FaSync, FaExpand, FaCompress, FaFilter, FaBell, FaEye,
+  FaSync, FaExpand, FaCompress, FaFilter, FaBell,
   FaMemory, FaDatabase, FaUsers, FaTachometerAlt, FaChartBar,
   FaMoneyBillWave
 } from 'react-icons/fa';
@@ -152,15 +152,6 @@ const RealTimeMonitoring = () => {
     } catch (err) {
       console.error('Failed to fetch real-time data:', err);
       setLoading(false);
-    }
-  };
-
-  const handleSOSResponse = async (sosId) => {
-    try {
-      await adminAPI.respondToSOS(sosId);
-      setSosAlerts(sosAlerts.filter(s => (s._id || s.id) !== sosId));
-    } catch (err) {
-      console.error('Failed to respond to SOS:', err);
     }
   };
 
@@ -392,12 +383,6 @@ const RealTimeMonitoring = () => {
                   {sos.location?.address || (sos.location?.coordinates ? `${sos.location.coordinates[1]?.toFixed(4)}, ${sos.location.coordinates[0]?.toFixed(4)}` : sos.location || 'N/A')} • {sos.time || (sos.createdAt ? new Date(sos.createdAt).toLocaleTimeString() : '')}
                 </div>
               </div>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => handleSOSResponse(sos._id || sos.id)}
-              >
-                <FaEye /> {t('admin.respond') || 'Respond'}
-              </button>
             </div>
           ))}
         </div>
