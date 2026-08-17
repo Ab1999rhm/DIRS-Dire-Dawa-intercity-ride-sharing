@@ -949,6 +949,7 @@
       "dbSize": "Database Size",
       "uptime": "Uptime",
       "activeConnections": "Active Connections",
+      "connectedUsers": "Connected Users",
       "apiLatency": "API Latency",
       "errorRate": "Error Rate",
       "liveAnalytics": "Live Analytics",
