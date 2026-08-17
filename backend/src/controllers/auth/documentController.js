@@ -54,9 +54,18 @@ exports.uploadVehicleDocuments = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Driver profile not found' });
   }
 
-  const vehicle = await Vehicle.findOne({ driver: driver._id, isActive: true });
+  let vehicle = await Vehicle.findOne({ driver: driver._id, isActive: true });
   if (!vehicle) {
-    return res.json({ message: 'No vehicle registered yet. Vehicle documents will be available after adding a vehicle.', vehicle: null });
+    vehicle = await Vehicle.create({
+      driver: driver._id,
+      vehicleType: 'car',
+      make: 'Pending',
+      model: 'Pending',
+      plateNumber: `PENDING-${driver._id}`,
+      color: 'Unknown',
+      year: new Date().getFullYear(),
+      capacity: 4
+    });
   }
 
   const { vehiclePhotoUrl, registrationPhotoUrl, insurancePhotoUrl, insuranceExpiry, registrationExpiry } = req.body;
