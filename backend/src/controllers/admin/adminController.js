@@ -10,6 +10,7 @@ const FraudDetection = require('../../models/FraudDetection');
 const SuspiciousActivity = require('../../models/SuspiciousActivity');
 const Referral = require('../../models/Referral');
 const RideRequest = require('../../models/RideRequest');
+const VehicleTrip = require('../../models/VehicleTrip');
 const Notification = require('../../models/Notification');
 const DispatchContact = require('../../models/DispatchContact');
 const Place = require('../../models/Place');
@@ -518,9 +519,37 @@ exports.getAllTrips = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(parseInt(limit));
 
-  const total = await Trip.countDocuments(query);
+  // Also fetch VehicleTrips for shared rides
+  const vehicleTripQuery = {};
+  if (status) {
+    const statusMap = { active: { $in: ['scheduled', 'boarding', 'in_progress'] }, completed: 'completed', cancelled: 'cancelled' };
+    if (statusMap[status]) vehicleTripQuery.status = statusMap[status];
+  }
+  if (dateFrom || dateTo) {
+    vehicleTripQuery.createdAt = {};
+    if (dateFrom) vehicleTripQuery.createdAt.$gte = new Date(dateFrom);
+    if (dateTo) vehicleTripQuery.createdAt.$lte = new Date(dateTo);
+  }
 
-  res.json({ trips, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+  const vehicleTrips = await VehicleTrip.find(vehicleTripQuery)
+    .populate('vehicle', 'make model plateNumber vehicleType')
+    .populate('driver', 'firstName lastName phoneNumber')
+    .populate('passengers', 'passenger selectedSeats estimatedFare status')
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  const total = await Trip.countDocuments(query);
+  const totalVehicleTrips = await VehicleTrip.countDocuments(vehicleTripQuery);
+
+  res.json({
+    trips,
+    vehicleTrips,
+    total,
+    totalVehicleTrips,
+    page: parseInt(page),
+    pages: Math.ceil((total + totalVehicleTrips) / limit)
+  });
 });
 
 exports.getPaymentOverview = asyncHandler(async (req, res) => {
@@ -1248,8 +1277,28 @@ exports.getPassengerTrips = asyncHandler(async (req, res) => {
     .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } })
     .sort({ createdAt: -1 })
     .limit(50);
+
+  // Also include shared rides from VehicleTrip
+  const sharedTrips = await RideRequest.find({
+    passenger: passenger._id,
+    vehicleTrip: { $ne: null }
+  })
+    .populate('vehicleTrip')
+    .populate('driver', 'user')
+    .populate({ path: 'driver', populate: { path: 'user', select: 'firstName lastName phoneNumber' } })
+    .sort({ createdAt: -1 })
+    .limit(50);
+
+  // Merge and deduplicate
+  const allTrips = [...trips];
+  for (const st of sharedTrips) {
+    if (!allTrips.find(t => t._id.toString() === st._id.toString())) {
+      allTrips.push(st);
+    }
+  }
+  allTrips.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   
-  res.json({ trips, totalTrips: trips.length });
+  res.json({ trips: allTrips.slice(0, 50), totalTrips: allTrips.length });
 });
 
 exports.getPassengerBehavior = asyncHandler(async (req, res) => {

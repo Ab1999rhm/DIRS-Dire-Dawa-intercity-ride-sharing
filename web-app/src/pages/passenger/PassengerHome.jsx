@@ -472,6 +472,7 @@ const PassengerHome = () => {
     setSearchingDrivers(0);
     setSelectedVehicle(null);
     setSelectedSeats([]);
+    setPassengersCount(1);
     setPromoCode('');
     setScheduleEnabled(false);
     setScheduledTime('');
@@ -669,7 +670,7 @@ const PassengerHome = () => {
         rideType,
         vehicleType: backendVehicleType,
         paymentMethod,
-        estimatedFare: fareCalc.total,
+        estimatedFare: fare.total,
         promoCode: promoCode || undefined,
         passengersCount: passengersCount || 1,
         selectedSeats: selectedSeats.length > 0 ? selectedSeats : undefined,
@@ -712,7 +713,7 @@ const PassengerHome = () => {
           pickupLocation: { address: pickup, coordinates: pickupCoords },
           dropoffLocation: { address: dropoff, coordinates: dropoffCoords },
           vehicleType: backendVehicleType,
-          estimatedFare: fareCalc.total,
+          estimatedFare: fare.total,
           passengerId: user?._id,
         });
       }
@@ -1734,6 +1735,7 @@ const PassengerHome = () => {
                 const found = VEHICLES.find(v => v.id === cat.id);
                 if (found) {
                   setSelectedVehicle(found);
+                  setSelectedSeats([]);
                   setBookingStep(3);
                 }
               }}
@@ -1791,8 +1793,9 @@ const PassengerHome = () => {
             </div>
             {bookingStep === 3 && (
               <button className="booking-continue-btn" onClick={() => {
-                if (rideType === 'intercity' && selectedVehicle?.id === 'minibus') {
-                  setBookingStep(4); // Go to seat picker for minibus
+                const hasSeats = rideType === 'intercity' && ['minibus', 'bus'].includes(selectedVehicle?.id);
+                if (hasSeats) {
+                  setBookingStep(4); // Go to seat picker for shared vehicles
                 } else {
                   setBookingStep(5); // Skip seat picker for cars
                 }
@@ -1803,8 +1806,8 @@ const PassengerHome = () => {
           </div>
         )}
 
-        {/* STEP 4: Seat Picker (intercity minibus only) */}
-        {bookingStep >= 4 && rideType === 'intercity' && selectedVehicle?.id === 'minibus' && (
+        {/* STEP 4: Seat Picker (intercity minibus/bus) */}
+        {bookingStep >= 4 && rideType === 'intercity' && ['minibus', 'bus'].includes(selectedVehicle?.id) && (
           <div className="booking-step">
             <div className="booking-step-header">
               <span className="booking-step-number">4</span>
@@ -2089,11 +2092,15 @@ const PassengerHome = () => {
         selectedSeats={selectedSeats}
         onConfirmSeats={(seats) => {
           setSelectedSeats(seats);
-          if (seats.length > 0) setBookingStep(prev => Math.max(prev, 6));
+          if (Array.isArray(seats)) {
+            setPassengersCount(seats.length || 1);
+          }
+          if (Array.isArray(seats) && seats.length > 0) setBookingStep(prev => Math.max(prev, 6));
         }}
         passengersCount={passengersCount}
-        vehicleType={selectedVehicle?.id === 'minibus' ? 'minibus' : 'car'}
+        vehicleType={selectedVehicle?.id || 'minibus'}
         capacity={selectedVehicle?.capacity || 16}
+        takenSeats={[]}
       />
 
       <FareBreakdownModal

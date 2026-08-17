@@ -76,6 +76,7 @@ vehicleTripSchema.index({ status: 1, rideType: 1, vehicleType: 1 });
 vehicleTripSchema.index({ destinationCity: 1, status: 1 });
 vehicleTripSchema.index({ driver: 1, status: 1 });
 vehicleTripSchema.index({ vehicle: 1, status: 1 });
+vehicleTripSchema.index({ vehicle: 1, departureTime: 1, status: 1 }, { unique: true, partialFilterExpression: { status: { $in: ['scheduled', 'boarding'] } } });
 
 vehicleTripSchema.pre('save', function (next) {
   this.updatedAt = Date.now();

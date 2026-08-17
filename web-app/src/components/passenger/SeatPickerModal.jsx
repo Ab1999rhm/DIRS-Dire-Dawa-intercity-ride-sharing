@@ -55,6 +55,7 @@ const SeatPickerModal = ({ isOpen, onClose, selectedSeats = [], onConfirmSeats, 
 
   if (vehicleType === 'car') {
     // For cars, just show passenger count selector
+    const count = Array.isArray(selectedSeats) ? selectedSeats.length : (passengersCount || 1);
     return (
       <div className="modal-overlay">
         <div className="seat-modal">
@@ -63,23 +64,29 @@ const SeatPickerModal = ({ isOpen, onClose, selectedSeats = [], onConfirmSeats, 
             <button className="close-btn" onClick={onClose}><FaTimes /></button>
           </div>
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>{passengersCount}</div>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>{count}</div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
               <button 
-                onClick={() => onConfirmSeats(Math.max(1, passengersCount - 1))}
-                disabled={passengersCount <= 1}
-                style={{ padding: '10px 20px', fontSize: '18px', cursor: passengersCount <= 1 ? 'not-allowed' : 'pointer' }}
+                onClick={() => {
+                  const newCount = Math.max(1, count - 1);
+                  onConfirmSeats(Array(newCount).fill(null).map((_, i) => `P${i + 1}`));
+                }}
+                disabled={count <= 1}
+                style={{ padding: '10px 20px', fontSize: '18px', cursor: count <= 1 ? 'not-allowed' : 'pointer' }}
               >-</button>
               <button 
-                onClick={() => onConfirmSeats(Math.min(4, passengersCount + 1))}
-                disabled={passengersCount >= 4}
-                style={{ padding: '10px 20px', fontSize: '18px', cursor: passengersCount >= 4 ? 'not-allowed' : 'pointer' }}
+                onClick={() => {
+                  const newCount = Math.min(4, count + 1);
+                  onConfirmSeats(Array(newCount).fill(null).map((_, i) => `P${i + 1}`));
+                }}
+                disabled={count >= 4}
+                style={{ padding: '10px 20px', fontSize: '18px', cursor: count >= 4 ? 'not-allowed' : 'pointer' }}
               >+</button>
             </div>
             <p style={{ color: '#666', fontSize: '14px' }}>Maximum 4 passengers for car rides</p>
           </div>
           <button className="confirm-seat-btn" onClick={onClose}>
-            <FaCheck /> Confirm {passengersCount} Passenger(s)
+            <FaCheck /> Confirm {count} Passenger(s)
           </button>
         </div>
       </div>
