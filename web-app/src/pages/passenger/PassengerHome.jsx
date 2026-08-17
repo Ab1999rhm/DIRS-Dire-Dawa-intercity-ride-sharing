@@ -221,6 +221,7 @@ const PassengerHome = () => {
 
   // Real-world production state
   const [showSeatPicker, setShowSeatPicker] = useState(false);
+  const [takenSeats, setTakenSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [passengersCount, setPassengersCount] = useState(1);
   const [showFareBreakdown, setShowFareBreakdown] = useState(false);
@@ -472,6 +473,7 @@ const PassengerHome = () => {
     setSearchingDrivers(0);
     setSelectedVehicle(null);
     setSelectedSeats([]);
+    setTakenSeats([]);
     setPassengersCount(1);
     setPromoCode('');
     setScheduleEnabled(false);
@@ -1818,7 +1820,27 @@ const PassengerHome = () => {
             </div>
             <button
               type="button"
-              onClick={() => setShowSeatPicker(true)}
+              onClick={async () => {
+                // Fetch taken seats from existing shared trips for this destination
+                try {
+                  const { ridesAPI } = await import('../../services/api');
+                  const dropoffKey = dropoffPlaceId || dropoff;
+                  const res = await ridesAPI.getSharedTrips({ vehicleType: selectedVehicle?.id, rideType: 'intercity' });
+                  const sharedTrips = res.data?.sharedTrips || [];
+                  const taken = [];
+                  for (const st of sharedTrips) {
+                    for (const seat of (st.seats || [])) {
+                      if (seat.status === 'reserved' || seat.status === 'occupied') {
+                        taken.push(seat.seatId);
+                      }
+                    }
+                  }
+                  setTakenSeats(taken);
+                } catch (_) {
+                  setTakenSeats([]);
+                }
+                setShowSeatPicker(true);
+              }}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -2095,12 +2117,12 @@ const PassengerHome = () => {
           if (Array.isArray(seats)) {
             setPassengersCount(seats.length || 1);
           }
-          if (Array.isArray(seats) && seats.length > 0) setBookingStep(prev => Math.max(prev, 6));
+          if (Array.isArray(seats) && seats.length > 0) setBookingStep(prev => Math.max(prev, 5));
         }}
         passengersCount={passengersCount}
         vehicleType={selectedVehicle?.id || 'minibus'}
         capacity={selectedVehicle?.capacity || 16}
-        takenSeats={[]}
+        takenSeats={takenSeats}
       />
 
       <FareBreakdownModal

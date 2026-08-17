@@ -37,7 +37,25 @@ const DriverTrips = () => {
       setLoading(true);
       const params = activeTab !== 'all' ? { status: activeTab } : {};
       const res = await ridesAPI.driverTrips(params);
-      setTrips(res.data?.trips || []);
+      const regularTrips = res.data?.trips || [];
+      const vehicleTrips = res.data?.vehicleTrips || [];
+      
+      // Normalize VehicleTrips for display
+      const normalizedVT = vehicleTrips.map(vt => ({
+        _id: vt._id,
+        isVehicleTrip: true,
+        status: vt.status,
+        passenger: vt.passengers?.[0] ? { firstName: `${vt.passengers.length} passengers`, lastName: '', averageRating: 0 } : { firstName: 'Shared', lastName: 'Trip', averageRating: 0 },
+        vehicle: vt.vehicle,
+        pickupLocation: { address: vt.destinationCity || 'Shared Trip' },
+        dropoffLocation: { address: vt.destinationCity || '' },
+        fare: { totalFare: vt.totalCollected || 0 },
+        createdAt: vt.createdAt,
+        seats: vt.seats,
+        vehicleTrip: vt
+      }));
+      
+      setTrips([...regularTrips, ...normalizedVT]);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load trips');
     } finally {
@@ -118,6 +136,11 @@ const DriverTrips = () => {
                   <FaCalendar /> {formatDate(trip.createdAt)}
                 </div>
               </div>
+              {trip.isVehicleTrip && (
+                <div style={{ padding: '6px 10px', background: 'var(--primary-50)', borderRadius: 6, margin: '6px 0', fontSize: 12, fontWeight: 600, color: 'var(--primary)' }}>
+                  Shared Ride · {trip.seats?.filter(s => s.status === 'occupied' || s.status === 'reserved').length || 0} of {trip.seats?.length || 0} seats
+                </div>
+              )}
               <div className="driver-trip-meta">
                 <span className="driver-trip-fare">{trip.fare?.totalFare || trip.fare?.total || 0} ETB</span>
                 {trip.rating?.driver && (

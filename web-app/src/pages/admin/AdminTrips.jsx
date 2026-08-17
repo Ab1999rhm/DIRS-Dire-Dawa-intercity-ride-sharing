@@ -168,10 +168,36 @@ const AdminTrips = () => {
         {selectedTrip && (
           <div className="detail-modal-content">
             <div className="detail-row"><span className="detail-key">{t('admin.status') || 'Status'}</span><span className="detail-val"><StatusBadge status={selectedTrip.status} /></span></div>
+            {selectedTrip.isVehicleTrip && (
+              <div className="detail-row"><span className="detail-key">Ride Type</span><span className="detail-val" style={{ fontWeight: 600, color: 'var(--primary)' }}>Shared Ride</span></div>
+            )}
             <div className="detail-row"><span className="detail-key">{t('admin.pickup') || 'Pickup'}</span><span className="detail-val">{selectedTrip.pickupLocation?.address || 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.dropoff') || 'Dropoff'}</span><span className="detail-val">{selectedTrip.dropoffLocation?.address || 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.passenger') || 'Passenger'}</span><span className="detail-val">{selectedTrip.passenger?.firstName} {selectedTrip.passenger?.lastName}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.driver') || 'Driver'}</span><span className="detail-val">{selectedTrip.driver?.firstName ? `${selectedTrip.driver.firstName} ${selectedTrip.driver.lastName}` : (t('admin.unassigned') || 'Unassigned')}</span></div>
+            {selectedTrip.isVehicleTrip && selectedTrip.vehicleTrip && (
+              <>
+                <div className="detail-row"><span className="detail-key">Vehicle</span><span className="detail-val">{selectedTrip.vehicleTrip.vehicle?.plateNumber || 'N/A'} ({selectedTrip.vehicleTrip.vehicle?.vehicleType || 'N/A'})</span></div>
+                <div className="detail-row"><span className="detail-key">Capacity</span><span className="detail-val">{selectedTrip.vehicleTrip.seats?.length || 0} seats</span></div>
+                <div className="detail-row"><span className="detail-key">Occupied</span><span className="detail-val">{selectedTrip.vehicleTrip.seats?.filter(s => s.status === 'occupied' || s.status === 'reserved').length || 0}</span></div>
+                <div className="detail-row"><span className="detail-key">Fare per Seat</span><span className="detail-val">ETB {selectedTrip.vehicleTrip.farePerSeat || 0}</span></div>
+                <div className="detail-row"><span className="detail-key">Total Collected</span><span className="detail-val">ETB {selectedTrip.vehicleTrip.totalCollected || 0}</span></div>
+                {selectedTrip.vehicleTrip.seats && (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Seat Map</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {selectedTrip.vehicleTrip.seats.map(s => (
+                        <span key={s.seatId} style={{
+                          padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+                          background: s.status === 'occupied' ? 'var(--success)' : s.status === 'reserved' ? 'var(--warning)' : 'var(--bg-secondary)',
+                          color: s.status === 'available' ? 'var(--text-muted)' : 'white'
+                        }}>{s.seatId}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
             <div className="detail-row"><span className="detail-key">{t('admin.fare') || 'Fare'}</span><span className="detail-val">ETB {(selectedTrip.fare?.totalFare || selectedTrip.fare?.total || selectedTrip.estimatedFare || 0).toLocaleString()}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.distance') || 'Distance'}</span><span className="detail-val">{selectedTrip.actualDistance || selectedTrip.distance ? `${(selectedTrip.actualDistance || selectedTrip.distance).toFixed(1)} km` : 'N/A'}</span></div>
             <div className="detail-row"><span className="detail-key">{t('admin.duration') || 'Duration'}</span><span className="detail-val">{selectedTrip.actualDuration ? `${selectedTrip.actualDuration} min` : 'N/A'}</span></div>

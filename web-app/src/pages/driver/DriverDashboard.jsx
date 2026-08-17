@@ -13,7 +13,8 @@ import {
   FaMotorcycle, FaShuttleVan, FaBus, FaTruck, FaBolt,
   FaHome, FaListUl, FaWallet, FaCog, FaChevronRight,
   FaExclamationTriangle, FaFlag, FaShieldAlt, FaUserSlash, FaEllipsisH,
-  FaComment, FaUser, FaHeadset, FaMap, FaSms, FaSearch, FaTimesCircle
+  FaComment, FaUser, FaHeadset, FaMap, FaSms, FaSearch, FaTimesCircle,
+  FaChair, FaUsers
 } from 'react-icons/fa';
 import FlexibleMap from '../../components/common/FlexibleMap';
 import InAppChat from '../../components/passenger/InAppChat';
@@ -82,7 +83,7 @@ const getGreeting = () => {
 
 const DriverDashboard = () => {
   const { t } = useLanguage();
-  const { user, setUser, emitLocationUpdate, newRideRequest, clearNewRideRequest, rideAccepted, clearRideAccepted, tripStatusUpdate, socket, chatUnread } = useAuth();
+  const { user, setUser, emitLocationUpdate, newRideRequest, clearNewRideRequest, rideAccepted, clearRideAccepted, newPassengerJoined, setNewPassengerJoined, tripStatusUpdate, socket, chatUnread } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -230,6 +231,17 @@ const DriverDashboard = () => {
       clearRideAccepted();
     }
   }, [rideAccepted]);
+
+  useEffect(() => {
+    if (newPassengerJoined && activeTrip) {
+      setActiveTrip(prev => ({
+        ...prev,
+        sharedPassengers: [...(prev.sharedPassengers || []), newPassengerJoined.passenger],
+        availableSeats: newPassengerJoined.passenger?.availableSeats ?? prev.availableSeats
+      }));
+      setNewPassengerJoined(null);
+    }
+  }, [newPassengerJoined]);
 
   useEffect(() => {
     if (tripStatusUpdate && activeTrip?._id === tripStatusUpdate._id) {
@@ -780,6 +792,30 @@ const DriverDashboard = () => {
                 <a href={`tel:${activeTrip.passenger?.phoneNumber}`} className="call-btn"><FaPhone /></a>
               </div>
             </div>
+            {activeTrip.seats && activeTrip.seats.length > 0 && (
+              <div style={{ padding: '10px 14px', background: 'var(--primary-50)', borderRadius: 8, margin: '8px 0', fontSize: 13 }}>
+                <div style={{ fontWeight: 600, color: 'var(--primary)', marginBottom: 4 }}>
+                  <FaChair /> Shared Ride — Seats: {activeTrip.seats.join(', ')}
+                </div>
+                {activeTrip.availableSeats != null && (
+                  <div style={{ color: 'var(--text-muted)' }}>
+                    {activeTrip.availableSeats} more seat{activeTrip.availableSeats !== 1 ? 's' : ''} available
+                  </div>
+                )}
+              </div>
+            )}
+            {activeTrip.sharedPassengers && activeTrip.sharedPassengers.length > 0 && (
+              <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: 8, margin: '8px 0', fontSize: 13 }}>
+                <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                  <FaUsers /> {activeTrip.sharedPassengers.length} Passenger{activeTrip.sharedPassengers.length !== 1 ? 's' : ''} on Board
+                </div>
+                {activeTrip.sharedPassengers.map((p, i) => (
+                  <div key={i} style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                    • Seat {p.seats?.join(', ')} — {p.name || 'Passenger'}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="trip-route-display">
               <div className="route-point"><div className="route-dot pickup" /><span>{activeTrip.pickup?.address || 'Pickup'}</span></div>
               <div className="route-connector"><div className="connector-line" /></div>

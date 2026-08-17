@@ -902,7 +902,19 @@ exports.getDriverTrips = asyncHandler(async (req, res) => {
 
   const total = await Trip.countDocuments(query);
 
-  res.json({ trips, total, page: parseInt(page), pages: Math.ceil(total / limit) });
+  // Also include VehicleTrips this driver is running
+  const vtQuery = { driver: req.user._id };
+  if (status) {
+    const statusMap = { active: { $in: ['scheduled', 'boarding', 'in_progress'] }, completed: 'completed', cancelled: 'cancelled' };
+    if (statusMap[status]) vtQuery.status = statusMap[status];
+  }
+  const vehicleTrips = await VehicleTrip.find(vtQuery)
+    .populate('vehicle', 'make model color plateNumber vehicleType')
+    .populate('passengers', 'passenger selectedSeats estimatedFare status')
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit));
+
+  res.json({ trips, vehicleTrips, total, page: parseInt(page), pages: Math.ceil(total / limit) });
 });
 
 exports.getTripDetails = asyncHandler(async (req, res) => {

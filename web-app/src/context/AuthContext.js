@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [newRideRequest, setNewRideRequest] = useState(null);
   const [rideAccepted, setRideAccepted] = useState(null);
+  const [newPassengerJoined, setNewPassengerJoined] = useState(null);
   const [driverLocation, setDriverLocation] = useState(null);
   const [tripStatusUpdate, setTripStatusUpdate] = useState(null);
   const [sosAlert, setSosAlert] = useState(null);
@@ -133,6 +134,14 @@ export const AuthProvider = ({ children }) => {
     newSocket.on('ride_accepted', (data) => {
       soundService.play('ride-accepted');
       setRideAccepted(data);
+    });
+
+    newSocket.on('new_passenger_joined', (data) => {
+      soundService.play('new-ride');
+      setNewPassengerJoined(data);
+      window.dispatchEvent(new CustomEvent('app-toast', {
+        detail: { message: `New passenger joined! Seat ${data.passenger?.seats?.join(', ') || ''}`, type: 'info' }
+      }));
     });
 
     newSocket.on('driver_location', (data) => {
@@ -273,6 +282,7 @@ export const AuthProvider = ({ children }) => {
     notifications, unreadCount, setNotifications, setUnreadCount, loadNotifications,
     newRideRequest, clearNewRideRequest,
     rideAccepted, clearRideAccepted,
+    newPassengerJoined, setNewPassengerJoined,
     driverLocation, tripStatusUpdate,
     sosAlert, clearSosAlert,
     emitLocationUpdate,
@@ -280,7 +290,7 @@ export const AuthProvider = ({ children }) => {
   }), [
     user, driverProfile, loading, serverWaking, socket,
     notifications, unreadCount, loadNotifications,
-    newRideRequest, rideAccepted,
+    newRideRequest, rideAccepted, newPassengerJoined,
     driverLocation, tripStatusUpdate, sosAlert,
     chatUnread,
   ]);
