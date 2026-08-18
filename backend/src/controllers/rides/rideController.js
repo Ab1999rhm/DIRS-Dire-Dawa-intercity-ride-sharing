@@ -9,6 +9,7 @@ const SuspiciousActivity = require('../../models/SuspiciousActivity');
 const { findNearbyDrivers } = require('../../services/rideMatchingService');
 const { calculateFare } = require('../../services/pricingService');
 const { notifyRideUpdate } = require('../../services/notificationService');
+const { dispatchWebhooks } = require('../../services/webhookService');
 const { getIO } = require('../../sockets/socketManager');
 const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
@@ -845,6 +846,15 @@ exports.completeTrip = asyncHandler(async (req, res) => {
   }
 
   logger.info('Trip completed', { tripId, fare: trip.fare?.totalFare });
+
+  dispatchWebhooks('ride_completed', {
+    tripId: trip._id,
+    vehicleTripId: vehicleTrip?._id || null,
+    passengerId: trip.passenger,
+    driverId: trip.driver,
+    fare: trip.fare?.totalFare || trip.fare || 0,
+    completedAt: trip.endTime
+  });
 
   try {
     const referralController = require('../referrals/referralController');

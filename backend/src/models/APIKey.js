@@ -5,12 +5,10 @@ const apiKeySchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  key: {
+  keyHash: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
-  keyHash: String,
   description: String,
   permissions: [{
     resource: String,
@@ -67,7 +65,6 @@ const apiKeySchema = new mongoose.Schema({
   }
 });
 
-apiKeySchema.index({ key: 1 });
 apiKeySchema.index({ keyHash: 1 });
 apiKeySchema.index({ isActive: 1 });
 apiKeySchema.index({ expiresAt: 1 });

@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
 const chapaService = require('../../services/chapaService');
+const { dispatchWebhooks } = require('../../services/webhookService');
 
 const idempotencyStore = new Map();
 
@@ -160,6 +161,19 @@ exports.processPayment = asyncHandler(async (req, res) => {
       tripId: trip._id,
       amount: driverEarnings,
       method
+    });
+
+    dispatchWebhooks('payment_processed', {
+      paymentId: payment._id,
+      transactionId,
+      amount: trip.fare.totalFare,
+      currency: 'ETB',
+      status: 'completed',
+      type: 'trip',
+      passengerId: req.user._id,
+      driverId: trip.driver,
+      tripId: trip._id,
+      processedAt: new Date()
     });
   }
 
@@ -833,6 +847,19 @@ exports.chapaWebhook = asyncHandler(async (req, res) => {
       }
 
       logger.info('Chapa webhook payment confirmed', { tx_ref, paymentId: payment._id });
+
+      dispatchWebhooks('payment_processed', {
+        paymentId: payment._id,
+        transactionId: payment.transactionId,
+        amount: payment.amount,
+        currency: payment.currency || 'ETB',
+        status: 'completed',
+        type: payment.type,
+        passengerId: payment.passenger,
+        driverId: payment.driver,
+        tripId: payment.trip,
+        processedAt: new Date()
+      });
     }
   }
 

@@ -4,7 +4,7 @@ import {
   FaEdit, FaSave, FaPlus, FaTrash, FaTimes,
   FaMobileAlt, FaServer, FaBell, FaShieldAlt, FaFlag, FaTachometerAlt,
   FaGlobe, FaHistory, FaKey, FaLink, FaUsers, FaCreditCard, FaLock,
-  FaEnvelope, FaEye, FaCheckCircle, FaCalendarAlt
+  FaEnvelope, FaEye, FaCheckCircle, FaCalendarAlt, FaCopy
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
@@ -54,6 +54,7 @@ const SystemConfiguration = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [editData, setEditData] = useState({});
   const [formData, setFormData] = useState({});
+  const [generatedApiKey, setGeneratedApiKey] = useState(null);
 
   const ZONE_TYPE = opts(['city', 'region', 'highway', 'intercity']);
   const VEHICLE_TYPE = opts(['car', 'minivan', 'minibus', 'bajaj', 'bus', 'all']);
@@ -393,7 +394,14 @@ const SystemConfiguration = () => {
       }
     }
     try {
-      await meta.createFn(buildCreatePayload(formData));
+      const res = await meta.createFn(buildCreatePayload(formData));
+      if (activeTab === 'api' && res?.data?.key) {
+        setGeneratedApiKey(res.data.key);
+        setShowCreateModal(false);
+        setFormData({});
+        fetchConfigurationData();
+        return;
+      }
       toast.success(`${meta.label} created successfully`);
       setShowCreateModal(false);
       setFormData({});
@@ -947,6 +955,35 @@ const SystemConfiguration = () => {
               <button className="config-btn config-btn-delete" onClick={handleDelete}>
                 {activeTab === 'api' ? <><FaLock /> Revoke</> : <><FaTrash /> Delete</>}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ===== GENERATED API KEY MODAL ===== */}
+      {generatedApiKey && (
+        <div className="modal-overlay" onClick={() => setGeneratedApiKey(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><FaKey /> API Key Created</h3>
+              <button className="modal-close" onClick={() => setGeneratedApiKey(null)}><FaTimes /></button>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+              Copy this key now. It will only be shown this once.
+            </p>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              background: 'var(--bg-input, #f3f4f6)', border: '1px dashed var(--border-color, #d1d5db)',
+              borderRadius: 8, padding: '12px 14px', marginBottom: 16, wordBreak: 'break-all'
+            }}>
+              <code style={{ fontSize: 13, flex: 1 }}>{generatedApiKey}</code>
+              <button
+                className="config-btn config-btn-view"
+                onClick={() => { navigator.clipboard.writeText(generatedApiKey); toast.success('API key copied'); }}
+                title="Copy"
+              ><FaCopy /></button>
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button className="config-btn config-btn-save" onClick={() => setGeneratedApiKey(null)}>Done</button>
             </div>
           </div>
         </div>

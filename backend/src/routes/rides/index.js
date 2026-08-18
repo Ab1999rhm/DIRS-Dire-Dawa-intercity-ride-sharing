@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const rideController = require('../../controllers/rides/rideController');
 const { protect, authorize } = require('../../middleware/auth');
+const { validateOptionalApiKey } = require('../../middleware/apiKey');
 const { validateRideRequest } = require('../../middleware/validation');
 const Place = require('../../models/Place');
 
 // Public endpoint - fetch active places for passenger/driver autocomplete
-router.get('/places', async (req, res) => {
+// Optional x-api-key header is validated when present
+router.get('/places', validateOptionalApiKey, async (req, res) => {
   try {
     const { type } = req.query;
     const query = { isActive: true };

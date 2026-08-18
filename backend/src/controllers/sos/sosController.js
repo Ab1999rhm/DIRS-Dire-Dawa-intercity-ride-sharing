@@ -5,6 +5,7 @@ const Trip = require('../../models/Trip');
 const Driver = require('../../models/Driver');
 const { sendRideNotification } = require('../../services/smsService');
 const { notifyRideUpdate, createNotification } = require('../../services/notificationService');
+const { dispatchWebhooks } = require('../../services/webhookService');
 const { getIO } = require('../../sockets/socketManager');
 const logger = require('../../config/logger');
 const { asyncHandler } = require('../../middleware/errorHandler');
@@ -55,6 +56,18 @@ exports.triggerSOS = asyncHandler(async (req, res) => {
     message: sosAlert.message,
     tripId: tripId || null,
     timestamp: new Date()
+  });
+
+  dispatchWebhooks('sos_triggered', {
+    alertId: sosAlert._id,
+    userId: req.user._id,
+    userName: `${user.firstName} ${user.lastName}`,
+    phoneNumber: user.phoneNumber,
+    location: sosCoordinates,
+    type: sosAlert.type,
+    message: sosAlert.message,
+    tripId: tripId || null,
+    triggeredAt: new Date()
   });
 
   if (user.emergencyContacts && user.emergencyContacts.length > 0) {

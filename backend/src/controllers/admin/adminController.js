@@ -6496,12 +6496,13 @@ exports.createAPIKey = asyncHandler(async (req, res) => {
   
   const apiKey = await APIKey.create({
     ...req.body,
-    key,
     keyHash,
     createdBy: req.user._id
   });
   await createAuditLog('api_key', apiKey._id, 'create', req.user._id, null, apiKey);
-  res.json({ message: 'API key created', apiKey, key });
+  const safeApiKey = apiKey.toObject();
+  delete safeApiKey.keyHash;
+  res.json({ message: 'API key created', apiKey: safeApiKey, key });
 });
 
 exports.getAPIKeys = asyncHandler(async (req, res) => {
