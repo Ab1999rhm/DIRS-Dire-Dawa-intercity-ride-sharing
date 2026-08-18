@@ -1,7 +1,7 @@
-const CACHE_NAME = 'dirs-v7';
-const STATIC_CACHE = 'dirs-static-v7';
-const API_CACHE = 'dirs-api-v7';
-const IMAGE_CACHE = 'dirs-images-v7';
+const CACHE_NAME = 'dirs-v8';
+const STATIC_CACHE = 'dirs-static-v8';
+const API_CACHE = 'dirs-api-v8';
+const IMAGE_CACHE = 'dirs-images-v8';
 
 const STATIC_ASSETS = [
   '/leaflet.css',
@@ -59,31 +59,30 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.match(/\.(css|js|woff2?|ttf|eot)$/)) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE));
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
     return;
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request));
+    event.respondWith(networkFirst(request, STATIC_CACHE));
     return;
   }
 
   event.respondWith(fetch(request));
 });
 
-async function cacheFirst(request, cacheName) {
+async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  if (cached) return cached;
-  try {
-    const response = await fetch(request);
+  const networkPromise = fetch(request).then((response) => {
     if (response.ok) {
       cache.put(request, response.clone());
     }
     return response;
-  } catch {
-    return new Response('', { status: 408 });
-  }
+  }).catch(() => cached || new Response('', { status: 408 }));
+
+  if (cached) return cached;
+  return networkPromise;
 }
 
 async function networkFirst(request, cacheName) {

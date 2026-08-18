@@ -80,6 +80,20 @@ class LazyErrorBoundary extends React.Component {
   static getDerivedStateFromError() {
     return { hasError: true };
   }
+  componentDidCatch(error) {
+    const isChunkError = error?.name === 'ChunkLoadError'
+      || /Loading chunk .* failed/.test(error?.message || '')
+      || /chunk/i.test(error?.message || '') && /\.js/.test(error?.message || '');
+    if (isChunkError && !sessionStorage.getItem('chunkReloaded')) {
+      sessionStorage.setItem('chunkReloaded', '1');
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.getRegistrations?.().then(regs => regs.forEach(r => r.update()));
+      }
+      window.location.reload();
+      return;
+    }
+    sessionStorage.removeItem('chunkReloaded');
+  }
   render() {
     if (this.state.hasError) {
       return (

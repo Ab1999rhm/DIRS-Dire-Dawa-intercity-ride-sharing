@@ -12,6 +12,10 @@ import { adminAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import './Admin.css';
 
+const EmptyRow = ({ style }) => (
+  <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, ...style }}>No data available for this period</div>
+);
+
 const AnalyticsReporting = () => {
   const { t } = useLanguage();
   const toast = useToast();
@@ -56,176 +60,116 @@ const AnalyticsReporting = () => {
 
   useEffect(() => { fetchAnalyticsData(); }, [filterPeriod, activeTab]);
 
-  const MOCK = {
-    revenue: {
-      revenueTrends: { totalRevenue: 285000, dailyAverage: 40714 },
-      revenueByRoute: { revenueByRoute: [{ route: 'Dire Dawa → Harar', revenue: 85000 }, { route: 'Dire Dawa → Addis Ababa', revenue: 72000 }, { route: 'Bole → Megenagna', revenue: 45000 }, { route: 'Piassa → Airport', revenue: 38000 }, { route: 'Kezira → Jugol', revenue: 25000 }] },
-      revenueByVehicle: { revenueByVehicle: { sedan: { revenue: 120000, count: 340 }, bajaj: { revenue: 85000, count: 520 }, minivan: { revenue: 55000, count: 95 }, bus: { revenue: 25000, count: 30 } } },
-      surgeImpact: { surgeImpact: 18.5 }
-    },
-    trips: {
-      tripCompletionRate: { completionRate: 87.5, cancellationRate: 12.5 },
-      cancellationReasons: { cancellationReasons: [{ reason: 'Driver too far', count: 45, percentage: 35 }, { reason: 'Changed mind', count: 30, percentage: 23 }, { reason: 'Found alternative', count: 25, percentage: 19 }, { reason: 'Long wait time', count: 18, percentage: 14 }, { reason: 'Other', count: 10, percentage: 9 }] },
-      avgTripDuration: { avgDuration: 18.5 },
-      tripVolumeTrends: {}
-    },
-    users: {
-      userGrowth: { totalNewUsers: 156 },
-      userActivity: { activityRate: 72 },
-      userDemographics: { totalUsers: 3450, demographics: { ageGroups: { '18-24': 890, '25-34': 1200, '35-44': 780, '45+': 580 } } },
-      userLifetimeValue: { userLifetimeValues: [{ userName: 'Sara Tesfaye', totalSpent: 15600, tripCount: 89 }, { userName: 'Bekele Alemu', totalSpent: 12400, tripCount: 67 }, { userName: 'Helen Mengistu', totalSpent: 9800, tripCount: 52 }] }
-    },
-    drivers: {
-      driverAvailability: { onlineCount: 45 },
-      driverPerformance: { performanceData: [{ avgRating: 4.7 }] },
-      driverEarnings: { driverEarnings: [{ driverName: 'Ahmed Ali', totalEarnings: 45000, tripCount: 230 }, { driverName: 'Mohammed Hussein', totalEarnings: 38000, tripCount: 195 }, { driverName: 'Yosef Tadesse', totalEarnings: 32000, tripCount: 170 }] },
-      driverChurn: { churnRate: 5.2 }
-    },
-    geo: {
-      routePopularity: { popularRoutes: [{ route: 'Bole → Megenagna', count: 450 }, { route: 'Piassa → Airport', count: 380 }, { route: 'Dire Dawa → Harar', count: 320 }, { route: 'Kezira → Jugol', count: 280 }, { route: 'Megenagna → Bole', count: 250 }] },
-      areaPerformance: { areaPerformance: [{ area: 'Bole', revenue: 85000, tripCount: 450 }, { area: 'Megenagna', revenue: 72000, tripCount: 380 }, { area: 'Piassa', revenue: 55000, tripCount: 290 }, { area: 'Kezira', revenue: 45000, tripCount: 240 }] }
-    },
-    time: {
-      peakHours: { peakHours: [{ hour: 7, count: 180 }, { hour: 8, count: 220 }, { hour: 12, count: 195 }, { hour: 17, count: 250 }, { hour: 18, count: 210 }] },
-      peakDays: { peakDays: [{ day: 'Monday', count: 520 }, { day: 'Friday', count: 480 }, { day: 'Saturday', count: 450 }, { day: 'Sunday', count: 380 }] },
-      seasonalTrends: { monthlyData: { 'Jan': 3200, 'Feb': 2900, 'Mar': 3500, 'Apr': 3800, 'May': 4100, 'Jun': 3600 } }
-    },
-    financial: {
-      commissionRate: { collectionRate: 92 },
-      refundRate: { refundRate: 3.2 },
-      avgFare: { avgFare: 185 },
-      paymentDistribution: { distribution: [{ method: 'Cash', count: 1200, percentage: 45 }, { method: 'Telebirr', count: 950, percentage: 35 }, { method: 'Chapa', count: 530, percentage: 20 }] }
-    },
-    performance: {
-      driverResponseTime: { avgResponseTime: 2.8 },
-      avgWaitTime: { avgWaitTime: 4.5 }
-    },
-    reports: {
-      dailyReport: { summary: { totalTrips: 180, completedTrips: 156, totalRevenue: 42000, newUsers: 23 } },
-      weeklyReport: { summary: { totalTrips: 1200, completedTrips: 1050, totalRevenue: 285000 } }
-    },
-    forecast: {
-      demandPrediction: { predictions: [{ date: '2026-08-12', predictedTrips: 195 }, { date: '2026-08-13', predictedTrips: 210 }, { date: '2026-08-14', predictedTrips: 185 }, { date: '2026-08-15', predictedTrips: 220 }] },
-      revenueProjection: { projections: [{ date: '2026-08-12', projectedRevenue: 48000 }, { date: '2026-08-13', projectedRevenue: 52000 }, { date: '2026-08-14', projectedRevenue: 45000 }, { date: '2026-08-15', projectedRevenue: 55000 }] }
-    },
-    comparative: {
-      yearOverYear: { comparison: { tripGrowth: 24, revenueGrowth: 31 } },
-      competitorAnalysis: { marketShare: { DIRS: 35, RideEasy: 28, DawaGo: 22, Other: 15 } }
-    }
-  };
-
   const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
       const params = { period: filterPeriod, startDate, endDate };
 
-      const isEmpty = (d, fallback) => {
-        if (!d || (typeof d === 'object' && Object.keys(d).length === 0)) return fallback;
-        return d;
-      };
-      const isEmptyArr = (d, fallback) => {
-        if (!d || (Array.isArray(d) && d.length === 0)) return fallback;
+      const ok = (res, key) => {
+        const d = res?.data;
+        if (!d || (Array.isArray(d) && d.length === 0) || (typeof d === 'object' && !Array.isArray(d) && Object.keys(d).length === 0)) return null;
+        if (key && !d[key]) return null;
         return d;
       };
 
       switch (activeTab) {
         case 'revenue': {
           const [trends, route, vehicle, surge] = await Promise.all([
-            adminAPI.getRevenueTrends(params).then(r => ({ data: isEmpty(r.data?.totalRevenue, null) ? MOCK.revenue.revenueTrends : r.data })).catch(() => MOCK.revenue.revenueTrends),
-            adminAPI.getRevenueByRoute(params).then(r => ({ data: isEmptyArr(r.data?.revenueByRoute, null) ? MOCK.revenue.revenueByRoute : r.data })).catch(() => MOCK.revenue.revenueByRoute),
-            adminAPI.getRevenueByVehicleType(params).then(r => ({ data: isEmpty(r.data?.revenueByVehicle, null) ? MOCK.revenue.revenueByVehicle : r.data })).catch(() => MOCK.revenue.revenueByVehicle),
-            adminAPI.getSurgePricingImpact(params).then(r => ({ data: isEmpty(r.data?.surgeImpact, null) ? MOCK.revenue.surgeImpact : r.data })).catch(() => MOCK.revenue.surgeImpact)
+            adminAPI.getRevenueTrends(params).then(r => ok(r, 'totalRevenue')).catch(() => null),
+            adminAPI.getRevenueByRoute(params).then(r => ok(r, 'revenueByRoute')).catch(() => null),
+            adminAPI.getRevenueByVehicleType(params).then(r => ok(r, 'revenueByVehicle')).catch(() => null),
+            adminAPI.getSurgePricingImpact(params).then(r => ok(r, 'surgeImpact')).catch(() => null)
           ]);
-          setRevenueTrends(trends.data); setRevenueByRoute(route.data); setRevenueByVehicle(vehicle.data); setSurgeImpact(surge.data);
+          setRevenueTrends(trends); setRevenueByRoute(route); setRevenueByVehicle(vehicle); setSurgeImpact(surge);
           break;
         }
         case 'trips': {
           const [completion, reasons, duration, volume] = await Promise.all([
-            adminAPI.getTripCompletionRate(params).then(r => ({ data: isEmpty(r.data?.completionRate, null) ? MOCK.trips.tripCompletionRate : r.data })).catch(() => MOCK.trips.tripCompletionRate),
-            adminAPI.getCancellationReasons(params).then(r => ({ data: isEmptyArr(r.data?.cancellationReasons, null) ? MOCK.trips.cancellationReasons : r.data })).catch(() => MOCK.trips.cancellationReasons),
-            adminAPI.getAverageTripDuration(params).then(r => ({ data: isEmpty(r.data?.avgDuration, null) ? MOCK.trips.avgTripDuration : r.data })).catch(() => MOCK.trips.avgTripDuration),
-            adminAPI.getTripVolumeTrends(params).then(r => ({ data: isEmpty(r.data, null) ? MOCK.trips.tripVolumeTrends : r.data })).catch(() => MOCK.trips.tripVolumeTrends)
+            adminAPI.getTripCompletionRate(params).then(r => ok(r, 'completionRate')).catch(() => null),
+            adminAPI.getCancellationReasons(params).then(r => ok(r, 'cancellationReasons')).catch(() => null),
+            adminAPI.getAverageTripDuration(params).then(r => ok(r, 'avgDuration')).catch(() => null),
+            adminAPI.getTripVolumeTrends(params).then(r => ok(r)).catch(() => null)
           ]);
-          setTripCompletionRate(completion.data); setCancellationReasons(reasons.data); setAvgTripDuration(duration.data); setTripVolumeTrends(volume.data);
+          setTripCompletionRate(completion); setCancellationReasons(reasons); setAvgTripDuration(duration); setTripVolumeTrends(volume);
           break;
         }
         case 'users': {
           const [growth, activity, demographics, ltv] = await Promise.all([
-            adminAPI.getUserGrowth(params).then(r => ({ data: isEmpty(r.data?.totalNewUsers, null) ? MOCK.users.userGrowth : r.data })).catch(() => MOCK.users.userGrowth),
-            adminAPI.getUserActivity(params).then(r => ({ data: isEmpty(r.data?.activityRate, null) ? MOCK.users.userActivity : r.data })).catch(() => MOCK.users.userActivity),
-            adminAPI.getUserDemographics(params).then(r => ({ data: isEmpty(r.data?.totalUsers, null) ? MOCK.users.userDemographics : r.data })).catch(() => MOCK.users.userDemographics),
-            adminAPI.getUserLifetimeValue(params).then(r => ({ data: isEmptyArr(r.data?.userLifetimeValues, null) ? MOCK.users.userLifetimeValue : r.data })).catch(() => MOCK.users.userLifetimeValue)
+            adminAPI.getUserGrowth(params).then(r => ok(r, 'totalNewUsers')).catch(() => null),
+            adminAPI.getUserActivity(params).then(r => ok(r, 'activityRate')).catch(() => null),
+            adminAPI.getUserDemographics(params).then(r => ok(r, 'totalUsers')).catch(() => null),
+            adminAPI.getUserLifetimeValue(params).then(r => ok(r, 'userLifetimeValues')).catch(() => null)
           ]);
-          setUserGrowth(growth.data); setUserActivity(activity.data); setUserDemographics(demographics.data); setUserLifetimeValue(ltv.data);
+          setUserGrowth(growth); setUserActivity(activity); setUserDemographics(demographics); setUserLifetimeValue(ltv);
           break;
         }
         case 'drivers': {
           const [availability, performance, earnings, churn] = await Promise.all([
-            adminAPI.getDriverAvailability(params).then(r => ({ data: isEmpty(r.data?.onlineCount, null) ? MOCK.drivers.driverAvailability : r.data })).catch(() => MOCK.drivers.driverAvailability),
-            adminAPI.getDriverPerformance(params).then(r => ({ data: isEmptyArr(r.data?.performanceData, null) ? MOCK.drivers.driverPerformance : r.data })).catch(() => MOCK.drivers.driverPerformance),
-            adminAPI.getDriverEarnings(params).then(r => ({ data: isEmptyArr(r.data?.driverEarnings, null) ? MOCK.drivers.driverEarnings : r.data })).catch(() => MOCK.drivers.driverEarnings),
-            adminAPI.getDriverChurn(params).then(r => ({ data: isEmpty(r.data?.churnRate, null) ? MOCK.drivers.driverChurn : r.data })).catch(() => MOCK.drivers.driverChurn)
+            adminAPI.getDriverAvailability(params).then(r => ok(r, 'onlineCount')).catch(() => null),
+            adminAPI.getDriverPerformance(params).then(r => ok(r, 'performanceData')).catch(() => null),
+            adminAPI.getDriverEarnings(params).then(r => ok(r, 'driverEarnings')).catch(() => null),
+            adminAPI.getDriverChurn(params).then(r => ok(r, 'churnRate')).catch(() => null)
           ]);
-          setDriverAvailability(availability.data); setDriverPerformance(performance.data); setDriverEarnings(earnings.data); setDriverChurn(churn.data);
+          setDriverAvailability(availability); setDriverPerformance(performance); setDriverEarnings(earnings); setDriverChurn(churn);
           break;
         }
         case 'geo': {
           const [routes, areas] = await Promise.all([
-            adminAPI.getRoutePopularity(params).then(r => ({ data: isEmptyArr(r.data?.popularRoutes, null) ? MOCK.geo.routePopularity : r.data })).catch(() => MOCK.geo.routePopularity),
-            adminAPI.getAreaPerformance(params).then(r => ({ data: isEmptyArr(r.data?.areaPerformance, null) ? MOCK.geo.areaPerformance : r.data })).catch(() => MOCK.geo.areaPerformance)
+            adminAPI.getRoutePopularity(params).then(r => ok(r, 'popularRoutes')).catch(() => null),
+            adminAPI.getAreaPerformance(params).then(r => ok(r, 'areaPerformance')).catch(() => null)
           ]);
-          setRoutePopularity(routes.data); setAreaPerformance(areas.data);
+          setRoutePopularity(routes); setAreaPerformance(areas);
           break;
         }
         case 'time': {
           const [hours, days, seasonal] = await Promise.all([
-            adminAPI.getPeakHoursNew(params).then(r => ({ data: isEmptyArr(r.data?.peakHours, null) ? MOCK.time.peakHours : r.data })).catch(() => MOCK.time.peakHours),
-            adminAPI.getPeakDays(params).then(r => ({ data: isEmptyArr(r.data?.peakDays, null) ? MOCK.time.peakDays : r.data })).catch(() => MOCK.time.peakDays),
-            adminAPI.getSeasonalTrends(params).then(r => ({ data: isEmpty(r.data?.monthlyData, null) ? MOCK.time.seasonalTrends : r.data })).catch(() => MOCK.time.seasonalTrends)
+            adminAPI.getPeakHoursNew(params).then(r => ok(r, 'peakHours')).catch(() => null),
+            adminAPI.getPeakDays(params).then(r => ok(r, 'peakDays')).catch(() => null),
+            adminAPI.getSeasonalTrends(params).then(r => ok(r, 'monthlyData')).catch(() => null)
           ]);
-          setPeakHours(hours.data); setPeakDays(days.data); setSeasonalTrends(seasonal.data);
+          setPeakHours(hours); setPeakDays(days); setSeasonalTrends(seasonal);
           break;
         }
         case 'financial': {
           const [commission, refund, fare, payment] = await Promise.all([
-            adminAPI.getCommissionCollectionRate(params).then(r => ({ data: isEmpty(r.data?.collectionRate, null) ? MOCK.financial.commissionRate : r.data })).catch(() => MOCK.financial.commissionRate),
-            adminAPI.getRefundRate(params).then(r => ({ data: isEmpty(r.data?.refundRate, null) ? MOCK.financial.refundRate : r.data })).catch(() => MOCK.financial.refundRate),
-            adminAPI.getAverageFare(params).then(r => ({ data: isEmpty(r.data?.avgFare, null) ? MOCK.financial.avgFare : r.data })).catch(() => MOCK.financial.avgFare),
-            adminAPI.getPaymentMethodDistribution(params).then(r => ({ data: isEmptyArr(r.data?.distribution, null) ? MOCK.financial.paymentDistribution : r.data })).catch(() => MOCK.financial.paymentDistribution)
+            adminAPI.getCommissionCollectionRate(params).then(r => ok(r, 'collectionRate')).catch(() => null),
+            adminAPI.getRefundRate(params).then(r => ok(r, 'refundRate')).catch(() => null),
+            adminAPI.getAverageFare(params).then(r => ok(r, 'avgFare')).catch(() => null),
+            adminAPI.getPaymentMethodDistribution(params).then(r => ok(r, 'distribution')).catch(() => null)
           ]);
-          setCommissionRate(commission.data); setRefundRate(refund.data); setAvgFare(fare.data); setPaymentDistribution(payment.data);
+          setCommissionRate(commission); setRefundRate(refund); setAvgFare(fare); setPaymentDistribution(payment);
           break;
         }
         case 'performance': {
           const [response, wait] = await Promise.all([
-            adminAPI.getDriverResponseTime(params).then(r => ({ data: isEmpty(r.data?.avgResponseTime, null) ? MOCK.performance.driverResponseTime : r.data })).catch(() => MOCK.performance.driverResponseTime),
-            adminAPI.getAverageWaitTime(params).then(r => ({ data: isEmpty(r.data?.avgWaitTime, null) ? MOCK.performance.avgWaitTime : r.data })).catch(() => MOCK.performance.avgWaitTime)
+            adminAPI.getDriverResponseTime(params).then(r => ok(r, 'avgResponseTime')).catch(() => null),
+            adminAPI.getAverageWaitTime(params).then(r => ok(r, 'avgWaitTime')).catch(() => null)
           ]);
-          setDriverResponseTime(response.data); setAvgWaitTime(wait.data);
+          setDriverResponseTime(response); setAvgWaitTime(wait);
           break;
         }
         case 'reports': {
           const [daily, weekly] = await Promise.all([
-            adminAPI.generateDailyReport(params).then(r => ({ data: isEmpty(r.data?.summary?.totalTrips, null) ? MOCK.reports.dailyReport : r.data })).catch(() => MOCK.reports.dailyReport),
-            adminAPI.generateWeeklyReport(params).then(r => ({ data: isEmpty(r.data?.summary?.totalTrips, null) ? MOCK.reports.weeklyReport : r.data })).catch(() => MOCK.reports.weeklyReport)
+            adminAPI.generateDailyReport(params).then(r => ok(r, 'summary')).catch(() => null),
+            adminAPI.generateWeeklyReport(params).then(r => ok(r, 'summary')).catch(() => null)
           ]);
-          setDailyReport(daily.data); setWeeklyReport(weekly.data);
+          setDailyReport(daily); setWeeklyReport(weekly);
           break;
         }
         case 'forecast': {
           const [demand, revenue] = await Promise.all([
-            adminAPI.getDemandPrediction(params).then(r => ({ data: isEmptyArr(r.data?.predictions, null) ? MOCK.forecast.demandPrediction : r.data })).catch(() => MOCK.forecast.demandPrediction),
-            adminAPI.getRevenueProjection(params).then(r => ({ data: isEmptyArr(r.data?.projections, null) ? MOCK.forecast.revenueProjection : r.data })).catch(() => MOCK.forecast.revenueProjection)
+            adminAPI.getDemandPrediction(params).then(r => ok(r, 'predictions')).catch(() => null),
+            adminAPI.getRevenueProjection(params).then(r => ok(r, 'projections')).catch(() => null)
           ]);
-          setDemandPrediction(demand.data); setRevenueProjection(revenue.data);
+          setDemandPrediction(demand); setRevenueProjection(revenue);
           break;
         }
         case 'comparative': {
           const [yoy, competitor] = await Promise.all([
-            adminAPI.getYearOverYear(params).then(r => ({ data: isEmpty(r.data?.comparison, null) ? MOCK.comparative.yearOverYear : r.data })).catch(() => MOCK.comparative.yearOverYear),
-            adminAPI.getCompetitorAnalysis(params).then(r => ({ data: isEmpty(r.data?.marketShare, null) ? MOCK.comparative.competitorAnalysis : r.data })).catch(() => MOCK.comparative.competitorAnalysis)
+            adminAPI.getYearOverYear(params).then(r => ok(r, 'comparison')).catch(() => null),
+            adminAPI.getCompetitorAnalysis(params).then(r => ok(r, 'marketShare')).catch(() => null)
           ]);
-          setYearOverYear(yoy.data); setCompetitorAnalysis(competitor.data);
+          setYearOverYear(yoy); setCompetitorAnalysis(competitor);
           break;
         }
       }
@@ -260,6 +204,22 @@ const AnalyticsReporting = () => {
     { key: 'comparative', icon: <FaBalanceScale />, label: 'Comparative' },
   ];
 
+  const routeList = revenueByRoute?.revenueByRoute || [];
+  const vehicleList = Object.entries(revenueByVehicle?.revenueByVehicle || {});
+  const cancellationList = cancellationReasons?.cancellationReasons || [];
+  const ageGroups = Object.entries(userDemographics?.demographics?.ageGroups || {});
+  const ltvList = userLifetimeValue?.userLifetimeValues || [];
+  const earningsList = driverEarnings?.driverEarnings || [];
+  const popularRoutes = routePopularity?.popularRoutes || [];
+  const areaList = areaPerformance?.areaPerformance || [];
+  const peakHoursList = peakHours?.peakHours || [];
+  const peakDaysList = peakDays?.peakDays || [];
+  const seasonalList = Object.entries(seasonalTrends?.monthlyData || {});
+  const paymentList = paymentDistribution?.distribution || [];
+  const predictionList = demandPrediction?.predictions || [];
+  const projectionList = revenueProjection?.projections || [];
+  const marketList = Object.entries(competitorAnalysis?.marketShare || {});
+
   return (
     <div className="admin-page">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #059669)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
@@ -291,9 +251,9 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaDollarSign />, val: `ETB ${(revenueTrends?.totalRevenue || 285000).toLocaleString()}`, label: 'Total Revenue', color: '#059669' },
-              { icon: <FaRoute />, val: revenueByRoute?.revenueByRoute?.length || 5, label: 'Routes', color: '#3b82f6' },
-              { icon: <FaFire />, val: `${surgeImpact?.surgeImpact || 18.5}%`, label: 'Surge Impact', color: '#f59e0b' },
+              { icon: <FaDollarSign />, val: `ETB ${(revenueTrends?.totalRevenue || 0).toLocaleString()}`, label: 'Total Revenue', color: '#059669' },
+              { icon: <FaRoute />, val: routeList.length || 0, label: 'Routes', color: '#3b82f6' },
+              { icon: <FaFire />, val: `${surgeImpact?.surgeImpact ?? 0}%`, label: 'Surge Impact', color: '#f59e0b' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -304,7 +264,7 @@ const AnalyticsReporting = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaChartLine style={{ color: '#3b82f6', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Revenue by Route</span></div>
-              <div>{(revenueByRoute?.revenueByRoute || []).slice(0, 5).map((item, idx) => (
+              <div>{routeList.length === 0 ? <EmptyRow /> : routeList.slice(0, 5).map((item, idx) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < 4 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{item.route}</span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: '#059669' }}>ETB {item.revenue?.toLocaleString()}</span>
@@ -313,8 +273,8 @@ const AnalyticsReporting = () => {
             </div>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaCar style={{ color: '#7c3aed', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Revenue by Vehicle</span></div>
-              <div>{Object.entries(revenueByVehicle?.revenueByVehicle || {}).map(([type, data], idx) => (
-                <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < Object.keys(revenueByVehicle?.revenueByVehicle || {}).length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>{vehicleList.length === 0 ? <EmptyRow /> : vehicleList.map(([type, data], idx) => (
+                <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < vehicleList.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)', textTransform: 'capitalize' }}>{type}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>ETB {data.revenue?.toLocaleString()} ({data.count} trips)</span>
                 </div>
@@ -329,9 +289,9 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaCheckCircle />, val: `${tripCompletionRate?.completionRate || 87.5}%`, label: 'Completion Rate', color: '#059669' },
-              { icon: <FaTimes />, val: `${tripCompletionRate?.cancellationRate || 12.5}%`, label: 'Cancellation Rate', color: '#ef4444' },
-              { icon: <FaClock />, val: `${avgTripDuration?.avgDuration || 18.5} min`, label: 'Avg Duration', color: '#3b82f6' },
+              { icon: <FaCheckCircle />, val: `${tripCompletionRate?.completionRate ?? 0}%`, label: 'Completion Rate', color: '#059669' },
+              { icon: <FaTimes />, val: `${tripCompletionRate?.cancellationRate ?? 0}%`, label: 'Cancellation Rate', color: '#ef4444' },
+              { icon: <FaClock />, val: `${avgTripDuration?.avgDuration ?? 0} min`, label: 'Avg Duration', color: '#3b82f6' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -341,7 +301,7 @@ const AnalyticsReporting = () => {
           </div>
           <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaTimes style={{ color: '#ef4444', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Cancellation Reasons</span></div>
-            <div>{(cancellationReasons?.cancellationReasons || []).map((item, idx, arr) => (
+            <div>{cancellationList.length === 0 ? <EmptyRow /> : cancellationList.map((item, idx, arr) => (
               <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{item.reason}</span>
@@ -361,9 +321,9 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaUsers />, val: userGrowth?.totalNewUsers || 156, label: 'New Users', color: '#059669' },
-              { icon: <FaEye />, val: `${userActivity?.activityRate || 72}%`, label: 'Activity Rate', color: '#3b82f6' },
-              { icon: <FaDollarSign />, val: `ETB ${(userLifetimeValue?.userLifetimeValues?.[0]?.totalSpent || 15600).toLocaleString()}`, label: 'Top LTV', color: '#f59e0b' },
+              { icon: <FaUsers />, val: userGrowth?.totalNewUsers ?? 0, label: 'New Users', color: '#059669' },
+              { icon: <FaEye />, val: `${userActivity?.activityRate ?? 0}%`, label: 'Activity Rate', color: '#3b82f6' },
+              { icon: <FaDollarSign />, val: `ETB ${(ltvList[0]?.totalSpent || 0).toLocaleString()}`, label: 'Top LTV', color: '#f59e0b' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -374,22 +334,22 @@ const AnalyticsReporting = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaChartBar style={{ color: '#7c3aed', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>User Demographics</span></div>
-              <div style={{ padding: '10px 16px' }}><span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>Total Users: {userDemographics?.totalUsers || 3450}</span></div>
-              {Object.entries(userDemographics?.demographics?.ageGroups || {}).map(([group, count], idx, arr) => (
+              <div style={{ padding: '10px 16px' }}><span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>Total Users: {userDemographics?.totalUsers ?? 0}</span></div>
+              {ageGroups.length === 0 ? <EmptyRow /> : ageGroups.map(([group, count], idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                     <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{group}</span>
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>{count}</span>
                   </div>
                   <div style={{ width: '100%', height: 6, background: 'var(--bg-secondary, rgba(0,0,0,0.05))', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${(count / (userDemographics?.totalUsers || 3450)) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #3b82f6)', borderRadius: 3 }} />
+                    <div style={{ width: `${(count / (userDemographics?.totalUsers || 1)) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #3b82f6)', borderRadius: 3 }} />
                   </div>
                 </div>
               ))}
             </div>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaDollarSign style={{ color: '#059669', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Top Lifetime Value Users</span></div>
-              <div>{(userLifetimeValue?.userLifetimeValues || []).slice(0, 5).map((user, idx, arr) => (
+              <div>{ltvList.length === 0 ? <EmptyRow /> : ltvList.slice(0, 5).map((user, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{user.userName}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>ETB {user.totalSpent?.toLocaleString()} ({user.tripCount} trips)</span>
@@ -405,9 +365,9 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaCar />, val: driverAvailability?.onlineCount || 45, label: 'Online Drivers', color: '#059669' },
-              { icon: <FaArrowDown />, val: `${driverChurn?.churnRate || 5.2}%`, label: 'Churn Rate', color: '#f59e0b' },
-              { icon: <FaStar />, val: driverPerformance?.performanceData?.[0]?.avgRating?.toFixed(1) || '4.7', label: 'Avg Rating', color: '#3b82f6' },
+              { icon: <FaCar />, val: driverAvailability?.onlineCount ?? 0, label: 'Online Drivers', color: '#059669' },
+              { icon: <FaArrowDown />, val: `${driverChurn?.churnRate ?? 0}%`, label: 'Churn Rate', color: '#f59e0b' },
+              { icon: <FaStar />, val: driverPerformance?.performanceData?.[0]?.avgRating?.toFixed(1) ?? '0.0', label: 'Avg Rating', color: '#3b82f6' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -417,7 +377,7 @@ const AnalyticsReporting = () => {
           </div>
           <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaDollarSign style={{ color: '#059669', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Top Earning Drivers</span></div>
-            <div>{(driverEarnings?.driverEarnings || []).slice(0, 5).map((driver, idx, arr) => (
+            <div>{earningsList.length === 0 ? <EmptyRow /> : earningsList.slice(0, 5).map((driver, idx, arr) => (
               <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{driver.driverName}</span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>ETB {driver.totalEarnings?.toLocaleString()} ({driver.tripCount} trips)</span>
@@ -433,7 +393,7 @@ const AnalyticsReporting = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaRoute style={{ color: '#3b82f6', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Popular Routes</span></div>
-              <div>{(routePopularity?.popularRoutes || []).slice(0, 5).map((route, idx, arr) => (
+              <div>{popularRoutes.length === 0 ? <EmptyRow /> : popularRoutes.slice(0, 5).map((route, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{route.route}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{route.count} trips</span>
@@ -442,7 +402,7 @@ const AnalyticsReporting = () => {
             </div>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaMapMarkedAlt style={{ color: '#7c3aed', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Area Performance</span></div>
-              <div>{(areaPerformance?.areaPerformance || []).slice(0, 5).map((area, idx, arr) => (
+              <div>{areaList.length === 0 ? <EmptyRow /> : areaList.slice(0, 5).map((area, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{area.area}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>ETB {area.revenue?.toLocaleString()} ({area.tripCount} trips)</span>
@@ -459,8 +419,8 @@ const AnalyticsReporting = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaClock style={{ color: '#f59e0b', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Peak Hours</span></div>
-              <div>{(peakHours?.peakHours || []).map((hour, idx, arr) => {
-                const maxCount = Math.max(...(peakHours?.peakHours || []).map(h => h.count || 0), 1);
+              <div>{peakHoursList.length === 0 ? <EmptyRow /> : peakHoursList.map((hour, idx, arr) => {
+                const maxCount = Math.max(...peakHoursList.map(h => h.count || 0), 1);
                 return (
                   <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{hour.hour}:00</span><span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>{hour.count} trips</span></div>
@@ -471,8 +431,8 @@ const AnalyticsReporting = () => {
             </div>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaCalendarAlt style={{ color: '#3b82f6', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Peak Days</span></div>
-              <div>{(peakDays?.peakDays || []).map((day, idx, arr) => {
-                const maxCount = Math.max(...(peakDays?.peakDays || []).map(d => d.count || 0), 1);
+              <div>{peakDaysList.length === 0 ? <EmptyRow /> : peakDaysList.map((day, idx, arr) => {
+                const maxCount = Math.max(...peakDaysList.map(d => d.count || 0), 1);
                 return (
                   <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{day.day}</span><span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>{day.count} trips</span></div>
@@ -483,8 +443,8 @@ const AnalyticsReporting = () => {
             </div>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaChartLine style={{ color: '#059669', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Seasonal Trends</span></div>
-              <div>{Object.entries(seasonalTrends?.monthlyData || {}).map(([month, count], idx, arr) => {
-                const maxCount = Math.max(...Object.values(seasonalTrends?.monthlyData || {}), 1);
+              <div>{seasonalList.length === 0 ? <EmptyRow /> : seasonalList.map(([month, count], idx, arr) => {
+                const maxCount = Math.max(...seasonalList.map(([, c]) => c || 0), 1);
                 return (
                   <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{month}</span><span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>{count} trips</span></div>
@@ -502,9 +462,9 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaPercent />, val: `${commissionRate?.collectionRate || 92}%`, label: 'Commission Rate', color: '#059669' },
-              { icon: <FaUndo />, val: `${refundRate?.refundRate || 3.2}%`, label: 'Refund Rate', color: '#ef4444' },
-              { icon: <FaDollarSign />, val: `ETB ${avgFare?.avgFare || 185}`, label: 'Average Fare', color: '#3b82f6' },
+              { icon: <FaPercent />, val: `${commissionRate?.collectionRate ?? 0}%`, label: 'Commission Rate', color: '#059669' },
+              { icon: <FaUndo />, val: `${refundRate?.refundRate ?? 0}%`, label: 'Refund Rate', color: '#ef4444' },
+              { icon: <FaDollarSign />, val: `ETB ${avgFare?.avgFare ?? 0}`, label: 'Average Fare', color: '#3b82f6' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -514,7 +474,7 @@ const AnalyticsReporting = () => {
           </div>
           <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaCreditCard style={{ color: '#7c3aed', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Payment Method Distribution</span></div>
-            <div>{(paymentDistribution?.distribution || []).map((item, idx, arr) => (
+            <div>{paymentList.length === 0 ? <EmptyRow /> : paymentList.map((item, idx, arr) => (
               <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{item.method}</span><span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>{item.count} ({item.percentage}%)</span></div>
                 <div style={{ width: '100%', height: 6, background: 'var(--bg-secondary, rgba(0,0,0,0.05))', borderRadius: 3, overflow: 'hidden' }}><div style={{ width: `${item.percentage}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #3b82f6)', borderRadius: 3 }} /></div>
@@ -529,8 +489,8 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaClock />, val: `${driverResponseTime?.avgResponseTime?.toFixed(1) || 2.8} min`, label: 'Driver Response Time', color: '#059669' },
-              { icon: <FaHourglassHalf />, val: `${avgWaitTime?.avgWaitTime?.toFixed(1) || 4.5} min`, label: 'Average Wait Time', color: '#f59e0b' },
+              { icon: <FaClock />, val: `${(driverResponseTime?.avgResponseTime ?? 0).toFixed(1)} min`, label: 'Driver Response Time', color: '#059669' },
+              { icon: <FaHourglassHalf />, val: `${(avgWaitTime?.avgWaitTime ?? 0).toFixed(1)} min`, label: 'Average Wait Time', color: '#f59e0b' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -548,10 +508,10 @@ const AnalyticsReporting = () => {
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaCalendar style={{ color: '#3b82f6', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Daily Report</span></div>
               {[
-                { label: 'Total Trips', val: dailyReport?.summary?.totalTrips || 180 },
-                { label: 'Completed Trips', val: dailyReport?.summary?.completedTrips || 156 },
-                { label: 'Total Revenue', val: `ETB ${(dailyReport?.summary?.totalRevenue || 42000).toLocaleString()}` },
-                { label: 'New Users', val: dailyReport?.summary?.newUsers || 23 },
+                { label: 'Total Trips', val: dailyReport?.summary?.totalTrips ?? 0 },
+                { label: 'Completed Trips', val: dailyReport?.summary?.completedTrips ?? 0 },
+                { label: 'Total Revenue', val: `ETB ${(dailyReport?.summary?.totalRevenue || 0).toLocaleString()}` },
+                { label: 'New Users', val: dailyReport?.summary?.newUsers ?? 0 },
               ].map((item, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{item.label}</span>
@@ -562,9 +522,9 @@ const AnalyticsReporting = () => {
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaCalendarAlt style={{ color: '#7c3aed', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Weekly Report</span></div>
               {[
-                { label: 'Total Trips', val: weeklyReport?.summary?.totalTrips || 1200 },
-                { label: 'Completed Trips', val: weeklyReport?.summary?.completedTrips || 1050 },
-                { label: 'Total Revenue', val: `ETB ${(weeklyReport?.summary?.totalRevenue || 285000).toLocaleString()}` },
+                { label: 'Total Trips', val: weeklyReport?.summary?.totalTrips ?? 0 },
+                { label: 'Completed Trips', val: weeklyReport?.summary?.completedTrips ?? 0 },
+                { label: 'Total Revenue', val: `ETB ${(weeklyReport?.summary?.totalRevenue || 0).toLocaleString()}` },
               ].map((item, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{item.label}</span>
@@ -582,7 +542,7 @@ const AnalyticsReporting = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaRobot style={{ color: '#3b82f6', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Demand Prediction</span></div>
-              <div>{(demandPrediction?.predictions || []).map((pred, idx, arr) => (
+              <div>{predictionList.length === 0 ? <EmptyRow /> : predictionList.map((pred, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{pred.date}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{pred.predictedTrips} trips</span>
@@ -591,7 +551,7 @@ const AnalyticsReporting = () => {
             </div>
             <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaDollarSign style={{ color: '#059669', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Revenue Projection</span></div>
-              <div>{(revenueProjection?.projections || []).map((proj, idx, arr) => (
+              <div>{projectionList.length === 0 ? <EmptyRow /> : projectionList.map((proj, idx, arr) => (
                 <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{proj.date}</span>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>ETB {proj.projectedRevenue?.toLocaleString()}</span>
@@ -607,8 +567,8 @@ const AnalyticsReporting = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaArrowUp />, val: `${yearOverYear?.comparison?.tripGrowth || 24}%`, label: 'Trip Growth', color: '#059669' },
-              { icon: <FaDollarSign />, val: `${yearOverYear?.comparison?.revenueGrowth || 31}%`, label: 'Revenue Growth', color: '#3b82f6' },
+              { icon: <FaArrowUp />, val: `${yearOverYear?.comparison?.tripGrowth ?? 0}%`, label: 'Trip Growth', color: '#059669' },
+              { icon: <FaDollarSign />, val: `${yearOverYear?.comparison?.revenueGrowth ?? 0}%`, label: 'Revenue Growth', color: '#3b82f6' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -618,7 +578,7 @@ const AnalyticsReporting = () => {
           </div>
           <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}><FaBalanceScale style={{ color: '#7c3aed', fontSize: 14 }} /><span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>Competitor Analysis</span></div>
-            <div>{Object.entries(competitorAnalysis?.marketShare || {}).map(([competitor, share], idx, arr) => (
+            <div>{marketList.length === 0 ? <EmptyRow /> : marketList.map(([competitor, share], idx, arr) => (
               <div key={idx} style={{ padding: '10px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{competitor}</span>
