@@ -584,27 +584,43 @@
 }
 
 /* ===== HERO QR SCAN-TO-DOWNLOAD CARD ===== */
+.hero-stats-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 30px;
+  animation: fadeInUp 0.6s ease 0.4s both;
+}
+@media (min-width: 768px) {
+  .hero-stats-row {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: 20px;
+  }
+}
 .hero-qr-card {
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 20px;
-  padding: 14px 18px;
+  gap: 14px;
+  padding: 12px 16px;
   background: rgba(255, 255, 255, 0.12);
   border: 2px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(14px);
-  max-width: 420px;
-  width: calc(100% - 24px);
+  width: 100%;
+  max-width: 400px;
   text-align: left;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
 }
 .hero-qr-box {
   flex-shrink: 0;
-  width: 92px;
-  height: 92px;
+  width: 96px;
+  height: 96px;
   padding: 6px;
   background: #fff;
   border-radius: var(--radius-md);
@@ -613,8 +629,8 @@
   justify-content: center;
 }
 .hero-qr-box svg {
-  width: 80px;
-  height: 80px;
+  width: 82px;
+  height: 82px;
   display: block;
 }
 .hero-qr-tag {
@@ -638,31 +654,12 @@
   font-size: 11px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.45;
-  margin-bottom: 8px;
-}
-.hero-qr-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  text-decoration: none;
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--secondary), var(--accent));
-  box-shadow: 0 4px 14px rgba(139, 73, 19, 0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.hero-qr-link:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 8px rgba(139, 73, 19, 0.5);
+  margin-bottom: 0;
 }
 @media (min-width: 768px) {
   .hero-qr-card {
-    margin-top: 28px;
-    padding: 16px 20px;
-    max-width: 460px;
+    padding: 14px 18px;
+    max-width: 360px;
   }
   .hero-qr-box {
     width: 110px;
@@ -674,7 +671,6 @@
   }
   .hero-qr-text h3 { font-size: 16px; }
   .hero-qr-text p { font-size: 12px; }
-  .hero-qr-link { font-size: 13px; }
 }
 
 /* ===== DOWNLOAD PAGE ===== */
@@ -955,12 +951,15 @@
   overflow: hidden;
   animation: fadeInUp 0.6s ease 0.4s both;
   max-width: 400px;
+  width: 100%;
   margin: 0 auto;
 }
 
 @media (min-width: 768px) {
   .public-hero-stats {
     margin: 0;
+    align-self: center;
+    max-width: 360px;
   }
 }
 .public-stat {

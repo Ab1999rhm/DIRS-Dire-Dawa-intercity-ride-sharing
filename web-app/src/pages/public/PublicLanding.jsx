@@ -247,18 +247,32 @@ const PublicLanding = () => {
               {t('landing.hero.learnMore')}
             </Link>
           </div>
-          <div className="public-hero-stats" ref={statsRef}>
-            {stats.map((s, i) => (
-              <div className="public-stat" key={i}>
-                <strong>
-                  {statsVisible ? (
-                    <CountUp target={s.value} decimals={s.isDecimal ? 1 : 0} />
-                  ) : '0'}
-                  {s.suffix}
-                </strong>
-                <span>{s.label}</span>
+          <div className="hero-stats-row">
+            <div className="public-hero-stats" ref={statsRef}>
+              {stats.map((s, i) => (
+                <div className="public-stat" key={i}>
+                  <strong>
+                    {statsVisible ? (
+                      <CountUp target={s.value} decimals={s.isDecimal ? 1 : 0} />
+                    ) : '0'}
+                    {s.suffix}
+                  </strong>
+                  <span>{s.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Scan to Download QR Code */}
+            <div className="hero-qr-card" title="Scan to download">
+              <div className="hero-qr-box">
+                <QRCodeSVG value={`${window.location.origin}/download`} size={120} level="M" />
               </div>
-            ))}
+              <div className="hero-qr-text">
+                <div className="hero-qr-tag"><FaQrcode /> {t('landing.download.tag') || 'Scan to Download'}</div>
+                <h3>{t('landing.download.title') || 'Get the DIRS App'}</h3>
+                <p>{t('landing.download.desc') || 'Scan the code with your phone camera to download the free app.'}</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -275,21 +289,6 @@ const PublicLanding = () => {
           </div>
           <div className="hero-vehicle">
             <img src="/images/bus.jpg" alt="Bus" />
-          </div>
-        </div>
-
-        {/* Scan to Download QR Code */}
-        <div className="hero-qr-card reveal">
-          <div className="hero-qr-box">
-            <QRCodeSVG value={`${window.location.origin}/download`} size={140} level="M" />
-          </div>
-          <div className="hero-qr-text">
-            <div className="hero-qr-tag"><FaQrcode /> {t('landing.download.tag') || 'Scan to Download'}</div>
-            <h3>{t('landing.download.title') || 'Get the DIRS App'}</h3>
-            <p>{t('landing.download.desc') || 'Scan the code with your phone camera to download the free app.'}</p>
-            <Link to="/download" className="hero-qr-link">
-              <FaDownload /> {t('landing.download.button') || 'Download Now'}
-            </Link>
           </div>
         </div>
       </section>
