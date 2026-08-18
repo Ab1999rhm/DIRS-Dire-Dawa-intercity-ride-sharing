@@ -22,6 +22,8 @@ const DriverManagement = () => {
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('drivers');
+  const [driverWithdrawals, setDriverWithdrawals] = useState([]);
+  const [driverWithdrawalsLoading, setDriverWithdrawalsLoading] = useState(false);
   const [drivers, setDrivers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -62,7 +64,45 @@ const DriverManagement = () => {
     fetchLostItems();
     fetchDriverIssues();
     fetchDriverAnalytics();
+    fetchDriverWithdrawals();
   }, []);
+
+  const fetchDriverWithdrawals = async (status = 'pending') => {
+    try {
+      setDriverWithdrawalsLoading(true);
+      const res = await adminAPI.getWithdrawals({ status, limit: 100 });
+      const d = res.data;
+      const all = Array.isArray(d) ? d : (d?.withdrawals || []);
+      setDriverWithdrawals(all.filter(w => w.driver));
+    } catch (err) {
+      setDriverWithdrawals([]);
+    } finally {
+      setDriverWithdrawalsLoading(false);
+    }
+  };
+
+  const handleApproveDriverWithdrawal = async (wd) => {
+    if (!window.confirm(`Approve driver withdrawal of ETB ${(wd.amount || 0).toLocaleString()}?`)) return;
+    try {
+      await adminAPI.approveWithdrawal(wd._id, 'Approved by admin');
+      toast.success('Withdrawal approved');
+      fetchDriverWithdrawals();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to approve');
+    }
+  };
+
+  const handleRejectDriverWithdrawal = async (wd) => {
+    const reason = window.prompt('Rejection reason:', 'Insufficient funds');
+    if (reason === null) return;
+    try {
+      await adminAPI.rejectWithdrawal(wd._id, reason || 'Rejected by admin');
+      toast.success('Withdrawal rejected and funds refunded');
+      fetchDriverWithdrawals();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to reject');
+    }
+  };
 
   const fetchDrivers = async () => {
     try {
@@ -822,10 +862,42 @@ const DriverManagement = () => {
               </div>
             ))}
           </div>
+
+          {/* Driver Withdrawal Requests */}
+          <div className="admin-section-title" style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaWallet /> Driver Withdrawal Requests
+            <button onClick={() => fetchDriverWithdrawals()} style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: 'white', color: '#6b7280' }}>Refresh</button>
+          </div>
+          <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+            {driverWithdrawalsLoading ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+            ) : driverWithdrawals.length === 0 ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaWallet style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>No pending driver withdrawal requests</p>
+              </div>
+            ) : driverWithdrawals.map((wd, idx) => (
+              <div key={wd._id} style={{ padding: '14px 16px', borderBottom: idx < driverWithdrawals.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(59,130,246,0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><FaWallet style={{ fontSize: 14 }} /></div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{wd.driver?.user?.firstName || 'Driver'} {wd.driver?.user?.lastName || ''}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wd.method || 'N/A'} · {wd.transactionId || ''}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: '#3b82f6' }}>ETB {(wd.amount || 0).toLocaleString()}</span>
+                    <span style={{ background: 'rgba(245,158,11,0.15)', color: '#d97706', fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700 }}>{wd.status}</span>
+                    <button onClick={() => handleApproveDriverWithdrawal(wd)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', background: '#10b981', color: 'white', fontWeight: 600 }}>Approve</button>
+                    <button onClick={() => handleRejectDriverWithdrawal(wd)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: 600 }}>Reject</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
-
-      {/* ===== SUPPORT TAB ===== */}
       {activeTab === 'support' && (
         <>
           <div className="admin-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -43,7 +43,6 @@ const RealTimeMonitoring = React.lazy(() => import('./pages/admin/RealTimeMonito
 const DriverManagement = React.lazy(() => import('./pages/admin/DriverManagement'));
 const PassengerManagement = React.lazy(() => import('./pages/admin/PassengerManagement'));
 const TripManagement = React.lazy(() => import('./pages/admin/TripManagement'));
-const FinancialManagement = React.lazy(() => import('./pages/admin/FinancialManagement'));
 const SafetySecurity = React.lazy(() => import('./pages/admin/SafetyDashboard'));
 const DispatchContacts = React.lazy(() => import('./pages/admin/DispatchContacts'));
 const SupportSystem = React.lazy(() => import('./pages/admin/SupportDashboard'));
@@ -217,7 +216,6 @@ const AdminRoutes = React.memo(() => (
       <Route path="driver-management" element={<DriverManagement />} />
       <Route path="passenger-management" element={<PassengerManagement />} />
       <Route path="trip-management" element={<TripManagement />} />
-      <Route path="financials" element={<FinancialManagement />} />
       <Route path="safety" element={<SafetySecurity />} />
       <Route path="dispatch-contacts" element={<DispatchContacts />} />
       <Route path="support" element={<SupportSystem />} />

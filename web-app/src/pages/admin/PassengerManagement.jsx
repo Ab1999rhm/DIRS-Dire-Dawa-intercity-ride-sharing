@@ -39,10 +39,50 @@ const PassengerManagement = () => {
   const [addFundsReason, setAddFundsReason] = useState('');
   const [passengerTrips, setPassengerTrips] = useState([]);
   const [passengerTransactions, setPassengerTransactions] = useState([]);
+  const [walletWithdrawals, setWalletWithdrawals] = useState([]);
+  const [walletWithdrawalsLoading, setWalletWithdrawalsLoading] = useState(false);
 
   useEffect(() => {
     fetchPassengers();
+    fetchWalletWithdrawals();
   }, []);
+
+  const fetchWalletWithdrawals = async (status = 'pending') => {
+    try {
+      setWalletWithdrawalsLoading(true);
+      const res = await adminAPI.getWithdrawals({ status, limit: 100 });
+      const d = res.data;
+      const all = Array.isArray(d) ? d : (d?.withdrawals || []);
+      setWalletWithdrawals(all.filter(w => w.passenger));
+    } catch (err) {
+      setWalletWithdrawals([]);
+    } finally {
+      setWalletWithdrawalsLoading(false);
+    }
+  };
+
+  const handleApproveWalletWithdrawal = async (wd) => {
+    if (!window.confirm(`Approve wallet withdrawal of ETB ${(wd.amount || 0).toLocaleString()}?`)) return;
+    try {
+      await adminAPI.approveWithdrawal(wd._id, 'Approved by admin');
+      toast.success('Withdrawal approved');
+      fetchWalletWithdrawals();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to approve');
+    }
+  };
+
+  const handleRejectWalletWithdrawal = async (wd) => {
+    const reason = window.prompt('Rejection reason:', 'Insufficient funds');
+    if (reason === null) return;
+    try {
+      await adminAPI.rejectWithdrawal(wd._id, reason || 'Rejected by admin');
+      toast.success('Withdrawal rejected and funds refunded');
+      fetchWalletWithdrawals();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to reject');
+    }
+  };
 
   const fetchPassengers = async () => {
     try {
@@ -284,6 +324,7 @@ const PassengerManagement = () => {
           { key: 'active', label: t('admin.active') || 'Active', count: passengers.filter(p => getStatus(p) === 'active').length },
           { key: 'suspended', label: t('admin.suspended') || 'Suspended', count: passengers.filter(p => getStatus(p) === 'suspended' || getStatus(p) === 'banned' || getStatus(p) === 'inactive').length },
           { key: 'behavior', label: t('admin.behavior') || 'Behavior', icon: <FaExclamationTriangle /> },
+          { key: 'wallet', label: 'Wallet', icon: <FaWallet /> },
           { key: 'analytics', label: t('admin.analytics') || 'Analytics', icon: <FaChartBar /> },
         ].map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
@@ -433,6 +474,44 @@ const PassengerManagement = () => {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Wallet Tab */}
+      {activeTab === 'wallet' && (
+        <div className="admin-animate-in-delay-3">
+          <div className="admin-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FaWallet /> Passenger Wallet Withdrawals
+            <button onClick={() => fetchWalletWithdrawals()} style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 12, border: '1px solid #e5e7eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', background: 'white', color: '#6b7280' }}>Refresh</button>
+          </div>
+          <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+            {walletWithdrawalsLoading ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+            ) : walletWithdrawals.length === 0 ? (
+              <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                <FaWallet style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }} />
+                <p style={{ color: 'var(--text-muted)' }}>No pending wallet withdrawal requests</p>
+              </div>
+            ) : walletWithdrawals.map((wd, idx) => (
+              <div key={wd._id} style={{ padding: '14px 16px', borderBottom: idx < walletWithdrawals.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(59,130,246,0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><FaWallet style={{ fontSize: 14 }} /></div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{wd.passenger?.firstName || 'Passenger'} {wd.passenger?.lastName || ''}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{wd.method || 'N/A'} · {wd.transactionId || ''}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: '#3b82f6' }}>ETB {(wd.amount || 0).toLocaleString()}</span>
+                    <span style={{ background: 'rgba(245,158,11,0.15)', color: '#d97706', fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700 }}>{wd.status}</span>
+                    <button onClick={() => handleApproveWalletWithdrawal(wd)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', background: '#10b981', color: 'white', fontWeight: 600 }}>Approve</button>
+                    <button onClick={() => handleRejectWalletWithdrawal(wd)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', background: '#ef4444', color: 'white', fontWeight: 600 }}>Reject</button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

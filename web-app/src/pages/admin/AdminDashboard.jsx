@@ -112,7 +112,7 @@ const AdminDashboard = () => {
     const type = (n.type || '').toLowerCase();
     let path = null;
     if (type.includes('sos') || type.includes('emergency') || type.includes('incident')) path = '/admin/sos';
-    else if (type.includes('withdrawal') || type.includes('payout') || type.includes('wallet') || type.includes('payment') || type.includes('refund')) path = '/admin/financials';
+    else if (type.includes('withdrawal') || type.includes('payout') || type.includes('wallet') || type.includes('payment') || type.includes('refund')) path = '/admin/driver-management';
     else if (type.includes('driver') || type.includes('verification') || type.includes('ride') || type.includes('trip')) path = '/admin/driver-management';
     else if (type.includes('ticket') || type.includes('support') || type.includes('chat')) path = '/admin/support';
     else if (type.includes('account') || type.includes('ban') || type.includes('block') || type.includes('user')) path = '/admin/passenger-management';
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
     { icon: <FaRoute />, label: 'Active Trips', path: '/admin/trip-management', color: '#2563eb', bg: 'rgba(37,99,235,0.08)', priority: 'high' },
     { icon: <FaShieldAlt />, label: 'SOS Alerts', path: '/admin/sos', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', priority: 'critical' },
     { icon: <FaUserCheck />, label: 'Driver Approvals', path: '/admin/driver-management', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', priority: 'high' },
-    { icon: <FaCreditCard />, label: 'Financial Summary', path: '/admin/financials', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', priority: 'medium' },
+    { icon: <FaCreditCard />, label: 'Financial Summary', path: '/admin/driver-management', color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', priority: 'medium' },
     { icon: <FaHeadset />, label: 'Support Tickets', path: '/admin/support', color: '#0891b2', bg: 'rgba(8,145,178,0.08)', priority: 'medium' },
   ];
 

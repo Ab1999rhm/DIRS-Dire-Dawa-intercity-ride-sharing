@@ -79,11 +79,6 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     },
     {
       id: 'finance',
-      label: t('admin.finance') || 'Finance',
-      color: '#d97706',
-      items: [
-        { path: '/admin/financials', icon: <FaMoneyBillWave />, label: t('admin.financialManagement'), badge: null },
-      ]
     },
     {
       id: 'safety',
