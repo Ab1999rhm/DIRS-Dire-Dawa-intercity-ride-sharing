@@ -4045,8 +4045,8 @@ exports.getUserBehavior = asyncHandler(async (req, res) => {
       bookingByDay[day] = (bookingByDay[day] || 0) + 1;
     }
     
-    if (trip.fare) {
-      behavior.totalSpent += trip.fare;
+    if (trip.fare?.totalFare) {
+      behavior.totalSpent += trip.fare.totalFare;
     }
   });
   
@@ -4063,7 +4063,7 @@ exports.getUserLifetimeValue = asyncHandler(async (req, res) => {
   
   const userValues = await Promise.all(users.map(async (user) => {
     const trips = await Trip.find({ passenger: user._id, status: 'completed' });
-    const totalSpent = trips.reduce((sum, trip) => sum + (trip.fare || 0), 0);
+    const totalSpent = trips.reduce((sum, trip) => sum + (trip.fare?.totalFare || 0), 0);
     const tripCount = trips.length;
     const avgTripValue = tripCount > 0 ? totalSpent / tripCount : 0;
     
@@ -4184,7 +4184,7 @@ exports.getDriverEarnings = asyncHandler(async (req, res) => {
     }).populate('payment');
     
     const totalEarnings = trips.reduce((sum, trip) => {
-      return sum + (trip.payment?.driverEarnings || trip.fare * 0.8 || 0);
+      return sum + (trip.payment?.driverEarnings || trip.fare?.totalFare * 0.8 || 0);
     }, 0);
     
     const totalHours = trips.reduce((sum, trip) => {
@@ -4502,7 +4502,7 @@ exports.getAverageFare = asyncHandler(async (req, res) => {
     createdAt: dateFilter
   }).populate('payment');
   
-  const fares = trips.map(t => t.payment?.amount || t.fare || 0);
+  const fares = trips.map(t => t.payment?.amount || t.fare?.totalFare || 0);
   const avgFare = fares.length > 0 ? fares.reduce((sum, f) => sum + f, 0) / fares.length : 0;
   
   if (groupBy === 'route') {
