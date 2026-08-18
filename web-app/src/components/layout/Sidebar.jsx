@@ -12,7 +12,7 @@ import {
   FaTools, FaServer, FaLock, FaPalette, FaPhone
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
-import { adminAPI } from '../../services/api';
+import { adminAPI, notificationsAPI } from '../../services/api';
 import './Sidebar.css';
 
 const Sidebar = ({ mobileOpen, onClose }) => {
@@ -21,6 +21,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [stats, setStats] = useState({ activeDrivers: 0, activeTrips: 0 });
+  const [notifCounts, setNotifCounts] = useState({});
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +45,38 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       mounted = false;
       clearInterval(interval);
     };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchNotifications = async () => {
+      try {
+        const res = await notificationsAPI.list({ isRead: false, limit: 100 });
+        const notifs = Array.isArray(res.data) ? res.data : (res.data?.notifications || []);
+        if (!mounted) return;
+        const counts = {};
+        notifs.forEach(n => {
+          const type = (n.type || '').toLowerCase();
+          let path = null;
+          if (type.includes('sos') || type.includes('emergency') || type.includes('incident') || type.includes('safety')) path = '/admin/safety';
+          else if (type.includes('driver') || type.includes('vehicle') || type.includes('verification')) path = '/admin/driver-management';
+          else if (type.includes('passenger') || type.includes('wallet') || type.includes('user')) path = '/admin/passenger-management';
+          else if (type.includes('trip') || type.includes('ride') || type.includes('booking')) path = '/admin/trip-management';
+          else if (type.includes('withdrawal') || type.includes('payout') || type.includes('payment') || type.includes('refund')) path = '/admin/driver-management';
+          else if (type.includes('support') || type.includes('ticket') || type.includes('chat')) path = '/admin/support';
+          else if (type.includes('announcement') || type.includes('content') || type.includes('notification')) path = '/admin/content';
+          else if (type.includes('dispatch')) path = '/admin/dispatch-contacts';
+          else if (type.includes('analytics') || type.includes('report')) path = '/admin/analytics';
+          if (path) counts[path] = (counts[path] || 0) + 1;
+        });
+        setNotifCounts(counts);
+      } catch (err) {
+        // silent
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => { mounted = false; clearInterval(interval); };
   }, []);
 
   useEffect(() => {
@@ -79,6 +112,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     },
     {
       id: 'finance',
+      hidden: true,
     },
     {
       id: 'safety',
@@ -110,11 +144,13 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     },
   ];
 
+  const getNotifBadge = (path) => notifCounts[path] || 0;
+
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  const getTotalLinks = () => navGroups.reduce((sum, g) => sum + g.items.length, 0);
+  const getTotalLinks = () => navGroups.reduce((sum, g) => sum + (g.items?.length || 0), 0);
 
   return (
     <>
@@ -167,7 +203,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
 
         {/* Navigation */}
         <nav className="sidebar-nav">
-          {navGroups.map((group) => (
+          {navGroups.filter(g => !g.hidden).map((group) => (
             <div key={group.id} className="sidebar-group">
               {!isCollapsed && (
                 <div className="sidebar-group-label">
@@ -176,7 +212,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
                 </div>
               )}
               {isCollapsed && <div className="sidebar-group-divider" />}
-              {group.items.map((link) => (
+              {(group.items || []).map((link) => (
                 <NavLink
                   key={link.path}
                   to={link.path}
@@ -192,8 +228,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
                   {!isCollapsed && (
                     <span className="sidebar-link-text">{link.label}</span>
                   )}
-                  {!isCollapsed && link.badge != null && (
-                    <span className="sidebar-link-badge">{link.badge}</span>
+                  {!isCollapsed && getNotifBadge(link.path) > 0 && (
+                    <span className="sidebar-link-badge">{getNotifBadge(link.path)}</span>
                   )}
                 </NavLink>
               ))}
