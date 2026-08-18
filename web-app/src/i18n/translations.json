@@ -1128,7 +1128,9 @@
         "contact": "Contact",
         "terms": "Terms",
         "project": "Dire Dawa University Project",
-        "team": "Team: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
+        "team": "Team: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi",
+        "faq": "Help & FAQ",
+        "join": "Join DIRS"
       }
     },
     "download": {
@@ -1985,7 +1987,9 @@
         "contact": "ያግኙን",
         "terms": "ውሎች",
         "project": "የመንግስት ፕሮጀክት",
-        "team": "ጥበብ: አብርሃም ፊካዱ፣ ዖብሳ ቁመራ፣ እልዳና አሽናፊ"
+        "team": "ጥበብ: አብርሃም ፊካዱ፣ ዖብሳ ቁመራ፣ እልዳና አሽናፊ",
+        "faq": "እርዳት እና ጥያቄዎች",
+        "join": "DIRS ይመዝገቡ"
       }
     },
     "download": {
@@ -2574,7 +2578,9 @@
         "contact": "Nu quundaa",
         "terms": "Haala",
         "project": "PROJEKTII Yaa'aa Dire Dawa",
-        "team": "Garee: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
+        "team": "Garee: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi",
+        "faq": "Gargaarsa fi Gaaffii",
+        "join": "DIRS Galmaa'i"
       }
     },
     "download": {
@@ -3163,7 +3169,9 @@
         "contact": "Nala soo xiriir",
         "terms": "Shuruudaha",
         "project": "Mashruuca Jaamacadda Dire Dawa",
-        "team": "Kooxda: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
+        "team": "Kooxda: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi",
+        "faq": "Caawimo & Su'aalo",
+        "join": "Is diiwaan geli DIRS"
       }
     },
     "download": {
