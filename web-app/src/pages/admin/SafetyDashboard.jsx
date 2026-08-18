@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FaShieldAlt, FaExclamationTriangle, FaUserShield, FaBan, FaCheckCircle,
   FaAmbulance, FaChartLine, FaHistory, FaSearch, FaFilter,
   FaEye, FaEdit, FaTimes, FaBell, FaUserClock, FaMapMarkerAlt, FaPhone,
   FaFileAlt, FaUserTie, FaCar, FaUsers, FaExclamation, FaFlag, FaClipboardCheck,
-  FaDownload, FaCalendar, FaClock, FaMapPin, FaFirstAid, FaUserSlash
+  FaDownload, FaCalendar, FaClock, FaMapPin, FaFirstAid, FaUserSlash,
+  FaFireAlt, FaCarCrash, FaHandRock, FaMedkit, FaSiren, FaWrench
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -47,9 +48,34 @@ const SafetyDashboard = () => {
   const [dispatchRecipients, setDispatchRecipients] = useState([]);
   const [dispatchInput, setDispatchInput] = useState('');
   const [dispatchSending, setDispatchSending] = useState(false);
+  const [selectedSOS, setSelectedSOS] = useState(null);
+  const [showSOSDetailModal, setShowSOSDetailModal] = useState(false);
 
   useEffect(() => {
     fetchSafetyData();
+  }, []);
+
+  useEffect(() => {
+    let socket;
+    try {
+      const { io } = require('socket.io-client');
+      const url = process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://dirs-dire-dawa-intercity-ride-sharing.onrender.com';
+      socket = io(url, { transports: ['polling', 'websocket'] });
+      socket.on('sos_alert', (alert) => {
+        setSOSAlerts(prev => {
+          if (prev.some(a => a._id === alert._id)) return prev;
+          return [alert, ...prev];
+        });
+        toast.error(`🚨 SOS Alert: ${alert.user?.firstName || 'User'} — ${alert.message || 'Emergency'}`);
+      });
+      socket.on('incident_created', (incident) => {
+        setIncidents(prev => {
+          if (prev.some(i => i._id === incident._id)) return prev;
+          return [incident, ...prev];
+        });
+      });
+    } catch (e) { /* socket not critical */ }
+    return () => { if (socket) socket.disconnect(); };
   }, []);
 
   const fetchSafetyData = async () => {
@@ -80,40 +106,6 @@ const SafetyDashboard = () => {
       setPendingVerifications(Array.isArray(verificationsData) ? verificationsData : (verificationsData?.drivers || verificationsData?.data || []));
     } catch (err) {
       console.error('Error fetching safety data:', err);
-      // Mock data fallback
-      setAnalytics({
-        incidents: { total: 5, critical: 1, resolutionRate: 80, byCategory: [{ _id: 'reckless_driving', count: 3 }, { _id: 'harassment', count: 2 }] },
-        fraud: { total: 2 },
-        suspiciousActivity: { total: 3 },
-        sos: { total: 4 },
-        hotspots: [{ _id: 'Bole', count: 4 }, { _id: 'Megenagna', count: 3 }, { _id: 'Piassa', count: 2 }]
-      });
-      setSOSAlerts([
-        { _id: 'sos1', user: { firstName: 'Sara', lastName: 'Tesfaye' }, message: 'Emergency - car accident', status: 'active', createdAt: new Date().toISOString() },
-        { _id: 'sos2', user: { firstName: 'Bekele', lastName: 'Alemu' }, message: 'Feeling unsafe with driver', status: 'active', createdAt: new Date().toISOString() },
-        { _id: 'sos3', user: { firstName: 'Helen', lastName: 'Mengistu' }, message: 'Wrong route concern', status: 'resolved', createdAt: new Date().toISOString() },
-      ]);
-      setIncidents([
-        { _id: 'inc1', category: 'reckless_driving', severity: 'high', status: 'investigating', description: 'Driver speeding through residential area', createdAt: new Date().toISOString() },
-        { _id: 'inc2', category: 'harassment', severity: 'medium', status: 'reported', description: 'Passenger verbally abusive to driver', createdAt: new Date().toISOString() },
-        { _id: 'inc3', category: 'theft', severity: 'critical', status: 'investigating', description: 'Reported phone theft during trip', createdAt: new Date().toISOString() },
-      ]);
-      setFraudAlerts([
-        { _id: 'fraud1', user: { firstName: 'Dawit', lastName: 'Kebede' }, type: 'Multiple account detection', status: 'detected', createdAt: new Date().toISOString() },
-        { _id: 'fraud2', user: { firstName: 'Yohannes', lastName: 'Tesfaye' }, type: 'Payment fraud attempt', status: 'confirmed', createdAt: new Date().toISOString() },
-      ]);
-      setSuspiciousActivities([
-        { _id: 'sus1', type: 'Unusual booking pattern', user: { firstName: 'Kalkidan', lastName: 'Zewde' }, status: 'detected', createdAt: new Date().toISOString() },
-        { _id: 'sus2', type: 'Multiple failed payments', user: { firstName: 'Yosef', lastName: 'Tadesse' }, status: 'detected', createdAt: new Date().toISOString() },
-        { _id: 'sus3', type: 'Late night repeated rides', user: { firstName: 'Kedir', lastName: 'Jemal' }, status: 'dismissed', createdAt: new Date().toISOString() },
-      ]);
-      setBlockedUsers([
-        { _id: 'blk1', firstName: 'Meron', lastName: 'Abebe', phoneNumber: '+251944111222', blockReason: 'Repeated harassment' },
-      ]);
-      setPendingVerifications([
-        { _id: 'ver1', user: { firstName: 'Ahmed', lastName: 'Ali', phoneNumber: '+251922222222' }, licenseNumber: 'DIR-2024-001' },
-        { _id: 'ver2', user: { firstName: 'Mohammed', lastName: 'Hussein', phoneNumber: '+251933333333' }, licenseNumber: 'DIR-2024-002' },
-      ]);
     } finally {
       setLoading(false);
     }
@@ -122,8 +114,11 @@ const SafetyDashboard = () => {
   const handleResolveSOS = async (alertId, isFalseAlarm) => {
     try {
       await adminAPI.resolveSOS(alertId, 'Resolved by admin', isFalseAlarm);
-      toast.success('SOS alert resolved');
-      fetchSafetyData();
+      setSOSAlerts(prev => prev.map(a => a._id === alertId ? { ...a, status: isFalseAlarm ? 'false_alarm' : 'resolved', resolvedBy: { firstName: 'Admin' }, resolvedAt: new Date().toISOString() } : a));
+      if (selectedSOS?._id === alertId) {
+        setSelectedSOS(prev => ({ ...prev, status: isFalseAlarm ? 'false_alarm' : 'resolved' }));
+      }
+      toast.success(isFalseAlarm ? 'Marked as false alarm' : 'SOS alert resolved');
     } catch (err) {
       toast.error('Failed to resolve SOS');
     }
@@ -131,11 +126,12 @@ const SafetyDashboard = () => {
 
   const handleCreateIncident = async () => {
     try {
-      await adminAPI.createIncident(newIncident);
+      const res = await adminAPI.createIncident(newIncident);
+      const created = res.data?.incident || res.data;
+      if (created?._id) setIncidents(prev => [created, ...prev]);
       toast.success('Incident created successfully');
       setShowCreateIncidentModal(false);
       setNewIncident({ category: 'other', severity: 'medium', description: '', location: { address: '', coordinates: [] } });
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to create incident');
     }
@@ -148,8 +144,8 @@ const SafetyDashboard = () => {
     }
     try {
       await adminAPI.assignIncident(incidentId, user._id);
+      setIncidents(prev => prev.map(i => i._id === incidentId ? { ...i, status: 'investigating', assignedTo: { firstName: user.firstName, lastName: user.lastName } } : i));
       toast.success('Incident assigned');
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to assign incident');
     }
@@ -158,8 +154,8 @@ const SafetyDashboard = () => {
   const handleResolveIncident = async (incidentId) => {
     try {
       await adminAPI.resolveIncident(incidentId, 'Resolved by admin', false, false);
+      setIncidents(prev => prev.map(i => i._id === incidentId ? { ...i, status: 'resolved', resolvedBy: { firstName: 'Admin' }, resolvedAt: new Date().toISOString() } : i));
       toast.success('Incident resolved');
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to resolve incident');
     }
@@ -168,10 +164,10 @@ const SafetyDashboard = () => {
   const handleBlockUser = async (userId) => {
     try {
       await adminAPI.blockUser(userId, blockReason, blockDuration);
+      setBlockedUsers(prev => [...prev, { _id: userId, firstName: 'User', lastName: '', phoneNumber: '', blockReason }]);
       toast.success('User blocked successfully');
       setShowBlockModal(false);
       setBlockReason('');
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to block user');
     }
@@ -180,8 +176,8 @@ const SafetyDashboard = () => {
   const handleUnblockUser = async (userId) => {
     try {
       await adminAPI.unblockUser(userId);
+      setBlockedUsers(prev => prev.filter(u => u._id !== userId));
       toast.success('User unblocked successfully');
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to unblock user');
     }
@@ -190,10 +186,10 @@ const SafetyDashboard = () => {
   const handleApproveVerification = async (driverId) => {
     try {
       await adminAPI.approveDriverVerification(driverId, verificationNotes);
+      setPendingVerifications(prev => prev.filter(d => d._id !== driverId));
       toast.success('Verification approved');
       setShowVerificationModal(false);
       setVerificationNotes('');
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to approve verification');
     }
@@ -202,10 +198,10 @@ const SafetyDashboard = () => {
   const handleRejectVerification = async (driverId) => {
     try {
       await adminAPI.rejectDriverVerification(driverId, verificationNotes);
+      setPendingVerifications(prev => prev.filter(d => d._id !== driverId));
       toast.success('Verification rejected');
       setShowVerificationModal(false);
       setVerificationNotes('');
-      fetchSafetyData();
     } catch (err) {
       toast.error('Failed to reject verification');
     }
@@ -272,6 +268,30 @@ const SafetyDashboard = () => {
 
   const toggleRecipient = (id) => {
     setDispatchRecipients(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
+  };
+
+  const SOS_TYPE_ICONS = {
+    accident: FaCarCrash, medical: FaMedkit, harassment: FaHandRock, theft: FaExclamationTriangle,
+    fire: FaFireAlt, breakdown: FaWrench, other: FaShieldAlt, general: FaExclamationTriangle,
+  };
+
+  const SOS_TYPE_LABELS = {
+    accident: 'Accident', medical: 'Medical Emergency', harassment: 'Harassment', theft: 'Theft',
+    fire: 'Fire Emergency', breakdown: 'Vehicle Breakdown', other: 'Other Emergency', general: 'General SOS',
+  };
+
+  const handleDispatchFromSOS = async (alert) => {
+    try {
+      const res = await adminAPI.getDispatchContacts({ type: 'police' });
+      const d = res.data;
+      const contacts = Array.isArray(d) ? d : (d?.contacts || []);
+      setDispatchContacts(contacts.filter(c => c.active !== false));
+      setDispatchRecipients([]);
+      setDispatchInput('');
+      setDispatchModal({ incident: { _id: alert._id, category: alert.type || 'other', severity: 'critical', description: alert.message, location: alert.location }, type: 'police', fromSOS: true, sosAlert: alert });
+    } catch (err) {
+      toast.error('Failed to load contacts');
+    }
   };
 
   const INCIDENT_TYPE_LABELS = {
@@ -477,27 +497,35 @@ const SafetyDashboard = () => {
                 <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                   <FaCheckCircle style={{ fontSize: 32, color: '#22c55e', marginBottom: 8 }} /><br />No active SOS alerts
                 </div>
-              ) : sosAlerts.filter(a => a.status === 'active').slice(0, 3).map(alert => (
-                <div key={alert._id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(220,38,38,0.1)', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <FaExclamationTriangle style={{ fontSize: 14 }} />
+              ) : sosAlerts.filter(a => a.status === 'active').slice(0, 3).map(alert => {
+                const TypeIcon = SOS_TYPE_ICONS[alert.type] || FaExclamationTriangle;
+                return (
+                <div key={alert._id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', cursor: 'pointer' }} onClick={() => { setSelectedSOS(alert); setShowSOSDetailModal(true); }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(220,38,38,0.1)', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <TypeIcon style={{ fontSize: 14 }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{alert.user?.firstName} {alert.user?.lastName}{alert.userName && !alert.user?.firstName ? alert.userName : ''}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{SOS_TYPE_LABELS[alert.type] || 'General'} — {alert.message || 'Emergency'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2, display: 'flex', gap: 8 }}>
+                          {alert.userPhone && <span><FaPhone style={{ fontSize: 8, marginRight: 2 }} />{alert.userPhone}</span>}
+                          {alert.location?.address && <span><FaMapMarkerAlt style={{ fontSize: 8, marginRight: 2 }} />{alert.location.address}</span>}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{alert.user?.firstName} {alert.user?.lastName}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{alert.message || 'Emergency'}</div>
+                    <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                      <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
+                        <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
+                      </button>
+                      <button className="driver-action-btn driver-btn-view" onClick={() => handleResolveSOS(alert._id, true)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}>
+                        False Alarm
+                      </button>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
-                      <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
-                    </button>
-                    <button className="driver-action-btn driver-btn-view" onClick={() => handleResolveSOS(alert._id, true)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}>
-                      False Alarm
-                    </button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         </div>
@@ -513,32 +541,43 @@ const SafetyDashboard = () => {
                 <FaCheckCircle style={{ fontSize: 48, color: '#22c55e', marginBottom: 16 }} />
                 <p style={{ color: 'var(--text-muted)' }}>No SOS alerts</p>
               </div>
-            ) : sosAlerts.map((alert, idx) => (
-              <div key={alert._id} style={{ padding: '14px 16px', borderBottom: idx < sosAlerts.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+            ) : sosAlerts.map((alert, idx) => {
+              const TypeIcon = SOS_TYPE_ICONS[alert.type] || FaExclamationTriangle;
+              return (
+              <div key={alert._id} style={{ padding: '14px 16px', borderBottom: idx < sosAlerts.length - 1 ? '1px solid var(--border-light)' : 'none', cursor: 'pointer', transition: 'background 0.15s' }} onClick={() => { setSelectedSOS(alert); setShowSOSDetailModal(true); }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary, #f9fafb)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: getStatusBg(alert.status), color: getStatusColor(alert.status), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <FaExclamationTriangle style={{ fontSize: 14 }} />
+                      <TypeIcon style={{ fontSize: 14 }} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>{alert.user?.firstName} {alert.user?.lastName}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{alert.message || 'Emergency alert'}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>{alert.user?.firstName} {alert.user?.lastName}{alert.userName && !alert.user?.firstName ? alert.userName : ''}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{SOS_TYPE_LABELS[alert.type] || alert.type || 'General'} — {alert.message || 'Emergency alert'}</div>
                     </div>
                   </div>
-                  <span style={{ background: `${getStatusColor(alert.status)}15`, color: getStatusColor(alert.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{alert.status}</span>
+                  <span style={{ background: `${getStatusColor(alert.status)}15`, color: getStatusColor(alert.status), fontSize: 10, padding: '4px 10px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{alert.status?.replace('_', ' ')}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, flexWrap: 'wrap' }}>
+                  {alert.userPhone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><FaPhone style={{ fontSize: 9 }} />{alert.userPhone}</span>}
+                  {(alert.location?.address || (alert.location?.coordinates?.length === 2)) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><FaMapMarkerAlt style={{ fontSize: 9 }} />{alert.location?.address || `${alert.location.coordinates[1]?.toFixed(4)}, ${alert.location.coordinates[0]?.toFixed(4)}`}</span>}
+                  {alert.trip && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><FaCar style={{ fontSize: 9 }} />Trip linked</span>}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><FaClock style={{ fontSize: 9 }} />{new Date(alert.createdAt).toLocaleString()}</span>
                 </div>
                 {alert.status === 'active' && (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
                     <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
                       <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
                     </button>
                     <button className="driver-action-btn driver-btn-view" onClick={() => handleResolveSOS(alert._id, true)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}>
                       False Alarm
                     </button>
+                    <button className="driver-action-btn driver-btn-ban" onClick={() => handleDispatchFromSOS(alert)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#dc2626', color: 'white', fontWeight: 600 }}>
+                      <FaAmbulance style={{ fontSize: 10 }} /> Dispatch
+                    </button>
                   </div>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         </div>
       )}
@@ -834,7 +873,7 @@ const SafetyDashboard = () => {
         <div className="modal-overlay" onClick={() => setDispatchModal(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{dispatchModal.type === 'police' ? '🚔 Dispatch to Police' : '🚑 Dispatch Ambulance to Hospital'}</h3>
+              <h3>{dispatchModal.fromSOS ? '🚨 Dispatch from SOS Alert' : dispatchModal.type === 'police' ? '🚔 Dispatch to Police' : '🚑 Dispatch Ambulance to Hospital'}</h3>
               <button className="modal-close" onClick={() => setDispatchModal(null)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
@@ -881,6 +920,118 @@ const SafetyDashboard = () => {
               <button className="driver-action-btn driver-btn-ban" onClick={handleSendDispatch} disabled={dispatchSending} style={{ marginTop: 16, width: '100%', padding: 10, fontSize: 13, borderRadius: 8, border: 'none', cursor: dispatchSending ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg, #dc2626, #b91c1c)', color: 'white', fontWeight: 600, opacity: dispatchSending ? 0.6 : 1 }}>
                 {dispatchSending ? 'Sending...' : `Send Dispatch to ${dispatchRecipients.length} ${dispatchRecipients.length === 1 ? 'recipient' : 'recipients'}`}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+    {/* ===== SOS DETAIL MODAL ===== */}
+      {showSOSDetailModal && selectedSOS && (
+        <div className="modal-overlay" onClick={() => setShowSOSDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
+            <div className="modal-header" style={{ background: selectedSOS.status === 'active' ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {React.createElement(SOS_TYPE_ICONS[selectedSOS.type] || FaExclamationTriangle, { style: { fontSize: 18 } })}
+                <h3 style={{ margin: 0 }}>{SOS_TYPE_LABELS[selectedSOS.type] || 'SOS Alert'}</h3>
+              </div>
+              <button className="modal-close" onClick={() => setShowSOSDetailModal(false)} style={{ color: 'white' }}><FaTimes /></button>
+            </div>
+            <div className="driver-detail">
+              {/* Status badge */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 12, marginBottom: 12 }}>
+                <span style={{ background: `${getStatusColor(selectedSOS.status)}15`, color: getStatusColor(selectedSOS.status), fontSize: 11, padding: '4px 12px', borderRadius: 12, fontWeight: 700, textTransform: 'capitalize' }}>{selectedSOS.status?.replace('_', ' ')}</span>
+                <span style={{ background: `${getSeverityColor('critical')}15`, color: getSeverityColor('critical'), fontSize: 11, padding: '4px 12px', borderRadius: 12, fontWeight: 700 }}>URGENT</span>
+              </div>
+
+              {/* User info */}
+              <div style={{ background: 'var(--bg-secondary, #f9fafb)', borderRadius: 10, padding: 12, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>REPORTED BY</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{selectedSOS.user?.firstName} {selectedSOS.user?.lastName}{selectedSOS.userName && !selectedSOS.user?.firstName ? selectedSOS.userName : ''}</div>
+                {selectedSOS.userPhone && (
+                  <a href={`tel:${selectedSOS.userPhone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 12, color: '#3b82f6', textDecoration: 'none', fontWeight: 600 }}>
+                    <FaPhone style={{ fontSize: 10 }} /> {selectedSOS.userPhone} — Call Now
+                  </a>
+                )}
+              </div>
+
+              {/* Message */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>MESSAGE</div>
+                <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>{selectedSOS.message || 'No message provided'}</div>
+              </div>
+
+              {/* Location */}
+              {selectedSOS.location && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>LOCATION</div>
+                  {selectedSOS.location.address ? (
+                    <a href={`https://www.google.com/maps?q=${selectedSOS.location.coordinates?.[1]},${selectedSOS.location.coordinates?.[0]}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#3b82f6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <FaMapMarkerAlt /> {selectedSOS.location.address}
+                    </a>
+                  ) : selectedSOS.location.coordinates?.length === 2 ? (
+                    <a href={`https://www.google.com/maps?q=${selectedSOS.location.coordinates[1]},${selectedSOS.location.coordinates[0]}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#3b82f6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <FaMapMarkerAlt /> {selectedSOS.location.coordinates[1]?.toFixed(5)}, {selectedSOS.location.coordinates[0]?.toFixed(5)} (Open in Maps)
+                    </a>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Trip */}
+              {selectedSOS.trip && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>LINKED TRIP</div>
+                  <div style={{ fontSize: 13, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <FaCar /> {typeof selectedSOS.trip === 'object' ? `Trip #${selectedSOS.trip._id?.slice(-6)}` : `Trip #${String(selectedSOS.trip).slice(-6)}`}
+                  </div>
+                </div>
+              )}
+
+              {/* Notified contacts */}
+              {selectedSOS.notifiedContacts?.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>NOTIFIED CONTACTS</div>
+                  {selectedSOS.notifiedContacts.map((c, i) => (
+                    <div key={i} style={{ fontSize: 12, color: 'var(--text)', padding: '4px 0', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{c.name} — {c.phoneNumber}</span>
+                      <span style={{ color: c.acknowledged ? '#22c55e' : '#f97316', fontSize: 10, fontWeight: 600 }}>{c.acknowledged ? 'Acknowledged' : 'Notified'}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Time & Resolution */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                <div style={{ background: 'var(--bg-secondary, #f9fafb)', borderRadius: 8, padding: 8 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>CREATED</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{new Date(selectedSOS.createdAt).toLocaleString()}</div>
+                </div>
+                {selectedSOS.resolvedAt && (
+                  <div style={{ background: 'var(--bg-secondary, #f9fafb)', borderRadius: 8, padding: 8 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>RESOLVED</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{new Date(selectedSOS.resolvedAt).toLocaleString()}</div>
+                  </div>
+                )}
+              </div>
+              {selectedSOS.resolutionNotes && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>RESOLUTION NOTES</div>
+                  <div style={{ fontSize: 12, color: 'var(--text)' }}>{selectedSOS.resolutionNotes}</div>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              {selectedSOS.status === 'active' && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { handleResolveSOS(selectedSOS._id, false); setShowSOSDetailModal(false); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#22c55e', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaCheckCircle /> Resolve
+                  </button>
+                  <button onClick={() => { handleResolveSOS(selectedSOS._id, true); setShowSOSDetailModal(false); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6b7280', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaBan /> False Alarm
+                  </button>
+                  <button onClick={() => { setShowSOSDetailModal(false); handleDispatchFromSOS(selectedSOS); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaAmbulance /> Dispatch
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
