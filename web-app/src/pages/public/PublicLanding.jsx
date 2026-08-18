@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   FaCar, FaMapMarkerAlt, FaShieldAlt, FaMobileAlt, FaStar, FaClock,
   FaMoneyBillWave, FaUsers, FaArrowRight, FaCheckCircle, FaGlobe, FaMoon, FaSun,
   FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload, FaChevronUp,
-  FaBook, FaUserPlus
+  FaBook, FaUserPlus, FaQrcode
 } from 'react-icons/fa';
 import './PublicLanding.css';
 
@@ -274,6 +275,21 @@ const PublicLanding = () => {
           </div>
           <div className="hero-vehicle">
             <img src="/images/bus.jpg" alt="Bus" />
+          </div>
+        </div>
+
+        {/* Scan to Download QR Code */}
+        <div className="hero-qr-card reveal">
+          <div className="hero-qr-box">
+            <QRCodeSVG value={`${window.location.origin}/download`} size={140} level="M" />
+          </div>
+          <div className="hero-qr-text">
+            <div className="hero-qr-tag"><FaQrcode /> {t('landing.download.tag') || 'Scan to Download'}</div>
+            <h3>{t('landing.download.title') || 'Get the DIRS App'}</h3>
+            <p>{t('landing.download.desc') || 'Scan the code with your phone camera to download the free app.'}</p>
+            <Link to="/download" className="hero-qr-link">
+              <FaDownload /> {t('landing.download.button') || 'Download Now'}
+            </Link>
           </div>
         </div>
       </section>

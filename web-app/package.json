@@ -8,6 +8,7 @@
     "axios": "^1.6.0",
     "core-js": "^3.50.0",
     "leaflet": "^1.9.4",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.11.0",

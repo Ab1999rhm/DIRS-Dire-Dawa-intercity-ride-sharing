@@ -1051,6 +1051,12 @@
       "installApp": "Install App",
       "login": "Login",
       "signUp": "Sign Up",
+      "download": {
+        "tag": "Scan to Download",
+        "title": "Get the DIRS App",
+        "desc": "Scan the code with your phone camera to download the free app.",
+        "button": "Download Now"
+      },
       "features": {
         "multipleVehicles": "Multiple Vehicles",
         "multipleVehiclesDesc": "Choose from Bajaj, Sedan, Minivan, and Bus for any trip",
@@ -1124,6 +1130,18 @@
         "project": "Dire Dawa University Project",
         "team": "Team: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
       }
+    },
+    "download": {
+      "backHome": "Back to Home",
+      "title": "Dire Dawa Intercity & Ride Sharing",
+      "creditLine": "This application is developed and designed by",
+      "lead": "Lead Developer",
+      "developer": "Developer",
+      "downloadApp": "Download App",
+      "installed": "App installed successfully!",
+      "installHint": "Open your browser menu and tap \"Add to Home Screen\".",
+      "note": "Install brings SOS, tracking, wallet and bookings right to your home screen.",
+      "techBuilt": "Built mobile-first with real-time ride tracking"
     }
   },
   "am": {
@@ -1890,6 +1908,12 @@
       "installApp": "ያግዙ",
       "login": "ግባ",
       "signUp": "ይመዝገቡ",
+      "download": {
+        "tag": "ለማውረድ ስካን ያድርጉ",
+        "title": "የ DIRS መተግበሪያ ያግኙ",
+        "desc": "ኮዱን በስልክ ካሜራ ይስካኑ እና ነፃ መተግበሪያውን ያውርዱ።",
+        "button": "አሁን ያውርዱ"
+      },
       "features": {
         "multipleVehicles": "የተለያዩ ተORYS",
         "multipleVehiclesDesc": "በجاج ሰዳን ሚኒβאן እና በስ መምረጥ ይችላሉ",
@@ -1963,6 +1987,18 @@
         "project": "የመንግስት ፕሮጀክት",
         "team": "ጥበብ: አብርሃም ፊካዱ፣ ዖብሳ ቁመራ፣ እልዳና አሽናፊ"
       }
+    },
+    "download": {
+      "backHome": "ወደ መነሻ ተመለስ",
+      "title": "የድሬ ዳዋ ከተማ እና ከተማ ጉዞ መጋጠሚያ",
+      "creditLine": "ይህ መተግበሪያ የተሰራው እና የተነደፈው በ",
+      "lead": "ዋና ልማት",
+      "developer": "ልማት",
+      "downloadApp": "መተግበሪያን ያውርዱ",
+      "installed": "መተግበሪያው በተሳካ ሁኔታ ተጭኗል!",
+      "installHint": "የአሳሹ ምናሌ ይክፈቱ እና \"እዚህ ገጽ ላይ ጨምር\" ያንኳኩ።",
+      "note": "መጫን SOS፣ ክትትል፣ የዋሌት እና የቅድመ-ማስያዣ ገጽታዎችን ወደ መነሻ ማያ ገጽ ያመጣል።",
+      "techBuilt": "በእውነተኛ ጊዜ የጉዞ ክትትል ተገንብቶል"
     }
   },
   "om": {
@@ -2461,6 +2497,12 @@
       "installApp": "App kaa'i",
       "login": "Seenu",
       "signUp": "Galmaa'i",
+      "download": {
+        "tag": "Buufachuuf Saakisanii",
+        "title": "App DIRS Kaa'u",
+        "desc": "Koodii kaameraa mobaayilaadhaan saakisiitii app bilisaa buusi.",
+        "button": "Amma Buusi"
+      },
       "features": {
         "multipleVehicles": "Baajaj, Haatii, Minivaan fi Baasii",
         "multipleVehiclesDesc": "Baajaj, Haatii, Minivaan fi Baasii keessatti filadhu",
@@ -2534,6 +2576,18 @@
         "project": "PROJEKTII Yaa'aa Dire Dawa",
         "team": "Garee: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
       }
+    },
+    "download": {
+      "backHome": "Deebi'i Bara",
+      "title": "Dire Dawa Magaalota Gidduu fi Wada Raadeessuu",
+      "creditLine": "App kun kan maddisiisee fi dizaayinii gopheesse",
+      "lead": "Ogeettii Gooraa",
+      "developer": "Dizaayinarii",
+      "downloadApp": "App Buusi",
+      "installed": "App sirritti kaa'ame!",
+      "installHint": "Mee sayaada kee banii \"Add to Home Screen\" tuqi.",
+      "note": "Kaa'achuun SOS, duudha handaara, walleetii fi qabduu hingu duubatti fiduudha.",
+      "techBuilt": "Mobaayiliif ta'ee yeroo dhugaa duudha handaara wajjin hojjetame"
     }
   },
   "so": {
@@ -3032,6 +3086,12 @@
       "installApp": "Ku rakib App-ka",
       "login": "Gali",
       "signUp": "Is diiwaan geli",
+      "download": {
+        "tag": "Isku fiiri si aad u soo dejtid",
+        "title": "Hesho App-ka DIRS",
+        "desc": "Qoraalka ku xooji kamaradda taleefankaaga si aad u soo dejiso app-ka bilaashka ah.",
+        "button": "Hadda Soo Deji"
+      },
       "features": {
         "multipleVehicles": "Gaadiid Badan",
         "multipleVehiclesDesc": "Dooro Bajaj, Baabuur, Minivan iyo Bas",
@@ -3105,6 +3165,18 @@
         "project": "Mashruuca Jaamacadda Dire Dawa",
         "team": "Kooxda: Abraham Fikadu, Obsa Kumera, Eldana Ashenafi"
       }
+    },
+    "download": {
+      "backHome": "Ku noqo Guriga",
+      "title": "Dire Dawa Magaalo-dhexe & Tafaariijta Wadaagga",
+      "creditLine": "App-kan waxaa sameeyay oo naqshadeeyay",
+      "lead": "Horumarin Heerka Kowaad",
+      "developer": "Naqshadeeye",
+      "downloadApp": "Soo Deji App-ka",
+      "installed": "App-ka si guul leh ayaa loo rakibay!",
+      "installHint": "Fur mealyaha browser-ka oo taabo \"Add to Home Screen\".",
+      "note": "Rakibaadda waxay kuu keenaysaa SOS, raad-raaca, wallet iyo dalballada qiimaha oo ka baxsan shaashadda hore.",
+      "techBuilt": "Waxaa loo dhisay mobil iyo raad-raac waqti-dhab ah"
     }
   }
 }
