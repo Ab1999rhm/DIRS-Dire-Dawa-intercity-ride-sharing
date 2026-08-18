@@ -2899,6 +2899,7 @@ exports.createTicket = asyncHandler(async (req, res) => {
   const ticketData = req.body;
   ticketData.createdBy = req.user._id;
   ticketData.source = 'admin_created';
+  if (ticketData.userId && !ticketData.user) ticketData.user = ticketData.userId;
   
   const ticket = await Ticket.create(ticketData);
   

@@ -38,19 +38,32 @@ const SupportDashboard = () => {
   const [broadcastMessage, setBroadcastMessage] = useState({ message: '', targetAudience: 'all', title: '' });
   const [ticketMessage, setTicketMessage] = useState('');
   const [chatMessage, setChatMessage] = useState('');
+  const [users, setUsers] = useState([]);
+  const [userSearch, setUserSearch] = useState('');
 
-  useEffect(() => { fetchSupportData(); }, []);
+  useEffect(() => {
+    fetchSupportData();
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await adminAPI.users({ limit: 100 });
+      const data = res.data;
+      setUsers(Array.isArray(data) ? data : (data?.users || []));
+    } catch (err) { /* silent — user picker optional */ }
+  };
 
   const fetchSupportData = async () => {
     try {
       setLoading(true);
       const [analyticsRes, ticketsRes, chatsRes, faqsRes, cannedRes, rulesRes] = await Promise.all([
         adminAPI.getSupportAnalytics({}).catch(() => ({ data: null })),
-        adminAPI.getTickets({}).catch(() => ({ data: [] })),
-        adminAPI.getSupportChats({}).catch(() => ({ data: [] })),
-        adminAPI.getFAQs({}).catch(() => ({ data: [] })),
-        adminAPI.getCannedResponses({}).catch(() => ({ data: [] })),
-        adminAPI.getAutoReplyRules({}).catch(() => ({ data: [] }))
+        adminAPI.getTickets({}).catch(() => ({ data: {} })),
+        adminAPI.getSupportChats({}).catch(() => ({ data: {} })),
+        adminAPI.getFAQs({}).catch(() => ({ data: {} })),
+        adminAPI.getCannedResponses({}).catch(() => ({ data: {} })),
+        adminAPI.getAutoReplyRules({}).catch(() => ({ data: {} }))
       ]);
 
       setAnalytics(analyticsRes.data);
@@ -66,107 +79,88 @@ const SupportDashboard = () => {
       setAutoReplyRules(Array.isArray(rulesData) ? rulesData : (rulesData?.rules || rulesData?.data || []));
     } catch (err) {
       console.error('Error fetching support data:', err);
-      setAnalytics({
-        tickets: { total: 12, open: 4, resolved: 7, byCategory: [{ _id: 'payment', count: 5 }, { _id: 'trip', count: 4 }, { _id: 'account', count: 3 }] },
-        chats: { active: 2 },
-        performance: { avgResponseTime: 12, avgSatisfaction: 4.5 },
-        faqs: { popular: [{ title: 'How to book a ride?', views: 234 }, { title: 'Payment methods', views: 189 }, { title: 'How to become a driver?', views: 156 }] }
-      });
-      setTickets([
-        { _id: 't1', ticketNumber: 'TK-001', subject: 'Payment not processed', category: 'payment', priority: 'high', status: 'open', description: 'I was charged but the ride was cancelled', createdAt: new Date().toISOString() },
-        { _id: 't2', ticketNumber: 'TK-002', subject: 'Driver was rude', category: 'safety', priority: 'medium', status: 'in_progress', description: 'The driver shouted at me for no reason', createdAt: new Date().toISOString() },
-        { _id: 't3', ticketNumber: 'TK-003', subject: 'Cannot login', category: 'account', priority: 'high', status: 'open', description: 'Getting error when trying to login with phone number', createdAt: new Date().toISOString() },
-        { _id: 't4', ticketNumber: 'TK-004', subject: 'Wrong fare charged', category: 'payment', priority: 'medium', status: 'resolved', description: 'I was charged more than the estimated fare', createdAt: new Date().toISOString() },
-      ]);
-      setChats([
-        { _id: 'c1', participants: [{ user: { firstName: 'Sara', lastName: 'Tesfaye' } }], messages: [{}, {}, {}], status: 'active', createdAt: new Date().toISOString() },
-        { _id: 'c2', participants: [{ user: { firstName: 'Bekele', lastName: 'Alemu' } }], messages: [{}], status: 'active', createdAt: new Date().toISOString() },
-        { _id: 'c3', participants: [{ user: { firstName: 'Helen', lastName: 'Mengistu' } }], messages: [{}, {}], status: 'ended', createdAt: new Date().toISOString() },
-      ]);
-      setFaqs([
-        { _id: 'f1', title: 'How to book a ride?', category: 'getting_started', content: 'Open the app, enter pickup and dropoff locations, select vehicle type, and tap Book.', views: 234 },
-        { _id: 'f2', title: 'Payment methods', category: 'payment', content: 'We accept cash, Telebirr, and Chapa payments.', views: 189 },
-        { _id: 'f3', title: 'How to become a driver?', category: 'driver', content: 'Register as a driver, upload your documents, and wait for verification.', views: 156 },
-        { _id: 'f4', title: 'Safety tips', category: 'safety', content: 'Always share your trip, keep emergency contacts updated, and trust your instincts.', views: 98 },
-      ]);
-      setCannedResponses([
-        { _id: 'cr1', title: 'Greeting', category: 'greeting', content: 'Hello! Thank you for contacting DIRS support. How can I help you today?', useCount: 45 },
-        { _id: 'cr2', title: 'Payment Issue', category: 'payment', content: 'We understand your concern about the payment. Let me look into this for you right away.', useCount: 32 },
-        { _id: 'cr3', title: 'Trip Issue', category: 'trip', content: 'Sorry to hear about your trip experience. We will investigate this matter.', useCount: 28 },
-      ]);
-      setAutoReplyRules([
-        { _id: 'ar1', name: 'Payment Auto-Reply', triggerType: 'category', trigger: 'payment', action: 'auto_reply', response: { message: 'We received your payment issue. Our team will review it within 24 hours.' } },
-        { _id: 'ar2', name: 'Safety Escalation', triggerType: 'category', trigger: 'safety', action: 'auto_escalate', response: { message: 'Your safety concern has been escalated to our priority team.' } },
-        { _id: 'ar3', name: 'Urgent Priority', triggerType: 'priority', trigger: 'urgent', action: 'auto_assign', response: { message: 'Your urgent request has been assigned to a senior agent.' } },
-      ]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateTicket = async () => {
+    if (!newTicket.userId) {
+      toast.error('Select a user for this ticket');
+      return;
+    }
+    if (!newTicket.subject.trim()) {
+      toast.error('Subject is required');
+      return;
+    }
     try {
-      await adminAPI.createTicket(newTicket);
+      const res = await adminAPI.createTicket(newTicket);
+      const created = res.data?.ticket;
+      if (created?._id) setTickets(prev => [created, ...prev]);
       toast.success('Ticket created successfully');
       setShowTicketModal(false);
       setNewTicket({ userId: '', category: 'other', priority: 'medium', subject: '', description: '' });
-      fetchSupportData();
+      setUserSearch('');
     } catch (err) { toast.error('Failed to create ticket'); }
   };
 
   const handleUpdateTicket = async (ticketId, updates) => {
     try {
       await adminAPI.updateTicket(ticketId, updates);
+      setTickets(prev => prev.map(t => t._id === ticketId ? { ...t, ...updates } : t));
       toast.success('Ticket updated successfully');
-      fetchSupportData();
     } catch (err) { toast.error('Failed to update ticket'); }
   };
 
   const handleAddTicketMessage = async (ticketId) => {
+    if (!ticketMessage.trim()) return;
     try {
       await adminAPI.addTicketMessage(ticketId, ticketMessage, false, []);
       toast.success('Message added');
       setTicketMessage('');
-      fetchSupportData();
     } catch (err) { toast.error('Failed to add message'); }
   };
 
   const handleResolveTicket = async (ticketId) => {
     try {
       await adminAPI.resolveTicket(ticketId, 'Resolved by admin');
+      setTickets(prev => prev.map(t => t._id === ticketId ? { ...t, status: 'resolved' } : t));
+      if (selectedTicket?._id === ticketId) setSelectedTicket(prev => ({ ...prev, status: 'resolved' }));
       toast.success('Ticket resolved');
       setSelectedTicket(null);
-      fetchSupportData();
     } catch (err) { toast.error('Failed to resolve ticket'); }
   };
 
   const handleCreateFAQ = async () => {
     try {
-      await adminAPI.createFAQ(newFAQ);
+      const res = await adminAPI.createFAQ(newFAQ);
+      const created = res.data?.faq;
+      if (created?._id) setFaqs(prev => [created, ...prev]);
       toast.success('FAQ created successfully');
       setShowFAQModal(false);
       setNewFAQ({ title: '', content: '', category: 'getting_started', tags: [], language: 'en' });
-      fetchSupportData();
     } catch (err) { toast.error('Failed to create FAQ'); }
   };
 
   const handleCreateCannedResponse = async () => {
     try {
-      await adminAPI.createCannedResponse(newCannedResponse);
+      const res = await adminAPI.createCannedResponse(newCannedResponse);
+      const created = res.data?.response;
+      if (created?._id) setCannedResponses(prev => [created, ...prev]);
       toast.success('Canned response created');
       setShowCannedModal(false);
       setNewCannedResponse({ title: '', content: '', category: 'greeting', tags: [], language: 'en' });
-      fetchSupportData();
     } catch (err) { toast.error('Failed to create canned response'); }
   };
 
   const handleCreateAutoReplyRule = async () => {
     try {
-      await adminAPI.createAutoReplyRule(newAutoReplyRule);
+      const res = await adminAPI.createAutoReplyRule(newAutoReplyRule);
+      const created = res.data?.rule;
+      if (created?._id) setAutoReplyRules(prev => [created, ...prev]);
       toast.success('Auto reply rule created');
       setShowAutoReplyModal(false);
       setNewAutoReplyRule({ name: '', trigger: '', triggerType: 'category', action: 'auto_reply', response: { message: '' }, category: 'other', priority: 'medium' });
-      fetchSupportData();
     } catch (err) { toast.error('Failed to create auto reply rule'); }
   };
 
@@ -180,17 +174,17 @@ const SupportDashboard = () => {
   };
 
   const handleDeleteFAQ = async (faqId) => {
-    try { await adminAPI.deleteFAQ(faqId); toast.success('FAQ deleted'); fetchSupportData(); }
+    try { await adminAPI.deleteFAQ(faqId); setFaqs(prev => prev.filter(f => f._id !== faqId)); toast.success('FAQ deleted'); }
     catch (err) { toast.error('Failed to delete FAQ'); }
   };
 
   const handleDeleteCannedResponse = async (responseId) => {
-    try { await adminAPI.deleteCannedResponse(responseId); toast.success('Canned response deleted'); fetchSupportData(); }
+    try { await adminAPI.deleteCannedResponse(responseId); setCannedResponses(prev => prev.filter(r => r._id !== responseId)); toast.success('Canned response deleted'); }
     catch (err) { toast.error('Failed to delete canned response'); }
   };
 
   const handleDeleteAutoReplyRule = async (ruleId) => {
-    try { await adminAPI.deleteAutoReplyRule(ruleId); toast.success('Auto reply rule deleted'); fetchSupportData(); }
+    try { await adminAPI.deleteAutoReplyRule(ruleId); setAutoReplyRules(prev => prev.filter(r => r._id !== ruleId)); toast.success('Auto reply rule deleted'); }
     catch (err) { toast.error('Failed to delete auto reply rule'); }
   };
 
@@ -295,12 +289,12 @@ const SupportDashboard = () => {
         <div>
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             {[
-              { icon: <FaTicketAlt />, val: analytics?.tickets?.total || tickets.length || 0, label: t('admin.totalTickets') || 'Total Tickets', color: '#3b82f6' },
-              { icon: <FaHourglassHalf />, val: analytics?.tickets?.open || openTickets, label: t('admin.openTickets') || 'Open Tickets', color: '#f97316' },
-              { icon: <FaCheckCircle />, val: analytics?.tickets?.resolved || tickets.filter(t => t.status === 'resolved').length, label: t('admin.resolvedTickets') || 'Resolved', color: '#22c55e' },
-              { icon: <FaClock />, val: `${analytics?.performance?.avgResponseTime || 12}m`, label: t('admin.avgResponseTime') || 'Avg Response', color: '#eab308' },
-              { icon: <FaStar />, val: analytics?.performance?.avgSatisfaction || '4.5', label: t('admin.satisfaction') || 'Satisfaction', color: '#22c55e' },
-              { icon: <FaComments />, val: analytics?.chats?.active || activeChats, label: t('admin.activeChats') || 'Active Chats', color: '#7c3aed' },
+              { icon: <FaTicketAlt />, val: tickets.length || analytics?.tickets?.total || 0, label: t('admin.totalTickets') || 'Total Tickets', color: '#3b82f6' },
+              { icon: <FaHourglassHalf />, val: openTickets || analytics?.tickets?.open || 0, label: t('admin.openTickets') || 'Open Tickets', color: '#f97316' },
+              { icon: <FaCheckCircle />, val: tickets.filter(t => t.status === 'resolved').length || analytics?.tickets?.resolved || 0, label: t('admin.resolvedTickets') || 'Resolved', color: '#22c55e' },
+              { icon: <FaClock />, val: `${analytics?.performance?.avgResponseTime ?? 0}m`, label: t('admin.avgResponseTime') || 'Avg Response', color: '#eab308' },
+              { icon: <FaStar />, val: analytics?.performance?.avgSatisfaction ?? '0.00', label: t('admin.satisfaction') || 'Satisfaction', color: '#22c55e' },
+              { icon: <FaComments />, val: analytics?.chats?.active ?? activeChats, label: t('admin.activeChats') || 'Active Chats', color: '#7c3aed' },
             ].map((s, i) => (
               <div key={i} className="admin-stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="admin-stat-icon" style={{ background: `${s.color}12`, color: s.color }}>{s.icon}</div>
@@ -584,8 +578,30 @@ const SupportDashboard = () => {
             </div>
             <div className="driver-detail">
               <div style={{ marginTop: 16 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>User ID</label>
-                <input type="text" value={newTicket.userId} onChange={(e) => setNewTicket({ ...newTicket, userId: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary, #f9fafb)', color: 'var(--text)', boxSizing: 'border-box' }} placeholder="Enter user ID" />
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>User</label>
+                {(newTicket.userId ? [users.find(u => u._id === newTicket.userId)].filter(Boolean) : []).map(u => (
+                  <div key={u._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', marginBottom: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{u.firstName} {u.lastName}</span>
+                    <button onClick={() => setNewTicket({ ...newTicket, userId: '' })} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Change</button>
+                  </div>
+                ))}
+                {!newTicket.userId && (
+                  <>
+                    <input type="text" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary, #f9fafb)', color: 'var(--text)', boxSizing: 'border-box', marginBottom: 8 }} placeholder="Search user by name or phone..." />
+                    <div style={{ maxHeight: 150, overflowY: 'auto', border: '1px solid var(--border-light)', borderRadius: 10 }}>
+                      {(userSearch.trim()
+                        ? users.filter(u => `${u.firstName} ${u.lastName} ${u.phoneNumber || ''}`.toLowerCase().includes(userSearch.toLowerCase())).slice(0, 30)
+                        : users.slice(0, 30)
+                      ).map(u => (
+                        <div key={u._id} onClick={() => setNewTicket({ ...newTicket, userId: u._id })} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{u.firstName} {u.lastName}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.phoneNumber} · {u.role}</span>
+                        </div>
+                      ))}
+                      {users.length === 0 && <div style={{ padding: 12, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>No users found</div>}
+                    </div>
+                  </>
+                )}
               </div>
               <div style={{ marginTop: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>Category</label>
@@ -786,6 +802,12 @@ const SupportDashboard = () => {
               <button className="modal-close" onClick={() => setSelectedTicket(null)}><FaTimes /></button>
             </div>
             <div className="driver-detail">
+              <div style={{ background: 'var(--bg-secondary, #f9fafb)', borderRadius: 10, padding: 10, marginBottom: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
+                  {selectedTicket.user?.firstName} {selectedTicket.user?.lastName} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>· {selectedTicket.user?.phoneNumber || selectedTicket.user?.email || ''}</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{selectedTicket.category} · {selectedTicket.source || 'web'} · {new Date(selectedTicket.createdAt).toLocaleString()}</div>
+              </div>
               <div className="detail-row">
                 <span className="detail-key">Subject</span>
                 <span className="detail-val">{selectedTicket.subject}</span>
@@ -802,12 +824,25 @@ const SupportDashboard = () => {
                 <span className="detail-key">Description</span>
                 <span className="detail-val">{selectedTicket.description || 'N/A'}</span>
               </div>
+              {(selectedTicket.messages || []).length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600 }}>MESSAGE THREAD</div>
+                  <div style={{ maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {(selectedTicket.messages || []).map((msg, idx) => (
+                      <div key={idx} style={{ padding: '8px 12px', borderRadius: 10, background: msg.isInternal ? 'rgba(234,179,8,0.08)' : 'rgba(59,130,246,0.08)', fontSize: 12, color: 'var(--text)' }}>
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>{msg.isInternal ? 'Internal note' : 'User message'} · {new Date(msg.createdAt).toLocaleString()}</div>
+                        {msg.message || msg.content || ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div style={{ marginTop: 16 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>Add Message</label>
                 <textarea value={ticketMessage} onChange={(e) => setTicketMessage(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 80, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary, #f9fafb)', color: 'var(--text)', boxSizing: 'border-box' }} placeholder="Type your message..." />
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                <button onClick={() => handleAddTicketMessage(selectedTicket._id)} style={{ flex: 1, padding: 10, fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#3b82f6', color: 'white', fontWeight: 600 }}>
+                <button onClick={() => handleAddTicketMessage(selectedTicket._id)} style={{ flex: 1, padding: 10, fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg, #3b82f6, #7c3aed)', color: 'white', fontWeight: 600 }}>
                   <FaPaperPlane /> Send Message
                 </button>
                 {selectedTicket.status !== 'resolved' && selectedTicket.status !== 'closed' && (
