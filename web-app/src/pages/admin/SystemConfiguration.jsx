@@ -1,16 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  FaCog, FaMap, FaCar, FaMoneyBillWave, FaSearch, FaFilter,
-  FaEdit, FaSave, FaPlus, FaTrash, FaCheckCircle, FaTimesCircle,
-  FaPercent, FaRoute, FaMobileAlt, FaServer, FaUpload, FaDownload,
-  FaBell, FaShieldAlt, FaFlag, FaTachometerAlt, FaGlobe, FaHistory,
-  FaKey, FaLink, FaUsers, FaCreditCard, FaLock, FaDatabase, FaTimes,
-  FaEnvelope, FaEye
+  FaCog, FaMap, FaCar, FaMoneyBillWave, FaSearch,
+  FaEdit, FaSave, FaPlus, FaTrash, FaTimes,
+  FaMobileAlt, FaServer, FaBell, FaShieldAlt, FaFlag, FaTachometerAlt,
+  FaGlobe, FaHistory, FaKey, FaLink, FaUsers, FaCreditCard, FaLock,
+  FaEnvelope, FaEye, FaCheckCircle, FaCalendarAlt
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { adminAPI } from '../../services/api';
 import { useToast } from '../../components/common/Toast';
 import './Admin.css';
+
+const opts = (arr) => arr.map(s => ({ v: s, l: s.replace(/_/g, ' ') }));
+
+const cap = (s) => String(s || '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+
+const fmtDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const fmtDateTime = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
 const SystemConfiguration = () => {
   const { t } = useLanguage();
@@ -29,56 +46,18 @@ const SystemConfiguration = () => {
   const [apiKeys, setApiKeys] = useState([]);
   const [webhooks, setWebhooks] = useState([]);
   const [activeTab, setActiveTab] = useState('tariff');
+  const [search, setSearch] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [editData, setEditData] = useState({});
+  const [formData, setFormData] = useState({});
 
-  const MOCK = {
-    tariffs: [
-      { _id: 1, zone: 'Dire Dawa City', baseFare: 50, perKm: 15, perMinute: 2, status: 'active' },
-      { _id: 2, zone: 'Dire Dawa → Harar', baseFare: 150, perKm: 12, perMinute: 1.5, status: 'active' },
-      { _id: 3, zone: 'Airport Zone', baseFare: 80, perKm: 18, perMinute: 2.5, status: 'active' },
-    ],
-    serviceAreas: [
-      { _id: 1, name: 'Dire Dawa Central', coverage: '15 km radius', status: 'active', drivers: 45 },
-      { _id: 2, name: 'Harar Route', coverage: '80 km corridor', status: 'active', drivers: 23 },
-      { _id: 3, name: 'Airport Zone', coverage: '10 km radius', status: 'active', drivers: 12 },
-    ],
-    vehicles: [
-      { _id: 1, name: 'Bajaj (Auto)', capacity: 3, baseFare: 50, status: 'active', drivers: 120 },
-      { _id: 2, name: 'Sedan', capacity: 4, baseFare: 80, status: 'active', drivers: 85 },
-      { _id: 3, name: 'Minivan', capacity: 7, baseFare: 120, status: 'active', drivers: 30 },
-      { _id: 4, name: 'Bus', capacity: 14, baseFare: 200, status: 'active', drivers: 12 },
-    ],
-    platform: { commission: { platformRate: 0.15, driverRate: 0.85 }, currency: { code: 'ETB', symbol: 'Br' } },
-    notification: { pushNotifications: { enabled: true }, sms: { enabled: true }, email: { enabled: false } },
-    security: { otp: { expiryTime: 300, length: 6 }, session: { duration: 86400 }, maxLoginAttempts: 5 },
-    features: [
-      { _id: 1, name: 'Surge Pricing', key: 'surge_pricing', category: 'pricing', enabled: true },
-      { _id: 2, name: 'Real-time Tracking', key: 'realtime_tracking', category: 'core', enabled: true },
-      { _id: 3, name: 'In-App Chat', key: 'in_app_chat', category: 'communication', enabled: true },
-      { _id: 4, name: 'Multi-Language', key: 'multi_language', category: 'localization', enabled: true },
-      { _id: 5, name: 'Offline Mode', key: 'offline_mode', category: 'performance', enabled: false },
-    ],
-    performance: { cache: { enabled: true, ttl: { default: 3600 } }, rateLimit: { windowMs: 900000, max: 100 } },
-    localization: { timezone: { default: 'Africa/Addis_Ababa' }, languages: [{ code: 'en', name: 'English' }, { code: 'am', name: 'Amharic' }, { code: 'om', name: 'Afaan Oromo' }, { code: 'so', name: 'Af Somali' }] },
-    audit: [
-      { _id: 1, action: 'Settings Updated', entityType: 'Platform', timestamp: '2026-08-11T10:30:00', performedBy: { name: 'Admin' } },
-      { _id: 2, action: 'Feature Flag Toggled', entityType: 'Surge Pricing', timestamp: '2026-08-10T14:20:00', performedBy: { name: 'Admin' } },
-      { _id: 3, action: 'API Key Generated', entityType: 'Payment Service', timestamp: '2026-08-09T09:15:00', performedBy: { name: 'System' } },
-    ],
-    apiKeys: [
-      { _id: 1, name: 'Chapa Payment API', isActive: true, usageCount: 12450, lastUsed: '2026-08-11' },
-      { _id: 2, name: 'SMS Gateway', isActive: true, usageCount: 8900, lastUsed: '2026-08-11' },
-      { _id: 3, name: 'Maps Service', isActive: true, usageCount: 23400, lastUsed: '2026-08-11' },
-    ],
-    webhooks: [
-      { _id: 1, name: 'Payment Events', url: 'https://api.dirs.com/webhooks/payment', events: ['payment.completed', 'payment.failed'], isActive: true },
-      { _id: 2, name: 'Trip Updates', url: 'https://api.dirs.com/webhooks/trip', events: ['trip.started', 'trip.completed'], isActive: true },
-    ],
-  };
+  const ZONE_TYPE = opts(['city', 'region', 'highway', 'intercity']);
+  const VEHICLE_TYPE = opts(['car', 'minivan', 'minibus', 'bajaj', 'bus', 'all']);
+  const FLAG_CATEGORY = opts(['core', 'marketing', 'analytics', 'security', 'ui', 'experimental']);
 
   useEffect(() => { fetchConfigurationData(); }, []);
 
@@ -88,87 +67,377 @@ const SystemConfiguration = () => {
       const [pricingRes, zonesRes, vehiclesRes, platformRes, notificationRes,
             securityRes, flagsRes, performanceRes, localizationRes, auditRes,
             keysRes, webhooksRes] = await Promise.all([
-        adminAPI.getPricingConfigs({}).catch(() => ({ data: MOCK.tariffs })),
-        adminAPI.getServiceZones({}).catch(() => ({ data: MOCK.serviceAreas })),
-        adminAPI.getVehicleCategories({}).catch(() => ({ data: MOCK.vehicles })),
-        adminAPI.getPlatformSettings().catch(() => ({ data: { settings: MOCK.platform } })),
-        adminAPI.getNotificationSettings().catch(() => ({ data: { settings: MOCK.notification } })),
-        adminAPI.getSecuritySettings().catch(() => ({ data: { settings: MOCK.security } })),
-        adminAPI.getFeatureFlags({}).catch(() => ({ data: MOCK.features })),
-        adminAPI.getPerformanceConfig().catch(() => ({ data: { config: MOCK.performance } })),
-        adminAPI.getLocalizationConfig().catch(() => ({ data: { config: MOCK.localization } })),
-        adminAPI.getAuditLogs({}).catch(() => ({ data: MOCK.audit })),
-        adminAPI.getAPIKeys({}).catch(() => ({ data: MOCK.apiKeys })),
-        adminAPI.getWebhooks({}).catch(() => ({ data: MOCK.webhooks }))
+        adminAPI.getPricingConfigs({}).catch(() => null),
+        adminAPI.getServiceZones({}).catch(() => null),
+        adminAPI.getVehicleCategories({}).catch(() => null),
+        adminAPI.getPlatformSettings().catch(() => null),
+        adminAPI.getNotificationSettings().catch(() => null),
+        adminAPI.getSecuritySettings().catch(() => null),
+        adminAPI.getFeatureFlags({}).catch(() => null),
+        adminAPI.getPerformanceConfig().catch(() => null),
+        adminAPI.getLocalizationConfig().catch(() => null),
+        adminAPI.getAuditLogs({}).catch(() => null),
+        adminAPI.getAPIKeys({}).catch(() => null),
+        adminAPI.getWebhooks({}).catch(() => null)
       ]);
-
-      const parse = (res, mock, key) => {
-        const d = res?.data;
-        if (Array.isArray(d) && d.length > 0) return d;
-        if (Array.isArray(d?.[key]) && d[key].length > 0) return d[key];
-        if (Array.isArray(d?.data) && d.data.length > 0) return d.data;
-        return mock;
-      };
-
-      setTariffs(parse(pricingRes, MOCK.tariffs, 'configs'));
-      setServiceAreas(parse(zonesRes, MOCK.serviceAreas, 'zones'));
-      setVehicleCategories(parse(vehiclesRes, MOCK.vehicles, 'categories'));
-      setPlatformSettings(platformRes?.data?.settings || MOCK.platform);
-      setNotificationSettings(notificationRes?.data?.settings || MOCK.notification);
-      setSecuritySettings(securityRes?.data?.settings || MOCK.security);
-      setFeatureFlags(parse(flagsRes, MOCK.features, 'flags'));
-      setPerformanceConfig(performanceRes?.data?.config || MOCK.performance);
-      setLocalizationConfig(localizationRes?.data?.config || MOCK.localization);
-      setAuditLogs(parse(auditRes, MOCK.audit, 'logs'));
-      setApiKeys(parse(keysRes, MOCK.apiKeys, 'keys'));
-      setWebhooks(parse(webhooksRes, MOCK.webhooks, 'webhooks'));
+      setTariffs(pricingRes?.data?.configs || []);
+      setServiceAreas(zonesRes?.data?.zones || []);
+      setVehicleCategories(vehiclesRes?.data?.categories || []);
+      setPlatformSettings(platformRes?.data?.settings || null);
+      setNotificationSettings(notificationRes?.data?.settings || null);
+      setSecuritySettings(securityRes?.data?.settings || null);
+      setFeatureFlags(flagsRes?.data?.flags || []);
+      setPerformanceConfig(performanceRes?.data?.config || null);
+      setLocalizationConfig(localizationRes?.data?.config || null);
+      setAuditLogs(auditRes?.data?.logs || []);
+      setApiKeys(keysRes?.data?.keys || []);
+      setWebhooks(webhooksRes?.data?.webhooks || []);
     } catch (err) {
       console.error('Failed to fetch configuration data:', err);
-      setTariffs(MOCK.tariffs);
-      setServiceAreas(MOCK.serviceAreas);
-      setVehicleCategories(MOCK.vehicles);
-      setPlatformSettings(MOCK.platform);
-      setNotificationSettings(MOCK.notification);
-      setSecuritySettings(MOCK.security);
-      setFeatureFlags(MOCK.features);
-      setPerformanceConfig(MOCK.performance);
-      setLocalizationConfig(MOCK.localization);
-      setAuditLogs(MOCK.audit);
-      setApiKeys(MOCK.apiKeys);
-      setWebhooks(MOCK.webhooks);
     }
     setLoading(false);
   };
 
-  const handleSaveTariff = async () => {
-    try {
-      if (editData._id) {
-        await adminAPI.updatePricingConfig(editData._id, editData);
-      } else {
-        await adminAPI.createPricingConfig(editData);
+  const TAB_META = useMemo(() => ({
+    tariff: {
+      key: 'tariff', label: 'Tariffs', icon: <FaMoneyBillWave />, color: '#3b82f6', getItems: () => tariffs,
+      createFn: adminAPI.createPricingConfig, updateFn: adminAPI.updatePricingConfig, deleteFn: adminAPI.deletePricingConfig,
+    },
+    service: {
+      key: 'service', label: 'Service Areas', icon: <FaMap />, color: '#10b981', getItems: () => serviceAreas,
+      createFn: adminAPI.createServiceZone, updateFn: adminAPI.updateServiceZone, deleteFn: adminAPI.deleteServiceZone,
+    },
+    vehicles: {
+      key: 'vehicles', label: 'Vehicles', icon: <FaCar />, color: '#f59e0b', getItems: () => vehicleCategories,
+      createFn: adminAPI.createVehicleCategory, updateFn: adminAPI.updateVehicleCategory, deleteFn: adminAPI.deleteVehicleCategory,
+    },
+    platform: { key: 'platform', label: 'Platform', icon: <FaCreditCard />, color: '#7c3aed', getItems: () => [], isSettings: true },
+    notifications: { key: 'notifications', label: 'Notifications', icon: <FaBell />, color: '#f59e0b', getItems: () => [], isSettings: true },
+    security: { key: 'security', label: 'Security', icon: <FaShieldAlt />, color: '#ef4444', getItems: () => [], isSettings: true },
+    features: {
+      key: 'features', label: 'Feature Flags', icon: <FaFlag />, color: '#6366f1', getItems: () => featureFlags,
+      createFn: adminAPI.createFeatureFlag, updateFn: adminAPI.updateFeatureFlag, toggleFn: adminAPI.toggleFeatureFlag,
+    },
+    performance: { key: 'performance', label: 'Performance', icon: <FaTachometerAlt />, color: '#059669', getItems: () => [], isSettings: true },
+    localization: { key: 'localization', label: 'Localization', icon: <FaGlobe />, color: '#0ea5e9', getItems: () => [], isSettings: true },
+    audit: { key: 'audit', label: 'Audit Logs', icon: <FaHistory />, color: '#6366f1', getItems: () => auditLogs, isReadOnly: true },
+    api: {
+      key: 'api', label: 'API Keys', icon: <FaKey />, color: '#ec4899', getItems: () => apiKeys,
+      createFn: adminAPI.createAPIKey,
+    },
+    webhooks: {
+      key: 'webhooks', label: 'Webhooks', icon: <FaLink />, color: '#14b8a6', getItems: () => webhooks,
+      createFn: adminAPI.createWebhook, updateFn: adminAPI.updateWebhook, deleteFn: adminAPI.deleteWebhook,
+    },
+  }), [tariffs, serviceAreas, vehicleCategories, featureFlags, auditLogs, apiKeys, webhooks]);
+
+  const meta = TAB_META[activeTab];
+
+  const buildCreateFields = (tab) => {
+    switch (tab) {
+      case 'tariff':
+        return [
+          { key: 'zoneId', label: 'Zone', type: 'select', required: true, options: serviceAreas.map(z => ({ v: z._id, l: z.name })) },
+          { key: 'vehicleType', label: 'Vehicle Type', type: 'select', required: true, options: VEHICLE_TYPE, defaultValue: 'car' },
+          { key: 'baseFare', label: 'Base Fare (ETB)', type: 'number', required: true },
+          { key: 'perKmRate', label: 'Per Kilometer (ETB)', type: 'number', required: true },
+          { key: 'perMinuteRate', label: 'Per Minute (ETB)', type: 'number' },
+          { key: 'minimumFare', label: 'Minimum Fare (ETB)', type: 'number' },
+        ];
+      case 'service':
+        return [
+          { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'e.g. Dire Dawa Central' },
+          { key: 'zoneType', label: 'Zone Type', type: 'select', options: ZONE_TYPE, defaultValue: 'city' },
+          { key: 'coverageRadius', label: 'Coverage Radius (km)', type: 'number' },
+          { key: 'priority', label: 'Priority', type: 'number' },
+          { key: 'centerLon', label: 'Center Longitude', type: 'number' },
+          { key: 'centerLat', label: 'Center Latitude', type: 'number' },
+        ];
+      case 'vehicles':
+        return [
+          { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'e.g. bajaj' },
+          { key: 'displayName', label: 'Display Name', type: 'text', required: true, placeholder: 'e.g. Bajaj (Auto)' },
+          { key: 'capacityPassengers', label: 'Capacity (seats)', type: 'number', required: true },
+          { key: 'capacityLuggage', label: 'Luggage Capacity', type: 'number' },
+          { key: 'commissionRate', label: 'Commission Rate (0-1)', type: 'number' },
+        ];
+      case 'features':
+        return [
+          { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'e.g. Surge Pricing' },
+          { key: 'key', label: 'Key', type: 'text', required: true, placeholder: 'e.g. surge_pricing' },
+          { key: 'category', label: 'Category', type: 'select', options: FLAG_CATEGORY, defaultValue: 'core' },
+          { key: 'description', label: 'Description', type: 'textarea' },
+        ];
+      case 'api':
+        return [
+          { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'e.g. Payment Service' },
+          { key: 'description', label: 'Description', type: 'text' },
+        ];
+      case 'webhooks':
+        return [
+          { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'e.g. Payment Events' },
+          { key: 'url', label: 'URL', type: 'text', required: true, placeholder: 'https://...' },
+          { key: 'events', label: 'Events (comma separated)', type: 'text', placeholder: 'ride_completed, payment_processed' },
+          { key: 'description', label: 'Description', type: 'text' },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const buildEditFields = (tab) => {
+    switch (tab) {
+      case 'tariff':
+        return [
+          { key: 'zoneId', label: 'Zone', type: 'select', options: serviceAreas.map(z => ({ v: z._id, l: z.name })) },
+          { key: 'vehicleType', label: 'Vehicle Type', type: 'select', options: VEHICLE_TYPE },
+          { key: 'baseFare', label: 'Base Fare (ETB)', type: 'number' },
+          { key: 'perKmRate', label: 'Per Kilometer (ETB)', type: 'number' },
+          { key: 'perMinuteRate', label: 'Per Minute (ETB)', type: 'number' },
+          { key: 'minimumFare', label: 'Minimum Fare (ETB)', type: 'number' },
+          { key: 'isActive', label: 'Status', type: 'select', boolean: true, options: [{ v: 'true', l: 'Active' }, { v: 'false', l: 'Inactive' }] },
+        ];
+      case 'service':
+        return [
+          { key: 'name', label: 'Name', type: 'text' },
+          { key: 'zoneType', label: 'Zone Type', type: 'select', options: ZONE_TYPE },
+          { key: 'coverageRadius', label: 'Coverage Radius (km)', type: 'number' },
+          { key: 'priority', label: 'Priority', type: 'number' },
+          { key: 'isActive', label: 'Status', type: 'select', boolean: true, options: [{ v: 'true', l: 'Active' }, { v: 'false', l: 'Inactive' }] },
+        ];
+      case 'vehicles':
+        return [
+          { key: 'name', label: 'Name', type: 'text' },
+          { key: 'displayName', label: 'Display Name', type: 'text' },
+          { key: 'capacityPassengers', label: 'Capacity (seats)', type: 'number' },
+          { key: 'capacityLuggage', label: 'Luggage Capacity', type: 'number' },
+          { key: 'commissionRate', label: 'Commission Rate (0-1)', type: 'number' },
+          { key: 'isActive', label: 'Status', type: 'select', boolean: true, options: [{ v: 'true', l: 'Active' }, { v: 'false', l: 'Inactive' }] },
+        ];
+      case 'features':
+        return [
+          { key: 'name', label: 'Name', type: 'text' },
+          { key: 'key', label: 'Key', type: 'text' },
+          { key: 'category', label: 'Category', type: 'select', options: FLAG_CATEGORY },
+          { key: 'description', label: 'Description', type: 'textarea' },
+          { key: 'enabled', label: 'Status', type: 'select', boolean: true, options: [{ v: 'true', l: 'Enabled' }, { v: 'false', l: 'Disabled' }] },
+        ];
+      case 'webhooks':
+        return [
+          { key: 'name', label: 'Name', type: 'text' },
+          { key: 'url', label: 'URL', type: 'text' },
+          { key: 'description', label: 'Description', type: 'text' },
+          { key: 'isActive', label: 'Status', type: 'select', boolean: true, options: [{ v: 'true', l: 'Active' }, { v: 'false', l: 'Inactive' }] },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const cardInfo = (item) => {
+    switch (activeTab) {
+      case 'tariff':
+        return {
+          title: item.zoneId?.name || item.zone || '—',
+          sub: `${item.vehicleType || '—'} • Base ${item.baseFare || 0} • km ${item.perKmRate || 0} • min ${item.perMinuteRate || 0}`,
+          stats: [
+            { icon: <FaMoneyBillWave />, text: `Min ${item.minimumFare || 0}` },
+            { icon: <FaCalendarAlt />, text: `Eff ${fmtDate(item.effectiveFrom)}` },
+          ],
+        };
+      case 'service':
+        return {
+          title: item.name,
+          sub: `${item.zoneType || 'city'} • ${item.coverageRadius || 0} km radius`,
+          stats: [
+            { icon: <FaUsers />, text: `Priority ${item.priority ?? 0}` },
+            { icon: <FaCheckCircle />, text: item.isBlackoutZone ? 'Blackout zone' : 'Active zone' },
+          ],
+        };
+      case 'vehicles':
+        return {
+          title: item.displayName || item.name,
+          sub: `${item.name} • ${item.capacity?.passengers ?? 0} seats`,
+          stats: [
+            { icon: <FaUsers />, text: `${item.capacity?.luggage ?? '—'} luggage` },
+            { icon: <FaMoneyBillWave />, text: `${Math.round((item.commissionRate ?? 0) * 100)}% commission` },
+          ],
+        };
+      case 'features':
+        return {
+          title: item.name,
+          sub: `${item.key} • ${item.category}`,
+          stats: [],
+        };
+      case 'audit':
+        return {
+          title: `${item.action || '—'} ${item.entityType || ''}`.trim(),
+          sub: item.performedBy?.name || item.performedBy || 'System',
+          stats: [{ icon: <FaHistory />, text: fmtDateTime(item.timestamp) }],
+        };
+      case 'api':
+        return {
+          title: item.name,
+          sub: `${item.usageCount || 0} uses`,
+          stats: [{ icon: <FaCalendarAlt />, text: `Last ${fmtDate(item.lastUsedAt)}` }],
+        };
+      case 'webhooks':
+        return {
+          title: item.name,
+          sub: `${item.url?.substring(0, 38) || '—'}${item.url?.length > 38 ? '...' : ''}`,
+          stats: [
+            { icon: <FaLink />, text: `${item.events?.length || 0} events` },
+            { icon: <FaCheckCircle />, text: `${item.successCount || 0} ok` },
+          ],
+        };
+      default:
+        return { title: item.name || item.title || '—', sub: '', stats: [] };
+    }
+  };
+
+  const getStatus = (item) => {
+    if (activeTab === 'features') return item.enabled ? 'active' : 'inactive';
+    if (activeTab === 'api') return item.isActive ? 'active' : 'inactive';
+    return item.isActive ? 'active' : 'inactive';
+  };
+
+  const filteredItems = useMemo(() => {
+    const items = meta.getItems() || [];
+    if (!search.trim()) return items;
+    const q = search.trim().toLowerCase();
+    return items.filter(it => [it.name, it.displayName, it.title, it.key, it.zone, it.url, it.zoneId?.name]
+      .some(v => v && String(v).toLowerCase().includes(q)));
+  }, [meta, activeTab, search]);
+
+  const makeFormData = (fields) => {
+    const fd = {};
+    fields.forEach(f => { fd[f.key] = f.defaultValue !== undefined ? f.defaultValue : ''; });
+    return fd;
+  };
+
+  const openCreate = () => {
+    const fields = buildCreateFields(activeTab);
+    if (activeTab === 'tariff' && serviceAreas.length === 0) {
+      toast.error('Create a Service Area first');
+      return;
+    }
+    setFormData(makeFormData(fields));
+    setShowCreateModal(true);
+  };
+
+  const buildCreatePayload = (data) => {
+    switch (activeTab) {
+      case 'service': {
+        const lon = data.centerLon !== '' ? Number(data.centerLon) : 42.1069;
+        const lat = data.centerLat !== '' ? Number(data.centerLat) : 9.593;
+        return {
+          name: data.name,
+          zoneType: data.zoneType,
+          coverageRadius: data.coverageRadius !== '' ? Number(data.coverageRadius) : undefined,
+          priority: data.priority !== '' ? Number(data.priority) : undefined,
+          boundaries: { type: 'Polygon', coordinates: [[[lon - 0.01, lat - 0.01], [lon + 0.01, lat - 0.01], [lon + 0.01, lat + 0.01], [lon - 0.01, lat + 0.01], [lon - 0.01, lat - 0.01]]] },
+          centerPoint: { type: 'Point', coordinates: [lon, lat] },
+        };
       }
-      toast.success('Tariff saved successfully');
+      case 'vehicles':
+        return {
+          name: data.name,
+          displayName: data.displayName,
+          capacity: { passengers: Number(data.capacityPassengers || 0), luggage: Number(data.capacityLuggage || 0) },
+          commissionRate: data.commissionRate !== '' ? Number(data.commissionRate) : 0.15,
+        };
+      case 'webhooks':
+        return {
+          name: data.name,
+          url: data.url,
+          events: data.events ? data.events.split(',').map(e => e.trim()).filter(Boolean) : [],
+          description: data.description || undefined,
+        };
+      default: {
+        const payload = {};
+        Object.entries(data).forEach(([k, v]) => {
+          if (k === 'isActive' || k === 'enabled') return;
+          if (v !== '' && v != null) payload[k] = v;
+        });
+        return payload;
+      }
+    }
+  };
+
+  const buildEditPayload = (data) => {
+    switch (activeTab) {
+      case 'vehicles':
+        return {
+          displayName: data.displayName,
+          capacity: { passengers: Number(data.capacityPassengers || 0), luggage: Number(data.capacityLuggage || 0) },
+          commissionRate: data.commissionRate !== '' ? Number(data.commissionRate) : undefined,
+        };
+      default: {
+        const payload = {};
+        Object.entries(data).forEach(([k, v]) => {
+          if (v !== '' && v != null) payload[k] = v;
+        });
+        if (payload.isActive !== undefined) payload.isActive = payload.isActive === 'true' || payload.isActive === true;
+        if (payload.enabled !== undefined) payload.enabled = payload.enabled === 'true' || payload.enabled === true;
+        return payload;
+      }
+    }
+  };
+
+  const handleCreate = async () => {
+    const fields = buildCreateFields(activeTab);
+    for (const f of fields) {
+      if (f.required && !String(formData[f.key] ?? '').trim() && ![false, 0].includes(formData[f.key])) {
+        toast.error(`${f.label} is required`);
+        return;
+      }
+    }
+    try {
+      await meta.createFn(buildCreatePayload(formData));
+      toast.success(`${meta.label} created successfully`);
+      setShowCreateModal(false);
+      setFormData({});
+      fetchConfigurationData();
+    } catch (err) { toast.error(`Failed to create ${meta.label.toLowerCase()}`); }
+  };
+
+  const openEdit = (item) => {
+    setSelectedItem(item);
+    const d = { ...item };
+    if (activeTab === 'vehicles') {
+      d.capacityPassengers = item.capacity?.passengers || '';
+      d.capacityLuggage = item.capacity?.luggage || '';
+      d.commissionRate = item.commissionRate ?? '';
+    }
+    if (activeTab === 'features') d.enabled = String(item.enabled);
+    if (activeTab === 'tariff') d.zoneId = item.zoneId?._id || item.zoneId || '';
+    buildEditFields(activeTab).forEach(f => {
+      if (f.boolean) d[f.key] = d[f.key] === undefined ? (f.key === 'enabled' ? 'false' : 'true') : String(d[f.key]);
+    });
+    setEditData(d);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    const payload = buildEditPayload(editData);
+    try {
+      await meta.updateFn(selectedItem._id, payload);
+      toast.success('Updated successfully');
       setShowEditModal(false);
       setEditData({});
       setSelectedItem(null);
       fetchConfigurationData();
-    } catch (err) { toast.error('Failed to save tariff'); }
+    } catch (err) { toast.error('Failed to save changes'); }
   };
 
-  const handleDeleteItem = async () => {
+  const handleDelete = async () => {
     try {
-      if (activeTab === 'tariff') {
-        await adminAPI.deletePricingConfig(selectedItem._id);
-      } else if (activeTab === 'service') {
-        await adminAPI.deleteServiceZone(selectedItem._id);
-      } else if (activeTab === 'vehicles') {
-        await adminAPI.deleteVehicleCategory(selectedItem._id);
-      } else if (activeTab === 'api') {
+      if (activeTab === 'api') {
         await adminAPI.revokeAPIKey(selectedItem._id);
-      } else if (activeTab === 'webhooks') {
-        await adminAPI.deleteWebhook(selectedItem._id);
+      } else {
+        await meta.deleteFn(selectedItem._id);
       }
-      toast.success('Deleted successfully');
+      toast.success(activeTab === 'api' ? 'API key revoked' : 'Deleted successfully');
       setShowDeleteModal(false);
       setSelectedItem(null);
       fetchConfigurationData();
@@ -176,8 +445,122 @@ const SystemConfiguration = () => {
   };
 
   const openView = (item) => { setSelectedItem(item); setShowDetailModal(true); };
-  const openEdit = (item) => { setSelectedItem(item); setEditData({ ...item }); setShowEditModal(true); };
   const openDelete = (item) => { setSelectedItem(item); setShowDeleteModal(true); };
+
+  const saveSettings = async (updateFn, settings, label) => {
+    try {
+      await updateFn(settings);
+      toast.success(`${label} saved successfully`);
+      fetchConfigurationData();
+    } catch (err) { toast.error(`Failed to save ${label.toLowerCase()}`); }
+  };
+
+  const detailRows = (item) => {
+    const rows = [];
+    const skip = ['_id', '__v', 'createdBy', 'updatedBy', 'version', 'keyHash', 'secret'];
+    Object.entries(item || {}).forEach(([key, val]) => {
+      if (skip.includes(key)) return;
+      if (typeof val === 'object' && val !== null) {
+        if (val.name && val.zoneId === undefined) { rows.push({ label: cap(key), val: val.name }); return; }
+        if (val.type === 'Point') { rows.push({ label: cap(key), val: `${val.coordinates?.[0]}, ${val.coordinates?.[1]}` }); return; }
+        rows.push({ label: cap(key), val: JSON.stringify(val) });
+      } else if (/At|From|Until|Date/.test(key) && val) {
+        rows.push({ label: cap(key), val: fmtDateTime(val) });
+      } else {
+        rows.push({ label: cap(key), val: String(val ?? '—') });
+      }
+    });
+    return rows;
+  };
+
+  const renderField = (f, value, onChange) => {
+    const inputStyle = {
+      width: '100%', padding: '12px', border: '2px solid var(--border-light)',
+      borderRadius: 10, fontSize: 14, outline: 'none', background: 'var(--card)', color: 'var(--text)'
+    };
+    const label = (
+      <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block', color: 'var(--text)' }}>
+        {f.label}{f.required ? ' *' : ''}
+      </label>
+    );
+    if (f.type === 'textarea') {
+      return (
+        <div key={f.key}>
+          {label}
+          <textarea value={value ?? ''} onChange={e => onChange(f.key, e.target.value)} placeholder={f.placeholder || ''} style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} />
+        </div>
+      );
+    }
+    if (f.type === 'select') {
+      return (
+        <div key={f.key}>
+          {label}
+          <select value={value ?? ''} onChange={e => onChange(f.key, e.target.value)} style={inputStyle}>
+            {!f.required && <option value="">—</option>}
+            {f.options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+          </select>
+        </div>
+      );
+    }
+    if (f.type === 'number') {
+      return (
+        <div key={f.key}>
+          {label}
+          <input type="number" step="any" value={value ?? ''} onChange={e => onChange(f.key, e.target.value)} placeholder={f.placeholder || ''} style={inputStyle} />
+        </div>
+      );
+    }
+    return (
+      <div key={f.key}>
+        {label}
+        <input type="text" value={value ?? ''} onChange={e => onChange(f.key, e.target.value)} placeholder={f.placeholder || ''} style={inputStyle} />
+      </div>
+    );
+  };
+
+  const renderCardItem = (item) => {
+    const info = cardInfo(item);
+    const status = getStatus(item);
+    const displayStatus = activeTab === 'features' ? (item.enabled ? 'Enabled' : 'Disabled') : (item.isActive ? 'Active' : 'Inactive');
+    return (
+      <div key={item._id} className="config-card">
+        <div className="config-card-header">
+          <div className="config-card-icon" style={{ background: `${meta.color}14`, color: meta.color }}>{meta.icon}</div>
+          <div className="config-card-info">
+            <div className="config-card-title">{info.title}</div>
+            <div className="config-card-subtitle">{info.sub}</div>
+          </div>
+          <span className={`status-badge ${status}`}>{displayStatus}</span>
+        </div>
+        {info.stats.length > 0 && (
+          <div className="config-card-stats">
+            {info.stats.map((s, i) => <span key={i}>{s.icon} {s.text}</span>)}
+          </div>
+        )}
+        <div className="config-card-actions">
+          <button className="config-btn config-btn-view" onClick={() => openView(item)}><FaEye /> View</button>
+          {meta.updateFn && (
+            <button className="config-btn config-btn-edit" onClick={() => openEdit(item)}><FaEdit /> Edit</button>
+          )}
+          {meta.deleteFn && (
+            <button className="config-btn config-btn-delete" onClick={() => openDelete(item)}><FaTrash /> Delete</button>
+          )}
+          {activeTab === 'api' && (
+            <button className="config-btn config-btn-delete" onClick={() => openDelete(item)}><FaLock /> Revoke</button>
+          )}
+          {activeTab === 'features' && meta.toggleFn && (
+            <button className={`config-btn ${item.enabled ? 'config-btn-disable' : 'config-btn-enable'}`}
+              onClick={() => meta.toggleFn(item._id, { enabled: !item.enabled }).then(() => fetchConfigurationData())}>
+              {item.enabled ? 'Disable' : 'Enable'}
+            </button>
+          )}
+          {activeTab === 'webhooks' && (
+            <button className="config-btn config-btn-view" onClick={() => adminAPI.testWebhook(item._id).then(() => toast.success('Webhook test sent')).catch(() => toast.error('Webhook test failed'))}><FaSearch /> Test</button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const tabs = [
     { key: 'tariff', icon: <FaMoneyBillWave />, label: 'Tariffs', count: tariffs.length },
@@ -186,10 +569,10 @@ const SystemConfiguration = () => {
     { key: 'platform', icon: <FaCreditCard />, label: 'Platform' },
     { key: 'notifications', icon: <FaBell />, label: 'Notifications' },
     { key: 'security', icon: <FaShieldAlt />, label: 'Security' },
-    { key: 'features', icon: <FaFlag />, label: 'Feature Flags', count: featureFlags.length },
+    { key: 'features', icon: <FaFlag />, label: 'Features', count: featureFlags.length },
     { key: 'performance', icon: <FaTachometerAlt />, label: 'Performance' },
     { key: 'localization', icon: <FaGlobe />, label: 'Localization' },
-    { key: 'audit', icon: <FaHistory />, label: 'Audit Logs', count: auditLogs.length },
+    { key: 'audit', icon: <FaHistory />, label: 'Audit', count: auditLogs.length },
     { key: 'api', icon: <FaKey />, label: 'API Keys', count: apiKeys.length },
     { key: 'webhooks', icon: <FaLink />, label: 'Webhooks', count: webhooks.length },
   ];
@@ -204,12 +587,17 @@ const SystemConfiguration = () => {
     );
   }
 
+  const canCreate = ['tariff', 'service', 'vehicles', 'features', 'api', 'webhooks'].includes(activeTab);
+
   return (
     <div className="admin-page">
       {/* Gradient Banner */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: 'linear-gradient(135deg, #1e3a5f, #059669)', borderRadius: 12, marginBottom: 16, color: 'white' }}>
-        <FaCog style={{ fontSize: 20 }} />
-        <span style={{ fontWeight: 700, fontSize: 15 }}>{t('admin.systemConfiguration') || 'System Configuration'}</span>
+      <div className="content-page-banner" style={{ background: `linear-gradient(135deg, #1e3a5f, ${meta.color})` }}>
+        <div className="content-page-banner-icon"><FaCog /></div>
+        <div className="content-page-banner-title">
+          {t('admin.systemConfiguration') || 'System Configuration'}
+          <span>{meta.label}</span>
+        </div>
         <button className="content-banner-btn" onClick={fetchConfigurationData}>
           <FaSearch /> Refresh
         </button>
@@ -231,318 +619,257 @@ const SystemConfiguration = () => {
       </div>
 
       {/* Pill Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 4 }}>
+      <div className="content-tab-row">
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`analytics-tab-btn ${activeTab === tab.key ? 'active' : ''}`}>
-            {tab.icon} {tab.label}
+          <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSearch(''); }} className={`analytics-tab-btn ${activeTab === tab.key ? 'active' : ''}`}>
+            {tab.icon} {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ''}
           </button>
         ))}
       </div>
 
-      {/* ===== TARIFF TAB ===== */}
-      {activeTab === 'tariff' && (
-        <div className="config-card-grid">
-          {tariffs.map((tariff) => (
-            <div key={tariff._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}><FaMoneyBillWave /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{tariff.zone}</div>
-                  <div className="config-card-subtitle">Base: ETB {tariff.baseFare} • Per km: ETB {tariff.perKm}</div>
-                </div>
-                <span className="status-badge active">active</span>
-              </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(tariff)}><FaEye /> View</button>
-                <button className="config-btn config-btn-edit" onClick={() => openEdit(tariff)}><FaEdit /> Edit</button>
-                <button className="config-btn config-btn-delete" onClick={() => openDelete(tariff)}><FaTrash /> Delete</button>
-              </div>
-            </div>
-          ))}
-          <button className="config-add-btn" onClick={() => { setEditData({}); setShowEditModal(true); }}><FaPlus /> Add Tariff Zone</button>
+      {/* Search for list tabs */}
+      {!meta.isSettings && (
+        <div className="content-search-bar">
+          <FaSearch className="content-search-icon" />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${meta.label.toLowerCase()}...`} />
         </div>
       )}
 
-      {/* ===== SERVICE AREAS TAB ===== */}
-      {activeTab === 'service' && (
-        <div className="config-card-grid">
-          {serviceAreas.map((area) => (
-            <div key={area._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}><FaMap /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{area.name}</div>
-                  <div className="config-card-subtitle">{area.coverage} • {area.drivers} drivers</div>
-                </div>
-                <span className="status-badge active">active</span>
-              </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(area)}><FaEye /> View</button>
-                <button className="config-btn config-btn-edit" onClick={() => openEdit(area)}><FaEdit /> Edit</button>
-                <button className="config-btn config-btn-delete" onClick={() => openDelete(area)}><FaTrash /> Delete</button>
-              </div>
-            </div>
-          ))}
-          <button className="config-add-btn"><FaPlus /> Add Service Area</button>
-        </div>
-      )}
-
-      {/* ===== VEHICLES TAB ===== */}
-      {activeTab === 'vehicles' && (
-        <div className="config-card-grid">
-          {vehicleCategories.map((v) => (
-            <div key={v._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}><FaCar /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{v.name}</div>
-                  <div className="config-card-subtitle">Capacity: {v.capacity} • Base: ETB {v.baseFare} • {v.drivers} drivers</div>
-                </div>
-                <span className="status-badge active">active</span>
-              </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(v)}><FaEye /> View</button>
-                <button className="config-btn config-btn-edit" onClick={() => openEdit(v)}><FaEdit /> Edit</button>
-                <button className="config-btn config-btn-delete" onClick={() => openDelete(v)}><FaTrash /> Delete</button>
-              </div>
-            </div>
-          ))}
-          <button className="config-add-btn"><FaPlus /> Add Vehicle Category</button>
-        </div>
+      {/* ===== LIST TABS ===== */}
+      {!meta.isSettings && (
+        filteredItems.length === 0 ? (
+          <div className="content-empty-card">
+            <div className="content-empty-icon">{meta.icon}</div>
+            <span>{search.trim() ? `No ${meta.label.toLowerCase()} match "${search}"` : `No ${meta.label.toLowerCase()} available`}</span>
+            {canCreate && !search.trim() && (
+              <button className="content-action-btn content-action-primary" onClick={openCreate}>
+                <FaPlus /> Add {meta.label.replace(/s$/, '')}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="config-card-grid">
+            {filteredItems.map(renderCardItem)}
+            {canCreate && (
+              <button className="config-add-btn" onClick={openCreate}><FaPlus /> Add {meta.label.replace(/s$/, '')}</button>
+            )}
+          </div>
+        )
       )}
 
       {/* ===== PLATFORM TAB ===== */}
-      {activeTab === 'platform' && platformSettings && (
+      {activeTab === 'platform' && (
         <div className="config-settings-card">
           <div className="config-settings-header">
-            <FaCreditCard style={{ color: '#3b82f6', fontSize: 16 }} />
+            <FaCreditCard style={{ color: '#7c3aed', fontSize: 16 }} />
             <span>Platform Settings</span>
           </div>
           <div className="config-settings-body">
-            <div className="config-field">
-              <label>Commission Rate ({(platformSettings.commission?.platformRate * 100).toFixed(1)}%)</label>
-              <input type="range" min="0" max="0.5" step="0.01" value={platformSettings.commission?.platformRate || 0.15} onChange={(e) => setPlatformSettings({ ...platformSettings, commission: { ...platformSettings.commission, platformRate: parseFloat(e.target.value) } })} />
-            </div>
-            <div className="config-field">
-              <label>Currency ({platformSettings.currency?.code || 'ETB'})</label>
-              <input type="text" value={platformSettings.currency?.code || 'ETB'} onChange={(e) => setPlatformSettings({ ...platformSettings, currency: { ...platformSettings.currency, code: e.target.value } })} />
-            </div>
+            {platformSettings ? (
+              <>
+                <div className="config-field">
+                  <label>Commission Rate ({((platformSettings.commission?.platformRate ?? 0.15) * 100).toFixed(1)}%)</label>
+                  <input type="range" min="0" max="0.5" step="0.01" value={platformSettings.commission?.platformRate ?? 0.15}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, commission: { ...platformSettings.commission, platformRate: parseFloat(e.target.value) } })} />
+                </div>
+                <div className="config-field">
+                  <label>Driver Rate ({((platformSettings.commission?.driverRate ?? 0.85) * 100).toFixed(1)}%)</label>
+                  <input type="range" min="0" max="1" step="0.01" value={platformSettings.commission?.driverRate ?? 0.85}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, commission: { ...platformSettings.commission, driverRate: parseFloat(e.target.value) } })} />
+                </div>
+                <div className="config-field">
+                  <label>Currency Code</label>
+                  <input type="text" value={platformSettings.currency?.code || 'ETB'}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, currency: { ...platformSettings.currency, code: e.target.value } })} />
+                </div>
+                <div className="config-field">
+                  <label>Currency Symbol</label>
+                  <input type="text" value={platformSettings.currency?.symbol || 'Br'}
+                    onChange={(e) => setPlatformSettings({ ...platformSettings, currency: { ...platformSettings.currency, symbol: e.target.value } })} />
+                </div>
+              </>
+            ) : (
+              <div className="content-empty-card">
+                <FaCreditCard className="content-empty-icon" />
+                <span>No platform settings initialized</span>
+                <button className="content-action-btn content-action-primary" onClick={() => setPlatformSettings({})}>Initialize</button>
+              </div>
+            )}
           </div>
-          <div className="config-settings-footer">
-            <button className="config-btn config-btn-save" onClick={() => adminAPI.updatePlatformSettings(platformSettings).then(() => toast.success('Settings saved'))}>
-              <FaSave /> Save Settings
-            </button>
-          </div>
+          {platformSettings && (
+            <div className="config-settings-footer">
+              <button className="config-btn config-btn-save" onClick={() => saveSettings(adminAPI.updatePlatformSettings, platformSettings, 'Platform settings')}><FaSave /> Save Settings</button>
+            </div>
+          )}
         </div>
       )}
 
       {/* ===== NOTIFICATIONS TAB ===== */}
-      {activeTab === 'notifications' && notificationSettings && (
+      {activeTab === 'notifications' && (
         <div className="config-settings-card">
           <div className="config-settings-header">
             <FaBell style={{ color: '#f59e0b', fontSize: 16 }} />
             <span>Notification Settings</span>
           </div>
           <div className="config-settings-body">
-            {[
-              { key: 'pushNotifications', label: 'Push Notifications', icon: <FaBell /> },
-              { key: 'sms', label: 'SMS Notifications', icon: <FaMobileAlt /> },
-              { key: 'email', label: 'Email Notifications', icon: <FaEnvelope /> },
-            ].map(({ key, label, icon }) => (
-              <div key={key} className="config-toggle-row">
-                <span className="config-toggle-label">{icon} {label}</span>
-                <button className={`config-toggle-btn ${notificationSettings[key]?.enabled ? 'active' : ''}`} onClick={() => setNotificationSettings({ ...notificationSettings, [key]: { ...notificationSettings[key], enabled: !notificationSettings[key]?.enabled } })}>
-                  {notificationSettings[key]?.enabled ? 'ON' : 'OFF'}
-                </button>
+            {notificationSettings ? (
+              [
+                { key: 'pushNotifications', label: 'Push Notifications', icon: <FaBell /> },
+                { key: 'sms', label: 'SMS Notifications', icon: <FaMobileAlt /> },
+                { key: 'email', label: 'Email Notifications', icon: <FaEnvelope /> },
+              ].map(({ key, label, icon }) => (
+                <div key={key} className="config-toggle-row">
+                  <span className="config-toggle-label">{icon} {label}</span>
+                  <button className={`config-toggle-btn ${notificationSettings[key]?.enabled ? 'active' : ''}`}
+                    onClick={() => setNotificationSettings({ ...notificationSettings, [key]: { ...notificationSettings[key], enabled: !notificationSettings[key]?.enabled } })}>
+                    {notificationSettings[key]?.enabled ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="content-empty-card">
+                <FaBell className="content-empty-icon" />
+                <span>No notification settings initialized</span>
+                <button className="content-action-btn content-action-primary" onClick={() => setNotificationSettings({})}>Initialize</button>
               </div>
-            ))}
+            )}
           </div>
-          <div className="config-settings-footer">
-            <button className="config-btn config-btn-save" onClick={() => adminAPI.updateNotificationSettings(notificationSettings).then(() => toast.success('Settings saved'))}>
-              <FaSave /> Save Settings
-            </button>
-          </div>
+          {notificationSettings && (
+            <div className="config-settings-footer">
+              <button className="config-btn config-btn-save" onClick={() => saveSettings(adminAPI.updateNotificationSettings, notificationSettings, 'Notification settings')}><FaSave /> Save Settings</button>
+            </div>
+          )}
         </div>
       )}
 
       {/* ===== SECURITY TAB ===== */}
-      {activeTab === 'security' && securitySettings && (
+      {activeTab === 'security' && (
         <div className="config-settings-card">
           <div className="config-settings-header">
             <FaShieldAlt style={{ color: '#ef4444', fontSize: 16 }} />
             <span>Security Settings</span>
           </div>
           <div className="config-settings-body">
-            <div className="config-field">
-              <label>OTP Expiry Time ({securitySettings.otp?.expiryTime}s)</label>
-              <input type="number" value={securitySettings.otp?.expiryTime || 300} onChange={(e) => setSecuritySettings({ ...securitySettings, otp: { ...securitySettings.otp, expiryTime: parseInt(e.target.value) } })} />
-            </div>
-            <div className="config-field">
-              <label>Session Duration ({securitySettings.session?.duration}s)</label>
-              <input type="number" value={securitySettings.session?.duration || 86400} onChange={(e) => setSecuritySettings({ ...securitySettings, session: { ...securitySettings.session, duration: parseInt(e.target.value) } })} />
-            </div>
-          </div>
-          <div className="config-settings-footer">
-            <button className="config-btn config-btn-save" onClick={() => adminAPI.updateSecuritySettings(securitySettings).then(() => toast.success('Settings saved'))}>
-              <FaSave /> Save Settings
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ===== FEATURE FLAGS TAB ===== */}
-      {activeTab === 'features' && (
-        <div className="config-card-grid">
-          {featureFlags.map((flag) => (
-            <div key={flag._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: flag.enabled ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.1)', color: flag.enabled ? '#10b981' : '#6b7280' }}><FaFlag /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{flag.name}</div>
-                  <div className="config-card-subtitle">{flag.key} • {flag.category}</div>
+            {securitySettings ? (
+              <>
+                <div className="config-field">
+                  <label>OTP Expiry Time ({securitySettings.otp?.expiryTime || 300}s)</label>
+                  <input type="number" value={securitySettings.otp?.expiryTime || 300}
+                    onChange={(e) => setSecuritySettings({ ...securitySettings, otp: { ...securitySettings.otp, expiryTime: parseInt(e.target.value) } })} />
                 </div>
-                <span className={`status-badge ${flag.enabled ? 'active' : 'inactive'}`}>{flag.enabled ? 'Enabled' : 'Disabled'}</span>
+                <div className="config-field">
+                  <label>OTP Length ({securitySettings.otp?.length || 6})</label>
+                  <input type="number" value={securitySettings.otp?.length || 6}
+                    onChange={(e) => setSecuritySettings({ ...securitySettings, otp: { ...securitySettings.otp, length: parseInt(e.target.value) } })} />
+                </div>
+                <div className="config-field">
+                  <label>Session Duration ({securitySettings.session?.duration || 86400}s)</label>
+                  <input type="number" value={securitySettings.session?.duration || 86400}
+                    onChange={(e) => setSecuritySettings({ ...securitySettings, session: { ...securitySettings.session, duration: parseInt(e.target.value) } })} />
+                </div>
+                <div className="config-field">
+                  <label>Password Min Length ({securitySettings.password?.minLength || 8})</label>
+                  <input type="number" value={securitySettings.password?.minLength || 8}
+                    onChange={(e) => setSecuritySettings({ ...securitySettings, password: { ...securitySettings.password, minLength: parseInt(e.target.value) } })} />
+                </div>
+              </>
+            ) : (
+              <div className="content-empty-card">
+                <FaShieldAlt className="content-empty-icon" />
+                <span>No security settings initialized</span>
+                <button className="content-action-btn content-action-primary" onClick={() => setSecuritySettings({})}>Initialize</button>
               </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(flag)}><FaEye /> View</button>
-                <button className={`config-btn ${flag.enabled ? 'config-btn-disable' : 'config-btn-enable'}`} onClick={() => adminAPI.toggleFeatureFlag(flag._id, { enabled: !flag.enabled }).then(() => fetchConfigurationData())}>
-                  {flag.enabled ? 'Disable' : 'Enable'}
-                </button>
-              </div>
+            )}
+          </div>
+          {securitySettings && (
+            <div className="config-settings-footer">
+              <button className="config-btn config-btn-save" onClick={() => saveSettings(adminAPI.updateSecuritySettings, securitySettings, 'Security settings')}><FaSave /> Save Settings</button>
             </div>
-          ))}
-          <button className="config-add-btn"><FaPlus /> Add Feature Flag</button>
+          )}
         </div>
       )}
 
       {/* ===== PERFORMANCE TAB ===== */}
-      {activeTab === 'performance' && performanceConfig && (
+      {activeTab === 'performance' && (
         <div className="config-settings-card">
           <div className="config-settings-header">
             <FaTachometerAlt style={{ color: '#059669', fontSize: 16 }} />
             <span>Performance Settings</span>
           </div>
           <div className="config-settings-body">
-            <div className="config-toggle-row">
-              <span className="config-toggle-label"><FaServer /> Cache Enabled</span>
-              <button className={`config-toggle-btn ${performanceConfig.cache?.enabled ? 'active' : ''}`} onClick={() => setPerformanceConfig({ ...performanceConfig, cache: { ...performanceConfig.cache, enabled: !performanceConfig.cache?.enabled } })}>
-                {performanceConfig.cache?.enabled ? 'ON' : 'OFF'}
-              </button>
-            </div>
-            <div className="config-field">
-              <label>Cache TTL ({performanceConfig.cache?.ttl?.default}s)</label>
-              <input type="number" value={performanceConfig.cache?.ttl?.default || 3600} onChange={(e) => setPerformanceConfig({ ...performanceConfig, cache: { ...performanceConfig.cache, ttl: { ...performanceConfig.cache?.ttl, default: parseInt(e.target.value) } } })} />
-            </div>
+            {performanceConfig ? (
+              <>
+                <div className="config-toggle-row">
+                  <span className="config-toggle-label"><FaServer /> Cache Enabled</span>
+                  <button className={`config-toggle-btn ${performanceConfig.cache?.enabled ? 'active' : ''}`}
+                    onClick={() => setPerformanceConfig({ ...performanceConfig, cache: { ...performanceConfig.cache, enabled: !performanceConfig.cache?.enabled } })}>
+                    {performanceConfig.cache?.enabled ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+                <div className="config-field">
+                  <label>Cache TTL ({performanceConfig.cache?.ttl?.default || 3600}s)</label>
+                  <input type="number" value={performanceConfig.cache?.ttl?.default || 3600}
+                    onChange={(e) => setPerformanceConfig({ ...performanceConfig, cache: { ...performanceConfig.cache, ttl: { ...performanceConfig.cache?.ttl, default: parseInt(e.target.value) } } })} />
+                </div>
+                <div className="config-field">
+                  <label>Target Response Time ({performanceConfig.responseTime?.target || 200}ms)</label>
+                  <input type="number" value={performanceConfig.responseTime?.target || 200}
+                    onChange={(e) => setPerformanceConfig({ ...performanceConfig, responseTime: { ...performanceConfig.responseTime, target: parseInt(e.target.value) } })} />
+                </div>
+              </>
+            ) : (
+              <div className="content-empty-card">
+                <FaTachometerAlt className="content-empty-icon" />
+                <span>No performance settings initialized</span>
+                <button className="content-action-btn content-action-primary" onClick={() => setPerformanceConfig({})}>Initialize</button>
+              </div>
+            )}
           </div>
-          <div className="config-settings-footer">
-            <button className="config-btn config-btn-save" onClick={() => adminAPI.updatePerformanceConfig(performanceConfig).then(() => toast.success('Settings saved'))}>
-              <FaSave /> Save Settings
-            </button>
-          </div>
+          {performanceConfig && (
+            <div className="config-settings-footer">
+              <button className="config-btn config-btn-save" onClick={() => saveSettings(adminAPI.updatePerformanceConfig, performanceConfig, 'Performance settings')}><FaSave /> Save Settings</button>
+            </div>
+          )}
         </div>
       )}
 
       {/* ===== LOCALIZATION TAB ===== */}
-      {activeTab === 'localization' && localizationConfig && (
+      {activeTab === 'localization' && (
         <div className="config-settings-card">
           <div className="config-settings-header">
-            <FaGlobe style={{ color: '#7c3aed', fontSize: 16 }} />
+            <FaGlobe style={{ color: '#0ea5e9', fontSize: 16 }} />
             <span>Localization Settings</span>
           </div>
           <div className="config-settings-body">
-            <div className="config-field">
-              <label>Default Timezone ({localizationConfig.timezone?.default || 'Africa/Addis_Ababa'})</label>
-              <input type="text" value={localizationConfig.timezone?.default || 'Africa/Addis_Ababa'} onChange={(e) => setLocalizationConfig({ ...localizationConfig, timezone: { ...localizationConfig.timezone, default: e.target.value } })} />
-            </div>
-            <div className="config-field">
-              <label>Available Languages ({localizationConfig.languages?.length || 0})</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                {localizationConfig.languages?.map((lang) => (
-                  <span key={lang.code} className="status-badge active" style={{ fontSize: 12 }}>{lang.name} ({lang.code})</span>
-                ))}
+            {localizationConfig ? (
+              <>
+                <div className="config-field">
+                  <label>Default Timezone</label>
+                  <input type="text" value={localizationConfig.timezone?.default || 'Africa/Addis_Ababa'}
+                    onChange={(e) => setLocalizationConfig({ ...localizationConfig, timezone: { ...localizationConfig.timezone, default: e.target.value } })} />
+                </div>
+                <div className="config-field">
+                  <label>Available Languages ({localizationConfig.languages?.length || 0})</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                    {localizationConfig.languages?.map((lang) => (
+                      <span key={lang._id || lang.code} className="status-badge active" style={{ fontSize: 12 }}>{lang.name} ({lang.code})</span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="content-empty-card">
+                <FaGlobe className="content-empty-icon" />
+                <span>No localization settings initialized</span>
+                <button className="content-action-btn content-action-primary" onClick={() => setLocalizationConfig({})}>Initialize</button>
               </div>
-            </div>
+            )}
           </div>
-          <div className="config-settings-footer">
-            <button className="config-btn config-btn-save" onClick={() => adminAPI.updateLocalizationConfig(localizationConfig).then(() => toast.success('Settings saved'))}>
-              <FaSave /> Save Settings
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ===== AUDIT LOGS TAB ===== */}
-      {activeTab === 'audit' && (
-        <div className="config-card-grid">
-          {auditLogs.length === 0 ? (
-            <div className="content-empty-card">
-              <FaHistory className="content-empty-icon" />
-              <span>No audit logs yet</span>
+          {localizationConfig && (
+            <div className="config-settings-footer">
+              <button className="config-btn config-btn-save" onClick={() => saveSettings(adminAPI.updateLocalizationConfig, localizationConfig, 'Localization settings')}><FaSave /> Save Settings</button>
             </div>
-          ) : auditLogs.map((log) => (
-            <div key={log._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}><FaHistory /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{log.action}</div>
-                  <div className="config-card-subtitle">{log.entityType} • {log.performedBy?.name || 'System'}</div>
-                </div>
-              </div>
-              <div className="config-card-stats">
-                <span><FaHistory size={11} /> {new Date(log.timestamp).toLocaleString()}</span>
-              </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(log)}><FaEye /> View</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ===== API KEYS TAB ===== */}
-      {activeTab === 'api' && (
-        <div className="config-card-grid">
-          {apiKeys.map((key) => (
-            <div key={key._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}><FaKey /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{key.name}</div>
-                  <div className="config-card-subtitle">{key.isActive ? 'Active' : 'Revoked'} • {key.usageCount?.toLocaleString()} uses</div>
-                </div>
-                <span className={`status-badge ${key.isActive ? 'active' : 'suspended'}`}>{key.isActive ? 'Active' : 'Revoked'}</span>
-              </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(key)}><FaEye /> View</button>
-                <button className="config-btn config-btn-delete" onClick={() => openDelete(key)}><FaLock /> Revoke</button>
-              </div>
-            </div>
-          ))}
-          <button className="config-add-btn"><FaPlus /> Generate API Key</button>
-        </div>
-      )}
-
-      {/* ===== WEBHOOKS TAB ===== */}
-      {activeTab === 'webhooks' && (
-        <div className="config-card-grid">
-          {webhooks.map((wh) => (
-            <div key={wh._id} className="config-card">
-              <div className="config-card-header">
-                <div className="config-card-icon" style={{ background: 'rgba(236,72,153,0.1)', color: '#ec4899' }}><FaLink /></div>
-                <div className="config-card-info">
-                  <div className="config-card-title">{wh.name}</div>
-                  <div className="config-card-subtitle">{wh.url?.substring(0, 35)}... • {wh.events?.length || 0} events</div>
-                </div>
-                <span className={`status-badge ${wh.isActive ? 'active' : 'inactive'}`}>{wh.isActive ? 'Active' : 'Inactive'}</span>
-              </div>
-              <div className="config-card-actions">
-                <button className="config-btn config-btn-view" onClick={() => openView(wh)}><FaEye /> View</button>
-                <button className="config-btn config-btn-view" onClick={() => adminAPI.testWebhook(wh._id).then(() => toast.success('Webhook test sent'))}><FaSearch /> Test</button>
-                <button className="config-btn config-btn-delete" onClick={() => openDelete(wh)}><FaTrash /> Delete</button>
-              </div>
-            </div>
-          ))}
-          <button className="config-add-btn"><FaPlus /> Add Webhook</button>
+          )}
         </div>
       )}
 
@@ -551,14 +878,14 @@ const SystemConfiguration = () => {
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Details</h3>
+              <h3>{selectedItem.name || selectedItem.displayName || selectedItem.title || 'Details'}</h3>
               <button className="modal-close" onClick={() => setShowDetailModal(false)}><FaTimes /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {Object.entries(selectedItem).filter(([k]) => !['_id'].includes(k)).map(([key, val]) => (
-                <div key={key} className="detail-row">
-                  <span className="detail-key">{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
-                  <span className="detail-val">{typeof val === 'object' ? JSON.stringify(val) : String(val)}</span>
+              {detailRows(selectedItem).map((r, i) => (
+                <div key={i} className="detail-row">
+                  <span className="detail-key">{r.label}</span>
+                  <span className="detail-val">{r.val}</span>
                 </div>
               ))}
             </div>
@@ -567,64 +894,35 @@ const SystemConfiguration = () => {
       )}
 
       {/* ===== EDIT MODAL ===== */}
-      {showEditModal && (
+      {showEditModal && selectedItem && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editData._id ? 'Edit' : 'Add'} {activeTab === 'tariff' ? 'Tariff' : activeTab === 'service' ? 'Service Area' : 'Vehicle'}</h3>
+              <h3>Edit {meta.label.replace(/s$/, '')}</h3>
               <button className="modal-close" onClick={() => setShowEditModal(false)}><FaTimes /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {activeTab === 'tariff' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Zone</label>
-                    <input type="text" value={editData.zone || ''} onChange={(e) => setEditData({ ...editData, zone: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Base Fare (ETB)</label>
-                    <input type="number" value={editData.baseFare || ''} onChange={(e) => setEditData({ ...editData, baseFare: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Per Kilometer (ETB)</label>
-                    <input type="number" value={editData.perKm || ''} onChange={(e) => setEditData({ ...editData, perKm: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Per Minute (ETB)</label>
-                    <input type="number" value={editData.perMinute || ''} onChange={(e) => setEditData({ ...editData, perMinute: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                </>
-              )}
-              {activeTab === 'service' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Name</label>
-                    <input type="text" value={editData.name || ''} onChange={(e) => setEditData({ ...editData, name: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Coverage</label>
-                    <input type="text" value={editData.coverage || ''} onChange={(e) => setEditData({ ...editData, coverage: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                </>
-              )}
-              {activeTab === 'vehicles' && (
-                <>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Name</label>
-                    <input type="text" value={editData.name || ''} onChange={(e) => setEditData({ ...editData, name: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Capacity</label>
-                    <input type="number" value={editData.capacity || ''} onChange={(e) => setEditData({ ...editData, capacity: parseInt(e.target.value) })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, display: 'block' }}>Base Fare (ETB)</label>
-                    <input type="number" value={editData.baseFare || ''} onChange={(e) => setEditData({ ...editData, baseFare: e.target.value })} style={{ width: '100%', padding: '12px', border: '2px solid var(--border-light)', borderRadius: 10, fontSize: 14, outline: 'none' }} />
-                  </div>
-                </>
-              )}
-              <button className="config-btn config-btn-save" style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', fontSize: 14 }} onClick={handleSaveTariff}>
+              {buildEditFields(activeTab).map(f => renderField(f, editData[f.key], (key, val) => setEditData({ ...editData, [key]: val })))}
+              <button className="config-btn config-btn-save" style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', fontSize: 14 }} onClick={handleSaveEdit}>
                 <FaSave /> Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== CREATE MODAL ===== */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Add {meta.label.replace(/s$/, '')}</h3>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}><FaTimes /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {buildCreateFields(activeTab).map(f => renderField(f, formData[f.key], (key, val) => setFormData({ ...formData, [key]: val })))}
+              <button className="config-btn config-btn-save" style={{ width: '100%', justifyContent: 'center', padding: '12px 16px', fontSize: 14 }} onClick={handleCreate}>
+                <FaPlus /> Create {meta.label.replace(/s$/, '')}
               </button>
             </div>
           </div>
@@ -636,15 +934,19 @@ const SystemConfiguration = () => {
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Delete Confirmation</h3>
+              <h3>{activeTab === 'api' ? 'Revoke API Key' : 'Delete Confirmation'}</h3>
               <button className="modal-close" onClick={() => setShowDeleteModal(false)}><FaTimes /></button>
             </div>
             <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>
-              Are you sure you want to delete <strong>"{selectedItem.zone || selectedItem.name}"</strong>? This action cannot be undone.
+              {activeTab === 'api'
+                ? `Are you sure you want to revoke key "${selectedItem.name}"? Webhooks and integrations using it will stop working.`
+                : `Are you sure you want to delete "${selectedItem.name || selectedItem.displayName || selectedItem.title}"? This action cannot be undone.`}
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <button className="config-btn config-btn-view" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-              <button className="config-btn config-btn-delete" onClick={handleDeleteItem}><FaTrash /> Delete</button>
+              <button className="config-btn config-btn-delete" onClick={handleDelete}>
+                {activeTab === 'api' ? <><FaLock /> Revoke</> : <><FaTrash /> Delete</>}
+              </button>
             </div>
           </div>
         </div>
