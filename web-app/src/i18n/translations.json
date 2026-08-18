@@ -1144,6 +1144,31 @@
       "installHint": "Open your browser menu and tap \"Add to Home Screen\".",
       "note": "Install brings SOS, tracking, wallet and bookings right to your home screen.",
       "techBuilt": "Built mobile-first with real-time ride tracking"
+    },
+    "faq": {
+      "title": "How can we help you?",
+      "subtitle": "Find answers to common questions about booking, payments, safety and more.",
+      "searchPlaceholder": "Search for answers...",
+      "cat": {
+        "all": "All",
+        "getting_started": "Getting Started",
+        "account": "Account",
+        "payment": "Payment",
+        "trips": "Trips",
+        "driver": "Driver",
+        "safety": "Safety",
+        "technical": "Technical",
+        "other": "Other"
+      },
+      "backHome": "Back to Home",
+      "loadError": "Unable to load FAQs. Please try again.",
+      "thanksHelpful": "Thanks for your feedback!",
+      "thanksNotHelpful": "Thanks — we will improve this answer.",
+      "noResults": "No answers found. Try a different search or contact support.",
+      "wasHelpful": "Was this helpful?",
+      "stillNeedHelp": "Still need help?",
+      "contactSupport": "Our support team is here for you.",
+      "contactUs": "Contact Us"
     }
   },
   "am": {
@@ -2003,6 +2028,31 @@
       "installHint": "የአሳሹ ምናሌ ይክፈቱ እና \"እዚህ ገጽ ላይ ጨምር\" ያንኳኩ።",
       "note": "መጫን SOS፣ ክትትል፣ የዋሌት እና የቅድመ-ማስያዣ ገጽታዎችን ወደ መነሻ ማያ ገጽ ያመጣል።",
       "techBuilt": "በእውነተኛ ጊዜ የጉዞ ክትትል ተገንብቶል"
+    },
+    "faq": {
+      "title": "እንዴት እንደምንለን?",
+      "subtitle": "ስለ ቀጠሮ መያዣ፣ ክፍያ፣ ደህንነት እና ሌሎች የተለመዱ ጥያቄዎች ይፈልጉ።",
+      "searchPlaceholder": "ለመፈለግ...",
+      "cat": {
+        "all": "ሁሉም",
+        "getting_started": "መጀመር",
+        "account": "መለያ",
+        "payment": "ክፍያ",
+        "trips": "ጉዞዎች",
+        "driver": "ሹፌር",
+        "safety": "ደህንነት",
+        "technical": "ቴክኒካል",
+        "other": "ሌላ"
+      },
+      "backHome": "ወደ መነሻ ተመለስ",
+      "loadError": "FAQs መጫን አልተቻልም። እባክዎ እንደገና ይሞክሩ።",
+      "thanksHelpful": "ለእርስዎ አመሰግናለሁ!",
+      "thanksNotHelpful": "አመሰግናለሁ - ይህንን መልስ እንደገና እንደተሻሻልነው እናመሰግናለሁ።",
+      "noResults": "መልስ አልተገኘም። የተለየ ፍለጋ ይሞክሩ ወይም ድጋፍ ይጠይቁ።",
+      "wasHelpful": "ይህ የረዳዎ ነበር?",
+      "stillNeedHelp": "አሁንም ድጋፍ ያስፈልጋል?",
+      "contactSupport": "የእኛ ድጋፍ ቡድን ለእርስዎ ነው።",
+      "contactUs": "ያግኙን"
     }
   },
   "om": {
@@ -2594,6 +2644,31 @@
       "installHint": "Mee sayaada kee banii \"Add to Home Screen\" tuqi.",
       "note": "Kaa'achuun SOS, duudha handaara, walleetii fi qabduu hingu duubatti fiduudha.",
       "techBuilt": "Mobaayiliif ta'ee yeroo dhugaa duudha handaara wajjin hojjetame"
+    },
+    "faq": {
+      "title": "Sii gargaaruuf maal qabanna?",
+      "subtitle": "Qabduu eegaa, lacag bixinaa, nageenya fi kan biroo waliigaltee gaaffiiwwan adda addaa barbaadi.",
+      "searchPlaceholder": "Deebii barbaaduuf...",
+      "cat": {
+        "all": "Hunduu",
+        "getting_started": "Jalqaba",
+        "account": "Maqaa",
+        "payment": "Lacag bixinaa",
+        "trips": "Deemoota",
+        "driver": "Daajitaa",
+        "safety": "Nageenya",
+        "technical": "Teknikaalii",
+        "other": "Kan biroo"
+      },
+      "backHome": "Deebi'i Bara",
+      "loadError": "FAQwwan deebi'uu danda'eera. Irra deebi'i yaali.",
+      "thanksHelpful": "Fayyadamaaf galatooma!",
+      "thanksNotHelpful": "Galatooma - deebiin kana guuttuu dandaanna.",
+      "noResults": "Deebii hin argamne. Barbaadicha gara garaati ykn gargaarsa gaafachaa.",
+      "wasHelpful": "Kun si gargaarera?",
+      "stillNeedHelp": "Gargaarsa barbaachaa?",
+      "contactSupport": "Gargaarsa keenya siif jira.",
+      "contactUs": "Nu gaafachaa"
     }
   },
   "so": {
@@ -3185,6 +3260,31 @@
       "installHint": "Fur mealyaha browser-ka oo taabo \"Add to Home Screen\".",
       "note": "Rakibaadda waxay kuu keenaysaa SOS, raad-raaca, wallet iyo dalballada qiimaha oo ka baxsan shaashadda hore.",
       "techBuilt": "Waxaa loo dhisay mobil iyo raad-raac waqti-dhab ah"
+    },
+    "faq": {
+      "title": "Sidee baan ku caawin karaa?",
+      "subtitle": "Ka hel jawaabo su'aalaha caadiga ah ee ku saabsan dalabista, lacag-bixinta, amniga iyo wax kale.",
+      "searchPlaceholder": "Raadi jawaabo...",
+      "cat": {
+        "all": "Dhammaan",
+        "getting_started": "Bilowga",
+        "account": "Akaunt",
+        "payment": "Lacag-bixinta",
+        "trips": "Safarro",
+        "driver": "Darawal",
+        "safety": "Amniga",
+        "technical": "Farsimaha",
+        "other": "Kale"
+      },
+      "backHome": "Ku noqo Guriga",
+      "loadError": "Lama heli karo FAQs. Isku day mar kale.",
+      "thanksHelpful": "Mahadsanid faa'iidadada!",
+      "thanksNotHelpful": "Mahadsan — waxaan wanaaji doonaa jawaabtan.",
+      "noResults": "Lama helin jawaabo. Isku raadi raad kale oo la xiriir taageerada.",
+      "wasHelpful": "Ma waxay ku caawisay?",
+      "stillNeedHelp": "Weli baan u baahanahay caawimo?",
+      "contactSupport": "Timaha taageerada ayaa halkan yaalla.",
+      "contactUs": "Nala soo xiriir"
     }
   }
 }
