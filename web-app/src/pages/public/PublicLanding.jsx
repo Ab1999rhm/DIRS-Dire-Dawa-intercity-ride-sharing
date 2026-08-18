@@ -5,7 +5,8 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   FaCar, FaMapMarkerAlt, FaShieldAlt, FaMobileAlt, FaStar, FaClock,
   FaMoneyBillWave, FaUsers, FaArrowRight, FaCheckCircle, FaGlobe, FaMoon, FaSun,
-  FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload, FaChevronUp
+  FaPhone, FaEnvelope, FaFacebook, FaTwitter, FaInstagram, FaDownload, FaChevronUp,
+  FaBook, FaUserPlus
 } from 'react-icons/fa';
 import './PublicLanding.css';
 
@@ -364,6 +365,14 @@ const PublicLanding = () => {
           </div>
           <div className="public-footer-bottom">
             <p>&copy; 2026 DIRS — {t('landing.footer.project')}</p>
+            <div className="public-footer-links">
+              <Link to="/faq" style={{ textDecoration: 'none', fontSize: 13, fontWeight: 600, color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 20 }}>
+                <FaBook size={13} /> {t('landing.footer.faq') || 'Help & FAQ'}
+              </Link>
+              <Link to="/register" style={{ textDecoration: 'none', fontSize: 13, fontWeight: 600, color: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <FaUserPlus size={13} /> {t('landing.footer.join') || 'Join DIRS'}
+              </Link>
+            </div>
             <p>{t('landing.footer.team')}</p>
           </div>
         </div>

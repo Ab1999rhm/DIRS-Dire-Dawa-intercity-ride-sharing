@@ -662,6 +662,13 @@ export const placesAPI = {
   getAll: (params) => api.get('/rides/places', { params }),
 };
 
+// Public support API (no auth)
+export const publicSupportAPI = {
+  getFAQs: (params) => api.get('/support/faqs', { params }),
+  getFAQ: (faqId) => api.get(`/support/faqs/${faqId}`),
+  sendFeedback: (faqId, helpful) => api.post(`/support/faqs/${faqId}/feedback`, { helpful }),
+};
+
 // Saved places API (authenticated, uses favoriteLocations in User model)
 export const savedPlacesAPI = {
   getAll: () => api.get('/auth/profile'),

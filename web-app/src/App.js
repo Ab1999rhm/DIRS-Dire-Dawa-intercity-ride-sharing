@@ -16,6 +16,7 @@ const AdminBottomNav = React.lazy(() => import('./components/layout/AdminBottomN
 const Sidebar = React.lazy(() => import('./components/layout/Sidebar'));
 const AdminMobileHeader = React.lazy(() => import('./components/layout/AdminMobileHeader'));
 const PublicLanding = React.lazy(() => import('./pages/public/PublicLanding'));
+const PublicFAQ = React.lazy(() => import('./pages/public/PublicFAQ'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
 const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));
@@ -297,6 +298,7 @@ function App() {
                   <Route path="/login" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{loginPage}</Suspense></LazyErrorBoundary></PublicRoute>} />
                   <Route path="/register" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{registerPage}</Suspense></LazyErrorBoundary></PublicRoute>} />
                   <Route path="/forgot-password" element={<PublicRoute><LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}>{forgotPasswordPage}</Suspense></LazyErrorBoundary></PublicRoute>} />
+                  <Route path="/faq" element={<LazyErrorBoundary><Suspense fallback={<LoadingSpinner />}><PublicFAQ /></Suspense></LazyErrorBoundary>} />
                   <Route path="/passenger/*" element={passengerRoute} />
                   <Route path="/driver/*" element={driverRoute} />
                   <Route path="/admin/*" element={adminRoute} />
