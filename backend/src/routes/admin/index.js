@@ -38,6 +38,8 @@ router.post('/financials/commission', protect, authorize('admin'), adminControll
 router.get('/safety/sos-alerts', protect, authorize('admin'), adminController.getSOSAlerts);
 router.get('/safety/sos-history/:userId', protect, authorize('admin'), adminController.getSOSHistory);
 router.put('/safety/sos/:alertId/resolve', protect, authorize('admin'), adminController.resolveSOS);
+router.put('/safety/sos/:alertId/respond', protect, authorize('admin'), adminController.respondToSOS);
+router.put('/safety/sos/:alertId/dispatch', protect, authorize('admin'), adminController.dispatchSOS);
 
 // Fraud Detection
 router.get('/safety/fraud-alerts', protect, authorize('admin'), adminController.getFraudAlerts);

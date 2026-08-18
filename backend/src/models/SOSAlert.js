@@ -13,7 +13,7 @@ const sosAlertSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'resolved', 'false_alarm'],
+    enum: ['active', 'responded', 'dispatched', 'resolved', 'false_alarm'],
     default: 'active'
   },
   location: {
@@ -49,6 +49,23 @@ const sosAlertSchema = new mongoose.Schema({
     default: false
   },
   adminNotifiedAt: Date,
+  respondedAt: Date,
+  dispatchedAt: Date,
+  adminActions: [{
+    action: { type: String, enum: ['acknowledged', 'called_user', 'dispatched_police', 'dispatched_ambulance', 'contacted_emergency_contact', 'located_user', 'other'] },
+    notes: String,
+    performedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    performedAt: { type: Date, default: Date.now }
+  }],
+  dispatchType: {
+    type: String,
+    enum: ['police', 'ambulance', null],
+    default: null
+  },
+  dispatchReportNumber: {
+    type: String,
+    default: ''
+  },
   resolvedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

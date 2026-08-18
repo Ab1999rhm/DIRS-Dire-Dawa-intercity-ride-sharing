@@ -5,7 +5,7 @@ import {
   FaEye, FaEdit, FaTimes, FaBell, FaUserClock, FaMapMarkerAlt, FaPhone,
   FaFileAlt, FaUserTie, FaCar, FaUsers, FaExclamation, FaFlag, FaClipboardCheck,
   FaDownload, FaCalendar, FaClock, FaMapPin, FaFirstAid, FaUserSlash,
-  FaFireAlt, FaCarCrash, FaHandRock, FaMedkit, FaSiren, FaWrench
+  FaFireAlt, FaCarCrash, FaHandRock, FaMedkit, FaWrench
 } from 'react-icons/fa';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -50,6 +50,10 @@ const SafetyDashboard = () => {
   const [dispatchSending, setDispatchSending] = useState(false);
   const [selectedSOS, setSelectedSOS] = useState(null);
   const [showSOSDetailModal, setShowSOSDetailModal] = useState(false);
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [respondSOS, setRespondSOS] = useState(null);
+  const [responseAction, setResponseAction] = useState('acknowledged');
+  const [responseNotes, setResponseNotes] = useState('');
 
   useEffect(() => {
     fetchSafetyData();
@@ -111,9 +115,9 @@ const SafetyDashboard = () => {
     }
   };
 
-  const handleResolveSOS = async (alertId, isFalseAlarm) => {
+  const handleResolveSOS = async (alertId, isFalseAlarm, notes) => {
     try {
-      await adminAPI.resolveSOS(alertId, 'Resolved by admin', isFalseAlarm);
+      await adminAPI.resolveSOS(alertId, notes || 'Resolved by admin', isFalseAlarm);
       setSOSAlerts(prev => prev.map(a => a._id === alertId ? { ...a, status: isFalseAlarm ? 'false_alarm' : 'resolved', resolvedBy: { firstName: 'Admin' }, resolvedAt: new Date().toISOString() } : a));
       if (selectedSOS?._id === alertId) {
         setSelectedSOS(prev => ({ ...prev, status: isFalseAlarm ? 'false_alarm' : 'resolved' }));
@@ -121,6 +125,41 @@ const SafetyDashboard = () => {
       toast.success(isFalseAlarm ? 'Marked as false alarm' : 'SOS alert resolved');
     } catch (err) {
       toast.error('Failed to resolve SOS');
+    }
+  };
+
+  const openRespondModal = (alert) => {
+    setRespondSOS(alert);
+    setResponseAction('acknowledged');
+    setResponseNotes('');
+    setShowResponseModal(true);
+  };
+
+  const handleRespondToSOS = async () => {
+    if (!respondSOS) return;
+    try {
+      await adminAPI.respondToSOS(respondSOS._id, responseAction, responseNotes);
+      setSOSAlerts(prev => prev.map(a => a._id === respondSOS._id ? { ...a, status: 'responded', respondedAt: new Date().toISOString(), adminActions: [...(a.adminActions || []), { action: responseAction, notes: responseNotes, performedAt: new Date().toISOString() }] } : a));
+      if (selectedSOS?._id === respondSOS._id) {
+        setSelectedSOS(prev => ({ ...prev, status: 'responded', respondedAt: new Date().toISOString() }));
+      }
+      toast.success('Response recorded');
+      setShowResponseModal(false);
+    } catch (err) {
+      toast.error('Failed to record response');
+    }
+  };
+
+  const handleDispatchSOS = async (alert, dispatchType, reportNumber, notes) => {
+    try {
+      await adminAPI.dispatchSOS(alert._id, dispatchType, reportNumber, notes);
+      setSOSAlerts(prev => prev.map(a => a._id === alert._id ? { ...a, status: 'dispatched', dispatchedAt: new Date().toISOString(), dispatchType, dispatchReportNumber: reportNumber } : a));
+      if (selectedSOS?._id === alert._id) {
+        setSelectedSOS(prev => ({ ...prev, status: 'dispatched', dispatchedAt: new Date().toISOString(), dispatchType }));
+      }
+      toast.success(`${dispatchType === 'police' ? 'Police' : 'Ambulance'} dispatched`);
+    } catch (err) {
+      toast.error('Failed to record dispatch');
     }
   };
 
@@ -241,7 +280,7 @@ const SafetyDashboard = () => {
 
   const handleSendDispatch = async () => {
     if (!dispatchModal) return;
-    const { incident, type } = dispatchModal;
+    const { incident, type, fromSOS, sosAlert, sosDispatchType } = dispatchModal;
     if (type === 'police' && !dispatchInput.trim()) {
       toast.error('Enter the police report number');
       return;
@@ -252,6 +291,12 @@ const SafetyDashboard = () => {
         await adminAPI.notifyPolice(incident._id, dispatchInput.trim(), dispatchRecipients);
       } else {
         await adminAPI.dispatchAmbulance(incident._id, dispatchInput.trim() || 'Assigned hospital', '', dispatchRecipients);
+      }
+      if (fromSOS && sosAlert?._id) {
+        try {
+          await adminAPI.dispatchSOS(sosAlert._id, sosDispatchType || 'police', dispatchInput.trim() || '', 'Dispatched via admin dashboard');
+          setSOSAlerts(prev => prev.map(a => a._id === sosAlert._id ? { ...a, status: 'dispatched', dispatchedAt: new Date().toISOString(), dispatchType: sosDispatchType || 'police' } : a));
+        } catch (e) { /* non-blocking */ }
       }
       const count = dispatchRecipients.length;
       toast.success(type === 'police'
@@ -280,15 +325,15 @@ const SafetyDashboard = () => {
     fire: 'Fire Emergency', breakdown: 'Vehicle Breakdown', other: 'Other Emergency', general: 'General SOS',
   };
 
-  const handleDispatchFromSOS = async (alert) => {
+  const handleDispatchFromSOS = async (alert, dispatchType) => {
     try {
-      const res = await adminAPI.getDispatchContacts({ type: 'police' });
+      const res = await adminAPI.getDispatchContacts({ type: dispatchType === 'ambulance' ? 'hospital' : 'police' });
       const d = res.data;
       const contacts = Array.isArray(d) ? d : (d?.contacts || []);
       setDispatchContacts(contacts.filter(c => c.active !== false));
       setDispatchRecipients([]);
       setDispatchInput('');
-      setDispatchModal({ incident: { _id: alert._id, category: alert.type || 'other', severity: 'critical', description: alert.message, location: alert.location }, type: 'police', fromSOS: true, sosAlert: alert });
+      setDispatchModal({ incident: { _id: alert._id, category: alert.type || 'other', severity: 'critical', description: alert.message, location: alert.location }, type: dispatchType === 'ambulance' ? 'hospital' : 'police', fromSOS: true, sosAlert: alert, sosDispatchType: dispatchType || 'police' });
     } catch (err) {
       toast.error('Failed to load contacts');
     }
@@ -334,6 +379,8 @@ const SafetyDashboard = () => {
       case 'active': return '#dc2626';
       case 'detected': return '#f97316';
       case 'investigating': return '#eab308';
+      case 'responded': return '#3b82f6';
+      case 'dispatched': return '#f97316';
       case 'resolved': return '#22c55e';
       case 'confirmed': return '#dc2626';
       case 'false_positive': return '#6b7280';
@@ -348,6 +395,8 @@ const SafetyDashboard = () => {
       case 'active': return 'rgba(220, 38, 38, 0.1)';
       case 'detected': return 'rgba(249, 115, 22, 0.1)';
       case 'investigating': return 'rgba(234, 179, 8, 0.1)';
+      case 'responded': return 'rgba(59, 130, 246, 0.1)';
+      case 'dispatched': return 'rgba(249, 115, 22, 0.1)';
       case 'resolved': return 'rgba(34, 197, 94, 0.1)';
       case 'confirmed': return 'rgba(220, 38, 38, 0.1)';
       case 'false_positive': return 'rgba(107, 114, 128, 0.1)';
@@ -369,7 +418,7 @@ const SafetyDashboard = () => {
 
   const tabs = [
     { key: 'overview', icon: <FaChartLine />, label: 'Overview' },
-    { key: 'sos', icon: <FaExclamationTriangle />, label: 'SOS', count: sosAlerts.filter(a => a.status === 'active').length },
+    { key: 'sos', icon: <FaExclamationTriangle />, label: 'SOS', count: sosAlerts.filter(a => ['active', 'responded', 'dispatched'].includes(a.status)).length },
     { key: 'incidents', icon: <FaFlag />, label: 'Incidents', count: incidents.filter(i => i.status !== 'resolved').length },
     { key: 'fraud', icon: <FaUserShield />, label: 'Fraud', count: fraudAlerts.filter(f => f.status === 'detected').length },
     { key: 'suspicious', icon: <FaExclamation />, label: 'Suspicious', count: suspiciousActivities.filter(s => s.status === 'detected').length },
@@ -493,11 +542,11 @@ const SafetyDashboard = () => {
               <button onClick={() => setActiveTab('sos')} style={{ padding: '4px 12px', borderRadius: 12, border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>View All</button>
             </div>
             <div>
-              {sosAlerts.filter(a => a.status === 'active').length === 0 ? (
+              {sosAlerts.filter(a => ['active', 'responded', 'dispatched'].includes(a.status)).length === 0 ? (
                 <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                   <FaCheckCircle style={{ fontSize: 32, color: '#22c55e', marginBottom: 8 }} /><br />No active SOS alerts
                 </div>
-              ) : sosAlerts.filter(a => a.status === 'active').slice(0, 3).map(alert => {
+              ) : sosAlerts.filter(a => ['active', 'responded', 'dispatched'].includes(a.status)).slice(0, 3).map(alert => {
                 const TypeIcon = SOS_TYPE_ICONS[alert.type] || FaExclamationTriangle;
                 return (
                 <div key={alert._id} style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)', cursor: 'pointer' }} onClick={() => { setSelectedSOS(alert); setShowSOSDetailModal(true); }}>
@@ -516,11 +565,11 @@ const SafetyDashboard = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
+                      <button className="driver-action-btn driver-btn-view" onClick={() => openRespondModal(alert)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}>
+                        <FaBell style={{ fontSize: 10 }} /> Respond
+                      </button>
                       <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
                         <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
-                      </button>
-                      <button className="driver-action-btn driver-btn-view" onClick={() => handleResolveSOS(alert._id, true)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}>
-                        False Alarm
                       </button>
                     </div>
                   </div>
@@ -565,14 +614,40 @@ const SafetyDashboard = () => {
                 </div>
                 {alert.status === 'active' && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                    <button className="driver-action-btn driver-btn-view" onClick={() => openRespondModal(alert)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#3b82f6', color: 'white', fontWeight: 600 }}>
+                      <FaBell style={{ fontSize: 10 }} /> Respond
+                    </button>
+                    <button className="driver-action-btn driver-btn-ban" onClick={() => handleDispatchFromSOS(alert, 'police')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#dc2626', color: 'white', fontWeight: 600 }}>
+                      <FaShieldAlt style={{ fontSize: 10 }} /> Police
+                    </button>
+                    <button className="driver-action-btn driver-btn-ban" onClick={() => handleDispatchFromSOS(alert, 'ambulance')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f97316', color: 'white', fontWeight: 600 }}>
+                      <FaAmbulance style={{ fontSize: 10 }} /> Ambulance
+                    </button>
                     <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
                       <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
                     </button>
                     <button className="driver-action-btn driver-btn-view" onClick={() => handleResolveSOS(alert._id, true)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#6b7280', color: 'white', fontWeight: 600 }}>
                       False Alarm
                     </button>
-                    <button className="driver-action-btn driver-btn-ban" onClick={() => handleDispatchFromSOS(alert)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#dc2626', color: 'white', fontWeight: 600 }}>
-                      <FaAmbulance style={{ fontSize: 10 }} /> Dispatch
+                  </div>
+                )}
+                {alert.status === 'responded' && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                    <button className="driver-action-btn driver-btn-ban" onClick={() => handleDispatchFromSOS(alert, 'police')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#dc2626', color: 'white', fontWeight: 600 }}>
+                      <FaShieldAlt style={{ fontSize: 10 }} /> Police
+                    </button>
+                    <button className="driver-action-btn driver-btn-ban" onClick={() => handleDispatchFromSOS(alert, 'ambulance')} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f97316', color: 'white', fontWeight: 600 }}>
+                      <FaAmbulance style={{ fontSize: 10 }} /> Ambulance
+                    </button>
+                    <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
+                      <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
+                    </button>
+                  </div>
+                )}
+                {alert.status === 'dispatched' && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                    <button className="driver-action-btn driver-btn-reactivate" onClick={() => handleResolveSOS(alert._id, false)} style={{ padding: '6px 12px', fontSize: 11, borderRadius: 6, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, background: '#22c55e', color: 'white', fontWeight: 600 }}>
+                      <FaCheckCircle style={{ fontSize: 10 }} /> Resolve
                     </button>
                   </div>
                 )}
@@ -924,6 +999,46 @@ const SafetyDashboard = () => {
           </div>
         </div>
       )}
+    {/* ===== RESPONSE MODAL ===== */}
+      {showResponseModal && respondSOS && (
+        <div className="modal-overlay" onClick={() => setShowResponseModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Record Admin Response</h3>
+              <button className="modal-close" onClick={() => setShowResponseModal(false)}><FaTimes /></button>
+            </div>
+            <div className="driver-detail">
+              <div style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)', borderRadius: 10, padding: 10, marginTop: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>{respondSOS.user?.firstName} {respondSOS.user?.lastName}{respondSOS.userName && !respondSOS.user?.firstName ? respondSOS.userName : ''}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{respondSOS.message || 'Emergency alert'}</div>
+                {respondSOS.userPhone && <div style={{ fontSize: 11, color: '#3b82f6', marginTop: 2 }}><FaPhone style={{ fontSize: 9, marginRight: 3 }} />{respondSOS.userPhone}</div>}
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>What did you do?</label>
+                <select value={responseAction} onChange={(e) => setResponseAction(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', fontSize: 14, background: 'var(--bg-secondary, #f9fafb)', color: 'var(--text)' }}>
+                  <option value="acknowledged">Acknowledged the alert</option>
+                  <option value="called_user">Called the user</option>
+                  <option value="dispatched_police">Dispatched police</option>
+                  <option value="dispatched_ambulance">Dispatched ambulance</option>
+                  <option value="contacted_emergency_contact">Contacted emergency contact</option>
+                  <option value="located_user">Located the user</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>Notes</label>
+                <textarea value={responseNotes} onChange={(e) => setResponseNotes(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 10, border: '2px solid var(--border-light)', minHeight: 80, fontSize: 14, resize: 'vertical', background: 'var(--bg-secondary, #f9fafb)', color: 'var(--text)' }} placeholder="Describe what you did (called the user, confirmed safety, etc.)" />
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button onClick={handleRespondToSOS} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#3b82f6', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <FaCheckCircle /> Record Response
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     {/* ===== SOS DETAIL MODAL ===== */}
       {showSOSDetailModal && selectedSOS && (
         <div className="modal-overlay" onClick={() => setShowSOSDetailModal(false)}>
@@ -1018,17 +1133,60 @@ const SafetyDashboard = () => {
                 </div>
               )}
 
+              {/* Admin actions timeline */}
+              {selectedSOS.adminActions?.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600 }}>ADMIN ACTION LOG</div>
+                  <div style={{ borderLeft: '2px solid var(--border-light)', paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {selectedSOS.adminActions.map((action, i) => (
+                      <div key={i} style={{ position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: -17, top: 3, width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }} />
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', textTransform: 'capitalize' }}>{action.action?.replace(/_/g, ' ')}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{action.notes}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{new Date(action.performedAt).toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Action buttons */}
               {selectedSOS.status === 'active' && (
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button onClick={() => { handleResolveSOS(selectedSOS._id, false); setShowSOSDetailModal(false); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#22c55e', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { openRespondModal(selectedSOS); }} style={{ padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#3b82f6', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaBell /> Respond
+                  </button>
+                  <button onClick={() => { setShowSOSDetailModal(false); handleDispatchFromSOS(selectedSOS, 'police'); }} style={{ padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaShieldAlt /> Police
+                  </button>
+                  <button onClick={() => { setShowSOSDetailModal(false); handleDispatchFromSOS(selectedSOS, 'ambulance'); }} style={{ padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#f97316', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaAmbulance /> Ambulance
+                  </button>
+                  <button onClick={() => { handleResolveSOS(selectedSOS._id, false); setShowSOSDetailModal(false); }} style={{ padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#22c55e', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <FaCheckCircle /> Resolve
                   </button>
-                  <button onClick={() => { handleResolveSOS(selectedSOS._id, true); setShowSOSDetailModal(false); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6b7280', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <button onClick={() => { handleResolveSOS(selectedSOS._id, true); setShowSOSDetailModal(false); }} style={{ gridColumn: '1 / -1', padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6b7280', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <FaBan /> False Alarm
                   </button>
-                  <button onClick={() => { setShowSOSDetailModal(false); handleDispatchFromSOS(selectedSOS); }} style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <FaAmbulance /> Dispatch
+                </div>
+              )}
+              {selectedSOS.status === 'responded' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { setShowSOSDetailModal(false); handleDispatchFromSOS(selectedSOS, 'police'); }} style={{ padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#dc2626', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaShieldAlt /> Police
+                  </button>
+                  <button onClick={() => { setShowSOSDetailModal(false); handleDispatchFromSOS(selectedSOS, 'ambulance'); }} style={{ padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#f97316', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaAmbulance /> Ambulance
+                  </button>
+                  <button onClick={() => { handleResolveSOS(selectedSOS._id, false); setShowSOSDetailModal(false); }} style={{ gridColumn: '1 / -1', padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#22c55e', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaCheckCircle /> Resolve
+                  </button>
+                </div>
+              )}
+              {selectedSOS.status === 'dispatched' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { handleResolveSOS(selectedSOS._id, false); setShowSOSDetailModal(false); }} style={{ gridColumn: '1 / -1', padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#22c55e', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <FaCheckCircle /> Resolve
                   </button>
                 </div>
               )}

@@ -363,6 +363,8 @@ export const adminAPI = {
   getSOSAlerts: (params) => api.get('/admin/safety/sos-alerts', { params }),
   getSOSHistory: (userId) => api.get(`/admin/safety/sos-history/${userId}`),
   resolveSOS: (alertId, notes, isFalseAlarm) => api.put(`/admin/safety/sos/${alertId}/resolve`, { notes, isFalseAlarm }),
+  respondToSOS: (alertId, action, notes) => api.put(`/admin/safety/sos/${alertId}/respond`, { action, notes }),
+  dispatchSOS: (alertId, dispatchType, reportNumber, notes) => api.put(`/admin/safety/sos/${alertId}/dispatch`, { dispatchType, reportNumber, notes }),
   // Fraud Detection
   getFraudAlerts: (params) => api.get('/admin/safety/fraud-alerts', { params }),
   investigateFraud: (fraudId, action, notes) => api.put(`/admin/safety/fraud/${fraudId}/investigate`, { action, notes }),

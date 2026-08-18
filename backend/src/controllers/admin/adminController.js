@@ -834,8 +834,20 @@ exports.getActiveTripsMonitoring = asyncHandler(async (req, res) => {
 
 exports.respondToSOS = asyncHandler(async (req, res) => {
   const { sosId } = req.params;
-  const alert = await SOSAlert.findByIdAndUpdate(sosId, { status: 'responded', respondedAt: new Date() }, { new: true });
+  const { action, notes } = req.body;
+  const alert = await SOSAlert.findById(sosId);
   if (!alert) return res.status(404).json({ message: 'SOS alert not found' });
+  alert.status = 'responded';
+  alert.respondedAt = new Date();
+  alert.adminActions.push({
+    action: action || 'acknowledged',
+    notes: notes || 'Admin acknowledged the alert',
+    performedBy: req.user._id,
+    performedAt: new Date()
+  });
+  await alert.save();
+  const io = getIO();
+  io.to('admins').emit('sos_responded', { alertId: alert._id, status: 'responded' });
   res.json({ message: 'Response recorded', alert });
 });
 
@@ -2263,21 +2275,47 @@ exports.getSOSHistory = asyncHandler(async (req, res) => {
 
 exports.resolveSOS = asyncHandler(async (req, res) => {
   const { alertId } = req.params;
-  const { notes, isFalseAlarm } = req.body;
+  const { notes, isFalseAlarm, action } = req.body;
   
-  const alert = await SOSAlert.findByIdAndUpdate(
-    alertId,
-    {
-      status: isFalseAlarm ? 'false_alarm' : 'resolved',
-      resolvedBy: req.user._id,
-      resolvedAt: new Date(),
-      resolutionNotes: notes
-    },
-    { new: true }
-  );
+  const alert = await SOSAlert.findById(alertId);
+  if (!alert) return res.status(404).json({ error: 'SOS alert not found' });
+
+  alert.status = isFalseAlarm ? 'false_alarm' : 'resolved';
+  alert.resolvedBy = req.user._id;
+  alert.resolvedAt = new Date();
+  alert.resolutionNotes = notes;
+  alert.adminActions.push({
+    action: action || (isFalseAlarm ? 'other' : 'acknowledged'),
+    notes: notes || (isFalseAlarm ? 'Marked as false alarm' : 'Resolved by admin'),
+    performedBy: req.user._id,
+    performedAt: new Date()
+  });
+  await alert.save();
   
   logger.info('SOS alert resolved', { alertId, isFalseAlarm });
   res.json({ message: 'SOS resolved successfully', alert });
+});
+
+exports.dispatchSOS = asyncHandler(async (req, res) => {
+  const { alertId } = req.params;
+  const { dispatchType, reportNumber, notes } = req.body;
+  const alert = await SOSAlert.findById(alertId);
+  if (!alert) return res.status(404).json({ error: 'SOS alert not found' });
+  alert.status = 'dispatched';
+  alert.dispatchedAt = new Date();
+  alert.dispatchType = dispatchType;
+  alert.dispatchReportNumber = reportNumber || '';
+  alert.adminActions.push({
+    action: dispatchType === 'police' ? 'dispatched_police' : 'dispatched_ambulance',
+    notes: notes || `${dispatchType === 'police' ? 'Police' : 'Ambulance'} dispatched. Report: ${reportNumber || 'N/A'}`,
+    performedBy: req.user._id,
+    performedAt: new Date()
+  });
+  await alert.save();
+  const io = getIO();
+  io.to('admins').emit('sos_dispatched', { alertId: alert._id, dispatchType });
+  logger.info('SOS dispatch recorded', { alertId, dispatchType });
+  res.json({ message: 'Dispatch recorded', alert });
 });
 
 // Fraud Detection
